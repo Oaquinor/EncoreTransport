@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f7fa" />
+    <title>Encore Transport | Website</title>
+    <link rel="stylesheet" href="../../packages/shared/styles.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="screen website-screen">
+      <header class="website-header app-shell">
+        <a class="brand brand--light" href="/">
+          <img class="brand-logo brand-logo--small" src="/logo.svg" alt="Encore Transport" />
+          <span>
+            <strong>Encore</strong>
+            <small>Transport</small>
+          </span>
+        </a>
+
+        <nav class="website-nav" aria-label="Secciones principales">
+          <a href="#home">Home</a>
+          <a href="#destinos">Destinos</a>
+          <a href="#servicios">Servicios</a>
+          <a href="#nosotros">Nosotros</a>
+          <a href="#faq">FAQ</a>
+          <a href="#contacto">Contacto</a>
+        </nav>
+
+        <a class="button button--primary" href="/move/">Reservar ahora</a>
+      </header>
+
+      <main class="app-shell website-layout motion-slide-up" id="home">
+        <section class="hero card card--pad hero-panel">
+          <div>
+            <div class="eyebrow">Transporte premium de larga distancia</div>
+            <h1 class="page-title page-title--light">Viajar con confianza empieza antes de subir al autobús.</h1>
+            <p class="page-lead">
+              Presentamos rutas seleccionadas, servicio confiable, atención cercana y una experiencia digital que conecta naturalmente con la reserva.
+            </p>
+
+            <div class="hero-actions">
+              <a class="button button--primary" href="/move/?origin=Ciudad%20de%20México&destination=Puebla">Comenzar reserva</a>
+              <a class="button button--ghost" href="#destinos">Explorar destinos</a>
+            </div>
+
+            <div class="hero-metrics">
+              <div class="metric-card">
+                <strong>180+</strong>
+                <span>salidas semanales</span>
+              </div>
+              <div class="metric-card">
+                <strong>97%</strong>
+                <span>satisfacción promedio</span>
+              </div>
+              <div class="metric-card">
+                <strong>24/7</strong>
+                <span>soporte y seguimiento</span>
+              </div>
+            </div>
+          </div>
+
+          <aside class="hero-aside card card--tight">
+            <div class="reservation-preview">
+              <div class="reservation-preview__header">
+                <span class="badge badge--primary">Reserva rápida</span>
+                <span class="reservation-preview__chip">Mobile first</span>
+              </div>
+              <div class="reservation-preview__card">
+                <label>
+                  <span>Origen</span>
+                  <div class="field">Ciudad de México</div>
+                </label>
+                <label>
+                  <span>Destino</span>
+                  <div class="field">Puebla</div>
+                </label>
+                <label>
+                  <span>Fecha</span>
+                  <div class="field">Sábado, 12 sep</div>
+                </label>
+                <a class="button button--primary button--block" href="/move/?origin=Ciudad%20de%20México&destination=Puebla">Ir a reservar</a>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section id="destinos" class="section-grid">
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow">Destinos destacados</div>
+              <h2>Conexiones pensadas para moverse con fluidez.</h2>
+            </div>
+            <p>Rutas con información clara, tiempos confiables y acceso directo al flujo de reserva.</p>
+          </div>
+          <div class="grid grid--3" id="destinationGrid"></div>
+        </section>
+
+        <section id="servicios" class="section-grid">
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow">Servicios</div>
+              <h2>Una experiencia que transmite confianza desde el primer clic.</h2>
+            </div>
+          </div>
+          <div class="grid grid--3">
+            <article class="service-card card card--pad">
+              <span class="service-icon">01</span>
+              <h3>Viajes interurbanos</h3>
+              <p>Horarios claros, disponibilidad visible y acompañamiento en la reserva.</p>
+            </article>
+            <article class="service-card card card--pad">
+              <span class="service-icon">02</span>
+              <h3>Atención asistida</h3>
+              <p>Canales de contacto y soporte para resolver dudas antes y durante el viaje.</p>
+            </article>
+            <article class="service-card card card--pad">
+              <span class="service-icon">03</span>
+              <h3>Operación confiable</h3>
+              <p>Información consistente para pasajeros, conductores y administración.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="nosotros" class="section-grid split-layout">
+          <article class="card card--pad story-card">
+            <div class="eyebrow">Nosotros</div>
+            <h2>Una marca enfocada en claridad, seguridad y buena experiencia.</h2>
+            <p>
+              El sitio público presenta la propuesta de valor sin mezclar la complejidad operativa. Su función es informar, generar confianza y conducir al pasajero hacia la experiencia de reserva.
+            </p>
+          </article>
+          <article class="card card--pad story-card story-card--soft">
+            <div class="eyebrow">Arquitectura</div>
+            <h2>La reserva vive en la Passenger PWA; el sitio solo orienta y deriva.</h2>
+            <p>
+              Esta separación evita duplicar reglas de negocio y prepara el sistema para crecer hacia apps móviles reales y una API Laravel centralizada.
+            </p>
+          </article>
+        </section>
+
+        <section id="faq" class="section-grid faq-grid">
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow">Preguntas frecuentes</div>
+              <h2>Dudas comunes respondidas con simpleza.</h2>
+            </div>
+          </div>
+          <div class="faq-list">
+            <details class="card card--pad" open>
+              <summary>¿Puedo reservar desde el website?</summary>
+              <p>Sí. El sitio te dirige a la Passenger PWA para completar la reserva en una experiencia móvil más fluida.</p>
+            </details>
+            <details class="card card--pad">
+              <summary>¿Dónde se gestionan las reglas críticas?</summary>
+              <p>Las reglas de negocio deben vivir centralizadas en la API Laravel, no en cada cliente.</p>
+            </details>
+            <details class="card card--pad">
+              <summary>¿Esto ya está listo para producción?</summary>
+              <p>El preview está listo para demostrar el producto; la base está preparada para evolucionar a producción real con Laravel y MySQL.</p>
+            </details>
+          </div>
+        </section>
+
+        <section id="contacto" class="section-grid contact-grid">
+          <div class="card card--pad contact-card">
+            <div class="eyebrow">Contacto</div>
+            <h2>¿Necesitas ayuda para tu próximo viaje?</h2>
+            <p>Canales de contacto listos para el preview y preparados para integrarse con la operación real más adelante.</p>
+            <div class="contact-actions">
+              <a class="button button--primary" href="mailto:hola@encoretransport.mx">Escribir correo</a>
+              <a class="button button--ghost button--ghost-light" href="/admin/">Ver operación</a>
+            </div>
+          </div>
+          <div class="card card--pad contact-card contact-card--info">
+            <span class="badge badge--info">CTA de reserva</span>
+            <h3>Desde aquí puedes pasar a la experiencia móvil de pasajero.</h3>
+            <p>El tránsito entre marketing y reserva queda claro, directo y sin fricción.</p>
+            <a class="button button--primary button--block" href="/move/">Abrir Passenger PWA</a>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./app.mjs"></script>
+  </body>
+</html>

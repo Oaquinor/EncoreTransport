@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 768" role="img" aria-label="Encore Transport">
+  <rect width="768" height="768" fill="#ffffff"/>
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#23b1ef"/>
+      <stop offset="100%" stop-color="#39a9e1"/>
+    </linearGradient>
+    <linearGradient id="road" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3f3f46"/>
+      <stop offset="100%" stop-color="#2f2f34"/>
+    </linearGradient>
+  </defs>
+  <circle cx="384" cy="252" r="186" fill="none" stroke="url(#sky)" stroke-width="72"/>
+  <circle cx="384" cy="252" r="146" fill="none" stroke="#1966a0" stroke-width="28"/>
+  <g fill="#1966a0">
+    <path d="M373 108h22v312h-22z"/>
+    <path d="M300 140l20-12 150 260-20 12z"/>
+    <path d="M468 140l20 12-150 260-20-12z"/>
+    <path d="M238 205l12-20 260 150-12 20z"/>
+    <path d="M530 205l12 20-260 150-12-20z"/>
+  </g>
+  <path d="M384 362 166 640h436L384 362z" fill="url(#road)"/>
+  <path d="M384 393 211 618h346L384 393z" fill="#ffffff" opacity="0.98"/>
+  <path d="M384 410 246 618h276L384 410z" fill="#3f3f46"/>
+  <path d="M384 446v172" stroke="#ffffff" stroke-width="18" stroke-linecap="round" stroke-dasharray="46 30"/>
+  <path d="M130 640h508" stroke="#3f3f46" stroke-width="16" stroke-linecap="round"/>
+  <text x="384" y="710" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="54" letter-spacing="2" fill="#3f3f46">ENCORE TRANSPORT</text>
+</svg>

@@ -1,0 +1,17 @@
+{
+  "name": "Encore Drive",
+  "short_name": "Encore Drive",
+  "start_url": "/driver/",
+  "scope": "/driver/",
+  "display": "standalone",
+  "background_color": "#07111d",
+  "theme_color": "#07111d",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

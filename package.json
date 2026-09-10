@@ -1,0 +1,19 @@
+{
+  "name": "encore-transport",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "test": "node tests/business-rules.test.mjs",
+    "check": "node tests/business-rules.test.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

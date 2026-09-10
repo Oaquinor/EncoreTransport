@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Encore Transport | Preview Hub</title>
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="stylesheet" href="./packages/shared/styles.css" />
+    <style>
+      .hub-shell {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 32px;
+        background:
+          radial-gradient(circle at top left, rgba(253, 186, 116, 0.18), transparent 30%),
+          radial-gradient(circle at top right, rgba(56, 189, 248, 0.16), transparent 28%),
+          linear-gradient(180deg, #08111f 0%, #0f172a 100%);
+        color: #e5eefb;
+      }
+
+      .hub-card {
+        width: min(1120px, 100%);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 28px;
+        background: rgba(15, 23, 42, 0.72);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 30px 80px rgba(2, 6, 23, 0.45);
+        overflow: hidden;
+      }
+
+      .hub-grid {
+        display: grid;
+        grid-template-columns: 1.25fr 0.95fr;
+      }
+
+      .hub-hero,
+      .hub-links {
+        padding: clamp(24px, 4vw, 44px);
+      }
+
+      .hub-hero {
+        border-right: 1px solid rgba(148, 163, 184, 0.12);
+      }
+
+      .hub-kicker {
+        text-transform: uppercase;
+        letter-spacing: 0.24em;
+        color: #94a3b8;
+        font-size: 0.74rem;
+      }
+
+      .hub-title {
+        font-size: clamp(2.4rem, 6vw, 4.8rem);
+        line-height: 0.95;
+        margin: 16px 0 18px;
+      }
+
+      .hub-description {
+        color: #cbd5e1;
+        max-width: 58ch;
+        font-size: 1.03rem;
+        line-height: 1.75;
+      }
+
+      .hub-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 28px;
+      }
+
+      .hub-stat {
+        padding: 16px;
+        border-radius: 20px;
+        background: rgba(15, 23, 42, 0.62);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+      }
+
+      .hub-stat strong {
+        display: block;
+        font-size: 1.15rem;
+        margin-bottom: 4px;
+      }
+
+      .hub-links {
+        display: grid;
+        gap: 16px;
+        background: rgba(2, 6, 23, 0.24);
+      }
+
+      .app-link {
+        display: grid;
+        gap: 6px;
+        padding: 18px 20px;
+        border-radius: 22px;
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+      }
+
+      .app-link:hover {
+        transform: translateY(-2px);
+        border-color: rgba(251, 191, 36, 0.35);
+        background: rgba(30, 41, 59, 0.92);
+      }
+
+      .app-link strong {
+        font-size: 1.05rem;
+      }
+
+      .app-link span {
+        color: #cbd5e1;
+        line-height: 1.5;
+      }
+
+      .cta-row {
+        margin-top: 24px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      @media (max-width: 900px) {
+        .hub-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hub-hero {
+          border-right: 0;
+          border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        .hub-stats {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="hub-shell">
+      <section class="hub-card">
+        <div class="hub-grid">
+          <div class="hub-hero">
+            <img class="brand-logo-hero" src="/logo.svg" alt="Encore Transport" />
+            <div class="hub-kicker">Encore Transport</div>
+            <h1 class="hub-title">Plataforma de transporte lista para crecer hacia producción.</h1>
+            <p class="hub-description">
+              Este workspace concentra la base arquitectónica del producto: website público,
+              experiencia pasajero, interfaz operativa para conductores y dashboard administrativo,
+              todos conectados conceptualmente a una API central Laravel.
+            </p>
+            <div class="cta-row">
+              <a class="button button--primary" href="/website/">Abrir website</a>
+              <a class="button button--ghost" href="/move/">Abrir Passenger PWA</a>
+            </div>
+            <div class="hub-stats">
+              <div class="hub-stat"><strong>4 apps</strong><span>Separadas por responsabilidad</span></div>
+              <div class="hub-stat"><strong>1 API</strong><span>Contratos centralizados</span></div>
+              <div class="hub-stat"><strong>Mobile-ready</strong><span>Preparado para iOS y Android</span></div>
+            </div>
+          </div>
+          <div class="hub-links">
+            <a class="app-link" href="/website/"><strong>Website público</strong><span>Confianza, destinos, servicios y CTA para reservar.</span></a>
+            <a class="app-link" href="/move/"><strong>Passenger PWA</strong><span>Flujo móvil de búsqueda, asiento, pago simulado y confirmación.</span></a>
+            <a class="app-link" href="/driver/"><strong>Driver PWA</strong><span>Operación rápida con estados de viaje y validación de pasajeros.</span></a>
+            <a class="app-link" href="/admin/"><strong>Admin Dashboard</strong><span>Supervisión de reservas, rutas, buses, inventario e incidencias.</span></a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
