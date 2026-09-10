@@ -13,8 +13,8 @@ const state = {
 };
 
 const modules = [
-  { id: 'dashboard', label: 'Control' },
-  { id: 'trips', label: 'Viajes' },
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'trips', label: 'Trips' },
   { id: 'buses', label: 'Buses' },
   { id: 'drivers', label: 'Drivers' },
   { id: 'bookings', label: 'Bookings' },
@@ -31,8 +31,8 @@ function render() {
         <div class="admin-brand">
           <img class="admin-brand__logo" src="/logo.svg" alt="Encore Transport" />
           <div>
-            <strong>Encore Operations</strong>
-            <small>Control Center</small>
+            <strong>Encore Control</strong>
+            <small>Admin Dashboard</small>
           </div>
         </div>
         <nav class="admin-nav">
@@ -76,7 +76,7 @@ function renderLoading() {
 }
 
 function renderContent() {
-  const dashboard = state.dashboard;
+  const dashboard = normalizeDashboard(state.dashboard);
   const filteredTrips = filterRows(dashboard.trips);
   const filteredBuses = filterRows(dashboard.buses);
   const filteredDrivers = filterRows(dashboard.drivers);
@@ -100,7 +100,7 @@ function renderContent() {
           </div>
           <span class="badge badge--info">Updated today</span>
         </div>
-        <img class="admin-fleet-image" src="/assets/media/Autobus.png" alt="Autobús de Encore Transport" />
+        <img class="admin-fleet-image" src="/assets/media/Autobus.png" alt="Encore Transport bus" />
         <div class="chart-bars">
           ${[52, 63, 58, 72, 81, 74, 88].map((height) => `<div class="chart-bar" style="height:${height}%"></div>`).join('')}
         </div>
@@ -194,7 +194,7 @@ function tableBlock(title, rows, headers) {
           <div class="eyebrow">${title}</div>
           <h2>${title}</h2>
         </div>
-        <span class="badge badge--neutral">${rows.length} registros</span>
+        <span class="badge badge--neutral">${rows.length} records</span>
       </div>
       <div class="table-wrap">
         <table class="table admin-table">
@@ -226,7 +226,7 @@ function placeholderPanel(title, description) {
         </div>
       </div>
       <p>${description}</p>
-      <span class="badge badge--info">Preparado para producción</span>
+      <span class="badge badge--info">Ready for Laravel</span>
     </section>
   `;
 }
@@ -259,6 +259,58 @@ function filterRows(rows) {
   const query = state.search.trim().toLowerCase();
   if (!query) return rows;
   return rows.filter((row) => Object.values(row).some((value) => String(value).toLowerCase().includes(query)));
+}
+
+function normalizeDashboard(dashboard) {
+  const trips = (dashboard?.trips ?? []).map((trip) => ({
+    id: trip.id,
+    routeName: trip.routeName ?? ([trip.route?.origin, trip.route?.destination].filter(Boolean).join(' → ') || 'Unassigned route'),
+    departureTime: trip.departureTime ?? trip.departure_time ?? '--:--',
+    occupancy: trip.occupancy ?? 0,
+    status: trip.status ?? 'unknown',
+    busId: trip.busId ?? trip.bus?.code ?? trip.bus?.plate ?? 'Unassigned bus',
+    driverId: trip.driverId ?? trip.driver?.name ?? 'Unassigned driver',
+    date: trip.date ?? trip.departure_date ?? null
+  }));
+
+  const buses = (dashboard?.buses ?? []).map((bus) => ({
+    id: bus.id,
+    name: bus.name ?? bus.code ?? 'Bus',
+    plate: bus.plate ?? '—',
+    capacity: bus.capacity ?? '—',
+    status: bus.status ?? 'unknown'
+  }));
+
+  const drivers = (dashboard?.drivers ?? []).map((driver) => ({
+    id: driver.id,
+    name: driver.name ?? 'Driver',
+    license: driver.license ?? driver.license_number ?? '—',
+    status: driver.status ?? 'unknown'
+  }));
+
+  const passengers = (dashboard?.passengers ?? []).map((booking) => ({
+    id: booking.id,
+    name: booking.name ?? booking.passenger_name ?? 'Passenger',
+    idNumber: booking.idNumber ?? booking.passenger_email ?? booking.passenger_phone ?? '—',
+    status: booking.status ?? 'unknown'
+  }));
+
+  return {
+    metrics: {
+      tripsToday: dashboard?.metrics?.tripsToday ?? 0,
+      bookings: dashboard?.metrics?.bookings ?? 0,
+      revenue: dashboard?.metrics?.revenue ?? 0,
+      occupancy: dashboard?.metrics?.occupancy ?? 0,
+      pendingBookings: dashboard?.metrics?.pendingBookings ?? 0,
+      availableBuses: dashboard?.metrics?.availableBuses ?? 0,
+      incidents: dashboard?.metrics?.incidents ?? 0
+    },
+    trips,
+    buses,
+    drivers,
+    passengers,
+    inventory: dashboard?.inventory ?? []
+  };
 }
 
 function wireEvents() {

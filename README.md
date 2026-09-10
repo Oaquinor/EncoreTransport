@@ -1,81 +1,55 @@
 # Encore Transport
 
-Preview monorepo para una plataforma de movilidad con cuatro experiencias separadas y una API central preparada para evolucionar a produccion.
+Preview monorepo for a transport platform with four separate experiences and a central API designed to evolve into production.
 
-## Estado actual
+## What it includes
 
-Encore Transport mantiene una foundation funcional basada en HTML, CSS manual y JavaScript ES Modules. Esta base conserva flujos importantes de producto:
-
-- Website publico.
+- Public website.
 - Passenger PWA.
 - Driver PWA.
-- Admin Dashboard.
-- Reglas de negocio y datos mock compartidos.
-- Manifest y Service Worker para las PWAs.
-- Base Laravel para futura API central.
-- Documentacion tecnica inicial.
-- Pruebas de reglas criticas.
+- Admin dashboard.
+- Shared contracts and rules to avoid duplication.
+- Documentation for architecture, API, database, and business rules.
+- A foundation ready to integrate Laravel + MySQL as the central backend.
 
-La migracion debe ser progresiva. No se debe reescribir todo desde cero ni eliminar mocks antes de tener una API real equivalente.
+## Architecture
 
-## Arquitectura
+The platform follows this principle:
 
-```text
-Website + Passenger PWA + Driver PWA + Admin Dashboard
-  -> Encore API
-  -> Laravel
-  -> MySQL
-```
+Website + Passenger PWA + Driver PWA + Admin Dashboard -> Laravel API -> MySQL
 
-En el preview actual, las aplicaciones consumen `packages/shared` como contrato temporal de dominio, reglas, datos mock y utilidades UI.
+In this preview, the central API is represented with shared contracts and rules so the flows can be navigated and validated directly from the browser without duplicating critical logic in each app.
 
-## Requisitos
+## Requirements
 
-- Node.js 24 o superior para el preview frontend.
-- PHP 8.2 y Composer para trabajar con `backend/laravel`.
+- Node.js 24 or newer.
+- PHP and Composer are planned for the future real Laravel API, but they are not required for the initial preview.
 
-## Ejecucion
+## Run
 
 ```bash
 npm run dev
 ```
 
-Luego abre la URL que muestre el servidor local.
+Then open the local server URL.
 
-Para probar la nueva foundation React/TypeScript de Passenger, instala dependencias y ejecuta:
-
-```bash
-npm run dev:passenger
-```
-
-La app legacy de Passenger sigue disponible en `/move` con el servidor actual.
-
-## Pruebas
+## Tests
 
 ```bash
 npm test
 ```
 
-## Estructura
+## Structure
 
-- `apps/website` - sitio publico comercial.
-- `apps/passenger-pwa` - experiencia mobile-first para pasajeros.
-- `apps/driver-pwa` - herramienta operacional para conductores.
-- `apps/admin-dashboard` - base del futuro Encore Operations Center.
-- `packages/shared` - contratos, reglas, datos mock y componentes reutilizables del preview.
-- `backend/laravel` - foundation Laravel para la API central real.
-- `docs` - documentacion arquitectonica y de migracion.
-- `tests` - pruebas de reglas criticas.
+- `apps/website` - public website.
+- `apps/passenger-pwa` - mobile-first passenger experience.
+- `apps/driver-pwa` - operational interface for drivers.
+- `apps/admin-dashboard` - administrative dashboard.
+- `packages/shared` - shared contracts, rules, and reusable components.
+- `backend/laravel` - reference and preparation for the real central API.
+- `docs` - architecture documentation.
+- `tests` - critical rule tests.
 
-## Documentacion clave
+## Environment Variables
 
-- [Architecture](docs/architecture.md)
-- [API](docs/api.md)
-- [Business Rules](docs/business-rules.md)
-- [Database](docs/database.md)
-- [Development](docs/development.md)
-- [Repository Health](docs/repository-health.md)
-
-## Variables de entorno
-
-Revisa `.env.example` para los valores base del preview y la futura API.
+Check `.env.example` for the preview baseline values and the future API.

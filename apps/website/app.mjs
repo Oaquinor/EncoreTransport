@@ -20,13 +20,13 @@ function destinationCard(route, trip, index) {
       <h3>${route.origin} → ${route.destination}</h3>
       <p>${trip.highlights.join(' · ')}</p>
       <div class="destination-card__meta">
-        <span>${trip.remainingSeats ?? 0} lugares disponibles</span>
-        <span>${trip.serviceClass ?? 'Exprés'}</span>
+        <span>${trip.remainingSeats ?? 0} seats left</span>
+        <span>${trip.serviceClass ?? 'Express'}</span>
       </div>
       <div class="destination-card__divider"></div>
       <div class="destination-card__footer">
         <strong>${formatCurrency(trip.baseFare)}</strong>
-        <a class="button button--ghost button--ghost-light" href="/passenger/?origin=${encodeURIComponent(route.origin)}&destination=${encodeURIComponent(route.destination)}">Reservar</a>
+        <a class="button button--ghost button--ghost-light" href="/passenger/?origin=${encodeURIComponent(route.origin)}&destination=${encodeURIComponent(route.destination)}">Book</a>
       </div>
     </article>
   `;
