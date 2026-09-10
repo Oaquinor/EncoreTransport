@@ -15,7 +15,7 @@
 }
 
 .driver-card {
-  border-radius: 28px;
+  border-radius: var(--radius-lg);
   padding: 18px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -49,7 +49,7 @@
 .driver-badge {
   width: 44px;
   height: 44px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   object-fit: cover;
   background: linear-gradient(135deg, var(--color-primary), var(--road-gray));
 }
@@ -90,7 +90,7 @@
 .driver-hero-image {
   width: 100%;
   margin: 14px 0;
-  border-radius: 22px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-soft);
   aspect-ratio: 16 / 9;
@@ -99,7 +99,7 @@
 
 .trip-state__step {
   padding: 14px 10px;
-  border-radius: 18px;
+  border-radius: var(--radius-md);
   text-align: center;
   background: var(--color-surface-secondary);
   color: var(--color-text-secondary);
@@ -137,7 +137,7 @@
   justify-content: space-between;
   gap: 10px;
   padding: 12px 14px;
-  border-radius: 18px;
+  border-radius: var(--radius-md);
   background: var(--color-surface-secondary);
 }
 
@@ -160,7 +160,7 @@
   justify-content: space-between;
   gap: 10px;
   padding: 12px 14px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: var(--color-surface-secondary);
 }
 
@@ -169,7 +169,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px;
-  border-radius: 18px;
+  border-radius: var(--radius-md);
   background: var(--color-surface-secondary);
 }
 
@@ -179,7 +179,7 @@
 
 .bottom-status {
   padding: 12px 14px;
-  border-radius: 18px;
+  border-radius: var(--radius-md);
   background: var(--color-primary-light);
   color: var(--color-primary-dark);
   font-weight: 700;

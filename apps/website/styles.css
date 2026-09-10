@@ -32,7 +32,7 @@
   left: -140px;
   background: radial-gradient(circle, rgba(140, 153, 166, 0.22), transparent 64%);
 }
-
+  border-radius: var(--radius-lg);
 .website-header {
   display: flex;
   align-items: center;
@@ -45,14 +45,14 @@
   color: #102033;
 }
 
-.brand-logo,
+  border-radius: var(--radius-lg);
 .brand-logo-hero {
   display: block;
 }
 
 .brand-logo--small {
   width: 48px;
-  height: 48px;
+  border-radius: var(--radius-lg);
 }
 
 .brand-logo-hero {
@@ -61,7 +61,7 @@
 }
 
 .brand--light span {
-  display: inline-grid;
+  border-radius: var(--radius-lg);
   line-height: 1;
 }
 
@@ -76,7 +76,7 @@
 .website-nav {
   display: flex;
   align-items: center;
-  gap: 18px;
+  border-radius: var(--radius-lg);
   flex-wrap: wrap;
 }
 
@@ -133,7 +133,7 @@
   content: '';
   position: absolute;
   inset: 20px;
-  border-radius: 24px;
+  border-radius: var(--radius-lg);
   border: 1px solid rgba(57, 169, 225, 0.08);
   pointer-events: none;
 }
@@ -144,7 +144,7 @@
   gap: 10px;
   padding: 10px 14px;
   border: 1px solid rgba(57, 169, 225, 0.2);
-  border-radius: 18px;
+  border-radius: var(--radius-md);
   margin: 12px 0 16px;
   background: rgba(223, 243, 251, 0.7);
   color: var(--color-text-primary);
@@ -198,7 +198,7 @@
 
 .metric-card {
   padding: 18px;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   animation: rise-in 700ms ease both;
 }
 
@@ -219,7 +219,7 @@
   color: #ffffff;
   position: relative;
   overflow: hidden;
-  border-radius: 22px;
+  border-radius: var(--radius-lg);
   animation: float-soft 6.5s ease-in-out infinite;
 }
 
@@ -232,7 +232,7 @@
   display: grid;
   gap: 12px;
   padding: 18px;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background: linear-gradient(135deg, rgba(20, 34, 50, 0.94), rgba(30, 127, 179, 0.9));
   color: #ffffff;
   box-shadow: var(--shadow);
@@ -255,7 +255,7 @@
   width: 100%;
   height: 170px;
   object-fit: cover;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
 }
@@ -269,7 +269,7 @@
 
 .reservation-preview__chip {
   padding: 8px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -277,7 +277,7 @@
 
 .reservation-preview__card {
   padding: 18px;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   display: grid;
   gap: 12px;
   background: rgba(255, 255, 255, 0.08);
@@ -344,7 +344,7 @@
   position: relative;
   overflow: hidden;
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-  border-radius: 22px;
+  border-radius: var(--radius-lg);
   transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
 }
 
@@ -361,7 +361,7 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   border: 1px solid rgba(255, 255, 255, 0.55);
   background: linear-gradient(135deg, rgba(223, 243, 251, 0.9), rgba(238, 243, 247, 0.9));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -375,7 +375,7 @@
   display: grid;
   gap: 2px;
   padding: 14px 16px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: linear-gradient(135deg, rgba(20, 34, 50, 0.88), rgba(20, 34, 50, 0.22));
   color: #ffffff;
   backdrop-filter: blur(10px);
@@ -430,7 +430,7 @@
 .service-card {
   padding: 22px;
   color: var(--color-text-primary);
-  border-radius: 22px;
+  border-radius: var(--radius-lg);
   transition: transform 220ms ease, box-shadow 220ms ease;
 }
 
@@ -438,7 +438,7 @@
 .contact-card__image {
   width: 100%;
   display: block;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   object-fit: cover;
   margin: 14px 0 16px;
 }
@@ -459,7 +459,7 @@
   display: grid;
   gap: 10px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 246, 250, 0.98));
-  border-radius: 22px;
+  border-radius: var(--radius-lg);
 }
 
 .testimonial-card p {
@@ -495,7 +495,7 @@
 .contact-card {
   padding: 24px;
   color: var(--color-text-primary);
-  border-radius: 22px;
+  border-radius: var(--radius-lg);
 }
 
 .story-card--accent {
@@ -544,7 +544,7 @@
   display: block;
   width: 72px;
   height: 4px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.5);
   margin-bottom: 18px;
 }
@@ -610,7 +610,7 @@
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.12), transparent 30%),
     linear-gradient(135deg, rgba(20, 34, 50, 0.98), rgba(57, 169, 225, 0.92));
   color: #ffffff;
-  border-radius: 24px;
+  border-radius: var(--radius-lg);
 }
 
 .trust-band h2,
@@ -628,7 +628,7 @@
 
 .trust-band__points div {
   padding: 16px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.12);
 }

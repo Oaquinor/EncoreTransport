@@ -34,7 +34,7 @@
 .passenger-logo {
   width: 44px;
   height: 44px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: linear-gradient(135deg, var(--color-primary), var(--road-gray));
   box-shadow: 0 12px 24px rgba(57, 169, 225, 0.18);
 }
@@ -51,7 +51,7 @@
 
 .passenger-stage,
 .passenger-card {
-  border-radius: 28px;
+  border-radius: var(--radius-lg);
 }
 
 .passenger-stage {
@@ -81,7 +81,6 @@
 }
 
 .splash-copy {
-  margin: 14px auto 0;
   color: var(--color-text-secondary);
   max-width: 28ch;
 }
@@ -99,7 +98,7 @@
 .splash-hero-image {
   width: 100%;
   max-width: 360px;
-  border-radius: 26px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-soft);
   object-fit: cover;
@@ -134,7 +133,7 @@
   gap: 8px;
   align-items: center;
   padding: 10px 12px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: var(--color-primary-light);
   color: var(--color-primary-dark);
 }
@@ -152,7 +151,7 @@
 
 .stepper__item {
   padding: 10px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   text-align: center;
   background: var(--color-surface-secondary);
   color: var(--color-text-secondary);
@@ -236,7 +235,7 @@
 .seat {
   min-height: 44px;
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--radius-sm);
   background: var(--color-surface-secondary);
   color: var(--color-text-primary);
   cursor: pointer;
@@ -305,7 +304,7 @@
 .confirmation-hero__icon {
   width: 62px;
   height: 62px;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   background: linear-gradient(135deg, var(--color-success), var(--color-primary));
   display: grid;
   place-items: center;
@@ -318,14 +317,14 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   padding: 10px;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
 }
 
 .bottom-nav__item {
   padding: 10px 8px;
-  border-radius: 14px;
+  border-radius: var(--radius-sm);
   text-align: center;
   color: var(--color-text-secondary);
   font-size: 0.72rem;

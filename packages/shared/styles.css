@@ -127,14 +127,14 @@ textarea {
   gap: 16px;
 }
 
-.grid--2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
+    --radius-lg: 12px;
+    --radius-md: 8px;
+    --radius-sm: 6px;
 
 .grid--3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-
+    border-radius: var(--radius-md);
 .card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -145,7 +145,7 @@ textarea {
 
 .card--pad {
   padding: 20px;
-}
+    border-radius: var(--radius-md);
 
 .card--tight {
   padding: 16px;
@@ -155,7 +155,7 @@ textarea {
   margin: 0 0 8px;
   font-size: 1.1rem;
 }
-
+    border-radius: var(--radius-md);
 .section-copy {
   margin: 0;
   color: var(--color-text-secondary);
