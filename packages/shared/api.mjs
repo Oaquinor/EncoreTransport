@@ -1,87 +1,61 @@
-import { calculateOccupancy, createBookingQuote, getAvailableSeats, reserveSeats, searchTrips } from './business-rules.mjs';
-import { bookingStatuses, driverStatuses, formatCurrency } from './domain.mjs';
-import {
-  mockBuses,
-  mockDashboardMetrics,
-  mockDrivers,
-  mockIncidents,
-  mockInventory,
-  mockPassengers,
-  mockPassengerJourney,
-  mockRoutes,
-  mockTrips
-} from './mock-data.mjs';
+import { appConfig } from './app-config.mjs';
+import { formatCurrency } from './domain.mjs';
 
-const delay = (value, timeout = 260) => new Promise((resolve) => setTimeout(() => resolve(structuredClone(value)), timeout));
+async function requestJson(path, options) {
+  const response = await fetch(`${appConfig.apiBaseUrl}${path}`, {
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    ...options
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed for ${path}`);
+  }
+
+  return response.json();
+}
 
 export async function fetchAppShell() {
-  return delay({ routes: mockRoutes, buses: mockBuses });
+  const payload = await requestJson('/routes');
+  const routes = Array.isArray(payload.data) ? payload.data : [];
+  return { routes };
 }
 
 export async function fetchPassengerSearch(filters) {
-  const trips = searchTrips(mockTrips, filters).map((trip) => ({
+  const payload = await requestJson(`/trips/search?origin=${encodeURIComponent(filters.origin ?? '')}&destination=${encodeURIComponent(filters.destination ?? '')}&date=${encodeURIComponent(filters.date ?? '')}&passengers=${encodeURIComponent(filters.passengers ?? 1)}`);
+  const trips = (payload.data ?? payload.trips ?? []).map((trip) => ({
     ...trip,
-    availableSeats: getAvailableSeats(trip).length,
-    priceLabel: formatCurrency(createBookingQuote(trip, filters.passengers ?? 1).total)
+    availableSeats: trip.availableSeats ?? trip.seats_available ?? 0,
+    priceLabel: trip.priceLabel ?? formatCurrency(trip.price_per_passenger ?? trip.price ?? 0)
   }));
 
-  return delay({ filters, trips, total: trips.length });
+  return { filters, trips, total: trips.length };
 }
 
 export async function fetchTripDetails(tripId) {
-  const trip = mockTrips.find((entry) => entry.id === tripId) ?? mockTrips[0];
-  const bus = mockBuses.find((entry) => entry.id === trip.busId) ?? mockBuses[0];
-  const driver = mockDrivers.find((entry) => entry.id === trip.driverId) ?? mockDrivers[0];
-  return delay({
-    trip: {
-      ...trip,
-      occupancyLabel: `${calculateOccupancy(trip.seatMap.filter((seat) => seat.reserved).length, trip.seatMap.length)}%`,
-      bus,
-      driver,
-      availableSeats: getAvailableSeats(trip)
-    }
-  });
+  const payload = await requestJson(`/trips/${encodeURIComponent(tripId)}`);
+  return { trip: payload.data ?? payload.trip ?? null };
 }
 
 export async function reserveTripSeats(tripId, seatIds, passengerCount) {
-  const trip = mockTrips.find((entry) => entry.id === tripId) ?? mockTrips[0];
-  const reservation = reserveSeats(trip, seatIds);
-  const bookingQuote = createBookingQuote(trip, passengerCount);
-  const booking = {
-    id: `booking-${tripId}`,
-    status: bookingStatuses.pendingPayment,
-    seatIds,
-    passengerCount,
-    total: bookingQuote.total,
-    totalLabel: bookingQuote.totalLabel,
-    createdAt: new Date().toISOString()
-  };
+  const payload = await requestJson('/bookings', {
+    method: 'POST',
+    body: JSON.stringify({ trip_id: tripId, seat_numbers: seatIds, passenger_count: passengerCount })
+  });
 
-  return delay({ booking, reservation });
+  return payload;
 }
 
 export async function fetchPassengerJourney() {
-  return delay(mockPassengerJourney);
+  const payload = await requestJson('/bookings');
+  return payload.data ?? payload;
 }
 
 export async function fetchDriverContext() {
-  return delay({
-    driver: mockDrivers[1],
-    currentTrip: mockTrips[0],
-    passengers: mockPassengers,
-    tripState: driverStatuses.next
-  });
+  const payload = await requestJson('/driver/me');
+  return payload.data ?? payload;
 }
 
 export async function fetchAdminDashboard() {
-  return delay({
-    metrics: mockDashboardMetrics,
-    trips: mockTrips,
-    buses: mockBuses,
-    routes: mockRoutes,
-    drivers: mockDrivers,
-    passengers: mockPassengers,
-    inventory: mockInventory,
-    incidents: mockIncidents
-  });
+  const payload = await requestJson('/admin/dashboard');
+  return payload.data ?? payload;
 }

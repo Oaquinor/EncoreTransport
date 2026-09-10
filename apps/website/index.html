@@ -20,29 +20,29 @@
         </a>
 
         <nav class="website-nav" aria-label="Secciones principales">
-          <a href="#home">Home</a>
-          <a href="#destinos">Destinos</a>
-          <a href="#servicios">Servicios</a>
-          <a href="#nosotros">Nosotros</a>
-          <a href="#faq">FAQ</a>
-          <a href="#contacto">Contacto</a>
+          <a href="#home">Inicio</a>
+          <a href="#services">Servicios</a>
+          <a href="#process">Cómo funciona</a>
+          <a href="#destinations">Destinos</a>
+          <a href="#testimonials">Testimonios</a>
+          <a href="#faq">Preguntas</a>
         </nav>
 
-        <a class="button button--primary" href="/move/">Reservar ahora</a>
+        <a class="button button--primary" href="/move/">Reservar viaje</a>
       </header>
 
       <main class="app-shell website-layout motion-slide-up" id="home">
-        <section class="hero card card--pad hero-panel">
-          <div>
-            <div class="eyebrow">Transporte premium de larga distancia</div>
-            <h1 class="page-title page-title--light">Viajar con confianza empieza antes de subir al autobús.</h1>
+        <section class="hero card hero-panel">
+          <div class="hero-copy card--pad">
+            <div class="eyebrow">Viajes puerta a puerta</div>
+            <h1 class="page-title page-title--light">Viaja cómodo y seguro a tu destino con Encore Transport.</h1>
             <p class="page-lead">
-              Presentamos rutas seleccionadas, servicio confiable, atención cercana y una experiencia digital que conecta naturalmente con la reserva.
+              Servicio de transporte cómodo y seguro entre los principales destinos. Reserva en minutos, sin complicaciones y con información clara.
             </p>
 
             <div class="hero-actions">
-              <a class="button button--primary" href="/move/?origin=Ciudad%20de%20México&destination=Puebla">Comenzar reserva</a>
-              <a class="button button--ghost" href="#destinos">Explorar destinos</a>
+              <a class="button button--primary" href="/move/?origin=Boston&destination=New%20York">Reservar ahora</a>
+              <a class="button button--ghost" href="#process">Cómo funciona</a>
             </div>
 
             <div class="hero-metrics">
@@ -61,74 +61,152 @@
             </div>
           </div>
 
-          <aside class="hero-aside card card--tight">
+          <aside class="hero-aside card--pad">
             <div class="reservation-preview">
               <div class="reservation-preview__header">
                 <span class="badge badge--primary">Reserva rápida</span>
                 <span class="reservation-preview__chip">Rápida</span>
               </div>
-              <div class="reservation-preview__card">
-                <label>
-                  <span>Origen</span>
-                  <div class="field">Ciudad de México</div>
-                </label>
-                <label>
-                  <span>Destino</span>
-                  <div class="field">Puebla</div>
-                </label>
-                <label>
-                  <span>Fecha</span>
-                  <div class="field">Sábado, 12 sep</div>
-                </label>
-                <a class="button button--primary button--block" href="/move/?origin=Ciudad%20de%20México&destination=Puebla">Ir a reservar</a>
+              <img class="reservation-preview__image" src="/website/public/yendo-hero-car.png" alt="Encore Transport en ruta" />
+              <div class="reservation-preview__routeboard">
+                <div>
+                  <small>Ruta</small>
+                  <strong>Boston → New York</strong>
+                </div>
+                <div>
+                  <small>Salida</small>
+                  <strong>Sáb, 12 sep · 08:30</strong>
+                </div>
+                <div>
+                  <small>Disponibilidad</small>
+                  <strong>12 lugares disponibles</strong>
+                </div>
               </div>
+              <a class="button button--primary button--block" href="/move/?origin=Boston&destination=New%20York">Abrir app de pasajero</a>
             </div>
           </aside>
         </section>
 
-        <section id="destinos" class="section-grid">
+        <section id="process" class="section-grid process-section">
           <div class="section-heading">
             <div>
-              <div class="eyebrow">Destinos destacados</div>
-              <h2>Conexiones pensadas para moverse con fluidez.</h2>
+              <div class="eyebrow">Cómo funciona</div>
+              <h2>Reservar es tan sencillo como escribir tu viaje.</h2>
             </div>
-            <p>Rutas con información clara, tiempos confiables y acceso directo al flujo de reserva.</p>
+            <p>Selecciona tu origen, destino y horario. Confirmamos tu reserva y te llevamos directo al viaje.</p>
+          </div>
+          <div class="grid grid--3 process-grid">
+            <article class="card card--pad process-card">
+              <span class="service-icon">01</span>
+              <h3>Escribe tu origen</h3>
+              <p>Dinos desde dónde sales, hacia dónde vas y cuándo quieres viajar.</p>
+            </article>
+            <article class="card card--pad process-card">
+              <span class="service-icon">02</span>
+              <h3>Confirmamos tu viaje</h3>
+              <p>Te damos los detalles de la reserva, el horario y la información del chofer.</p>
+            </article>
+            <article class="card card--pad process-card">
+              <span class="service-icon">03</span>
+              <h3>Te recogemos</h3>
+              <p>Llega directo a tu destino sin pasos innecesarios ni terminales.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="destinations" class="section-grid">
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow">Destinos</div>
+              <h2>Viajes puerta a puerta entre los principales destinos.</h2>
+            </div>
+            <p>Rutas con horarios claros, buena disponibilidad y acceso directo a reservar.</p>
           </div>
           <div class="grid grid--3" id="destinationGrid"></div>
         </section>
 
-        <section id="servicios" class="section-grid">
+        <section class="trust-band card card--pad">
+          <div>
+            <div class="eyebrow">Por qué Encore Move</div>
+            <h2>Un servicio pensado para verse moderno y operar con claridad.</h2>
+          </div>
+          <div class="trust-band__points">
+            <div>
+              <strong>Rutas claras</strong>
+              <span>Todo se entiende de inmediato.</span>
+            </div>
+            <div>
+              <strong>Marca visible</strong>
+              <span>El producto no se pierde en la interfaz.</span>
+            </div>
+            <div>
+              <strong>Datos reales</strong>
+              <span>La vista se conecta al backend.</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="services" class="section-grid">
           <div class="section-heading">
             <div>
-              <div class="eyebrow">Servicios</div>
-              <h2>Una experiencia que transmite confianza desde el primer clic.</h2>
+              <div class="eyebrow">Servicios de transporte</div>
+              <h2>Opciones de viaje para distintas necesidades.</h2>
             </div>
           </div>
           <div class="grid grid--3">
             <article class="service-card card card--pad">
               <span class="service-icon">01</span>
-              <h3>Viajes interurbanos</h3>
-              <p>Horarios claros, disponibilidad visible y acompañamiento en la reserva.</p>
+              <img class="service-card__image" src="/website/public/yendo-shared.jpg" alt="Viajes compartidos" />
+              <h3>Viajes compartidos</h3>
+              <p>La opción más económica para viajar cómodo y seguro con otros pasajeros.</p>
             </article>
             <article class="service-card card card--pad">
               <span class="service-icon">02</span>
-              <h3>Atención asistida</h3>
-              <p>Canales de contacto y soporte para resolver dudas antes y durante el viaje.</p>
+              <img class="service-card__image" src="/website/public/yendo-private.jpg" alt="Viajes privados" />
+              <h3>Viajes privados</h3>
+              <p>Todo el vehículo para ti y tu grupo, sin paradas intermedias.</p>
             </article>
             <article class="service-card card card--pad">
               <span class="service-icon">03</span>
-              <h3>Operación confiable</h3>
-              <p>Información consistente para pasajeros, conductores y administración.</p>
+              <img class="service-card__image" src="/website/public/yendo-parcel.jpg" alt="Encomiendas" />
+              <h3>Encomiendas</h3>
+              <p>Envía o recibe paquetería con entrega directa entre destinos.</p>
             </article>
           </div>
         </section>
 
-        <section id="nosotros" class="section-grid split-layout">
+        <section id="testimonials" class="section-grid testimonial-grid">
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow">Testimonios</div>
+              <h2>Lo que dicen quienes ya viajaron.</h2>
+            </div>
+          </div>
+          <div class="grid grid--3">
+            <article class="card card--pad testimonial-card">
+              <p>“Me gusta mucho el servicio, es muy conveniente no tener que esperar taxi afuera de la casa.”</p>
+              <strong>Cecilia Z.</strong>
+              <span>Manta</span>
+            </article>
+            <article class="card card--pad testimonial-card">
+              <p>“Yendo me facilita mover inventario entre mis locales de Manta y Portoviejo.”</p>
+              <strong>Carlos M.</strong>
+              <span>Portoviejo</span>
+            </article>
+            <article class="card card--pad testimonial-card">
+              <p>“Me sirve mucho para hacerme mi tratamiento médico en Manta.”</p>
+              <strong>Laura R.</strong>
+              <span>Portoviejo</span>
+            </article>
+          </div>
+        </section>
+
+        <section id="about" class="section-grid split-layout">
           <article class="card card--pad story-card">
             <div class="eyebrow">Nosotros</div>
-            <h2>Una marca enfocada en claridad, seguridad y buena experiencia.</h2>
+            <h2>Transporte cómodo y seguro para moverte sin complicaciones.</h2>
             <p>
-              El sitio público presenta la propuesta de valor sin mezclar la complejidad operativa. Su función es informar, generar confianza y conducir al pasajero hacia la experiencia de reserva.
+              Encore Transport ofrece una experiencia directa, clara y visualmente moderna para acercarte a tu destino sin perder tiempo.
             </p>
           </article>
           <article class="card card--pad story-card story-card--soft">
@@ -144,7 +222,7 @@
           <div class="section-heading">
             <div>
               <div class="eyebrow">Preguntas frecuentes</div>
-              <h2>Dudas comunes respondidas con simpleza.</h2>
+              <h2>Respuestas rápidas antes de reservar.</h2>
             </div>
           </div>
           <div class="faq-list">
@@ -163,14 +241,14 @@
           </div>
         </section>
 
-        <section id="contacto" class="section-grid contact-grid">
+        <section id="contact" class="section-grid contact-grid">
           <div class="card card--pad contact-card">
             <div class="eyebrow">Contacto</div>
             <h2>¿Necesitas ayuda para tu próximo viaje?</h2>
             <p>Canales de contacto preparados para acompañarte antes, durante y después del viaje.</p>
             <div class="contact-actions">
-              <a class="button button--primary" href="mailto:hola@encoretransport.mx">Escribir correo</a>
-              <a class="button button--ghost button--ghost-light" href="/admin/">Ver operación</a>
+              <a class="button button--primary" href="https://wa.me/+593981897842">Escríbenos por WhatsApp</a>
+              <a class="button button--ghost button--ghost-light" href="/admin/">Ver operaciones</a>
             </div>
           </div>
           <div class="card card--pad contact-card contact-card--info">
@@ -180,6 +258,23 @@
             <a class="button button--primary button--block" href="/move/">Reservar viaje</a>
           </div>
         </section>
+
+        <footer class="website-footer">
+          <div class="website-footer__brand">
+            <img src="/logo.svg" alt="Encore Transport" />
+            <div>
+              <strong>Encore Transport</strong>
+              <span>Servicio puerta a puerta</span>
+            </div>
+          </div>
+          <div class="website-footer__links">
+            <a href="#services">Servicios</a>
+            <a href="#destinations">Destinos</a>
+            <a href="#faq">Preguntas</a>
+            <a href="https://wa.me/+593981897842">WhatsApp</a>
+          </div>
+          <span>Reservas impulsadas por Encore Move</span>
+        </footer>
       </main>
     </div>
 

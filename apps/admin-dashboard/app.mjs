@@ -16,11 +16,11 @@ const modules = [
   { id: 'dashboard', label: 'Control' },
   { id: 'trips', label: 'Viajes' },
   { id: 'buses', label: 'Buses' },
-  { id: 'drivers', label: 'Conductores' },
-  { id: 'bookings', label: 'Reservas' },
-  { id: 'inventory', label: 'Inventario' },
-  { id: 'reports', label: 'Reportes' },
-  { id: 'users', label: 'Usuarios' },
+  { id: 'drivers', label: 'Drivers' },
+  { id: 'bookings', label: 'Bookings' },
+  { id: 'inventory', label: 'Inventory' },
+  { id: 'reports', label: 'Reports' },
+  { id: 'users', label: 'Users' },
   { id: 'roles', label: 'Roles' }
 ];
 
@@ -42,12 +42,12 @@ function render() {
       <section class="admin-main">
         <header class="admin-topbar">
           <div>
-            <div class="eyebrow">Operación centralizada</div>
+            <div class="eyebrow">Centralized operations</div>
             <h1 class="page-title">${getModuleTitle()}</h1>
           </div>
           <div class="admin-controls">
-            <input class="field" id="searchInput" placeholder="Buscar..." value="${state.search}" />
-            <button class="button button--ghost" id="refreshButton">Actualizar</button>
+            <input class="field" id="searchInput" placeholder="Search..." value="${state.search}" />
+            <button class="button button--ghost" id="refreshButton">Refresh</button>
           </div>
         </header>
 
@@ -67,10 +67,10 @@ function getModuleTitle() {
 function renderLoading() {
   return `
     <div class="grid grid--3">
-      ${statCard('Viajes hoy', '—', 'Cargando...')}
-      ${statCard('Reservas', '—', 'Cargando...')}
-      ${statCard('Ingresos', '—', 'Cargando...')}
-      ${statCard('Incidencias', '—', 'Cargando...')}
+      ${statCard('Today\'s trips', '—', 'Loading...')}
+      ${statCard('Bookings', '—', 'Loading...')}
+      ${statCard('Revenue', '—', 'Loading...')}
+      ${statCard('Incidents', '—', 'Loading...')}
     </div>
   `;
 }
@@ -85,20 +85,20 @@ function renderContent() {
 
   return `
     <section class="admin-stats">
-      ${statCard('Viajes hoy', dashboard.metrics.tripsToday, 'Operación activa')}
-      ${statCard('Reservas', dashboard.metrics.bookings, 'Confirmadas y pendientes')}
-      ${statCard('Ingresos', formatCurrency(dashboard.metrics.revenue), 'Monitoreo diario')}
-      ${statCard('Ocupación', `${dashboard.metrics.occupancy}%`, 'Capacidad usada')}
+      ${statCard('Today\'s trips', dashboard.metrics.tripsToday, 'Active operations')}
+      ${statCard('Bookings', dashboard.metrics.bookings, 'Confirmed and pending')}
+      ${statCard('Revenue', formatCurrency(dashboard.metrics.revenue), 'Daily tracking')}
+      ${statCard('Occupancy', `${dashboard.metrics.occupancy}%`, 'Capacity used')}
     </section>
 
     <section class="admin-columns">
       <article class="admin-panel admin-panel--pad">
         <div class="module-view__header">
           <div>
-            <div class="eyebrow">Tendencia</div>
-            <h2>Ocupación y operación</h2>
+            <div class="eyebrow">Trend</div>
+            <h2>Occupancy and operations</h2>
           </div>
-          <span class="badge badge--info">Actualizado hoy</span>
+          <span class="badge badge--info">Updated today</span>
         </div>
         <img class="admin-fleet-image" src="/assets/media/Autobus.png" alt="Autobús de Encore Transport" />
         <div class="chart-bars">
@@ -109,14 +109,14 @@ function renderContent() {
       <article class="admin-panel admin-panel--pad">
         <div class="module-view__header">
           <div>
-            <div class="eyebrow">Alertas</div>
-            <h2>Estado operacional</h2>
+            <div class="eyebrow">Alerts</div>
+            <h2>Operational status</h2>
           </div>
         </div>
         <div class="feed">
-          <div class="feed-item"><strong>${dashboard.metrics.pendingBookings}</strong> reservas pendientes de confirmación</div>
-          <div class="feed-item"><strong>${dashboard.metrics.availableBuses}</strong> buses disponibles para programación</div>
-          <div class="feed-item"><strong>${dashboard.metrics.incidents}</strong> incidencias activas requieren atención</div>
+          <div class="feed-item"><strong>${dashboard.metrics.pendingBookings}</strong> bookings pending confirmation</div>
+          <div class="feed-item"><strong>${dashboard.metrics.availableBuses}</strong> buses available for scheduling</div>
+          <div class="feed-item"><strong>${dashboard.metrics.incidents}</strong> active incidents require attention</div>
         </div>
       </article>
     </section>
@@ -128,21 +128,21 @@ function renderContent() {
 function renderModuleTables(filteredTrips, filteredBuses, filteredDrivers, filteredPassengers, filteredInventory) {
   switch (state.activeModule) {
     case 'trips':
-      return tableBlock('Viajes', filteredTrips.map((trip) => [trip.routeName, trip.departureTime, `${trip.occupancy}%`, trip.status]), ['Ruta', 'Salida', 'Ocupación', 'Estado']);
+      return tableBlock('Trips', filteredTrips.map((trip) => [trip.routeName, trip.departureTime, `${trip.occupancy}%`, trip.status]), ['Route', 'Departure', 'Occupancy', 'Status']);
     case 'buses':
-      return tableBlock('Buses', filteredBuses.map((bus) => [bus.name, bus.plate, bus.capacity, bus.status]), ['Unidad', 'Placa', 'Capacidad', 'Estado']);
+      return tableBlock('Buses', filteredBuses.map((bus) => [bus.name, bus.plate, bus.capacity, bus.status]), ['Unit', 'Plate', 'Capacity', 'Status']);
     case 'drivers':
-      return tableBlock('Conductores', filteredDrivers.map((driver) => [driver.name, driver.license, driver.status]), ['Nombre', 'Licencia', 'Estado']);
+      return tableBlock('Drivers', filteredDrivers.map((driver) => [driver.name, driver.license, driver.status]), ['Name', 'License', 'Status']);
     case 'bookings':
-      return tableBlock('Reservas', filteredPassengers.map((passenger) => [passenger.name, passenger.idNumber, passenger.status]), ['Pasajero', 'Documento', 'Estado']);
+      return tableBlock('Bookings', filteredPassengers.map((passenger) => [passenger.name, passenger.idNumber, passenger.status]), ['Passenger', 'Document', 'Status']);
     case 'inventory':
-      return tableBlock('Inventario', filteredInventory.map((item) => [item.name, `${item.quantity} ${item.unit}`, item.status]), ['Item', 'Cantidad', 'Estado']);
+      return tableBlock('Inventory', filteredInventory.map((item) => [item.name, `${item.quantity} ${item.unit}`, item.status]), ['Item', 'Quantity', 'Status']);
     case 'reports':
       return reportsPanel();
     case 'users':
-      return placeholderPanel('Usuarios', 'Preparado para la administración de cuentas y accesos.');
+      return placeholderPanel('Users', 'Prepared for account and access administration.');
     case 'roles':
-      return placeholderPanel('Roles y permisos', 'Preparado para RBAC, policies y permisos granulares.');
+      return placeholderPanel('Roles and permissions', 'Prepared for RBAC, policies, and granular permissions.');
     default:
       return dashboardPanel(filteredTrips, filteredBuses, filteredDrivers, filteredPassengers, filteredInventory);
   }
@@ -153,14 +153,14 @@ function dashboardPanel(filteredTrips, filteredBuses, filteredDrivers, filteredP
     <section class="admin-panel admin-panel--pad module-view">
       <div class="module-view__header">
         <div>
-          <div class="eyebrow">Resumen</div>
-          <h2>Operación diaria</h2>
+          <div class="eyebrow">Summary</div>
+          <h2>Daily operations</h2>
         </div>
-        <span class="badge badge--primary">${state.dashboard.metrics.tripsToday} viajes</span>
+        <span class="badge badge--primary">${state.dashboard.metrics.tripsToday} trips</span>
       </div>
       <div class="table-wrap">
         <table class="table admin-table">
-          <thead><tr><th>Ruta</th><th>Bus</th><th>Conductor</th><th>Ocupación</th><th>Estado</th></tr></thead>
+          <thead><tr><th>Route</th><th>Bus</th><th>Driver</th><th>Occupancy</th><th>Status</th></tr></thead>
           <tbody>
             ${filteredTrips
               .map((trip) => `<tr><td>${trip.routeName}</td><td>${trip.busId}</td><td>${trip.driverId}</td><td>${trip.occupancy}%</td><td><span class="row-action" data-row-trip="${trip.id}">${trip.status}</span></td></tr>`)
@@ -171,13 +171,13 @@ function dashboardPanel(filteredTrips, filteredBuses, filteredDrivers, filteredP
     </section>
     <section class="admin-columns">
       <article class="admin-panel admin-panel--pad">
-        <h3>Buses disponibles</h3>
+        <h3>Available buses</h3>
         <div class="grid" style="gap:10px;">
-          ${filteredBuses.map((bus) => `<div class="feed-item"><strong>${bus.name}</strong><div>${bus.plate} · ${bus.capacity} asientos</div></div>`).join('')}
+          ${filteredBuses.map((bus) => `<div class="feed-item"><strong>${bus.name}</strong><div>${bus.plate} · ${bus.capacity} seats</div></div>`).join('')}
         </div>
       </article>
       <article class="admin-panel admin-panel--pad">
-        <h3>Incidencias y pasajeros</h3>
+        <h3>Incidents and passengers</h3>
         <div class="grid" style="gap:10px;">
           ${filteredPassengers.slice(0, 3).map((passenger) => `<div class="feed-item"><strong>${passenger.name}</strong><div>${passenger.status}</div></div>`).join('')}
         </div>
@@ -237,19 +237,19 @@ function reportsPanel() {
     <section class="admin-panel admin-panel--pad module-view">
       <div class="module-view__header">
         <div>
-          <div class="eyebrow">Reportes</div>
-          <h2>Filtros y exportación futura</h2>
+          <div class="eyebrow">Reports</div>
+          <h2>Filters and future export</h2>
         </div>
         <div class="admin-controls">
-          <select class="select"><option>Hoy</option><option>Rango de fechas</option></select>
-          <button class="button button--ghost">Exportar CSV</button>
+          <select class="select"><option>Today</option><option>Date range</option></select>
+          <button class="button button--ghost">Export CSV</button>
         </div>
       </div>
       <div class="grid grid--2">
-        <div class="feed-item"><strong>Viajes</strong><div>${dashboard.trips.length} registros disponibles</div></div>
-        <div class="feed-item"><strong>Reservas</strong><div>${dashboard.metrics.bookings} consolidaciones</div></div>
-        <div class="feed-item"><strong>Ingresos</strong><div>${formatCurrency(dashboard.metrics.revenue)}</div></div>
-        <div class="feed-item"><strong>Ocupación</strong><div>${dashboard.metrics.occupancy}% promedio</div></div>
+        <div class="feed-item"><strong>Trips</strong><div>${dashboard.trips.length} records available</div></div>
+        <div class="feed-item"><strong>Bookings</strong><div>${dashboard.metrics.bookings} consolidations</div></div>
+        <div class="feed-item"><strong>Revenue</strong><div>${formatCurrency(dashboard.metrics.revenue)}</div></div>
+        <div class="feed-item"><strong>Occupancy</strong><div>${dashboard.metrics.occupancy}% average</div></div>
       </div>
     </section>
   `;
@@ -292,16 +292,16 @@ function wireEvents() {
         <div class="detail-dialog__content">
           <div class="detail-dialog__header">
             <div>
-              <div class="eyebrow">Viaje</div>
+              <div class="eyebrow">Trip</div>
               <h3>${trip.routeName}</h3>
             </div>
-            <button class="button button--ghost" id="closeDialog">Cerrar</button>
+            <button class="button button--ghost" id="closeDialog">Close</button>
           </div>
           <div class="grid grid--2">
-            <div class="feed-item"><strong>Salida</strong><div>${formatDateLabel(trip.date)} · ${formatTimeLabel(trip.departureTime)}</div></div>
-            <div class="feed-item"><strong>Ocupación</strong><div>${trip.occupancy}%</div></div>
+            <div class="feed-item"><strong>Departure</strong><div>${formatDateLabel(trip.date)} · ${formatTimeLabel(trip.departureTime)}</div></div>
+            <div class="feed-item"><strong>Occupancy</strong><div>${trip.occupancy}%</div></div>
             <div class="feed-item"><strong>Bus</strong><div>${trip.busId}</div></div>
-            <div class="feed-item"><strong>Conductor</strong><div>${trip.driverId}</div></div>
+            <div class="feed-item"><strong>Driver</strong><div>${trip.driverId}</div></div>
           </div>
         </div>
       `;

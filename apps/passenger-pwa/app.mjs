@@ -24,16 +24,16 @@ const state = {
   selectedSeats: [],
   booking: null,
   search: {
-    origin: initialQuery.get('origin') ?? 'Ciudad de México',
-    destination: initialQuery.get('destination') ?? 'Puebla',
+    origin: initialQuery.get('origin') ?? '',
+    destination: initialQuery.get('destination') ?? '',
     date: initialQuery.get('date') ?? defaultDate,
     passengers: Number(initialQuery.get('passengers') ?? 2)
   },
   passenger: {
-    name: 'María Torres',
-    email: 'maria.torres@mail.com',
-    phone: '55 2088 3399',
-    documentId: 'MX-748211'
+    name: '',
+    email: '',
+    phone: '',
+    documentId: ''
   },
   paymentProgress: 'idle'
 };
@@ -76,11 +76,11 @@ function render() {
         ${renderProgress(currentStepIndex)}
         ${renderScreen()}
 
-        <nav class="bottom-nav" aria-label="Navegación rápida">
-          ${bottomNavItem('Buscar', state.screen === 'search')}
-          ${bottomNavItem('Viaje', state.screen === 'results' || state.screen === 'seat')}
-          ${bottomNavItem('Reserva', state.screen === 'passenger' || state.screen === 'summary')}
-          ${bottomNavItem('Estado', state.screen === 'payment' || state.screen === 'confirmation')}
+        <nav class="bottom-nav" aria-label="Quick navigation">
+          ${bottomNavItem('Search', state.screen === 'search')}
+          ${bottomNavItem('Trip', state.screen === 'results' || state.screen === 'seat')}
+          ${bottomNavItem('Booking', state.screen === 'passenger' || state.screen === 'summary')}
+          ${bottomNavItem('Status', state.screen === 'payment' || state.screen === 'confirmation')}
         </nav>
       </div>
     </div>
@@ -98,12 +98,12 @@ function renderProgress(currentStepIndex) {
   return `
     <section class="passenger-card card card--pad stepper">
       <div class="progress-wrap">
-        <strong>Progreso de la reserva</strong>
+        <strong>Booking progress</strong>
         <span class="badge badge--primary">${percentage}%</span>
       </div>
       ${progressBar(percentage)}
       <div class="stepper__items">
-        ${['Inicio', 'Resultados', 'Asiento', 'Datos', 'Resumen', 'Pago', 'Éxito']
+        ${['Start', 'Results', 'Seat', 'Details', 'Summary', 'Payment', 'Success']
           .map((label, index) => `<div class="stepper__item ${index <= currentStepIndex ? 'stepper__item--active' : ''}">${label}</div>`)
           .join('')}
       </div>
@@ -118,11 +118,11 @@ function renderScreen() {
         <section class="passenger-stage passenger-stage--splash motion-enter">
           <div class="splash-orbit"></div>
           <div>
-            <div class="badge badge--info splash-badge">Instalable · Mobile first</div>
-            <h1 class="splash-title">Encuentra tu viaje en segundos.</h1>
-            <p class="splash-copy">Reserva con una experiencia fluida, clara y pensada para tocar y avanzar sin fricción.</p>
+            <div class="badge badge--info splash-badge">Installable · Mobile first</div>
+            <h1 class="splash-title">Find your trip in seconds.</h1>
+            <p class="splash-copy">Book with a smooth, clear experience designed for fast, intuitive use.</p>
           </div>
-          <img class="splash-hero-image" src="/assets/media/logo.jpeg" alt="Encore Transport en operación" />
+          <img class="splash-hero-image" src="/assets/media/logo.jpeg" alt="Encore Transport in motion" />
         </section>
       `;
     case 'search':
@@ -147,8 +147,8 @@ function renderScreen() {
 function renderSearch() {
   return `
     <section class="passenger-card card card--pad motion-enter">
-      <div class="search-chip">Búsqueda rápida y visual</div>
-      <h2>Selecciona tu próximo trayecto</h2>
+      <div class="search-chip">Quick visual search</div>
+      <h2>Where are you going?</h2>
       <form class="search-form" id="searchForm">
         <div class="search-form__grid search-form__grid--2">
           <label>
@@ -170,7 +170,7 @@ function renderSearch() {
             <input class="field" type="number" min="1" max="8" name="passengers" value="${escapeHtml(state.search.passengers)}" />
           </label>
         </div>
-        <button class="button button--primary button--block" type="submit">Buscar viaje</button>
+        <button class="button button--primary button--block" type="submit">Search trips</button>
       </form>
     </section>
   `;
@@ -187,7 +187,7 @@ function renderResults() {
   }
 
   if (!state.searchResults.length) {
-    return emptyState('No encontramos salidas para esos filtros.', 'Prueba otra ruta, fecha o número de pasajeros.', 'Buscar de nuevo');
+    return emptyState('No trips matched those filters.', 'Try a different route, date, or passenger count.', 'Search again');
   }
 
   return `
@@ -205,13 +205,13 @@ function renderResults() {
               </div>
               <div class="trip-card__meta">
                 <small>${formatTimeLabel(trip.departureTime)} · ${minutesToLabel(trip.durationMinutes)}</small>
-                <small>${trip.availableSeats} asientos disponibles</small>
+                <small>${trip.availableSeats} seats available</small>
               </div>
               <div class="trip-card__footer">
                 <div>${trip.highlights.map((item) => badge(item, 'neutral')).join(' ')}</div>
                 <div class="trip-card__actions">
-                  <button class="button button--ghost" data-detail-trip="${trip.id}">Detalles</button>
-                  <button class="button button--primary" data-select-trip="${trip.id}">Elegir</button>
+                  <button class="button button--ghost" data-detail-trip="${trip.id}">View trip</button>
+                  <button class="button button--primary" data-select-trip="${trip.id}">Select</button>
                 </div>
               </div>
             </article>
@@ -228,7 +228,7 @@ function getTripBadgeTone(status) {
 
 function renderSeatMap() {
   if (!state.selectedTrip) {
-    return emptyState('Selecciona un viaje primero.', 'Regresa a resultados para elegir una salida.', 'Volver');
+    return emptyState('Select a trip first.', 'Go back to results to choose a departure.', 'Back');
   }
 
   const rows = [];
@@ -254,18 +254,18 @@ function renderSeatMap() {
     <section class="passenger-card card card--pad motion-enter">
       <div class="seat-header">
         <div>
-          <div class="badge badge--info">Selecciona asiento</div>
+          <div class="badge badge--info">Select a seat</div>
           <h2>${state.selectedTrip.origin} → ${state.selectedTrip.destination}</h2>
         </div>
         <strong>${state.selectedSeats.length}/${state.search.passengers}</strong>
       </div>
-      <p class="seat-note">Toca los asientos disponibles. Los ocupados o bloqueados se muestran deshabilitados.</p>
+      <p class="seat-note">Tap the available seats. Occupied or blocked seats are disabled.</p>
       <div class="seat-map">
         <div class="seat-rows">${rows.join('')}</div>
       </div>
       <div class="seat-actions">
-        <button class="button button--ghost" id="backToResults">Volver</button>
-        <button class="button button--primary" id="continueToPassenger" ${state.selectedSeats.length !== state.search.passengers ? 'disabled' : ''}>Continuar</button>
+        <button class="button button--ghost" id="backToResults">Back</button>
+        <button class="button button--primary" id="continueToPassenger" ${state.selectedSeats.length !== state.search.passengers ? 'disabled' : ''}>Continue</button>
       </div>
     </section>
   `;
@@ -276,10 +276,10 @@ function renderPassengerForm() {
     <section class="passenger-card card card--pad motion-enter">
       <div class="payment-header">
         <div>
-          <div class="badge badge--neutral">Datos del pasajero</div>
-          <h2>Completa tu información</h2>
+          <div class="badge badge--neutral">Passenger details</div>
+          <h2>Complete your information</h2>
         </div>
-        <span class="badge badge--success">Seguro</span>
+        <span class="badge badge--success">Secure</span>
       </div>
       <form class="form-grid" id="passengerForm">
         <label><span class="muted-copy">Nombre</span><input class="field" name="name" value="${escapeHtml(state.passenger.name)}" /></label>
@@ -287,8 +287,8 @@ function renderPassengerForm() {
         <label><span class="muted-copy">Teléfono</span><input class="field" name="phone" value="${escapeHtml(state.passenger.phone)}" /></label>
         <label><span class="muted-copy">Documento</span><input class="field" name="documentId" value="${escapeHtml(state.passenger.documentId)}" /></label>
         <div class="payment-actions">
-          <button class="button button--ghost" type="button" id="backToSeats">Volver</button>
-          <button class="button button--primary" type="submit">Ver resumen</button>
+          <button class="button button--ghost" type="button" id="backToSeats">Back</button>
+          <button class="button button--primary" type="submit">Review summary</button>
         </div>
       </form>
     </section>
@@ -305,8 +305,8 @@ function renderSummary() {
     <section class="passenger-card card card--pad motion-enter">
       <div class="summary-row">
         <div>
-          <div class="badge badge--primary">Resumen</div>
-          <h2>Revisa antes de pagar</h2>
+          <div class="badge badge--primary">Summary</div>
+          <h2>Review before payment</h2>
         </div>
         <strong>${total}</strong>
       </div>
@@ -317,23 +317,23 @@ function renderSummary() {
         <div class="summary-list__item"><span>Pasajero</span><strong>${escapeHtml(state.passenger.name)}</strong></div>
       </div>
       <div class="confirmation-actions">
-        <button class="button button--ghost" id="backToPassenger">Editar datos</button>
-        <button class="button button--primary" id="startPayment">Procesar pago</button>
+        <button class="button button--ghost" id="backToPassenger">Edit details</button>
+        <button class="button button--primary" id="startPayment">Process payment</button>
       </div>
     </section>
   `;
 }
 
 function renderPayment() {
-  const processingState = state.paymentProgress === 'processing' ? 'Procesando' : state.paymentProgress === 'confirming' ? 'Confirmando' : 'Preparando';
+  const processingState = state.paymentProgress === 'processing' ? 'Processing' : state.paymentProgress === 'confirming' ? 'Confirming' : 'Preparing';
   return `
     <section class="passenger-card card card--pad payment-flow motion-enter">
       <div class="payment-screen">
         <div class="loading-pulse"></div>
         <div class="text-center">
           <div class="badge badge--warning">${processingState}</div>
-          <h2>Estamos asegurando tu reserva</h2>
-          <p class="muted-copy">Validando asientos, confirmando disponibilidad y preparando el comprobante.</p>
+          <h2>Secure payment</h2>
+          <p class="muted-copy">Validating seats, confirming availability, and preparing your receipt.</p>
         </div>
       </div>
     </section>

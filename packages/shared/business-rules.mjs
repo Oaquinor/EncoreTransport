@@ -112,12 +112,12 @@ export function getTripStatusTone(status) {
 export function getBookingStateLabel(status) {
   switch (status) {
     case bookingStatuses.confirmed:
-      return 'Confirmada';
+      return 'Confirmed';
     case bookingStatuses.pendingPayment:
-      return 'Pago pendiente';
+      return 'Payment pending';
     case bookingStatuses.cancelled:
-      return 'Cancelada';
+      return 'Cancelled';
     default:
-      return 'Borrador';
+      return 'Draft';
   }
 }

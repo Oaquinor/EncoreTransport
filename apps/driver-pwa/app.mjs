@@ -43,32 +43,32 @@ function renderLogin() {
             <small>Operación en ruta</small>
           </div>
         </div>
-        <span class="badge badge--warning">Operación</span>
+        <span class="badge badge--warning">Operations</span>
       </div>
-      <img class="driver-hero-image" src="/assets/media/Autobus.png" alt="Autobús de Encore Transport" />
+      <img class="driver-hero-image" src="/assets/media/Autobus.png" alt="Encore Transport bus" />
       <div>
-        <h1 class="driver-title">Acceso rápido para salir a ruta.</h1>
-        <p class="driver-copy">Interfaz enfocada en el trabajo del conductor: una sola vista, estados claros y acciones grandes.</p>
+        <h1 class="driver-title">Fast access to start your route.</h1>
+        <p class="driver-copy">Focused on the driver workflow: one view, clear states, and large touch-friendly actions.</p>
       </div>
       <form id="driverLoginForm" class="driver-grid">
-        <label><span class="muted-copy">Usuario</span><input class="field" name="user" value="ricardo.luna" /></label>
-        <label><span class="muted-copy">Código de acceso</span><input class="field" name="code" type="password" value="123456" /></label>
-        <button class="button button--primary button--block" type="submit">Entrar al turno</button>
+        <label><span class="muted-copy">User</span><input class="field" name="user" value="ricardo.luna" /></label>
+        <label><span class="muted-copy">Access code</span><input class="field" name="code" type="password" value="123456" /></label>
+        <button class="button button--primary button--block" type="submit">Start shift</button>
       </form>
     </section>
   `;
 }
 
 function renderDashboard() {
-  const tripStateLabel = state.tripState === driverStatuses.next ? 'PRÓXIMO' : state.tripState === driverStatuses.active ? 'EN CURSO' : 'FINALIZADO';
+  const tripStateLabel = state.tripState === driverStatuses.next ? 'UPCOMING' : state.tripState === driverStatuses.active ? 'IN PROGRESS' : 'COMPLETED';
   return `
     <section class="driver-dashboard motion-enter">
       <header class="driver-card driver-header">
         <div class="driver-brand">
           <img class="driver-badge" src="/logo.svg" alt="Encore Transport" />
           <div>
-            <strong>${state.driver?.name ?? 'Conductor'}</strong>
-            <small>${state.driver?.license ?? 'Licencia'}</small>
+            <strong>${state.driver?.name ?? 'Driver'}</strong>
+            <small>${state.driver?.license ?? 'License'}</small>
           </div>
         </div>
         <span class="badge badge--primary">${tripStateLabel}</span>
@@ -77,15 +77,15 @@ function renderDashboard() {
       <section class="driver-card">
         <div class="trip-state">
           <div>
-            <div class="badge badge--info">Próximo viaje</div>
-            <h2>${state.currentTrip?.origin ?? 'Origen'} → ${state.currentTrip?.destination ?? 'Destino'}</h2>
-            <p class="driver-copy">Bus ${state.currentTrip?.busId ?? ''} · Salida ${state.currentTrip?.departureTime ?? ''} · Ruta ${state.currentTrip?.routeName ?? ''}</p>
+            <div class="badge badge--info">Next trip</div>
+            <h2>${state.currentTrip?.origin ?? 'Origin'} → ${state.currentTrip?.destination ?? 'Destination'}</h2>
+            <p class="driver-copy">Bus ${state.currentTrip?.busId ?? ''} · Departure ${state.currentTrip?.departureTime ?? ''} · Route ${state.currentTrip?.routeName ?? ''}</p>
           </div>
-          <span class="badge badge--neutral">${state.currentTrip?.seatsAvailable ?? 0} asientos libres</span>
+          <span class="badge badge--neutral">${state.currentTrip?.seatsAvailable ?? 0} seats available</span>
         </div>
-        <img class="driver-hero-image" src="/assets/media/Autobus.png" alt="Autobús de Encore Transport" />
+        <img class="driver-hero-image" src="/assets/media/Autobus.png" alt="Encore Transport bus" />
         <div class="trip-state__steps">
-          ${['PRÓXIMO', 'EN CURSO', 'FINALIZADO']
+          ${['UPCOMING', 'IN PROGRESS', 'COMPLETED']
             .map((label, index) => `<div class="trip-state__step ${index === getStepIndex() ? 'trip-state__step--active' : ''}">${label}</div>`)
             .join('')}
         </div>
@@ -93,12 +93,12 @@ function renderDashboard() {
       </section>
 
       <section class="driver-grid driver-grid--2">
-        ${statCard('Pasajeros', String(state.passengers.length), 'Lista de abordaje')}
-        ${statCard('Estado', tripStateLabel, 'Secuencia operativa')}
+        ${statCard('Passengers', String(state.passengers.length), 'Boarding list')}
+        ${statCard('Status', tripStateLabel, 'Operational sequence')}
       </section>
 
       <section class="driver-card">
-        <h3>Pasajeros</h3>
+        <h3>Passengers</h3>
         <div class="passenger-list">
           ${state.passengers
             .map(
@@ -108,7 +108,7 @@ function renderDashboard() {
                     <strong>${passenger.name}</strong>
                     <small>${passenger.idNumber}</small>
                   </div>
-                  <button class="button button--ghost" data-toggle-passenger="${passenger.id}">${state.boardedPassengers.has(passenger.id) ? 'Abordado' : 'Marcar'}</button>
+                  <button class="button button--ghost" data-toggle-passenger="${passenger.id}">${state.boardedPassengers.has(passenger.id) ? 'Boarded' : 'Mark boarded'}</button>
                 </div>
               `
             )
@@ -117,22 +117,22 @@ function renderDashboard() {
       </section>
 
       <section class="driver-card incident-box">
-        <h3>Incidencias</h3>
-        <textarea class="field" id="incidentNotes" placeholder="Describe el incidente si ocurre..."></textarea>
+        <h3>Incidents</h3>
+        <textarea class="field" id="incidentNotes" placeholder="Describe the incident if one occurs..."></textarea>
         <div class="driver-actions">
-          <button class="button button--ghost" id="boardingAction">Marcar abordaje</button>
+          <button class="button button--ghost" id="boardingAction">Mark boarding</button>
           <button class="button button--primary" id="tripAction">${getPrimaryActionLabel()}</button>
         </div>
       </section>
 
       <section class="driver-card timeline">
-        <h3>Bitácora</h3>
-        <div class="timeline__item"><span>Check-in de ruta</span><strong>Hace 12 min</strong></div>
-        <div class="timeline__item"><span>Bus asignado</span><strong>${state.currentTrip?.busId ?? ''}</strong></div>
-        <div class="timeline__item"><span>Estado actual</span><strong>${tripStateLabel}</strong></div>
+        <h3>Timeline</h3>
+        <div class="timeline__item"><span>Route check-in</span><strong>12 min ago</strong></div>
+        <div class="timeline__item"><span>Assigned bus</span><strong>${state.currentTrip?.busId ?? ''}</strong></div>
+        <div class="timeline__item"><span>Current status</span><strong>${tripStateLabel}</strong></div>
       </section>
 
-      <div class="bottom-status">${tripStateLabel} · ${state.boardedPassengers.size}/${state.passengers.length} pasajeros confirmados</div>
+      <div class="bottom-status">${tripStateLabel} · ${state.boardedPassengers.size}/${state.passengers.length} passengers confirmed</div>
     </section>
   `;
 }
@@ -150,9 +150,9 @@ function getProgressValue() {
 }
 
 function getPrimaryActionLabel() {
-  if (state.tripState === driverStatuses.next) return 'Iniciar viaje';
-  if (state.tripState === driverStatuses.active) return 'Finalizar viaje';
-  return 'Viaje completado';
+  if (state.tripState === driverStatuses.next) return 'Start trip';
+  if (state.tripState === driverStatuses.active) return 'Complete trip';
+  return 'Trip completed';
 }
 
 function wireEvents() {

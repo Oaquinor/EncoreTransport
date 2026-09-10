@@ -1,3 +1,5 @@
+import { appConfig } from './app-config.mjs';
+
 export const tripStatuses = Object.freeze({
   scheduled: 'scheduled',
   boarding: 'boarding',
@@ -33,8 +35,8 @@ export function normalizeText(value) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-export function formatCurrency(amount, currency = 'MXN') {
-  return new Intl.NumberFormat('es-MX', {
+export function formatCurrency(amount, currency = appConfig.currency) {
+  return new Intl.NumberFormat(appConfig.locale, {
     style: 'currency',
     currency,
     maximumFractionDigits: 0
@@ -42,7 +44,7 @@ export function formatCurrency(amount, currency = 'MXN') {
 }
 
 export function formatDateLabel(isoDate) {
-  return new Intl.DateTimeFormat('es-MX', {
+  return new Intl.DateTimeFormat(appConfig.locale, {
     weekday: 'short',
     day: '2-digit',
     month: 'short'
@@ -50,7 +52,7 @@ export function formatDateLabel(isoDate) {
 }
 
 export function formatTimeLabel(timeValue) {
-  return new Intl.DateTimeFormat('es-MX', {
+  return new Intl.DateTimeFormat(appConfig.locale, {
     hour: '2-digit',
     minute: '2-digit'
   }).format(new Date(`2026-01-01T${timeValue}:00`));
