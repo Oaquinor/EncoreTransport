@@ -13,7 +13,7 @@ const state = {
 };
 
 const modules = [
-  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'dashboard', label: 'Control' },
   { id: 'trips', label: 'Viajes' },
   { id: 'buses', label: 'Buses' },
   { id: 'drivers', label: 'Conductores' },
@@ -31,8 +31,8 @@ function render() {
         <div class="admin-brand">
           <img class="admin-brand__logo" src="/logo.svg" alt="Encore Transport" />
           <div>
-            <strong>Encore Control</strong>
-            <small>Admin Dashboard</small>
+            <strong>Encore Operations</strong>
+            <small>Control Center</small>
           </div>
         </div>
         <nav class="admin-nav">
@@ -226,7 +226,7 @@ function placeholderPanel(title, description) {
         </div>
       </div>
       <p>${description}</p>
-      <span class="badge badge--info">Preparado para Laravel</span>
+      <span class="badge badge--info">Preparado para producción</span>
     </section>
   `;
 }

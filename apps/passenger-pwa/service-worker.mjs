@@ -1,4 +1,4 @@
-const cacheName = 'encore-passenger-preview-v1';
+const cacheName = 'encore-passenger-v1';
 const assets = [
   './',
   './index.html',

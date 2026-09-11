@@ -40,7 +40,7 @@ function renderLogin() {
           <img class="driver-badge" src="/logo.svg" alt="Encore Transport" />
           <div>
             <strong>Encore Drive</strong>
-            <small>Driver PWA</small>
+            <small>Operación en ruta</small>
           </div>
         </div>
         <span class="badge badge--warning">Operación</span>

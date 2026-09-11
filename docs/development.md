@@ -6,6 +6,17 @@
 npm run dev
 ```
 
+## Passenger React/TypeScript
+
+La nueva foundation se implementa en paralelo para no romper `/move`.
+
+```bash
+npm install
+npm run dev:passenger
+```
+
+Mientras migra, la app React consume `@encore/api-client` con mocks tipados. El objetivo es poder cambiar ese cliente hacia Laravel API sin reescribir pantallas.
+
 ## Pruebas
 
 ```bash

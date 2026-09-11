@@ -9,11 +9,24 @@
   ],
   "scripts": {
     "dev": "node server.mjs",
+    "dev:passenger": "npm run dev -w @encore/passenger",
     "start": "node server.mjs",
     "test": "node tests/business-rules.test.mjs",
-    "check": "node tests/business-rules.test.mjs"
+    "check": "node tests/business-rules.test.mjs",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
   },
   "engines": {
     "node": ">=24"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "^5.6.3",
+    "vite": "^7.0.0"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.0.0"
   }
 }

@@ -1,4 +1,4 @@
-const cacheName = 'encore-driver-preview-v2';
+const cacheName = 'encore-driver-v2';
 const assets = [
   './',
   './index.html',

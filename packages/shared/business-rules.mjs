@@ -54,13 +54,17 @@ export function createBookingQuote(trip, passengerCount = 1) {
 
 export function reserveSeats(trip, seatIds) {
   const selectedSeats = new Set(seatIds);
+  const knownSeats = new Set(trip.seatMap.map((seat) => seat.id));
+  const unavailableSeats = [...selectedSeats].filter((seatId) => !knownSeats.has(seatId) || trip.seatMap.some((seat) => seat.id === seatId && (seat.reserved || seat.blocked)));
+  const unavailableSeatSet = new Set(unavailableSeats);
+  const reservableSeatIds = [...selectedSeats].filter((seatId) => knownSeats.has(seatId) && !unavailableSeatSet.has(seatId));
+
   const updatedTrip = {
     ...trip,
-    seatMap: trip.seatMap.map((seat) => (selectedSeats.has(seat.id) ? { ...seat, reserved: true } : seat)),
-    seatsAvailable: Math.max(0, trip.seatsAvailable - selectedSeats.size)
+    seatMap: trip.seatMap.map((seat) => (selectedSeats.has(seat.id) && !unavailableSeatSet.has(seat.id) ? { ...seat, reserved: true } : seat)),
+    seatsAvailable: Math.max(0, trip.seatsAvailable - reservableSeatIds.length)
   };
 
-  const unavailableSeats = seatIds.filter((seatId) => trip.seatMap.some((seat) => seat.id === seatId && (seat.reserved || seat.blocked)));
   return {
     updatedTrip,
     unavailableSeats

@@ -16,4 +16,12 @@ const reservation = reserveSeats(targetTrip, ['1A', '1B']);
 assert.equal(reservation.unavailableSeats.length, 0);
 assert.equal(reservation.updatedTrip.seatsAvailable, targetTrip.seatsAvailable - 2);
 
+const unavailableReservation = reserveSeats(targetTrip, ['3B', '8B']);
+assert.deepEqual(unavailableReservation.unavailableSeats, ['3B', '8B']);
+assert.equal(unavailableReservation.updatedTrip.seatsAvailable, targetTrip.seatsAvailable);
+
+const invalidReservation = reserveSeats(targetTrip, ['1A', '1A', '99Z']);
+assert.deepEqual(invalidReservation.unavailableSeats, ['99Z']);
+assert.equal(invalidReservation.updatedTrip.seatsAvailable, targetTrip.seatsAvailable - 1);
+
 console.log('Business rules tests passed');
