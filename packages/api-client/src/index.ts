@@ -12,10 +12,10 @@ function seatRow(row: number, letters: string[]) {
     return {
       id: seatNumber,
       label: seatNumber,
-      reserved: row % 3 === 0 && index === 1,
-      blocked: row === 8 && index > 0,
-      window: index === 0 || index === 2,
-      aisle: index === 1 || index === 3
+      reserved: ['3B', '5C', '6B', '9A'].includes(seatNumber),
+      blocked: ['10C', '10D'].includes(seatNumber),
+      window: index === 0 || index === 3,
+      aisle: index === 1 || index === 2
     };
   });
 }
@@ -25,65 +25,90 @@ function createSeatMap(totalRows = 10) {
 }
 
 const mockRoutes: Route[] = [
-  { id: 'route-cdmx-puebla', origin: 'Ciudad de México', destination: 'Puebla', durationMinutes: 135 },
-  { id: 'route-gdl-pv', origin: 'Guadalajara', destination: 'Puerto Vallarta', durationMinutes: 285 },
-  { id: 'route-mty-slp', origin: 'Monterrey', destination: 'San Luis Potosí', durationMinutes: 255 }
+  { id: 'route-sdq-sti', origin: 'Santo Domingo', destination: 'Santiago', durationMinutes: 135 },
+  { id: 'route-sdq-puj', origin: 'Santo Domingo', destination: 'Punta Cana', durationMinutes: 165 },
+  { id: 'route-sti-pop', origin: 'Santiago', destination: 'Puerto Plata', durationMinutes: 95 },
+  { id: 'route-sdq-lrm', origin: 'Santo Domingo', destination: 'La Romana', durationMinutes: 90 }
 ];
 
 const mockVehicles: Vehicle[] = [
-  { id: 'bus-aurora-14', plate: 'ET-314-AX', name: 'Aurora 14', capacity: 42, features: ['Wi-Fi', 'USB', 'A/C'], status: 'operational' },
-  { id: 'bus-via-21', plate: 'ET-521-BY', name: 'Vía 21', capacity: 46, features: ['Wi-Fi', 'USB', 'Baño'], status: 'operational' }
+  { id: 'bus-203', plate: 'A874512', name: 'Bus 203', capacity: 40, features: ['Wi-Fi', 'USB', 'A/C', 'Reclining seats'], status: 'operational' },
+  { id: 'bus-118', plate: 'A662104', name: 'Bus 118', capacity: 36, features: ['Wi-Fi', 'A/C', 'Included luggage'], status: 'operational' },
+  { id: 'van-045', plate: 'V140882', name: 'Executive Van 045', capacity: 14, features: ['A/C', 'Private service', 'USB'], status: 'maintenance' }
 ];
 
 const mockDrivers: Driver[] = [
-  { id: 'driver-1', name: 'Sofía Hernández', license: 'D-AL-8841', status: 'next' },
-  { id: 'driver-2', name: 'Ricardo Luna', license: 'D-AL-5520', status: 'active' }
+  { id: 'driver-ricardo-luna', name: 'Ricardo Luna', license: 'DOP-D-5520', status: 'active' },
+  { id: 'driver-laura-medina', name: 'Laura Medina', license: 'DOP-D-8841', status: 'next' },
+  { id: 'driver-manuel-rojas', name: 'Manuel Rojas', license: 'DOP-D-9012', status: 'finished' }
 ];
 
 const mockTrips: Trip[] = [
   {
-    id: 'trip-cdmx-puebla-700',
-    routeId: 'route-cdmx-puebla',
-    routeName: 'Ciudad de México → Puebla',
-    origin: 'Ciudad de México',
-    destination: 'Puebla',
-    date: '2026-09-12',
-    departureTime: '07:00',
-    arrivalTime: '09:15',
+    id: 'EN-001',
+    routeId: 'route-sdq-sti',
+    routeName: 'Santo Domingo → Santiago',
+    origin: 'Santo Domingo',
+    destination: 'Santiago',
+    date: '2026-09-14',
+    departureTime: '08:30',
+    arrivalTime: '10:45',
     durationMinutes: 135,
-    baseFare: 320,
+    baseFare: 650,
     demandMultiplier: 1,
-    serviceFee: 25,
-    occupancy: 68,
-    seatsAvailable: 14,
-    busId: 'bus-aurora-14',
-    driverId: 'driver-1',
+    serviceFee: 35,
+    occupancy: 55,
+    seatsAvailable: 18,
+    busId: 'bus-203',
+    driverId: 'driver-ricardo-luna',
     status: 'boarding',
     featured: true,
-    highlights: ['Express', 'Wi-Fi', '1 parada'],
+    highlights: ['Direct', 'Wi-Fi', 'A/C', 'Luggage included'],
     seatMap: createSeatMap(10)
   },
   {
-    id: 'trip-gdl-pv-1130',
-    routeId: 'route-gdl-pv',
-    routeName: 'Guadalajara → Puerto Vallarta',
-    origin: 'Guadalajara',
-    destination: 'Puerto Vallarta',
-    date: '2026-09-12',
-    departureTime: '11:30',
-    arrivalTime: '16:05',
-    durationMinutes: 275,
+    id: 'EN-002',
+    routeId: 'route-sdq-puj',
+    routeName: 'Santo Domingo → Punta Cana',
+    origin: 'Santo Domingo',
+    destination: 'Punta Cana',
+    date: '2026-09-14',
+    departureTime: '11:15',
+    arrivalTime: '14:00',
+    durationMinutes: 165,
+    baseFare: 950,
+    demandMultiplier: 1.05,
+    serviceFee: 50,
+    occupancy: 61,
+    seatsAvailable: 14,
+    busId: 'bus-118',
+    driverId: 'driver-laura-medina',
+    status: 'scheduled',
+    featured: true,
+    highlights: ['Express', 'USB', 'Reclining seats'],
+    seatMap: createSeatMap(9)
+  },
+  {
+    id: 'EN-003',
+    routeId: 'route-sti-pop',
+    routeName: 'Santiago → Puerto Plata',
+    origin: 'Santiago',
+    destination: 'Puerto Plata',
+    date: '2026-09-14',
+    departureTime: '16:20',
+    arrivalTime: '17:55',
+    durationMinutes: 95,
     baseFare: 520,
-    demandMultiplier: 1.08,
-    serviceFee: 35,
-    occupancy: 54,
-    seatsAvailable: 20,
-    busId: 'bus-via-21',
-    driverId: 'driver-2',
+    demandMultiplier: 1,
+    serviceFee: 30,
+    occupancy: 70,
+    seatsAvailable: 11,
+    busId: 'bus-203',
+    driverId: 'driver-manuel-rojas',
     status: 'scheduled',
     featured: false,
-    highlights: ['Panorámico', 'Baño', 'Refrigerios'],
-    seatMap: createSeatMap(11)
+    highlights: ['Fast', 'A/C', 'Luggage included'],
+    seatMap: createSeatMap(10)
   }
 ];
 
@@ -98,6 +123,9 @@ export interface TripDetailsResponse {
     driver: Driver;
     availableSeats: ReturnType<typeof getAvailableSeats>;
     priceLabel: string;
+    boardingPoint: string;
+    dropoffPoint: string;
+    serviceClass: string;
   };
 }
 
@@ -143,7 +171,10 @@ export function createMockEncoreApiClient(): EncoreApiClient {
           vehicle,
           driver,
           availableSeats: getAvailableSeats(trip),
-          priceLabel: formatCurrency(createBookingQuote(trip, 1).total)
+          priceLabel: formatCurrency(createBookingQuote(trip, 1).total),
+          boardingPoint: trip.id === 'EN-001' ? 'Agora Mall, north entrance' : 'Main pickup point',
+          dropoffPoint: trip.id === 'EN-001' ? 'Monumento a los Heroes' : 'Destination lobby',
+          serviceClass: trip.id === 'EN-002' ? 'Coastal Express' : 'Premium Shuttle'
         }
       });
     },
@@ -154,7 +185,7 @@ export function createMockEncoreApiClient(): EncoreApiClient {
       return delay({
         reservation,
         booking: {
-          id: `booking-${tripId}`,
+          id: `BK-${tripId}-4281`,
           status: bookingStatuses.pendingPayment,
           tripId,
           seatIds,

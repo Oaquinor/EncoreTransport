@@ -29,8 +29,8 @@ export function normalizeText(value: unknown): string {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-export function formatCurrency(amount: number, currency = 'MXN'): string {
-  return new Intl.NumberFormat('es-MX', {
+export function formatCurrency(amount: number, currency = 'DOP'): string {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
     maximumFractionDigits: 0
@@ -38,7 +38,7 @@ export function formatCurrency(amount: number, currency = 'MXN'): string {
 }
 
 export function formatDateLabel(isoDate: string): string {
-  return new Intl.DateTimeFormat('es-MX', {
+  return new Intl.DateTimeFormat('en-US', {
     weekday: 'short',
     day: '2-digit',
     month: 'short'
@@ -46,7 +46,7 @@ export function formatDateLabel(isoDate: string): string {
 }
 
 export function formatTimeLabel(timeValue: string): string {
-  return new Intl.DateTimeFormat('es-MX', {
+  return new Intl.DateTimeFormat('en-US', {
     hour: '2-digit',
     minute: '2-digit'
   }).format(new Date(`2026-01-01T${timeValue}:00`));
@@ -91,7 +91,7 @@ export function createBookingQuote(trip: Trip, passengerCount = 1) {
   return {
     tripId: trip.id,
     passengerCount,
-    currency: 'MXN',
+    currency: 'DOP',
     total,
     totalLabel: formatCurrency(total),
     breakdown: {

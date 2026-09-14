@@ -41,7 +41,7 @@ export function createBookingQuote(trip, passengerCount = 1) {
   return {
     tripId: trip.id,
     passengerCount,
-    currency: 'MXN',
+    currency: 'DOP',
     total: price,
     totalLabel: formatCurrency(price),
     breakdown: {
@@ -58,7 +58,6 @@ export function reserveSeats(trip, seatIds) {
   const unavailableSeats = [...selectedSeats].filter((seatId) => !knownSeats.has(seatId) || trip.seatMap.some((seat) => seat.id === seatId && (seat.reserved || seat.blocked)));
   const unavailableSeatSet = new Set(unavailableSeats);
   const reservableSeatIds = [...selectedSeats].filter((seatId) => knownSeats.has(seatId) && !unavailableSeatSet.has(seatId));
-
   const updatedTrip = {
     ...trip,
     seatMap: trip.seatMap.map((seat) => (selectedSeats.has(seat.id) && !unavailableSeatSet.has(seat.id) ? { ...seat, reserved: true } : seat)),

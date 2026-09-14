@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Encore Passenger",
+    "slug": "encore-passenger",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "encore-passenger",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-status-bar"
+    ]
+  }
+}

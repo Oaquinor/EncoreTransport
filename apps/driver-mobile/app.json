@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Encore Driver",
+    "slug": "encore-driver",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "encore-driver",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true
+  }
+}

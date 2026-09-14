@@ -1,11 +1,11 @@
 export const appConfig = Object.freeze({
-  country: 'United States',
-  currency: 'USD',
+  country: 'Dominican Republic',
+  currency: 'DOP',
   locale: 'en-US',
-  timezone: 'America/New_York',
-  apiBaseUrl: 'http://localhost:8000/api/v1',
+  timezone: 'America/Santo_Domingo',
+  apiBaseUrl: globalThis?.__ENCORE_API_BASE_URL__ ?? '/api/v1',
   passengerAppName: 'Encore Move',
   driverAppName: 'Encore Drive',
-  adminAppName: 'Encore Control',
+  adminAppName: 'Encore Operations Center',
   websiteAppName: 'Encore Transport'
 });

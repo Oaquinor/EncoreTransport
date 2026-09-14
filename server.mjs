@@ -4,6 +4,7 @@ import path from 'node:path';
 
 const rootDirectory = process.cwd();
 const port = Number(process.env.PORT ?? 4173);
+const host = process.env.HOST ?? '127.0.0.1';
 const mimeTypes = new Map([
   ['.html', 'text/html; charset=utf-8'],
   ['.css', 'text/css; charset=utf-8'],
@@ -27,26 +28,18 @@ const appAliases = new Map([
   ['/admin', '/apps/admin-dashboard']
 ]);
 
-function isInsideDirectory(candidatePath, parentDirectory) {
-  const relativePath = path.relative(parentDirectory, candidatePath);
-  return relativePath === '' || (!relativePath.startsWith('..') && !path.isAbsolute(relativePath));
-}
-
 function resolveRequestPath(requestUrl) {
   const parsedUrl = new URL(requestUrl, `http://localhost:${port}`);
   const normalizedPathname = parsedUrl.pathname.replace(/\/$/, '');
 
   for (const [aliasPath, targetPath] of appAliases.entries()) {
-    const appDirectory = path.join(rootDirectory, targetPath);
-
     if (normalizedPathname === aliasPath) {
-      return path.join(appDirectory, 'index.html');
+      return path.join(rootDirectory, targetPath, 'index.html');
     }
 
     if (normalizedPathname.startsWith(`${aliasPath}/`)) {
       const remainingPath = normalizedPathname.slice(aliasPath.length + 1);
-      const candidatePath = path.normalize(path.join(appDirectory, remainingPath));
-      return isInsideDirectory(candidatePath, appDirectory) ? candidatePath : null;
+      return path.normalize(path.join(rootDirectory, targetPath, remainingPath));
     }
   }
 
@@ -57,7 +50,7 @@ function resolveRequestPath(requestUrl) {
   }
 
   const candidatePath = path.normalize(path.join(rootDirectory, pathname));
-  if (!isInsideDirectory(candidatePath, rootDirectory)) {
+  if (!candidatePath.startsWith(rootDirectory)) {
     return null;
   }
 
@@ -91,6 +84,6 @@ createServer(async (request, response) => {
   }
 
   await serveFile(response, requestPath);
-}).listen(port, () => {
-  console.log(`Encore Transport running on http://localhost:${port}`);
+}).listen(port, host, () => {
+  console.log(`Encore Transport preview running on http://${host}:${port}`);
 });

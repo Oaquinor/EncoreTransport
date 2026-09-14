@@ -5,16 +5,7 @@ import { badge, emptyState, progressBar, skeletonCard, statCard } from '../../pa
 
 const appRoot = document.querySelector('#app');
 const initialQuery = new URLSearchParams(window.location.search);
-const defaultDate = '2026-09-12';
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+const defaultDate = '2026-09-14';
 
 const state = {
   screen: 'splash',
@@ -24,16 +15,16 @@ const state = {
   selectedSeats: [],
   booking: null,
   search: {
-    origin: initialQuery.get('origin') ?? '',
-    destination: initialQuery.get('destination') ?? '',
+    origin: initialQuery.get('origin') ?? 'Santo Domingo',
+    destination: initialQuery.get('destination') ?? 'Santiago',
     date: initialQuery.get('date') ?? defaultDate,
     passengers: Number(initialQuery.get('passengers') ?? 2)
   },
   passenger: {
-    name: '',
-    email: '',
-    phone: '',
-    documentId: ''
+    name: 'Maria Torres',
+    email: 'maria.torres@mail.com',
+    phone: '+1 809 555 1842',
+    documentId: '001-7482110-4'
   },
   paymentProgress: 'idle'
 };
@@ -67,7 +58,7 @@ function render() {
             <img class="passenger-logo" src="/logo.svg" alt="Encore Transport" />
             <div>
               <strong>Encore Move</strong>
-              <small>Reserva de viajes</small>
+              <small>Passenger PWA</small>
             </div>
           </div>
           <span class="badge badge--neutral">${formatDateLabel(state.search.date)}</span>
@@ -152,22 +143,22 @@ function renderSearch() {
       <form class="search-form" id="searchForm">
         <div class="search-form__grid search-form__grid--2">
           <label>
-            <span class="muted-copy">Origen</span>
-            <input class="field" name="origin" value="${escapeHtml(state.search.origin)}" />
+            <span class="muted-copy">Departure</span>
+            <input class="field" name="origin" value="${state.search.origin}" />
           </label>
           <label>
-            <span class="muted-copy">Destino</span>
-            <input class="field" name="destination" value="${escapeHtml(state.search.destination)}" />
+            <span class="muted-copy">Destination</span>
+            <input class="field" name="destination" value="${state.search.destination}" />
           </label>
         </div>
         <div class="search-form__grid search-form__grid--2">
           <label>
-            <span class="muted-copy">Fecha</span>
-            <input class="field" type="date" name="date" value="${escapeHtml(state.search.date)}" />
+            <span class="muted-copy">Date</span>
+            <input class="field" type="date" name="date" value="${state.search.date}" />
           </label>
           <label>
-            <span class="muted-copy">Pasajeros</span>
-            <input class="field" type="number" min="1" max="8" name="passengers" value="${escapeHtml(state.search.passengers)}" />
+            <span class="muted-copy">Passengers</span>
+            <input class="field" type="number" min="1" max="8" name="passengers" value="${state.search.passengers}" />
           </label>
         </div>
         <button class="button button--primary button--block" type="submit">Search trips</button>
@@ -282,10 +273,10 @@ function renderPassengerForm() {
         <span class="badge badge--success">Secure</span>
       </div>
       <form class="form-grid" id="passengerForm">
-        <label><span class="muted-copy">Nombre</span><input class="field" name="name" value="${escapeHtml(state.passenger.name)}" /></label>
-        <label><span class="muted-copy">Correo</span><input class="field" type="email" name="email" value="${escapeHtml(state.passenger.email)}" /></label>
-        <label><span class="muted-copy">Teléfono</span><input class="field" name="phone" value="${escapeHtml(state.passenger.phone)}" /></label>
-        <label><span class="muted-copy">Documento</span><input class="field" name="documentId" value="${escapeHtml(state.passenger.documentId)}" /></label>
+        <label><span class="muted-copy">Name</span><input class="field" name="name" value="${state.passenger.name}" /></label>
+        <label><span class="muted-copy">Email</span><input class="field" type="email" name="email" value="${state.passenger.email}" /></label>
+        <label><span class="muted-copy">Phone</span><input class="field" name="phone" value="${state.passenger.phone}" /></label>
+        <label><span class="muted-copy">Document</span><input class="field" name="documentId" value="${state.passenger.documentId}" /></label>
         <div class="payment-actions">
           <button class="button button--ghost" type="button" id="backToSeats">Back</button>
           <button class="button button--primary" type="submit">Review summary</button>
@@ -311,10 +302,10 @@ function renderSummary() {
         <strong>${total}</strong>
       </div>
       <div class="summary-list">
-        <div class="summary-list__item"><span>Viaje</span><strong>${state.selectedTrip.origin} → ${state.selectedTrip.destination}</strong></div>
-        <div class="summary-list__item"><span>Fecha</span><strong>${formatDateLabel(state.search.date)}</strong></div>
-        <div class="summary-list__item"><span>Asientos</span><strong>${state.selectedSeats.join(', ')}</strong></div>
-        <div class="summary-list__item"><span>Pasajero</span><strong>${escapeHtml(state.passenger.name)}</strong></div>
+        <div class="summary-list__item"><span>Trip</span><strong>${state.selectedTrip.origin} → ${state.selectedTrip.destination}</strong></div>
+        <div class="summary-list__item"><span>Date</span><strong>${formatDateLabel(state.search.date)}</strong></div>
+        <div class="summary-list__item"><span>Seats</span><strong>${state.selectedSeats.join(', ')}</strong></div>
+        <div class="summary-list__item"><span>Passenger</span><strong>${state.passenger.name}</strong></div>
       </div>
       <div class="confirmation-actions">
         <button class="button button--ghost" id="backToPassenger">Edit details</button>
@@ -341,31 +332,29 @@ function renderPayment() {
 }
 
 function renderConfirmation() {
-  const bookingCode = state.booking?.id ?? 'Reserva en proceso';
   const isPendingPayment = state.booking?.status === 'pending_payment';
-  const bookingStatus = isPendingPayment ? 'Pago pendiente' : 'Confirmada';
   const statusBadge = isPendingPayment ? 'warning' : 'success';
-  const statusTitle = isPendingPayment ? 'Tu reserva está apartada.' : 'Tu viaje está listo.';
-
+  const statusLabel = isPendingPayment ? 'Payment pending' : 'Booking confirmed';
+  const statusTitle = isPendingPayment ? 'Your seats are being held.' : 'Your trip is ready.';
   return `
     <section class="passenger-card card card--pad motion-enter">
       <div class="confirmation-hero">
         <div class="confirmation-hero__icon">✓</div>
         <div>
-          <div class="badge badge--${statusBadge}">${bookingStatus}</div>
+          <div class="badge badge--${statusBadge}">${statusLabel}</div>
           <h2>${statusTitle}</h2>
-          <p class="muted-copy">Recibirás los detalles por correo y podrás revisar el estado desde esta misma app.</p>
+          <p class="muted-copy">This preview keeps payment status explicit until a real gateway confirms the transaction.</p>
         </div>
       </div>
       <div class="summary-list">
-        <div class="summary-list__item"><span>Reserva</span><strong>${escapeHtml(bookingCode)}</strong></div>
-        <div class="summary-list__item"><span>Pago</span><strong>${state.booking?.totalLabel ?? state.selectedTrip?.priceLabel ?? ''}</strong></div>
-        <div class="summary-list__item"><span>Asientos</span><strong>${state.selectedSeats.join(', ')}</strong></div>
-        <div class="summary-list__item"><span>Estado</span><strong>${bookingStatus}</strong></div>
+        <div class="summary-list__item"><span>Booking</span><strong>${state.booking?.id ?? 'booking-preview'}</strong></div>
+        <div class="summary-list__item"><span>Payment</span><strong>${state.booking?.totalLabel ?? state.selectedTrip?.priceLabel ?? ''}</strong></div>
+        <div class="summary-list__item"><span>Seats</span><strong>${state.selectedSeats.join(', ')}</strong></div>
+        <div class="summary-list__item"><span>Status</span><strong>${statusLabel}</strong></div>
       </div>
       <div class="confirmation-actions">
-        <button class="button button--ghost" id="newSearch">Nueva búsqueda</button>
-        <a class="button button--primary" href="/website/">Volver a Encore</a>
+        <button class="button button--ghost" id="newSearch">New search</button>
+        <a class="button button--primary" href="/website/">Back to website</a>
       </div>
     </section>
   `;
@@ -490,7 +479,12 @@ async function initialize() {
   registerServiceWorker();
   render();
   await new Promise((resolve) => setTimeout(resolve, 1100));
-  state.screen = 'search';
+  state.screen = 'results';
+  state.loading = true;
+  render();
+  const response = await fetchPassengerSearch(state.search);
+  state.searchResults = response.trips;
+  state.loading = false;
   render();
 }
 

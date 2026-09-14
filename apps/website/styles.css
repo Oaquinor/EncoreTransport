@@ -712,6 +712,46 @@
   margin-top: 8px;
 }
 
+.booking-search-section {
+  margin-top: -8px;
+}
+
+.booking-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.booking-strip__field {
+  display: grid;
+  gap: 5px;
+  min-height: 70px;
+  padding: 14px;
+  border-radius: 18px;
+  background: #f5f8fb;
+  border: 1px solid rgba(216, 226, 234, 0.88);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.booking-strip__field:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(20, 34, 50, 0.1);
+}
+
+.booking-strip__field span {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.booking-strip__field strong {
+  font-size: 1rem;
+}
+
 @media (max-width: 1060px) {
   .hero-panel,
   .contact-grid,
@@ -736,5 +776,371 @@
   .trust-band,
   .trust-band__points {
     grid-template-columns: 1fr;
+  }
+
+  .booking-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Client-preview polish: closer to the clean white product board reference. */
+.website-screen {
+  background: linear-gradient(180deg, #ffffff 0%, #f5f8fb 58%, #eef4f8 100%);
+}
+
+.website-screen::before,
+.website-screen::after {
+  display: none;
+}
+
+.website-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  margin-top: 14px;
+  padding: 12px 18px;
+  border: 1px solid rgba(216, 226, 234, 0.86);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 18px 42px rgba(20, 34, 50, 0.08);
+  backdrop-filter: blur(16px);
+}
+
+.website-nav {
+  gap: 20px;
+}
+
+.website-nav a {
+  font-size: 0.86rem;
+}
+
+.hero-panel {
+  grid-template-columns: 0.9fr 1.1fr;
+  min-height: 560px;
+  border-radius: 30px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.96) 0 45%, rgba(255, 255, 255, 0.28) 62%),
+    url('/website/public/yendo-destino-2.jpg') center/cover;
+  box-shadow: 0 28px 70px rgba(20, 34, 50, 0.13);
+}
+
+.hero-panel::before,
+.hero-panel::after {
+  display: none;
+}
+
+.page-title--light {
+  max-width: 9ch;
+  font-size: clamp(3.3rem, 7vw, 6.4rem);
+  line-height: 0.88;
+}
+
+.page-lead {
+  max-width: 43ch;
+  font-size: 1.08rem;
+}
+
+.hero-aside {
+  align-self: stretch;
+  display: grid;
+  align-items: end;
+  background: transparent;
+  box-shadow: none;
+  animation: none;
+}
+
+.reservation-preview {
+  align-self: end;
+  max-width: 470px;
+  margin-left: auto;
+  padding: 18px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(216, 226, 234, 0.9);
+  box-shadow: 0 26px 60px rgba(20, 34, 50, 0.16);
+  backdrop-filter: blur(12px);
+}
+
+.reservation-preview__image {
+  height: 220px;
+  object-fit: contain;
+  background: linear-gradient(180deg, #f5f8fb, #eaf1f6);
+  box-shadow: none;
+}
+
+.hero-metrics {
+  max-width: 620px;
+}
+
+.metric-card {
+  border-radius: 18px;
+}
+
+.booking-strip {
+  border-radius: 24px;
+  box-shadow: 0 22px 58px rgba(20, 34, 50, 0.1);
+}
+
+.product-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: -18px;
+}
+
+.product-pill {
+  display: grid;
+  gap: 5px;
+  min-height: 92px;
+  padding: 16px;
+  border: 1px solid rgba(216, 226, 234, 0.92);
+  border-radius: 20px;
+  background: #ffffff;
+  color: inherit;
+  text-decoration: none;
+  box-shadow: 0 16px 36px rgba(20, 34, 50, 0.08);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.product-pill:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 46px rgba(20, 34, 50, 0.12);
+}
+
+.product-pill strong {
+  color: var(--color-text-primary);
+}
+
+.product-pill span {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 1060px) {
+  .hero-panel {
+    grid-template-columns: 1fr;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.58)),
+      url('/website/public/yendo-destino-2.jpg') center/cover;
+  }
+
+  .reservation-preview {
+    max-width: none;
+    margin-left: 0;
+  }
+
+  .product-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .product-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .page-title--light {
+    font-size: clamp(3rem, 16vw, 4.4rem);
+  }
+}
+
+.website-screen .card,
+.website-screen .button,
+.website-screen .field,
+.website-screen .badge,
+.website-screen .product-pill,
+.website-screen .booking-strip,
+.website-screen .booking-strip__field,
+.website-screen .metric-card,
+.website-screen .service-card,
+.website-screen .destination-card,
+.website-screen .story-card,
+.website-screen .contact-card,
+.website-screen .reservation-preview,
+.website-screen .reservation-preview__image,
+.website-screen .reservation-preview__routeboard,
+.website-screen .website-header {
+  border-radius: 12px;
+}
+
+.website-screen .button {
+  min-height: 42px;
+  padding-inline: 18px;
+  box-shadow: 0 8px 20px rgba(17, 33, 48, 0.08);
+}
+
+.website-layout {
+  gap: 48px;
+}
+
+.hero-panel {
+  border-radius: 18px;
+  transform-style: preserve-3d;
+}
+
+.hero-copy {
+  padding: clamp(30px, 5vw, 60px);
+}
+
+.reservation-preview {
+  transform: translateY(10px);
+}
+
+.impact-band {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid rgba(216, 226, 234, 0.9);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 22px 60px rgba(20, 34, 50, 0.08);
+}
+
+.impact-band > div {
+  display: grid;
+  gap: 8px;
+  min-height: 126px;
+  align-content: center;
+  padding: 22px;
+  border-right: 1px solid rgba(216, 226, 234, 0.82);
+}
+
+.impact-band > div:last-child {
+  border-right: 0;
+}
+
+.impact-band strong {
+  color: #102033;
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  line-height: 0.95;
+  letter-spacing: 0;
+}
+
+.impact-band strong::after {
+  content: '+';
+  color: var(--color-primary);
+  font-size: 0.55em;
+  margin-left: 2px;
+  vertical-align: super;
+}
+
+.impact-band > div:last-child strong::after {
+  content: '%';
+}
+
+.impact-band span {
+  color: var(--color-text-secondary);
+  font-weight: 800;
+}
+
+.solutions-showcase {
+  position: relative;
+}
+
+.solution-stage {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid rgba(216, 226, 234, 0.9);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(57, 169, 225, 0.08), transparent 42%),
+    #ffffff;
+  box-shadow: 0 22px 60px rgba(20, 34, 50, 0.08);
+}
+
+.solution-stage article {
+  display: grid;
+  gap: 12px;
+  min-height: 230px;
+  padding: 24px;
+  border: 1px solid rgba(216, 226, 234, 0.8);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(245, 248, 251, 0.72), rgba(255, 255, 255, 0.96));
+  transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
+}
+
+.solution-stage article:hover {
+  transform: translateY(-8px);
+  border-color: rgba(57, 169, 225, 0.38);
+  box-shadow: 0 24px 50px rgba(20, 34, 50, 0.12);
+}
+
+.solution-stage span {
+  color: var(--color-primary);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.solution-stage h3 {
+  margin: auto 0 0;
+  font-size: 1.6rem;
+}
+
+.solution-stage p {
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 700ms ease, transform 700ms ease;
+}
+
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.destination-card,
+.service-card,
+.testimonial-card,
+.story-card,
+.contact-card,
+.product-pill {
+  transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
+}
+
+.destination-card:hover,
+.service-card:hover,
+.testimonial-card:hover,
+.story-card:hover,
+.contact-card:hover,
+.product-pill:hover {
+  transform: translateY(-6px);
+  border-color: rgba(57, 169, 225, 0.35);
+  box-shadow: 0 26px 60px rgba(20, 34, 50, 0.14);
+}
+
+@media (max-width: 900px) {
+  .impact-band,
+  .solution-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .impact-band > div {
+    border-right: 0;
+    border-bottom: 1px solid rgba(216, 226, 234, 0.82);
+  }
+
+  .impact-band > div:last-child {
+    border-bottom: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll,
+  .solution-stage article,
+  .destination-card,
+  .service-card,
+  .testimonial-card,
+  .story-card,
+  .contact-card,
+  .product-pill {
+    transition: none;
   }
 }

@@ -680,6 +680,203 @@
   font-weight: 800;
 }
 
+.details-screen,
+.ticket-screen {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(216, 226, 234, 0.9);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 22px 54px rgba(20, 34, 50, 0.1);
+}
+
+.map-preview {
+  position: relative;
+  min-height: 190px;
+  overflow: hidden;
+  border-radius: 24px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.24) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24) 1px, transparent 1px),
+    linear-gradient(135deg, #dff3fb, #eaf6ee 48%, #f9fbfd);
+  background-size: 34px 34px, 34px 34px, auto;
+  border: 1px solid rgba(216, 226, 234, 0.95);
+}
+
+.map-route-line {
+  position: absolute;
+  inset: 42% 18%;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-primary-dark), var(--color-success));
+  transform: rotate(-10deg);
+  box-shadow: 0 10px 24px rgba(20, 34, 50, 0.16);
+}
+
+.map-pin {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--color-text-primary);
+  font-size: 0.76rem;
+  font-weight: 900;
+  box-shadow: 0 12px 26px rgba(20, 34, 50, 0.14);
+}
+
+.map-pin--start {
+  left: 10%;
+  top: 30%;
+}
+
+.map-pin--end {
+  right: 10%;
+  bottom: 30%;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.detail-grid > div {
+  display: grid;
+  gap: 5px;
+  padding: 13px;
+  border-radius: 18px;
+  background: #f5f8fb;
+  border: 1px solid rgba(216, 226, 234, 0.8);
+}
+
+.detail-grid span {
+  color: var(--color-text-secondary);
+  font-size: 0.76rem;
+}
+
+.passenger-fieldset {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid rgba(216, 226, 234, 0.92);
+  border-radius: 20px;
+  background: #ffffff;
+}
+
+.passenger-fieldset legend {
+  padding: 0 8px;
+  color: var(--color-primary-dark);
+  font-weight: 900;
+}
+
+.trip-actions,
+.payment-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.payment-methods {
+  justify-content: center;
+}
+
+.payment-methods span {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #f5f8fb;
+  border: 1px solid rgba(216, 226, 234, 0.9);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.digital-ticket {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  overflow: hidden;
+  border-radius: 28px;
+  color: #ffffff;
+  background:
+    linear-gradient(135deg, rgba(57, 169, 225, 0.2), transparent 36%),
+    linear-gradient(145deg, #142232, #203d52 62%, #1f9d74);
+  box-shadow: 0 24px 60px rgba(20, 34, 50, 0.24);
+}
+
+.ticket-brand,
+.ticket-route {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ticket-brand {
+  justify-content: flex-start;
+}
+
+.ticket-brand img {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.ticket-brand strong,
+.ticket-brand span,
+.ticket-route span,
+.ticket-route strong {
+  display: block;
+}
+
+.ticket-brand span,
+.ticket-route span {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.76rem;
+}
+
+.ticket-qr {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  width: 116px;
+  height: 116px;
+  padding: 10px;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.ticket-qr span {
+  border-radius: 2px;
+  background: #d8e2ea;
+}
+
+.ticket-qr .is-dark {
+  background: #142232;
+}
+
+.ticket-route i {
+  flex: 1;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.36);
+}
+
+.digital-ticket .detail-grid > div {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.digital-ticket .detail-grid span {
+  color: rgba(255, 255, 255, 0.72);
+}
+
 @keyframes pulse {
   0%,
   100% {
@@ -730,5 +927,17 @@
 
   .summary-list__item strong {
     text-align: left;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trip-actions {
+    justify-content: stretch;
+  }
+
+  .trip-actions .button {
+    flex: 1 1 140px;
   }
 }
