@@ -464,31 +464,77 @@
 }
 
 .seat-map {
+  position: relative;
   display: grid;
   gap: 12px;
-  padding: 12px;
-  border: 1px solid rgba(216, 226, 234, 0.9);
-  border-radius: 26px;
+  padding: 28px 18px 24px;
+  border: 0;
+  border-radius: 38px;
   background:
-    linear-gradient(180deg, #ffffff, #f7fafc);
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.58) 36%, transparent 37%),
+    linear-gradient(180deg, #dbe5ed, #f7fafc);
+  box-shadow: inset 0 0 0 1px rgba(20, 34, 50, 0.1), 0 24px 48px rgba(20, 34, 50, 0.12);
+  overflow: hidden;
+}
+
+.bus-shell {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  filter: drop-shadow(0 18px 26px rgba(20, 34, 50, 0.12));
+}
+
+.bus-shell path:first-child {
+  fill: rgba(255, 255, 255, 0.86);
+  stroke: rgba(20, 34, 50, 0.16);
+  stroke-width: 2;
+}
+
+.bus-shell path:last-child {
+  fill: rgba(20, 34, 50, 0.88);
 }
 
 .bus-front {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   min-height: 42px;
-  padding: 0 12px;
-  border-radius: 18px 18px 10px 10px;
-  background: #142232;
+  padding: 0 18px;
+  border-radius: 26px 26px 12px 12px;
+  background: linear-gradient(135deg, #142232, #23445d);
   color: #ffffff;
   font-size: 0.78rem;
   font-weight: 800;
+  box-shadow: 0 14px 28px rgba(20, 34, 50, 0.18);
+}
+
+.driver-cockpit::before,
+.front-door::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #39a9e1;
+}
+
+.front-door::before {
+  width: 14px;
+  border-radius: 3px;
+  background: #ffffff;
 }
 
 .seat-rows {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: 8px;
+  padding: 8px 4px 0;
 }
 
 .seat-row {
@@ -511,14 +557,35 @@
 }
 
 .seat {
+  position: relative;
+  display: grid;
+  place-items: center;
   min-height: 44px;
-  border: 1px solid #d8e2ea;
-  border-radius: 13px 13px 8px 8px;
-  background: #eef3f7;
+  border: 1px solid rgba(20, 34, 50, 0.12);
+  border-radius: 14px 14px 9px 9px;
+  background: linear-gradient(180deg, #ffffff, #e7eef4);
   color: var(--color-text-primary);
   cursor: pointer;
   font-weight: 800;
+  overflow: hidden;
+  box-shadow: inset 0 -6px 0 rgba(20, 34, 50, 0.05), 0 8px 14px rgba(20, 34, 50, 0.08);
   transition: transform var(--transition-fast), background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.seat-back {
+  position: absolute;
+  top: 5px;
+  left: 8px;
+  right: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(20, 34, 50, 0.12);
+}
+
+.seat-label {
+  position: relative;
+  z-index: 1;
+  padding-top: 8px;
 }
 
 .seat:hover {
@@ -535,7 +602,8 @@
 .seat--reserved,
 .seat--blocked {
   cursor: not-allowed;
-  opacity: 0.42;
+  opacity: 0.58;
+  background: repeating-linear-gradient(135deg, #d5dee7 0 6px, #c7d2dc 6px 12px);
   transform: none;
 }
 
@@ -697,21 +765,87 @@
   overflow: hidden;
   border-radius: 24px;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.24) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.24) 1px, transparent 1px),
-    linear-gradient(135deg, #dff3fb, #eaf6ee 48%, #f9fbfd);
-  background-size: 34px 34px, 34px 34px, auto;
+    linear-gradient(90deg, rgba(255, 255, 255, 0.34) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34) 1px, transparent 1px),
+    linear-gradient(135deg, #cfe6ef, #e6f2e8 48%, #f9fbfd);
+  background-size: 32px 32px, 32px 32px, auto;
   border: 1px solid rgba(216, 226, 234, 0.95);
 }
 
-.map-route-line {
+.map-gridline,
+.map-park,
+.map-water,
+.map-route-svg {
   position: absolute;
-  inset: 42% 18%;
-  height: 6px;
+}
+
+.map-gridline {
+  height: 12px;
+  left: -20px;
+  right: -20px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--color-primary-dark), var(--color-success));
-  transform: rotate(-10deg);
-  box-shadow: 0 10px 24px rgba(20, 34, 50, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 0 0 1px rgba(20, 34, 50, 0.04);
+}
+
+.map-gridline--one {
+  top: 42px;
+  transform: rotate(18deg);
+}
+
+.map-gridline--two {
+  bottom: 34px;
+  transform: rotate(-24deg);
+}
+
+.map-park {
+  width: 120px;
+  height: 82px;
+  left: 18px;
+  bottom: 18px;
+  border-radius: 24px;
+  background: rgba(31, 157, 116, 0.18);
+}
+
+.map-water {
+  width: 150px;
+  height: 84px;
+  right: -28px;
+  top: -14px;
+  border-radius: 0 0 0 48px;
+  background: rgba(57, 169, 225, 0.2);
+}
+
+.map-route-svg {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.map-road {
+  fill: none;
+  stroke: var(--color-success);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 10 9;
+  animation: dash-flow 1.8s linear infinite;
+}
+
+.map-road--wide {
+  stroke: #ffffff;
+  stroke-width: 16;
+  stroke-dasharray: none;
+  animation: none;
+}
+
+.map-route-dot {
+  fill: #ffffff;
+  stroke: var(--color-primary-dark);
+  stroke-width: 5;
+}
+
+.map-route-dot--end {
+  stroke: var(--color-success);
 }
 
 .map-pin {
@@ -726,6 +860,7 @@
   font-size: 0.76rem;
   font-weight: 900;
   box-shadow: 0 12px 26px rgba(20, 34, 50, 0.14);
+  max-width: 42%;
 }
 
 .map-pin--start {
@@ -736,6 +871,20 @@
 .map-pin--end {
   right: 10%;
   bottom: 30%;
+}
+
+.map-vehicle {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: #142232;
+  color: #ffffff;
+  font-size: 0.74rem;
+  font-weight: 900;
+  box-shadow: 0 14px 28px rgba(20, 34, 50, 0.22);
 }
 
 .detail-grid {
@@ -843,10 +992,10 @@
 
 .ticket-qr {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
-  width: 116px;
-  height: 116px;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 2px;
+  width: 132px;
+  height: 132px;
   padding: 10px;
   border-radius: 18px;
   background: #ffffff;
@@ -887,6 +1036,12 @@
   50% {
     transform: scale(1.04);
     opacity: 1;
+  }
+}
+
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -38;
   }
 }
 
@@ -939,5 +1094,87 @@
 
   .trip-actions .button {
     flex: 1 1 140px;
+  }
+}
+
+/* Alignment pass shared across Passenger flow screens. */
+.passenger-app {
+  width: 100%;
+  max-width: 500px;
+  margin-inline: auto;
+}
+
+.button,
+.bottom-nav__item,
+.stepper__item {
+  white-space: normal;
+}
+
+.stepper__items {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.trip-actions,
+.seat-actions,
+.payment-actions,
+.confirmation-actions {
+  align-items: center;
+}
+
+.trip-actions .button,
+.seat-actions .button,
+.payment-actions .button,
+.confirmation-actions .button {
+  min-width: 132px;
+}
+
+.sticky-summary {
+  z-index: 12;
+}
+
+.bottom-nav {
+  width: 100%;
+  max-width: 500px;
+  margin-inline: auto;
+}
+
+@media (min-width: 520px) {
+  .stepper__items {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 460px) {
+  .passenger-topbar,
+  .trip-card__header,
+  .trip-card__footer,
+  .summary-row,
+  .seat-header,
+  .payment-header,
+  .confirmation-hero {
+    align-items: stretch;
+  }
+
+  .passenger-topbar__status {
+    display: none;
+  }
+
+  .trip-actions .button,
+  .seat-actions .button,
+  .payment-actions .button,
+  .confirmation-actions .button {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .bottom-nav {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+    padding: 7px;
+  }
+
+  .bottom-nav__item {
+    padding-inline: 2px;
+    font-size: 0.66rem;
   }
 }

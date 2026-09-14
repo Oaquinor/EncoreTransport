@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 type Tab = 'home' | 'trips' | 'tickets' | 'profile';
 type BookingStep = 'search' | 'results' | 'trip' | 'seats' | 'passenger' | 'review' | 'payment' | 'confirmation' | 'ticket';
@@ -43,19 +44,23 @@ export default function App() {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar style="dark" />
-      <View style={styles.app}>
-        <Header title={title} />
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {tab === 'home' && <Home step={step} setStep={setStep} selectedSeats={selectedSeats} toggleSeat={toggleSeat} />}
-          {tab === 'trips' && <Trips setStep={setStep} setTab={setTab} />}
-          {tab === 'tickets' && <Ticket />}
-          {tab === 'profile' && <Profile />}
-        </ScrollView>
-        <BottomNav tab={tab} setTab={setTab} />
-      </View>
-    </SafeAreaView>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+        <StatusBar style="dark" />
+        <View style={styles.app}>
+          <Header title={title} />
+          <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+            {tab === 'home' && <Home step={step} setStep={setStep} selectedSeats={selectedSeats} toggleSeat={toggleSeat} />}
+            {tab === 'trips' && <Trips setStep={setStep} setTab={setTab} />}
+            {tab === 'tickets' && <Ticket />}
+            {tab === 'profile' && <Profile />}
+          </ScrollView>
+          <SafeAreaView edges={['bottom']} style={styles.navSafe}>
+            <BottomNav tab={tab} setTab={setTab} />
+          </SafeAreaView>
+        </View>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
@@ -83,12 +88,9 @@ function Home({ step, setStep, selectedSeats, toggleSeat }: { step: BookingStep;
 
   return (
     <View style={styles.stack}>
-      <View style={styles.hero}>
-        <Text style={styles.heroLabel}>Premium intercity travel</Text>
-        <Text style={styles.heroTitle}>Book a clear, comfortable trip in minutes.</Text>
-        <Text style={styles.heroCopy}>Search routes, choose seats, preview payment, and keep a digital ticket ready.</Text>
-      </View>
       <View style={styles.card}>
+        <Text style={styles.badge}>Premium intercity travel</Text>
+        <Text style={styles.cardTitle}>Find your next trip</Text>
         <Field label="Origin" value="Santo Domingo" />
         <Field label="Destination" value="Santiago" />
         <View style={styles.row}>
@@ -101,6 +103,14 @@ function Home({ step, setStep, selectedSeats, toggleSeat }: { step: BookingStep;
         <Text style={styles.cardTitle}>Upcoming trip</Text>
         <TripMini />
       </View>
+      <View style={styles.destinationRow}>
+        {['Santiago', 'Punta Cana', 'La Romana'].map((destination) => (
+          <Pressable key={destination} style={styles.destinationChip}>
+            <Text style={styles.destinationText}>{destination}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <TicketMini />
     </View>
   );
 }
@@ -127,7 +137,7 @@ function Results({ setStep }: { setStep: (step: BookingStep) => void }) {
 function TripDetails({ setStep }: { setStep: (step: BookingStep) => void }) {
   return (
     <View style={styles.stack}>
-      <MapMock />
+      <RouteMap />
       <View style={styles.card}>
         <Text style={styles.badge}>{trip.id}</Text>
         <Text style={styles.cardTitle}>{trip.origin} to {trip.destination}</Text>
@@ -146,17 +156,20 @@ function Seats({ selectedSeats, setStep, toggleSeat }: { selectedSeats: string[]
   return (
     <View style={styles.card}>
       <Text style={styles.cardTitle}>Select seats</Text>
-      <View style={styles.busFront}><Text style={styles.meta}>Driver · Front door</Text></View>
+      <View style={styles.busShell}>
+        <View style={styles.busFront}><Text style={styles.busFrontText}>Driver</Text><Text style={styles.busFrontText}>Front door</Text></View>
       <View style={styles.seatGrid}>
         {seats.map((seat, index) => {
           const reserved = ['3B', '5C', '6B'].includes(seat);
           const active = selectedSeats.includes(seat);
           return (
             <Pressable key={seat} disabled={reserved} onPress={() => toggleSeat(seat)} style={[styles.seat, index % 4 === 2 && styles.seatGap, reserved && styles.seatReserved, active && styles.seatActive]}>
+              <View style={styles.seatBack} />
               <Text style={[styles.seatText, active && styles.seatTextActive]}>{seat}</Text>
             </Pressable>
           );
         })}
+      </View>
       </View>
       <Text style={styles.meta}>Selected: {selectedSeats.join(', ')}</Text>
       <PrimaryButton label="Continue" onPress={() => setStep('passenger')} />
@@ -196,9 +209,9 @@ function Review({ setStep, selectedSeats }: { setStep: (step: BookingStep) => vo
 function Payment({ setStep }: { setStep: (step: BookingStep) => void }) {
   return (
     <View style={styles.card}>
-      <Text style={styles.badge}>Mock gateway</Text>
-      <Text style={styles.cardTitle}>Payment handoff ready</Text>
-      <Text style={styles.meta}>Card, CardNet, and VisaNet states are represented without real charges.</Text>
+      <Text style={styles.badge}>Secure payment</Text>
+      <Text style={styles.cardTitle}>Authorize payment</Text>
+      <Text style={styles.meta}>Card, CardNet, and VisaNet states are represented as provider authorization steps.</Text>
       <View style={styles.row}>
         <Text style={styles.paymentChip}>Card</Text>
         <Text style={styles.paymentChip}>CardNet</Text>
@@ -214,7 +227,7 @@ function Confirmation({ setStep }: { setStep: (step: BookingStep) => void }) {
     <View style={styles.card}>
       <Text style={styles.badge}>Payment pending</Text>
       <Text style={styles.cardTitle}>Your seats are being held.</Text>
-      <Text style={styles.meta}>The preview does not mark payment as confirmed while the gateway state is pending.</Text>
+      <Text style={styles.meta}>We will update this ticket as soon as the payment provider confirms authorization.</Text>
       <PrimaryButton label="View digital ticket" onPress={() => setStep('ticket')} />
     </View>
   );
@@ -238,12 +251,22 @@ function Ticket() {
     <View style={styles.ticket}>
       <Text style={styles.ticketBrand}>Encore Transport</Text>
       <Text style={styles.ticketTitle}>Digital Ticket</Text>
-      <View style={styles.qr}><Text style={styles.qrText}>QR</Text></View>
+      <QrCode />
       <Info light label="Booking" value="BK-EN-001-4281" />
       <Info light label="Passenger" value="Maria Torres" />
       <Info light label="Route" value={`${trip.origin} → ${trip.destination}`} />
       <Info light label="Seat" value="4B, 4C" />
       <Info light label="Status" value="Payment pending" />
+    </View>
+  );
+}
+
+function TicketMini() {
+  return (
+    <View style={styles.ticketMini}>
+      <Text style={styles.badge}>Ticket ready</Text>
+      <Text style={styles.cardTitle}>BK-EN-001-4281</Text>
+      <Text style={styles.meta}>Maria Torres · Seat 4B, 4C · Payment pending</Text>
     </View>
   );
 }
@@ -269,12 +292,24 @@ function TripMini() {
   );
 }
 
-function MapMock() {
+function RouteMap() {
   return (
     <View style={styles.map}>
-      <View style={styles.mapLine} />
-      <Text style={[styles.mapPin, styles.mapStart]}>Origin</Text>
-      <Text style={[styles.mapPin, styles.mapEnd]}>Destination</Text>
+      <View style={styles.mapDistrictOne} />
+      <View style={styles.mapDistrictTwo} />
+      <View style={styles.mapRoadSoft} />
+      <View style={styles.mapRoad} />
+      <Text style={[styles.mapPin, styles.mapStart]}>Agora Mall</Text>
+      <Text style={[styles.mapPin, styles.mapEnd]}>Monumento</Text>
+      <Text style={styles.mapBus}>Bus 203</Text>
+    </View>
+  );
+}
+
+function QrCode() {
+  return (
+    <View style={styles.qr}>
+      {Array.from({ length: 49 }, (_, index) => <View key={index} style={[styles.qrDot, (index * 5 + 3) % 7 < 3 && styles.qrDotDark]} />)}
     </View>
   );
 }
@@ -320,6 +355,7 @@ function BottomNav({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: palette.bg },
   app: { flex: 1, paddingHorizontal: 16, paddingTop: 10 },
+  navSafe: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 14 },
   brand: { color: palette.muted, fontWeight: '800', fontSize: 12 },
   title: { color: palette.ink, fontSize: 28, fontWeight: '900' },
@@ -343,18 +379,29 @@ const styles = StyleSheet.create({
   primaryButton: { minHeight: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 18, backgroundColor: palette.blue },
   primaryButtonText: { color: palette.white, fontWeight: '900', fontSize: 16 },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  destinationRow: { flexDirection: 'row', gap: 10 },
+  destinationChip: { flex: 1, minHeight: 74, justifyContent: 'flex-end', padding: 12, borderRadius: 20, backgroundColor: palette.ink },
+  destinationText: { color: palette.white, fontWeight: '900' },
+  ticketMini: { gap: 8, padding: 16, borderRadius: 24, backgroundColor: '#eaf6ee', borderWidth: 1, borderColor: '#cce7db' },
   price: { color: palette.ink, fontSize: 18, fontWeight: '900' },
   link: { color: palette.blue, fontWeight: '900' },
-  map: { height: 180, borderRadius: 26, overflow: 'hidden', backgroundColor: '#dff3fb', borderWidth: 1, borderColor: palette.line },
-  mapLine: { position: 'absolute', left: 54, right: 54, top: 88, height: 6, borderRadius: 999, backgroundColor: palette.green, transform: [{ rotate: '-10deg' }] },
-  mapPin: { position: 'absolute', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: palette.white, color: palette.ink, fontWeight: '900' },
-  mapStart: { left: 24, top: 52 },
-  mapEnd: { right: 24, bottom: 48 },
+  map: { height: 190, borderRadius: 26, overflow: 'hidden', backgroundColor: '#dcecf2', borderWidth: 1, borderColor: palette.line },
+  mapDistrictOne: { position: 'absolute', left: 18, bottom: 18, width: 124, height: 86, borderRadius: 24, backgroundColor: '#cfe8db' },
+  mapDistrictTwo: { position: 'absolute', right: -16, top: 10, width: 150, height: 90, borderRadius: 32, backgroundColor: '#c9e9f7' },
+  mapRoadSoft: { position: 'absolute', left: 28, right: 28, top: 90, height: 18, borderRadius: 999, backgroundColor: palette.white, transform: [{ rotate: '-14deg' }] },
+  mapRoad: { position: 'absolute', left: 38, right: 42, top: 95, height: 6, borderRadius: 999, backgroundColor: palette.green, transform: [{ rotate: '-14deg' }] },
+  mapPin: { position: 'absolute', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: palette.white, color: palette.ink, fontWeight: '900', overflow: 'hidden' },
+  mapStart: { left: 18, top: 48 },
+  mapEnd: { right: 18, bottom: 44 },
+  mapBus: { position: 'absolute', left: 142, top: 82, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 999, overflow: 'hidden', backgroundColor: palette.ink, color: palette.white, fontWeight: '900' },
   info: { gap: 2 },
   infoValue: { color: palette.ink, fontWeight: '900' },
-  busFront: { padding: 12, borderRadius: 18, backgroundColor: '#eef4f8' },
-  seatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  seat: { width: '20%', minWidth: 54, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 14, backgroundColor: '#eef4f8' },
+  busShell: { gap: 12, padding: 14, borderRadius: 32, backgroundColor: '#f8fbfd', borderWidth: 2, borderColor: '#cfdae4' },
+  busFront: { flexDirection: 'row', justifyContent: 'space-between', padding: 12, borderRadius: 22, backgroundColor: palette.ink },
+  busFrontText: { color: palette.white, fontWeight: '900' },
+  seatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
+  seat: { width: '20%', minWidth: 54, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 14, backgroundColor: '#eef4f8', borderWidth: 1, borderColor: palette.line },
+  seatBack: { position: 'absolute', top: 6, left: 9, right: 9, height: 7, borderRadius: 999, backgroundColor: '#cad7e1' },
   seatGap: { marginLeft: 18 },
   seatReserved: { backgroundColor: '#d8e2ea', opacity: 0.55 },
   seatActive: { backgroundColor: palette.green },
@@ -364,11 +411,13 @@ const styles = StyleSheet.create({
   ticket: { gap: 14, padding: 22, borderRadius: 30, backgroundColor: palette.ink },
   ticketBrand: { color: palette.white, fontWeight: '900', fontSize: 18 },
   ticketTitle: { color: '#bdefff', fontWeight: '900', fontSize: 28 },
-  qr: { width: 116, height: 116, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.white },
+  qr: { width: 132, height: 132, padding: 10, borderRadius: 18, flexDirection: 'row', flexWrap: 'wrap', gap: 3, backgroundColor: palette.white },
+  qrDot: { width: 13, height: 13, borderRadius: 2, backgroundColor: '#d8e2ea' },
+  qrDotDark: { backgroundColor: palette.ink },
   qrText: { color: palette.ink, fontWeight: '900' },
   lightLabel: { color: '#aebdcc' },
   lightValue: { color: palette.white },
-  nav: { position: 'absolute', left: 16, right: 16, bottom: 16, flexDirection: 'row', gap: 8, padding: 8, borderRadius: 24, backgroundColor: palette.white, borderWidth: 1, borderColor: palette.line },
+  nav: { marginHorizontal: 16, marginBottom: 10, flexDirection: 'row', gap: 8, padding: 8, borderRadius: 24, backgroundColor: palette.white, borderWidth: 1, borderColor: palette.line },
   navItem: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 16 },
   navItemActive: { backgroundColor: '#dff3fb' },
   navText: { color: palette.muted, fontWeight: '800', fontSize: 12 },

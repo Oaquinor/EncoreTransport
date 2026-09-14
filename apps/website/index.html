@@ -31,66 +31,104 @@
       </header>
 
       <main class="app-shell website-layout motion-slide-up" id="home">
-        <section class="hero card hero-panel">
-          <div class="hero-copy card--pad">
-            <div class="eyebrow">Safe travel. Brighter tomorrows.</div>
-            <h1 class="page-title page-title--light">Travel further, feel closer.</h1>
+        <section class="hero hero-panel">
+          <div class="hero-copy">
+            <div class="eyebrow">Premium transport, clearly booked</div>
+            <h1 class="page-title page-title--light">Travel across the Dominican Republic with Encore.</h1>
             <p class="page-lead">
-              Safe, comfortable, and reliable transportation across the main cities of the Dominican Republic.
+              Search scheduled routes, choose real seats, confirm passenger details, and board with a digital ticket that matches the driver and operations view.
             </p>
 
-            <div class="hero-actions">
-              <a class="button button--primary" href="/passenger/?origin=Santo%20Domingo&destination=Santiago">Book a Trip</a>
-              <a class="button button--ghost" href="#experience">Explore the experience</a>
+            <div class="hero-trust">
+              <span>Shared demo data</span>
+              <span>Clear fares</span>
+              <span>Seat-level booking</span>
             </div>
 
-            <div class="hero-metrics">
-              <div class="metric-card">
-                <strong>32</strong>
-                <span>daily demo trips</span>
-              </div>
-              <div class="metric-card">
-                <strong>72%</strong>
-                <span>average occupancy</span>
-              </div>
-              <div class="metric-card">
-                <strong>24/7</strong>
-                <span>support-ready flow</span>
-              </div>
+            <div class="hero-illustration" aria-hidden="true">
+              <img src="/assets/media/Autobus.png" alt="" />
             </div>
           </div>
 
-          <aside class="hero-aside card--pad">
-            <div class="reservation-preview">
-              <div class="reservation-preview__header">
-                <span class="badge badge--primary">Fast booking</span>
-                <span class="reservation-preview__chip">Mobile ready</span>
-              </div>
-              <img class="reservation-preview__image" src="/assets/media/Autobus.png" alt="Encore Transport bus" />
-              <div class="reservation-preview__routeboard">
-                <div>
-                  <small>Route</small>
-                  <strong>Santo Domingo → Santiago</strong>
-                </div>
-                <div>
-                  <small>Departure</small>
-                  <strong>Mon, Sep 14 · 08:30</strong>
-                </div>
-                <div>
-                  <small>Availability</small>
-                  <strong>18 seats available</strong>
-                </div>
-              </div>
-              <a class="button button--primary button--block" href="/passenger/?origin=Santo%20Domingo&destination=Santiago">Open Passenger App</a>
+          <aside class="booking-widget" aria-label="Book a ride">
+            <div class="ride-tabs">
+              <button class="ride-tab ride-tab--active" type="button"><span>↔</span>Route</button>
+              <button class="ride-tab" type="button"><span>✦</span>Premium</button>
+              <button class="ride-tab" type="button"><span>✈</span>Airport</button>
+              <button class="ride-tab" type="button"><span>●</span>Charter</button>
             </div>
+
+            <button class="ride-field ride-field--location" type="button" data-open-map>
+              <span class="ride-field__icon"></span>
+              <span>
+                <small>From</small>
+                <strong id="pickupName">Agora Mall</strong>
+                <em id="pickupArea">Santo Domingo</em>
+              </span>
+            </button>
+
+            <a class="ride-field" href="/passenger/?origin=Santo%20Domingo&destination=Santiago">
+              <span class="ride-field__icon ride-field__icon--end"></span>
+              <span>
+                <small>To</small>
+                <strong>Monumento a los Heroes</strong>
+                <em>Santiago</em>
+              </span>
+            </a>
+
+            <div class="ride-field-grid">
+              <a class="ride-field" href="/passenger/">
+                <span>
+                  <small>When</small>
+                  <strong>Mon, Sep 14</strong>
+                  <em>08:30 AM</em>
+                </span>
+              </a>
+              <a class="ride-field" href="/passenger/">
+                <span>
+                  <small>Seats</small>
+                  <strong>2 passengers</strong>
+                  <em>4B, 4C available</em>
+                </span>
+              </a>
+            </div>
+
+            <a class="ride-submit" href="/passenger/?origin=Santo%20Domingo&destination=Santiago">Search available trips</a>
+            <p class="ride-note">EN-001 · Bus 203 · Ricardo Luna · DOP 685 per seat</p>
           </aside>
         </section>
+
+        <div class="map-modal" id="pickupMap" aria-hidden="true">
+          <div class="map-modal__backdrop" data-close-map></div>
+          <section class="map-modal__panel" role="dialog" aria-modal="true" aria-labelledby="mapTitle">
+            <header>
+              <h2 id="mapTitle">Pickup location — pick on map</h2>
+              <button type="button" data-close-map aria-label="Close map">×</button>
+            </header>
+            <div class="modal-map" id="modalMapCanvas">
+              <div class="modal-map__district modal-map__district--a"></div>
+              <div class="modal-map__district modal-map__district--b"></div>
+              <div class="modal-map__road modal-map__road--one"></div>
+              <div class="modal-map__road modal-map__road--two"></div>
+              <div class="modal-map__road modal-map__road--three"></div>
+              <span class="modal-map__label modal-map__label--one">PIANTINI</span>
+              <span class="modal-map__label modal-map__label--two">NACO</span>
+              <span class="modal-map__label modal-map__label--three">ENS. JULIETA</span>
+              <span class="modal-map__hint">Drag the map to move the pin</span>
+              <span class="modal-map__pin" id="modalMapPin"></span>
+            </div>
+            <footer>
+              <span id="pickupCoordinates">18.4822, -69.9369</span>
+              <button class="ride-submit" type="button" id="usePickupLocation">Use this location</button>
+            </footer>
+          </section>
+        </div>
 
         <section class="product-strip" aria-label="Encore preview modules">
           <a href="/website/" class="product-pill"><strong>Encore Website</strong><span>Modern. Informative. Easy to book.</span></a>
           <a href="/passenger/" class="product-pill"><strong>Passenger App</strong><span>Book. Travel. Explore.</span></a>
           <a href="/driver/" class="product-pill"><strong>Driver App</strong><span>Drive with confidence.</span></a>
-          <a href="/admin/" class="product-pill"><strong>Operations Preview</strong><span>Real-time visibility concept.</span></a>
+          <a href="/admin/" class="product-pill"><strong>Operations</strong><span>Live-style visibility for teams.</span></a>
         </section>
 
         <section class="impact-band" aria-label="Encore platform metrics">
@@ -118,7 +156,7 @@
               <div class="eyebrow">Booking search</div>
               <h2>Start with the route. Encore handles the journey around it.</h2>
             </div>
-            <p>Passengers can move from route search to seat selection, payment preview, confirmation, and a digital ticket.</p>
+            <p>Passengers move from route search to seat selection, payment authorization, confirmation, and a polished boarding pass.</p>
           </div>
           <div class="booking-strip card card--pad">
             <a class="booking-strip__field" href="/passenger/?origin=Santo%20Domingo&destination=Santiago"><span>From</span><strong>Santo Domingo</strong></a>
@@ -189,6 +227,37 @@
           </div>
         </section>
 
+        <section class="tracking-showcase">
+          <div class="tracking-map" aria-label="Route tracking preview">
+            <div class="tracking-map__district tracking-map__district--one"></div>
+            <div class="tracking-map__district tracking-map__district--two"></div>
+            <svg viewBox="0 0 760 380" aria-hidden="true">
+              <path class="tracking-road tracking-road--base" d="M70 265 C170 90 270 310 378 188 S594 86 700 138" />
+              <path class="tracking-road tracking-road--active" d="M70 265 C170 90 270 310 378 188 S594 86 700 138" />
+              <circle cx="70" cy="265" r="10" />
+              <circle cx="700" cy="138" r="10" />
+            </svg>
+            <span class="tracking-pin tracking-pin--start">Agora Mall</span>
+            <span class="tracking-pin tracking-pin--end">Monumento</span>
+            <span class="tracking-vehicle">Bus 203 · on schedule</span>
+          </div>
+          <div class="phone-mockup" aria-label="Mobile ticket mockup">
+            <div class="phone-mockup__screen">
+              <span class="badge badge--success">Boarding</span>
+              <h3>SDQ → STI</h3>
+              <p>Mon, Sep 14 · 08:30</p>
+              <div class="phone-qr">
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              </div>
+              <div class="phone-ticket-row"><span>Seat</span><strong>4B, 4C</strong></div>
+              <div class="phone-ticket-row"><span>Booking</span><strong>BK-EN-001-4281</strong></div>
+            </div>
+          </div>
+        </section>
+
         <section class="solutions-showcase section-grid">
           <div class="section-heading">
             <div>
@@ -201,7 +270,7 @@
             <article>
               <span>01</span>
               <h3>Passenger booking</h3>
-              <p>Search, trip details, seat selection, payment preview, confirmation, and digital tickets.</p>
+              <p>Search, trip details, seat selection, payment authorization, confirmation, and digital tickets.</p>
             </article>
             <article>
               <span>02</span>
@@ -228,7 +297,7 @@
             <div class="eyebrow">Technology</div>
             <h2>Smart travel tools without making the customer think about software.</h2>
             <p>
-              Passengers see a smooth booking experience, while the platform stays ready for real payments, maps, notifications, and live operations.
+              Passengers see a smooth booking experience, while the platform presents payments, maps, notifications, and live operations in one connected journey.
             </p>
           </article>
         </section>
@@ -249,12 +318,12 @@
             <article class="card card--pad testimonial-card">
               <p>Operations can monitor trips, bookings, occupancy, revenue, incidents, vehicles, and activity.</p>
               <strong>Operations Center</strong>
-              <span>Control room concept</span>
+              <span>Control room workflow</span>
             </article>
             <article class="card card--pad testimonial-card">
               <p>Business users can see how the brand, passenger journey, and daily operation connect.</p>
               <strong>Business Preview</strong>
-              <span>Client-ready story</span>
+              <span>Client-ready journey</span>
             </article>
           </div>
         </section>
@@ -273,11 +342,11 @@
             </details>
             <details class="card card--pad">
               <summary>Are payments live in this preview?</summary>
-              <p>No. Payment states are mocked so the experience can be demonstrated without charging real cards.</p>
+              <p>Payments are represented as authorization states so the booking journey can be reviewed without charging a real card.</p>
             </details>
             <details class="card card--pad">
               <summary>Does the preview use real tracking?</summary>
-              <p>No. Maps and tracking are represented with preview-ready placeholders that show where real integrations will connect later.</p>
+              <p>The product view shows realistic route tracking and is structured for a live map provider when production credentials are connected.</p>
             </details>
           </div>
         </section>
@@ -286,7 +355,7 @@
           <div class="card card--pad contact-card">
             <div class="eyebrow">Contact</div>
             <h2>Ready to review Encore Transport?</h2>
-            <p>Open the passenger, driver, and operations previews to see how the complete platform story fits together.</p>
+            <p>Open the passenger, driver, and operations experiences to see how the complete platform story fits together.</p>
             <img class="contact-card__image" src="/website/public/yendo-destino-1.jpg" alt="Route reference" />
             <div class="contact-actions">
               <a class="button button--primary" href="/passenger/">Open Passenger</a>
@@ -294,9 +363,9 @@
             </div>
           </div>
           <div class="card card--pad contact-card contact-card--info">
-            <span class="badge badge--info">Preview path</span>
+            <span class="badge badge--info">Platform path</span>
             <h3>Website → Passenger → Driver → Operations.</h3>
-            <p>The demo is structured so a client can understand the brand, booking flow, driver workflow, and operational control center in one review.</p>
+            <p>The experience is structured so a client can understand the brand, booking flow, driver workflow, and operational control center in one review.</p>
             <a class="button button--primary button--block" href="/passenger/">Book a Trip</a>
           </div>
         </section>
@@ -315,7 +384,7 @@
             <a href="#faq">FAQ</a>
             <a href="/admin/">Operations</a>
           </div>
-          <span>Passenger, driver, and operations previews powered by Encore.</span>
+          <span>Passenger, driver, and operations experiences powered by Encore.</span>
         </footer>
       </main>
     </div>

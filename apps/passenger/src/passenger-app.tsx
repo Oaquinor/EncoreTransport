@@ -363,9 +363,19 @@ function TripDetailsScreen({ trip, onBack, onSelect }: { trip: PassengerTrip; on
         <Button tone="ghost" onClick={onBack}>Back</Button>
       </div>
       <div className="map-preview">
-        <div className="map-route-line" />
-        <span className="map-pin map-pin--start">Origin</span>
-        <span className="map-pin map-pin--end">Destination</span>
+        <div className="map-gridline map-gridline--one" />
+        <div className="map-gridline map-gridline--two" />
+        <div className="map-park" />
+        <div className="map-water" />
+        <svg className="map-route-svg" viewBox="0 0 420 190" aria-hidden="true">
+          <path className="map-road map-road--wide" d="M42 136 C105 72 160 158 220 98 S328 42 380 74" />
+          <path className="map-road" d="M42 136 C105 72 160 158 220 98 S328 42 380 74" />
+          <circle className="map-route-dot" cx="42" cy="136" r="6" />
+          <circle className="map-route-dot map-route-dot--end" cx="380" cy="74" r="6" />
+        </svg>
+        <span className="map-pin map-pin--start">{trip.boardingPoint}</span>
+        <span className="map-pin map-pin--end">{trip.dropoffPoint}</span>
+        <span className="map-vehicle">Bus 203</span>
       </div>
       <div className="detail-grid">
         <div><span>Departure</span><strong>{formatDateLabel(trip.date)} · {formatTimeLabel(trip.departureTime)}</strong></div>
@@ -420,9 +430,13 @@ function SeatScreen({ passengerCount, selectedSeats, trip, onBack, onContinue, o
         <span><i className="seat-sample seat-sample--unavailable" /> Unavailable</span>
       </div>
       <div className="seat-map">
+        <svg className="bus-shell" viewBox="0 0 420 780" aria-hidden="true" preserveAspectRatio="none">
+          <path d="M78 26 Q210 -6 342 26 Q386 38 392 92 L398 696 Q398 744 350 760 L70 760 Q22 744 22 696 L28 92 Q34 38 78 26Z" />
+          <path d="M116 36 L304 36 Q342 36 352 78 L68 78 Q78 36 116 36Z" />
+        </svg>
         <div className="bus-front">
-          <span>Driver</span>
-          <span>Front door</span>
+          <span className="driver-cockpit">Driver</span>
+          <span className="front-door">Front door</span>
         </div>
         <div className="seat-rows">
           {rows.map((row, rowIndex) => (
@@ -437,7 +451,8 @@ function SeatScreen({ passengerCount, selectedSeats, trip, onBack, onContinue, o
                     onClick={() => onToggleSeat(seat.id)}
                     type="button"
                   >
-                    {seat.id}
+                    <span className="seat-back" />
+                    <span className="seat-label">{seat.id}</span>
                   </button>
                 </Fragment>
               ))}
@@ -534,8 +549,8 @@ function ReviewScreen({ fees, passengers, search, selectedSeats, subtotal, total
         <div className="summary-list__item"><span>Total</span><strong>{formatCurrency(total)}</strong></div>
       </div>
       <div className="policy-note">
-        <strong>Payment preview</strong>
-        <span>CardNet, VisaNet, and card processors are represented as mock states for this preview.</span>
+        <strong>Payment authorization</strong>
+        <span>Your seats are held while the payment provider returns the final authorization state.</span>
       </div>
       <div className="confirmation-actions">
         <Button tone="ghost" onClick={onBack}>Edit passengers</Button>
@@ -555,7 +570,7 @@ function PaymentPreview({ state }: { state: PaymentState }) {
         <div className="text-center">
           <Badge tone="warning">{label}</Badge>
           <h2>Preparing a secure payment handoff</h2>
-          <p className="muted-copy">This preview simulates the gateway handoff without charging a real card.</p>
+          <p className="muted-copy">Encrypting trip details, confirming seat availability, and opening the payment provider session.</p>
         </div>
         <div className="payment-methods">
           <span>Card</span>
@@ -585,7 +600,7 @@ function ConfirmationScreen({ booking, paymentState, selectedSeats, trip, onNewS
         <div>
           <Badge tone={isFailed ? 'warning' : isPendingPayment ? 'warning' : 'success'}>{statusLabel}</Badge>
           <h2>{isFailed ? 'The reservation is not complete.' : isPendingPayment ? 'Your seats are being held.' : 'Your trip is ready.'}</h2>
-          <p className="muted-copy">The preview never claims payment success while the mock gateway is pending.</p>
+          <p className="muted-copy">{isPendingPayment ? 'We will update the ticket automatically when the payment provider confirms the authorization.' : 'Your booking details are ready for boarding.'}</p>
         </div>
       </div>
       <div className="summary-list">
@@ -614,8 +629,8 @@ function TicketScreen({ booking, passengers, selectedSeats, trip, onBack }: { bo
             <span>Digital Ticket</span>
           </div>
         </div>
-        <div className="ticket-qr" aria-label="QR code preview">
-          {Array.from({ length: 49 }, (_, index) => <span key={index} className={index % 2 === 0 || index % 5 === 0 ? 'is-dark' : ''} />)}
+        <div className="ticket-qr" aria-label="Boarding QR code">
+          {Array.from({ length: 81 }, (_, index) => <span key={index} className={(index * 7 + booking.id.length + selectedSeats.join('').length) % 5 < 2 || [0, 1, 2, 9, 18, 63, 72, 80].includes(index) ? 'is-dark' : ''} />)}
         </div>
         <div className="ticket-route">
           <div><span>From</span><strong>{trip.origin}</strong></div>

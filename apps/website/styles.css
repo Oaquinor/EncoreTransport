@@ -45,7 +45,6 @@
   color: #102033;
 }
 
-  border-radius: var(--radius-lg);
 .brand-logo-hero {
   display: block;
 }
@@ -919,6 +918,34 @@
 @media (max-width: 1060px) {
   .hero-panel {
     grid-template-columns: 1fr;
+    min-height: auto;
+    padding-block: 48px 36px;
+  }
+
+  .hero-copy {
+    min-height: 520px;
+    align-content: start;
+  }
+
+  .hero-illustration {
+    width: min(620px, 84vw);
+  }
+
+  .booking-widget {
+    min-width: 0;
+  }
+
+  .ride-field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .map-modal__panel footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .hero-panel {
+    grid-template-columns: 1fr;
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.58)),
       url('/website/public/yendo-destino-2.jpg') center/cover;
@@ -935,6 +962,43 @@
 }
 
 @media (max-width: 640px) {
+  .website-header {
+    padding-inline: 16px;
+  }
+
+  .hero-panel {
+    padding-inline: 16px;
+  }
+
+  .page-title--light {
+    max-width: 11ch;
+  }
+
+  .hero-trust {
+    gap: 8px;
+  }
+
+  .hero-trust span {
+    font-size: 0.8rem;
+  }
+
+  .booking-widget {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .ride-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .map-modal {
+    padding: 10px;
+  }
+
+  .modal-map {
+    height: 420px;
+  }
+
   .product-strip {
     grid-template-columns: 1fr;
   }
@@ -1036,6 +1100,1089 @@
 
 .solutions-showcase {
   position: relative;
+}
+
+/* 2026 premium direction: product-first, high-contrast booking surface. */
+.website-screen {
+  background: #f4f5f2;
+}
+
+.website-header {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 18px clamp(18px, 7vw, 120px);
+  border: 0;
+  border-bottom: 1px solid #e5e5e1;
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.website-header .button {
+  background: #050505;
+  color: #ffffff;
+  border-color: #050505;
+}
+
+.brand--light strong {
+  font-size: 1.22rem;
+  letter-spacing: 0.01em;
+}
+
+.website-nav a {
+  color: #2c2c2a;
+  font-weight: 800;
+}
+
+.website-layout {
+  width: 100%;
+  max-width: none;
+  padding-top: 0;
+  gap: 56px;
+}
+
+.hero-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(420px, 0.82fr);
+  min-height: calc(100vh - 84px);
+  padding: clamp(42px, 6vw, 86px) clamp(18px, 8vw, 142px);
+  border: 0;
+  border-radius: 0;
+  background:
+    radial-gradient(circle at 22% 75%, rgba(255, 183, 41, 0.18), transparent 24%),
+    radial-gradient(circle at 76% 18%, rgba(57, 169, 225, 0.12), transparent 22%),
+    linear-gradient(118deg, #020202 0%, #050505 56%, #171105 100%);
+  color: #ffffff;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.hero-panel::before {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 36%;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.82));
+  pointer-events: none;
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-content: center;
+  padding: 0;
+  max-width: 760px;
+}
+
+.hero-copy .eyebrow {
+  color: #ffc23d;
+  letter-spacing: 0.13em;
+}
+
+.page-title--light {
+  max-width: 13ch;
+  color: #ffffff;
+  font-size: clamp(3.5rem, 6.3vw, 7.2rem);
+  line-height: 0.89;
+}
+
+.page-lead {
+  max-width: 650px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: clamp(1.08rem, 1.5vw, 1.45rem);
+  line-height: 1.45;
+}
+
+.hero-trust {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.hero-trust span {
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 900;
+}
+
+.hero-illustration {
+  position: absolute;
+  left: clamp(18px, 8vw, 142px);
+  bottom: 0;
+  width: min(620px, 46vw);
+  transform: translateY(8%);
+  opacity: 0.96;
+}
+
+.hero-illustration img {
+  width: 100%;
+  display: block;
+  filter: drop-shadow(0 30px 42px rgba(0,0,0,0.48));
+}
+
+.booking-widget {
+  position: relative;
+  z-index: 2;
+  align-self: center;
+  display: grid;
+  gap: 18px;
+  padding: 26px;
+  border-radius: 24px;
+  background: #ffffff;
+  color: #111111;
+  box-shadow: 0 38px 84px rgba(0, 0, 0, 0.36);
+}
+
+.ride-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.ride-tab {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-height: 70px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: #777;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.ride-tab span {
+  color: #9b9b97;
+  font-size: 1.4rem;
+}
+
+.ride-tab--active {
+  border-color: #050505;
+  color: #050505;
+}
+
+.ride-tab--active span {
+  color: #050505;
+}
+
+.ride-field,
+.ride-submit {
+  text-decoration: none;
+}
+
+.ride-field {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 12px;
+  align-items: center;
+  min-height: 86px;
+  padding: 16px 18px;
+  border: 1px solid #deded8;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #111111;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  text-align: left;
+}
+
+.ride-field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ride-field-grid .ride-field {
+  grid-template-columns: 1fr;
+  min-height: 84px;
+}
+
+.ride-field small,
+.ride-field em {
+  display: block;
+}
+
+.ride-field small {
+  color: #a4a4a0;
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ride-field strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.08rem;
+}
+
+.ride-field em {
+  margin-top: 4px;
+  color: #84847d;
+  font-style: normal;
+}
+
+.ride-field__icon {
+  width: 18px;
+  height: 18px;
+  border: 4px solid #f5a400;
+  border-radius: 50%;
+}
+
+.ride-field__icon--end {
+  border-color: #111111;
+}
+
+.ride-submit {
+  display: grid;
+  place-items: center;
+  min-height: 62px;
+  border-radius: 15px;
+  background: #050505;
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 950;
+  box-shadow: 0 16px 26px rgba(0, 0, 0, 0.18);
+}
+
+.ride-note {
+  margin: -2px 0 0;
+  color: #72726d;
+  text-align: center;
+  font-weight: 800;
+}
+
+.map-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  place-items: center;
+  padding: 24px;
+}
+
+.map-modal.is-open {
+  display: grid;
+}
+
+.map-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.map-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(920px, 100%);
+  overflow: hidden;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 34px 100px rgba(0, 0, 0, 0.45);
+}
+
+.map-modal__panel header,
+.map-modal__panel footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 22px 24px;
+}
+
+.map-modal__panel h2 {
+  margin: 0;
+  color: #111111;
+  font-size: 1.35rem;
+}
+
+.map-modal__panel header button {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  background: transparent;
+  color: #666;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+.modal-map {
+  position: relative;
+  height: min(52vh, 520px);
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.68) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255,255,255,0.68) 1px, transparent 1px),
+    #e9ece9;
+  background-position: var(--map-x, 0) var(--map-y, 0), var(--map-x, 0) var(--map-y, 0), 0 0;
+  background-size: 42px 42px, 42px 42px, auto;
+}
+
+.modal-map.is-dragging {
+  cursor: grabbing;
+}
+
+.modal-map__district,
+.modal-map__road,
+.modal-map__label,
+.modal-map__hint,
+.modal-map__pin {
+  position: absolute;
+}
+
+.modal-map__district {
+  border-radius: 36px;
+  background: rgba(187, 208, 194, 0.45);
+  transform: translate(var(--map-x, 0), var(--map-y, 0));
+  transition: transform 80ms linear;
+}
+
+.modal-map__district--a {
+  width: 310px;
+  height: 160px;
+  left: 90px;
+  bottom: 50px;
+}
+
+.modal-map__district--b {
+  width: 340px;
+  height: 190px;
+  right: 80px;
+  top: 70px;
+}
+
+.modal-map__road {
+  height: 18px;
+  left: -80px;
+  right: -80px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 0 0 1px rgba(120, 130, 132, 0.14);
+  margin-left: var(--map-x, 0);
+  margin-top: var(--map-y, 0);
+}
+
+.modal-map__road--one {
+  top: 28%;
+  transform: rotate(-17deg);
+}
+
+.modal-map__road--two {
+  top: 55%;
+  transform: rotate(11deg);
+}
+
+.modal-map__road--three {
+  top: 74%;
+  transform: rotate(-6deg);
+}
+
+.modal-map__label {
+  color: rgba(55, 62, 65, 0.42);
+  font-size: 1.2rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  transform: translate(var(--map-x, 0), var(--map-y, 0));
+}
+
+.modal-map__label--one {
+  left: 28%;
+  top: 32%;
+}
+
+.modal-map__label--two {
+  left: 52%;
+  top: 53%;
+}
+
+.modal-map__label--three {
+  right: 12%;
+  top: 22%;
+}
+
+.modal-map__hint {
+  left: 50%;
+  top: 22px;
+  transform: translateX(-50%);
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #666;
+  font-weight: 850;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+}
+
+.modal-map__pin {
+  left: 50%;
+  top: 50%;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -90%) rotate(45deg);
+  border: 4px solid #111111;
+  border-radius: 50% 50% 50% 0;
+  background: #f5a400;
+  box-shadow: 0 12px 22px rgba(0,0,0,0.28);
+}
+
+.map-modal__panel footer span {
+  color: #686862;
+  font-weight: 850;
+}
+
+.map-modal__panel footer .ride-submit {
+  width: min(360px, 100%);
+  min-height: 54px;
+}
+
+@media (max-width: 1060px) {
+  .website-screen .hero-panel {
+    background:
+      radial-gradient(circle at 22% 75%, rgba(255, 183, 41, 0.18), transparent 24%),
+      radial-gradient(circle at 76% 18%, rgba(57, 169, 225, 0.12), transparent 22%),
+      linear-gradient(118deg, #020202 0%, #050505 56%, #171105 100%);
+  }
+}
+
+.tracking-showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: center;
+  min-height: 460px;
+  padding: 24px;
+  border: 1px solid rgba(216, 226, 234, 0.9);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(20, 34, 50, 0.94), rgba(31, 74, 94, 0.92)),
+    #142232;
+  box-shadow: 0 28px 70px rgba(20, 34, 50, 0.14);
+  overflow: hidden;
+}
+
+.tracking-map {
+  position: relative;
+  min-height: 380px;
+  overflow: hidden;
+  border-radius: 14px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255,255,255,0.08) 1px, transparent 1px),
+    linear-gradient(135deg, #243f50, #335f63 52%, #1d3447);
+  background-size: 48px 48px, 48px 48px, auto;
+}
+
+.tracking-map__district,
+.tracking-map svg {
+  position: absolute;
+}
+
+.tracking-map__district {
+  border-radius: 36px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.tracking-map__district--one {
+  width: 220px;
+  height: 140px;
+  left: 36px;
+  bottom: 34px;
+}
+
+.tracking-map__district--two {
+  width: 260px;
+  height: 150px;
+  right: 32px;
+  top: 34px;
+}
+
+.tracking-map svg {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.tracking-map circle {
+  fill: #ffffff;
+  stroke: #39a9e1;
+  stroke-width: 7;
+}
+
+.tracking-road {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.tracking-road--base {
+  stroke: rgba(255,255,255,0.86);
+  stroke-width: 22;
+}
+
+.tracking-road--active {
+  stroke: #1f9d74;
+  stroke-width: 8;
+  stroke-dasharray: 16 14;
+  animation: tracking-flow 2s linear infinite;
+}
+
+.tracking-pin,
+.tracking-vehicle {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 13px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #142232;
+  font-weight: 900;
+  box-shadow: 0 18px 34px rgba(0,0,0,0.24);
+}
+
+.tracking-pin--start {
+  left: 7%;
+  bottom: 21%;
+}
+
+.tracking-pin--end {
+  right: 6%;
+  top: 29%;
+}
+
+.tracking-vehicle {
+  left: 47%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+  background: #39a9e1;
+  color: #ffffff;
+}
+
+.phone-mockup {
+  width: min(100%, 300px);
+  justify-self: center;
+  padding: 12px;
+  border-radius: 34px;
+  background: #0d1824;
+  box-shadow: 0 28px 60px rgba(0,0,0,0.34);
+}
+
+.phone-mockup__screen {
+  display: grid;
+  gap: 14px;
+  min-height: 540px;
+  padding: 22px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, #ffffff, #eef4f8);
+}
+
+.phone-mockup h3 {
+  margin: 8px 0 0;
+  color: #102033;
+  font-size: 2rem;
+}
+
+.phone-mockup p,
+.phone-ticket-row span {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.phone-qr {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  width: 156px;
+  height: 156px;
+  padding: 12px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(216, 226, 234, 0.9);
+}
+
+.phone-qr i {
+  border-radius: 2px;
+  background: #142232;
+}
+
+.phone-qr i:nth-child(3n) {
+  background: #d8e2ea;
+}
+
+.phone-ticket-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 0;
+  border-top: 1px dashed #c8d4de;
+}
+
+/* Encore aligned reset: keep the functional booking/map ideas, restore the clear brand system. */
+.website-screen {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f6f9fb 54%, #eef4f8 100%);
+}
+
+.website-header {
+  max-width: var(--shell-width);
+  width: calc(100% - 32px);
+  margin: 14px auto 0;
+  padding: 12px 18px;
+  border: 1px solid rgba(216, 226, 234, 0.9);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 42px rgba(20, 34, 50, 0.08);
+  backdrop-filter: blur(16px);
+}
+
+.website-header .button,
+.ride-submit {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 14px 30px rgba(57, 169, 225, 0.2);
+}
+
+.website-nav a {
+  color: var(--color-text-secondary);
+  font-weight: 700;
+}
+
+.website-nav a:hover {
+  color: var(--color-primary-dark);
+}
+
+.website-layout {
+  max-width: var(--shell-width);
+  width: calc(100% - 32px);
+  padding-top: 20px;
+  gap: 48px;
+}
+
+.hero-panel,
+.website-screen .hero-panel {
+  grid-template-columns: minmax(0, 0.95fr) minmax(390px, 0.82fr);
+  min-height: 640px;
+  padding: clamp(28px, 5vw, 58px);
+  border: 1px solid rgba(216, 226, 234, 0.9);
+  border-radius: 18px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0 44%, rgba(255, 255, 255, 0.64) 62%),
+    url('/website/public/yendo-destino-2.jpg') center/cover;
+  color: var(--color-text-primary);
+  box-shadow: 0 28px 70px rgba(20, 34, 50, 0.13);
+}
+
+.hero-panel::before {
+  display: none;
+}
+
+.hero-copy {
+  align-content: center;
+  max-width: 680px;
+  padding: 0;
+}
+
+.hero-copy .eyebrow {
+  color: var(--color-primary-dark);
+  letter-spacing: 0.12em;
+}
+
+.page-title--light {
+  max-width: 11ch;
+  color: var(--color-text-primary);
+  font-size: clamp(3.3rem, 6vw, 6.4rem);
+  line-height: 0.9;
+}
+
+.page-lead {
+  max-width: 560px;
+  color: var(--color-text-secondary);
+  font-size: 1.08rem;
+  line-height: 1.6;
+}
+
+.hero-trust {
+  margin-top: 24px;
+}
+
+.hero-trust span {
+  border: 1px solid rgba(216, 226, 234, 0.95);
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--color-text-primary);
+  box-shadow: 0 10px 22px rgba(20, 34, 50, 0.06);
+}
+
+.hero-illustration {
+  left: clamp(28px, 5vw, 58px);
+  width: min(520px, 42vw);
+  transform: translateY(9%);
+}
+
+.hero-illustration img {
+  filter: drop-shadow(0 22px 36px rgba(20, 34, 50, 0.18));
+}
+
+.booking-widget {
+  align-self: center;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid rgba(216, 226, 234, 0.95);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--color-text-primary);
+  box-shadow: 0 26px 60px rgba(20, 34, 50, 0.16);
+  backdrop-filter: blur(12px);
+}
+
+.ride-tabs {
+  gap: 8px;
+}
+
+.ride-tab {
+  min-height: 62px;
+  border-bottom-color: transparent;
+  color: var(--color-text-secondary);
+}
+
+.ride-tab span {
+  color: #8aa4b7;
+}
+
+.ride-tab--active {
+  border-color: var(--color-primary-dark);
+  color: var(--color-primary-dark);
+}
+
+.ride-tab--active span {
+  color: var(--color-primary-dark);
+}
+
+.ride-field {
+  min-height: 78px;
+  border-color: rgba(216, 226, 234, 0.95);
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--color-text-primary);
+  box-shadow: 0 10px 22px rgba(20, 34, 50, 0.06);
+}
+
+.ride-field small {
+  color: var(--color-text-secondary);
+}
+
+.ride-field em {
+  color: var(--color-text-secondary);
+}
+
+.ride-field__icon {
+  border-color: var(--color-primary);
+}
+
+.ride-field__icon--end {
+  border-color: var(--color-success);
+}
+
+.ride-note {
+  color: var(--color-text-secondary);
+}
+
+.map-modal__backdrop {
+  background: rgba(20, 34, 50, 0.42);
+  backdrop-filter: blur(4px);
+}
+
+.map-modal__panel {
+  border: 1px solid rgba(216, 226, 234, 0.95);
+  border-radius: 18px;
+  box-shadow: 0 34px 100px rgba(20, 34, 50, 0.26);
+}
+
+.map-modal__panel h2 {
+  color: var(--color-text-primary);
+}
+
+.modal-map {
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.68) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255,255,255,0.68) 1px, transparent 1px),
+    linear-gradient(135deg, #dff3fb, #edf7f2 52%, #f7fafc);
+  background-size: 42px 42px, 42px 42px, auto;
+}
+
+.modal-map__pin {
+  border-color: var(--color-text-primary);
+  background: var(--color-primary);
+}
+
+.tracking-showcase {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(243, 248, 252, 0.96));
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 1060px) {
+  .hero-panel,
+  .website-screen .hero-panel {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.7)),
+      url('/website/public/yendo-destino-2.jpg') center/cover;
+  }
+
+  .hero-copy {
+    min-height: 430px;
+  }
+
+  .hero-illustration {
+    width: min(560px, 82vw);
+  }
+}
+
+@media (max-width: 640px) {
+  .website-header,
+  .website-layout {
+    width: calc(100% - 20px);
+  }
+
+  .hero-panel,
+  .website-screen .hero-panel {
+    padding: 20px;
+  }
+
+  .hero-copy {
+    min-height: 390px;
+  }
+
+  .booking-widget {
+    padding: 16px;
+  }
+}
+
+/* Final alignment pass: remove overlap and keep every first-viewport element on-grid. */
+.website-screen {
+  overflow-x: hidden;
+}
+
+.website-header,
+.website-layout {
+  max-width: 1180px;
+  width: min(1180px, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+.website-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+}
+
+.website-nav {
+  justify-content: center;
+  min-width: 0;
+}
+
+.hero-panel,
+.website-screen .hero-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 460px);
+  gap: clamp(24px, 4vw, 54px);
+  align-items: center;
+  min-height: auto;
+  padding: clamp(28px, 4vw, 48px);
+  overflow: hidden;
+}
+
+.hero-copy {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  min-width: 0;
+  max-width: none;
+  padding: 0;
+}
+
+.hero-copy .eyebrow,
+.page-title--light,
+.page-lead,
+.hero-trust {
+  position: relative;
+  z-index: 2;
+}
+
+.page-title--light {
+  max-width: 560px;
+  margin: 0;
+  font-size: clamp(3rem, 6vw, 5.9rem);
+  line-height: 0.95;
+  overflow-wrap: normal;
+}
+
+.page-lead {
+  margin: 0;
+  max-width: 560px;
+}
+
+.hero-illustration {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  z-index: 1;
+  width: min(560px, 100%);
+  max-width: 100%;
+  margin-top: 10px;
+  transform: none;
+}
+
+.hero-illustration img {
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.booking-widget {
+  width: 100%;
+  min-width: 0;
+  max-width: 460px;
+  justify-self: end;
+  align-self: center;
+}
+
+.ride-tabs {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(216, 226, 234, 0.95);
+}
+
+.ride-tab {
+  min-width: 0;
+  min-height: 58px;
+  padding: 8px 6px;
+  line-height: 1.1;
+  overflow: hidden;
+}
+
+.ride-tab span {
+  font-size: 1rem;
+}
+
+.ride-field {
+  width: 100%;
+  min-width: 0;
+}
+
+.ride-field strong,
+.ride-field em,
+.ride-note {
+  overflow-wrap: anywhere;
+}
+
+.ride-field-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ride-submit {
+  width: 100%;
+  border: 0;
+}
+
+.product-strip,
+.impact-band,
+.section-grid,
+.tracking-showcase,
+.trust-band,
+.contact-grid,
+.website-footer {
+  width: 100%;
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+@media (max-width: 980px) {
+  .website-header {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .website-nav {
+    justify-content: start;
+  }
+
+  .hero-panel,
+  .website-screen .hero-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-copy {
+    min-height: 0;
+  }
+
+  .page-title--light {
+    max-width: 700px;
+  }
+
+  .hero-illustration img {
+    max-height: 240px;
+  }
+
+  .booking-widget {
+    max-width: none;
+    justify-self: stretch;
+  }
+}
+
+@media (max-width: 620px) {
+  .website-header,
+  .website-layout {
+    width: min(100% - 20px, 1180px);
+  }
+
+  .hero-panel,
+  .website-screen .hero-panel {
+    padding: 18px;
+  }
+
+  .page-title--light {
+    font-size: clamp(2.55rem, 13vw, 4rem);
+  }
+
+  .hero-trust {
+    gap: 8px;
+  }
+
+  .hero-trust span {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+
+  .ride-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ride-field-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes tracking-flow {
+  to {
+    stroke-dashoffset: -60;
+  }
 }
 
 .solution-stage {

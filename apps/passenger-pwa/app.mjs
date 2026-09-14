@@ -343,7 +343,7 @@ function renderConfirmation() {
         <div>
           <div class="badge badge--${statusBadge}">${statusLabel}</div>
           <h2>${statusTitle}</h2>
-          <p class="muted-copy">This preview keeps payment status explicit until a real gateway confirms the transaction.</p>
+          <p class="muted-copy">Payment status stays pending until the provider confirms the transaction.</p>
         </div>
       </div>
       <div class="summary-list">

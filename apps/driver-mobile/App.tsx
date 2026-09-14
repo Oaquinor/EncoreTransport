@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 type Tab = 'home' | 'trips' | 'notifications' | 'profile';
 type Flow = 'splash' | 'login' | 'home' | 'boarding' | 'active' | 'complete' | 'incident';
@@ -42,7 +43,8 @@ export default function App() {
 
   if (flow === 'splash') {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaProvider>
+      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
         <StatusBar style="light" />
         <View style={styles.splash}>
           <Text style={styles.splashBrand}>Encore Driver</Text>
@@ -50,12 +52,14 @@ export default function App() {
           <PrimaryButton label="Continue" onPress={() => setFlow('login')} />
         </View>
       </SafeAreaView>
+      </SafeAreaProvider>
     );
   }
 
   if (flow === 'login') {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaProvider>
+      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
         <StatusBar style="dark" />
         <View style={styles.login}>
           <Text style={styles.brand}>Encore Driver</Text>
@@ -65,11 +69,13 @@ export default function App() {
           <PrimaryButton label="Enter driver home" onPress={() => setFlow('home')} />
         </View>
       </SafeAreaView>
+      </SafeAreaProvider>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaProvider>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <StatusBar style="dark" />
       <View style={styles.app}>
         <Header />
@@ -79,9 +85,12 @@ export default function App() {
           {tab === 'notifications' && <Notifications setFlow={setFlow} />}
           {tab === 'profile' && <Profile />}
         </ScrollView>
-        <BottomNav tab={tab} setTab={setTab} />
+        <SafeAreaView edges={['bottom']} style={styles.navSafe}>
+          <BottomNav tab={tab} setTab={setTab} />
+        </SafeAreaView>
       </View>
     </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
@@ -138,7 +147,7 @@ function Boarding({ setFlow }: { setFlow: (flow: Flow) => void }) {
             <Text style={[styles.passengerStatus, passenger.status === 'Absent' && styles.statusAbsent, passenger.status === 'Pending' && styles.statusPending]}>{passenger.status}</Text>
           </View>
         ))}
-        <Text style={styles.meta}>QR scan preview ready for production integration.</Text>
+        <Text style={styles.meta}>Boarding scan is ready for passenger ticket validation.</Text>
         <PrimaryButton label="Start trip" onPress={() => setFlow('active')} />
       </View>
     </View>
@@ -153,7 +162,7 @@ function ActiveTrip({ setFlow }: { setFlow: (flow: Flow) => void }) {
         <Text style={styles.cardTitle}>Active trip</Text>
         <Info label="Route" value={trip.route} />
         <Info label="Next stop" value={trip.nextStop} />
-        <Info label="Mock ETA" value={trip.eta} />
+        <Info label="ETA" value={trip.eta} />
         <Info label="Vehicle" value={`${trip.vehicle} · ${trip.plate}`} />
         <View style={styles.actionRow}>
           <SecondaryButton label="Report incident" onPress={() => setFlow('incident')} />
@@ -174,7 +183,7 @@ function Incident({ setFlow }: { setFlow: (flow: Flow) => void }) {
         </Pressable>
       ))}
       <TextInput style={[styles.search, styles.notes]} placeholder="Add details for operations" placeholderTextColor={colors.muted} multiline />
-      <PrimaryButton label="Send incident preview" onPress={() => setFlow('active')} />
+      <PrimaryButton label="Send incident" onPress={() => setFlow('active')} />
     </View>
   );
 }
@@ -183,7 +192,7 @@ function CompleteTrip({ setFlow }: { setFlow: (flow: Flow) => void }) {
   return (
     <View style={styles.card}>
       <Text style={styles.badge}>Completed</Text>
-      <Text style={styles.cardTitle}>Trip closed for preview.</Text>
+      <Text style={styles.cardTitle}>Trip closed.</Text>
       <Info label="Trip" value={trip.id} />
       <Info label="Passengers" value="22 boarded · 1 absent" />
       <Info label="Arrival" value={trip.eta} />
@@ -228,9 +237,13 @@ function Profile() {
 function MapPanel({ active }: { active?: boolean }) {
   return (
     <View style={styles.map}>
+      <View style={styles.mapDistrictOne} />
+      <View style={styles.mapDistrictTwo} />
+      <View style={styles.mapRoadBase} />
       <View style={[styles.mapLine, active && styles.mapLineActive]} />
-      <Text style={[styles.mapPin, styles.mapStart]}>Start</Text>
-      <Text style={[styles.mapPin, styles.mapEnd]}>{active ? 'Next stop' : 'Destination'}</Text>
+      <Text style={[styles.mapPin, styles.mapStart]}>Agora Mall</Text>
+      <Text style={[styles.mapPin, styles.mapEnd]}>{active ? 'Checkpoint' : 'Monumento'}</Text>
+      <Text style={styles.mapVehicle}>{active ? 'Live · Bus 203' : 'Route EN-001'}</Text>
     </View>
   );
 }
@@ -293,6 +306,7 @@ function BottomNav({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   app: { flex: 1, paddingHorizontal: 16, paddingTop: 10 },
+  navSafe: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   splash: { flex: 1, justifyContent: 'flex-end', gap: 18, padding: 24, backgroundColor: colors.ink },
   splashBrand: { color: '#bdefff', fontWeight: '900', fontSize: 16 },
   splashTitle: { color: '#ffffff', fontWeight: '900', fontSize: 42, lineHeight: 44 },
@@ -315,12 +329,16 @@ const styles = StyleSheet.create({
   metric: { width: '47%', gap: 4, padding: 14, borderRadius: 20, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line },
   metricValue: { color: colors.ink, fontWeight: '900', fontSize: 17 },
   meta: { color: colors.muted, lineHeight: 20 },
-  map: { height: 180, borderRadius: 26, overflow: 'hidden', backgroundColor: '#dfeef5', borderWidth: 1, borderColor: colors.line },
-  mapLine: { position: 'absolute', left: 42, right: 42, top: 88, height: 7, borderRadius: 999, backgroundColor: colors.blue, transform: [{ rotate: '-11deg' }] },
+  map: { height: 190, borderRadius: 26, overflow: 'hidden', backgroundColor: '#dcecf2', borderWidth: 1, borderColor: colors.line },
+  mapDistrictOne: { position: 'absolute', left: 16, bottom: 18, width: 132, height: 88, borderRadius: 24, backgroundColor: '#cfe8db' },
+  mapDistrictTwo: { position: 'absolute', right: -18, top: 12, width: 154, height: 92, borderRadius: 32, backgroundColor: '#c9e9f7' },
+  mapRoadBase: { position: 'absolute', left: 28, right: 28, top: 90, height: 19, borderRadius: 999, backgroundColor: '#ffffff', transform: [{ rotate: '-11deg' }] },
+  mapLine: { position: 'absolute', left: 42, right: 42, top: 96, height: 7, borderRadius: 999, backgroundColor: colors.blue, transform: [{ rotate: '-11deg' }] },
   mapLineActive: { backgroundColor: colors.action },
   mapPin: { position: 'absolute', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, overflow: 'hidden', backgroundColor: colors.panel, color: colors.ink, fontWeight: '900' },
-  mapStart: { left: 22, top: 46 },
-  mapEnd: { right: 22, bottom: 44 },
+  mapStart: { left: 18, top: 46 },
+  mapEnd: { right: 18, bottom: 42 },
+  mapVehicle: { position: 'absolute', left: 122, top: 80, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 999, overflow: 'hidden', backgroundColor: colors.ink, color: '#ffffff', fontWeight: '900' },
   search: { minHeight: 48, paddingHorizontal: 14, borderRadius: 16, backgroundColor: '#f5f8fb', borderWidth: 1, borderColor: colors.line, color: colors.ink },
   notes: { minHeight: 94, textAlignVertical: 'top', paddingTop: 14 },
   passengerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.line },
@@ -340,7 +358,7 @@ const styles = StyleSheet.create({
   primaryButtonText: { color: '#ffffff', fontWeight: '900', fontSize: 16 },
   secondaryButton: { flex: 1, minHeight: 52, alignItems: 'center', justifyContent: 'center', borderRadius: 18, backgroundColor: '#eef4f8', borderWidth: 1, borderColor: colors.line },
   secondaryButtonText: { color: colors.ink, fontWeight: '900', fontSize: 16 },
-  nav: { position: 'absolute', left: 16, right: 16, bottom: 16, flexDirection: 'row', gap: 8, padding: 8, borderRadius: 24, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line },
+  nav: { marginHorizontal: 16, marginBottom: 10, flexDirection: 'row', gap: 8, padding: 8, borderRadius: 24, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line },
   navItem: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 16 },
   navItemActive: { backgroundColor: '#dff4eb' },
   navText: { color: colors.muted, fontWeight: '800', fontSize: 12 },
