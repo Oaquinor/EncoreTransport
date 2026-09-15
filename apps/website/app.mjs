@@ -1,89 +1,55 @@
-const destinations = [
-  { city: 'Santiago', route: 'Santo Domingo → Santiago', time: '2h 15m', price: 'DOP 685', tag: 'Most popular' },
-  { city: 'Punta Cana', route: 'Santo Domingo → Punta Cana', time: '2h 45m', price: 'DOP 1,048', tag: 'Beach route' },
-  { city: 'La Romana', route: 'Santo Domingo → La Romana', time: '1h 50m', price: 'DOP 820', tag: 'Daily departures' },
-  { city: 'Puerto Plata', route: 'Santiago → Puerto Plata', time: '1h 35m', price: 'DOP 620', tag: 'North coast' },
+const destinations=[
+  {code:'STI',name:'Santiago',from:'DOP 685',time:'2h 15m',depart:'08:30'},
+  {code:'PUJ',name:'Punta Cana',from:'DOP 1,048',time:'2h 45m',depart:'11:15'},
+  {code:'LRM',name:'La Romana',from:'DOP 820',time:'1h 55m',depart:'18:10'},
+  {code:'POP',name:'Puerto Plata',from:'DOP 940',time:'3h 10m',depart:'07:20'}
 ];
 
-const grid = document.querySelector('#destinationGrid');
-if (grid) {
-  grid.innerHTML = destinations.map((item, index) => `
-    <a class="destination-card" href="/passenger/?origin=${encodeURIComponent(item.route.split(' → ')[0])}&destination=${encodeURIComponent(item.city)}" data-reveal style="--delay:${index * 70}ms">
-      <div class="destination-card__visual"><span>${String(index + 1).padStart(2, '0')}</span><i></i></div>
-      <div class="destination-card__copy">
-        <small>${item.tag}</small>
-        <h3>${item.city}</h3>
-        <p>${item.route}</p>
-        <div><span>${item.time}</span><strong>${item.price}</strong></div>
-      </div>
-    </a>
-  `).join('');
+const destinationGrid=document.querySelector('#destinationGrid');
+if(destinationGrid){
+  destinationGrid.innerHTML=destinations.map((d)=>`<a class="destination-card" href="/passenger/" data-reveal><div class="destination-visual"><span class="destination-code">${d.code}</span></div><div class="destination-body"><small>From Santo Domingo</small><h3>${d.name}</h3><p>Premium intercity service</p><div class="destination-meta"><span>${d.depart}</span><span>${d.time}</span><strong>${d.from}</strong></div></div></a>`).join('');
 }
 
-const seatPreview = document.querySelector('#seatPreview');
-if (seatPreview) {
-  const selected = new Set(['4B', '4C']);
-  const occupied = new Set(['3B', '5C', '6B']);
-  seatPreview.innerHTML = Array.from({ length: 8 }, (_, row) => {
-    const seats = ['A', 'B', 'C', 'D'].map((letter, index) => {
-      const id = `${row + 1}${letter}`;
-      const state = selected.has(id) ? 'selected' : occupied.has(id) ? 'occupied' : 'available';
-      return `<button type="button" class="seat-preview seat-preview--${state}" aria-label="Seat ${id}"><span>◢</span><strong>${id}</strong></button>${index === 1 ? '<i class="seat-aisle"></i>' : ''}`;
-    }).join('');
-    return `<div class="seat-preview-row"><em>${row + 1}</em>${seats}</div>`;
+const seatPreview=document.querySelector('#seatPreview');
+if(seatPreview){
+  const occupied=new Set(['3B','5C','7A']);
+  const reserved=new Set(['8D']);
+  const selected=new Set(['4B','4C']);
+  seatPreview.innerHTML=Array.from({length:9},(_,r)=>{
+    const row=r+1;
+    const ids=['A','B','C','D'].map((c)=>`${row}${c}`);
+    const seat=(id)=>`<button class="seat ${selected.has(id)?'selected':occupied.has(id)?'occupied':reserved.has(id)?'reserved':''}" ${occupied.has(id)||reserved.has(id)?'disabled':''}>${id}</button>`;
+    return `<div class="seat-row"><em>${row}</em>${seat(ids[0])}${seat(ids[1])}<span class="aisle"></span>${seat(ids[2])}${seat(ids[3])}</div>`;
   }).join('');
-
-  seatPreview.addEventListener('click', (event) => {
-    const button = event.target.closest('.seat-preview');
-    if (!button || button.classList.contains('seat-preview--occupied')) return;
-    button.classList.toggle('seat-preview--selected');
-    button.classList.toggle('seat-preview--available');
+  seatPreview.addEventListener('click',(e)=>{
+    const button=e.target.closest('.seat');
+    if(!button||button.disabled)return;
+    button.classList.toggle('selected');
   });
 }
 
-const qr = document.querySelector('#phoneQr');
-if (qr) {
-  const dark = new Set([0,1,2,4,5,6,7,8,10,12,13,14,16,17,19,21,22,23,24,26,28,29,30,31,33,35,36,38,39,40,42,44,45,47,48,49,51,53,55,56,57,58,60,62,63]);
-  qr.innerHTML = Array.from({ length: 64 }, (_, index) => `<i class="${dark.has(index) ? 'is-dark' : ''}"></i>`).join('');
+const phoneQr=document.querySelector('#phoneQr');
+if(phoneQr){
+  const dark=new Set([0,1,2,4,5,6,7,8,10,12,13,14,16,17,19,21,22,23,24,26,28,29,30,31,33,35,36,38,39,40,42,44,45,47,48,49,51,53,55,56,57,58,60,62,63]);
+  phoneQr.innerHTML=Array.from({length:64},(_,i)=>`<i style="opacity:${dark.has(i)?1:0}"></i>`).join('');
 }
 
-const swapButton = document.querySelector('.swap-route');
-if (swapButton) {
-  swapButton.addEventListener('click', () => {
-    const inputs = [...document.querySelectorAll('.booking-field--wide input')];
-    if (inputs.length !== 2) return;
-    const current = inputs[0].value;
-    inputs[0].value = inputs[1].value;
-    inputs[1].value = current;
-  });
-}
+const observer=new IntersectionObserver((entries)=>{entries.forEach((entry)=>{if(entry.isIntersecting){entry.target.classList.add('is-visible');observer.unobserve(entry.target);}})},{threshold:.12});
+document.querySelectorAll('[data-reveal]').forEach((el)=>observer.observe(el));
 
-const modal = document.querySelector('#routeModal');
-const openButtons = document.querySelectorAll('[data-open-map]');
-const closeButtons = document.querySelectorAll('[data-close-map]');
-function setModal(open) {
-  if (!modal) return;
-  modal.setAttribute('aria-hidden', String(!open));
-  modal.classList.toggle('is-open', open);
-  document.body.classList.toggle('modal-open', open);
-}
-openButtons.forEach((button) => button.addEventListener('click', () => setModal(true)));
-closeButtons.forEach((button) => button.addEventListener('click', () => setModal(false)));
-document.addEventListener('keydown', (event) => { if (event.key === 'Escape') setModal(false); });
+const counters=document.querySelectorAll('[data-count]');
+const counterObserver=new IntersectionObserver((entries)=>{entries.forEach((entry)=>{if(!entry.isIntersecting)return;const el=entry.target;const target=Number(el.dataset.count||0);let start=0;const duration=900;const initial=performance.now();function frame(now){const p=Math.min(1,(now-initial)/duration);const eased=1-Math.pow(1-p,3);el.textContent=String(Math.round(target*eased));if(p<1)requestAnimationFrame(frame)}requestAnimationFrame(frame);counterObserver.unobserve(el);})},{threshold:.5});
+counters.forEach((el)=>counterObserver.observe(el));
 
-const revealElements = [...document.querySelectorAll('[data-reveal]')];
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (!entry.isIntersecting) return;
-    entry.target.classList.add('is-visible');
-    observer.unobserve(entry.target);
-  });
-}, { threshold: 0.14, rootMargin: '0px 0px -40px' });
-revealElements.forEach((element) => observer.observe(element));
+const heroBus=document.querySelector('.hero-bus');
+window.addEventListener('scroll',()=>{if(!heroBus)return;const y=Math.min(24,window.scrollY*.025);heroBus.style.transform=`translate3d(0,${y}px,0)`;},{passive:true});
 
-const bus = document.querySelector('.hero-bus');
-window.addEventListener('scroll', () => {
-  if (!bus || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const offset = Math.min(window.scrollY * 0.06, 32);
-  bus.style.transform = `translate3d(0, ${offset}px, 0)`;
-}, { passive: true });
+const swap=document.querySelector('.swap');
+swap?.addEventListener('click',()=>{const form=swap.closest('form');const inputs=form?.querySelectorAll('input[name="origin"],input[name="destination"]');if(!inputs||inputs.length<2)return;const a=inputs[0].value;inputs[0].value=inputs[1].value;inputs[1].value=a;});
+
+const modal=document.querySelector('#routeModal');
+const openModal=()=>{modal?.classList.add('is-open');modal?.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';};
+const closeModal=()=>{modal?.classList.remove('is-open');modal?.setAttribute('aria-hidden','true');document.body.style.overflow='';};
+document.querySelectorAll('[data-open-map]').forEach((el)=>el.addEventListener('click',openModal));
+document.querySelectorAll('[data-close-map]').forEach((el)=>el.addEventListener('click',closeModal));
+document.addEventListener('keydown',(e)=>{if(e.key==='Escape')closeModal();});
