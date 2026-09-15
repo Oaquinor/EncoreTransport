@@ -4,11 +4,11 @@
   "version": "0.1.0",
   "main": "index.js",
   "scripts": {
-    "dev": "EXPO_NO_TELEMETRY=1 __UNSAFE_EXPO_HOME_DIRECTORY=../../.expo-home expo start",
-    "start": "EXPO_NO_TELEMETRY=1 __UNSAFE_EXPO_HOME_DIRECTORY=../../.expo-home expo start",
-    "android": "EXPO_NO_TELEMETRY=1 __UNSAFE_EXPO_HOME_DIRECTORY=../../.expo-home expo start --android",
-    "ios": "EXPO_NO_TELEMETRY=1 __UNSAFE_EXPO_HOME_DIRECTORY=../../.expo-home expo start --ios",
-    "web": "EXPO_NO_TELEMETRY=1 __UNSAFE_EXPO_HOME_DIRECTORY=../../.expo-home expo start --web"
+    "dev": "expo start",
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
   },
   "dependencies": {
     "@expo/vector-icons": "~15.0.2",

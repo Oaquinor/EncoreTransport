@@ -6,6 +6,9 @@
     "orientation": "portrait",
     "scheme": "encore-driver",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-status-bar"
+    ]
   }
 }

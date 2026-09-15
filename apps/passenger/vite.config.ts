@@ -2,8 +2,18 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  base: '/passenger/',
   plugins: [react()],
   server: {
-    port: 5173
-  }
+    host: '0.0.0.0',
+    port: 5173,
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 5173,
+  },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+  },
 });
