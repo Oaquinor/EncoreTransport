@@ -4,11 +4,11 @@
   "version": "0.1.0",
   "main": "index.js",
   "scripts": {
-    "dev": "expo start",
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "dev": "EXPO_NO_TELEMETRY=1 __UNSAFE_EXPO_HOME_DIRECTORY=../../.expo-home expo start",
+    "start": "EXPO_NO_TELEMETRY=1 __UNSAFE_EXPO_HOME_DIRECTORY=../../.expo-home expo start",
+    "android": "EXPO_NO_TELEMETRY=1 __UNSAFE_EXPO_HOME_DIRECTORY=../../.expo-home expo start --android",
+    "ios": "EXPO_NO_TELEMETRY=1 __UNSAFE_EXPO_HOME_DIRECTORY=../../.expo-home expo start --ios",
+    "web": "EXPO_NO_TELEMETRY=1 __UNSAFE_EXPO_HOME_DIRECTORY=../../.expo-home expo start --web"
   },
   "dependencies": {
     "@expo/vector-icons": "~15.0.2",
@@ -16,7 +16,7 @@
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-native": "0.86.3",
-    "react-native-safe-area-context": "^5.6.2"
+    "react-native-safe-area-context": "~5.7.0"
   },
   "devDependencies": {
     "@types/react": "~19.2.4",
