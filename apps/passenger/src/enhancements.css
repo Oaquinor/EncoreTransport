@@ -1,0 +1,39 @@
+/* Encore Passenger — Enhancement Edition
+   Additive layer: preserves the current identity and only elevates it. */
+
+:root{--encore-glow:0 18px 50px rgba(45,169,223,.11);--encore-soft:#eef8fc;--encore-line-strong:#c8d8e0}
+
+.brand-button{padding:0;border:0;background:transparent;color:inherit}.topbar nav button{position:relative}.topbar nav button:after{content:"";position:absolute;left:0;right:100%;bottom:-7px;height:2px;background:var(--blue);transition:right .24s ease}.topbar nav button:hover:after{right:0}
+
+.steps button{appearance:none;border:0;border-right:1px solid var(--line);background:transparent;display:flex;align-items:center;gap:8px;padding:11px 10px;color:#9aabb6;font-size:.62rem;cursor:pointer;transition:background .2s,color .2s,transform .2s}.steps button:last-child{border-right:0}.steps button.active{color:var(--ink);font-weight:850}.steps button:not(:disabled):hover{background:#edf8fc;color:var(--blue2);transform:translateY(-1px)}.steps button:disabled{cursor:default}.steps button em{font-style:normal}
+
+/* Keep the original dark hero, but make it feel lighter and more dimensional. */
+.hero{isolation:isolate}.hero:after{content:"";position:absolute;inset:auto -8% -50% 42%;height:78%;background:radial-gradient(circle,rgba(103,211,247,.16),transparent 65%);pointer-events:none}.hero-copy,.hero-art{z-index:1}.hero-ticket{background:rgba(255,255,255,.035);padding:20px;border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(10px)}
+
+.booking-console{box-shadow:0 16px 46px rgba(16,49,70,.08)}.booking-console label:focus-within{background:#f1f9fc;box-shadow:inset 0 -2px 0 var(--blue)}.booking-console input{transition:color .2s}.booking-console input:focus{color:var(--blue2)}
+
+.trip-card,.details-card,.passenger-card,.payment-main,.credit-card,.price-panel,.boarding-pass,.confirmation{transition:transform .28s cubic-bezier(.2,.75,.2,1),box-shadow .28s,border-color .28s}.trip-card:hover{transform:translateY(-5px);box-shadow:0 24px 60px rgba(16,49,70,.12)}
+
+.route-panel:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(120deg,transparent 55%,rgba(255,255,255,.16));mix-blend-mode:screen}.moving-bus{box-shadow:0 8px 24px rgba(45,169,223,.24)}
+
+/* Realer seats without replacing the cabin concept. */
+.seat{overflow:visible;box-shadow:0 4px 10px rgba(25,58,77,.07);transform-style:preserve-3d}.seat:before{content:"";position:absolute;left:9px;right:9px;bottom:5px;height:14px;border-radius:4px 4px 10px 10px;background:#eef3f6;border:1px solid #c4d1d8;z-index:0}.seat:after{content:"";position:absolute;left:5px;right:5px;top:7px;height:31px;border-radius:10px 10px 6px 6px;border:1px solid #c4d1d8;background:linear-gradient(#fff,#f7fafb);z-index:0}.seat>i{z-index:1;left:11px;right:11px}.seat>span{z-index:2}.seat:hover{transform:translateY(-4px) perspective(220px) rotateX(4deg)}.seat.selected:before,.seat.selected:after{background:var(--green);border-color:var(--green)}.seat.occupied:before,.seat.occupied:after{background:#d7e0e5;border-color:#c8d2d8}.seat.reserved:before,.seat.reserved:after{background:#fff0cf;border-color:#e4cb95}.seat.selected{box-shadow:0 10px 24px rgba(31,157,116,.2)}
+.bus{background:linear-gradient(90deg,#e4edf1 0,#f9fbfc 9%,#f9fbfc 91%,#e4edf1 100%)}.windshield{box-shadow:inset 0 -12px 18px rgba(255,255,255,.45)}.seat-summary{border-color:var(--encore-line-strong)}
+
+/* Passenger form keeps the bordered structure but gains focus hierarchy. */
+.passenger-fields label{transition:background .2s,box-shadow .2s}.passenger-fields label:focus-within{background:#f4fafc;box-shadow:inset 0 -2px 0 var(--blue)}.passenger-fields input{outline:none}.passenger-card:hover{border-color:#c8dce6}
+
+/* Payment: preserve Card/CardNet/VisaNet and the simulated physical card. */
+.payment-trust{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line);background:#f7fbfc}.payment-trust>div{display:grid;gap:2px}.payment-trust strong{font-size:.78rem}.payment-trust small{color:var(--muted);font-size:.68rem}.trust-dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 6px rgba(31,157,116,.08)}
+.credit-card{position:relative;overflow:hidden;min-height:278px;isolation:isolate}.credit-card:before{content:"";position:absolute;width:280px;height:280px;border-radius:50%;right:-100px;top:-120px;border:1px solid rgba(255,255,255,.11);box-shadow:0 0 0 45px rgba(255,255,255,.022),0 0 0 90px rgba(255,255,255,.018);z-index:-1}.card-chip{width:46px;height:34px;border-radius:8px;background:linear-gradient(135deg,#d8bb79,#f5dfaa);box-shadow:inset 0 0 0 1px rgba(77,57,18,.2)}.card-shine{position:absolute;top:-40%;bottom:-40%;width:110px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);transform:rotate(18deg) translateX(-250px);pointer-events:none}.credit-card.is-verifying .card-shine{animation:cardScan 1.05s ease-in-out infinite}.credit-card.is-approved{box-shadow:0 28px 70px rgba(31,157,116,.2);outline:1px solid rgba(31,157,116,.35)}@keyframes cardScan{to{transform:rotate(18deg) translateX(620px)}}
+.verification-panel{position:relative;display:grid;grid-template-columns:42px 1fr;gap:11px;align-items:center;margin:0 20px 20px;padding:14px;border:1px solid var(--line);background:#f8fafb;overflow:hidden}.verification-panel>div{display:grid;gap:2px}.verification-panel strong{font-size:.82rem}.verification-panel small{color:var(--muted);font-size:.7rem}.verification-icon{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#e9f5fa;color:var(--blue2);font-weight:900}.verification-track{grid-column:1/-1;height:3px;background:#e2e9ec;overflow:hidden}.verification-track i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--green))}.verification-panel.verifying .verification-icon{animation:spinVerify .8s linear infinite}.verification-panel.verifying .verification-track i{animation:verifyTrack 1.2s ease forwards}.verification-panel.approved{background:#f0faf6;border-color:#bee6d5}.verification-panel.approved .verification-icon{background:var(--green);color:white}.verification-panel.approved .verification-track i{width:100%;background:var(--green)}@keyframes spinVerify{to{transform:rotate(360deg)}}@keyframes verifyTrack{to{width:92%}}
+.action-band .cta:disabled{opacity:.7;cursor:wait}
+
+.confirmation{max-width:none}.confirmation-strip{display:grid;grid-template-columns:repeat(3,1fr);width:min(760px,100%);margin:10px auto 26px;border:1px solid var(--line);background:#f8fbfc;text-align:left}.confirmation-strip div{padding:14px 16px;border-right:1px solid var(--line);display:grid;gap:4px}.confirmation-strip div:last-child{border-right:0}.confirmation-strip span{font-size:.62rem;color:var(--muted);letter-spacing:.1em;font-weight:850}.confirmation-strip strong{font-size:.88rem}
+
+.boarding-pass{position:relative}.boarding-pass:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(120deg,transparent 60%,rgba(117,221,255,.055))}.qr-code{box-shadow:0 0 0 8px rgba(255,255,255,.035)}
+
+/* Motion is subtle and purposeful. */
+.stage{animation:enhanceScreenIn .38s cubic-bezier(.16,1,.3,1)}@keyframes enhanceScreenIn{from{opacity:0;transform:translateY(12px) scale(.998)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+@media(max-width:760px){.confirmation-strip{grid-template-columns:1fr}.confirmation-strip div{border-right:0;border-bottom:1px solid var(--line)}.confirmation-strip div:last-child{border-bottom:0}.steps button{display:none}.credit-card{min-height:230px}.payment-trust{padding:11px 14px}}

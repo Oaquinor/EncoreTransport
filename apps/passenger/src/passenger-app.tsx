@@ -30,10 +30,32 @@ export function PassengerApp(){
   const [selectedSeats,setSelectedSeats] = useState<string[]>(['4B','4C']);
   const [payment,setPayment] = useState<'Card'|'CardNet'|'VisaNet'>('Card');
   const [passenger2,setPassenger2] = useState('');
+  const [history,setHistory] = useState<Screen[]>([]);
   const steps:Screen[] = ['home','results','trip','seats','passengers','review','payment','confirmation','ticket'];
   const step = steps.indexOf(screen);
 
-  function move(next:Screen){ setScreen(next); window.scrollTo({top:0,behavior:'smooth'}); }
+  function move(next:Screen){
+    if(next===screen) return;
+    setHistory(current=>[...current,screen]);
+    setScreen(next);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function goBack(){
+    setHistory(current=>{
+      const copy=[...current];
+      const previous=copy.pop();
+      if(previous){ setScreen(previous); window.scrollTo({top:0,behavior:'smooth'}); }
+      return copy;
+    });
+  }
+  function resetFlow(){ setHistory([]); setScreen('home'); window.scrollTo({top:0,behavior:'smooth'}); }
+  function jumpBack(target:Screen){
+    const targetIndex=steps.indexOf(target);
+    if(targetIndex<0||targetIndex>step) return;
+    setScreen(target);
+    setHistory(steps.slice(0,targetIndex));
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
   function chooseTrip(t:Trip){ setSelectedTrip(t); move('trip'); }
   function toggleSeat(id:string){
     const blocked = ['3B','5C','6B','9A','7D'];
@@ -43,34 +65,34 @@ export function PassengerApp(){
 
   return (
     <div className="app">
-      <Topbar />
+      <Topbar onBook={resetFlow} onTrips={()=>move('results')} />
       <div className="shell">
-        <ProgressRail step={step} />
+        <ProgressRail step={step} onStep={jumpBack} />
         <main className="stage">
           {screen==='home' && <Home onSearch={()=>move('results')} />}
-          {screen==='results' && <Results onBack={()=>move('home')} onSelect={chooseTrip} />}
-          {screen==='trip' && <TripView trip={selectedTrip} onBack={()=>move('results')} onContinue={()=>move('seats')} />}
-          {screen==='seats' && <Seats trip={selectedTrip} selected={selectedSeats} toggle={toggleSeat} onBack={()=>move('trip')} onContinue={()=>move('passengers')} />}
-          {screen==='passengers' && <Passengers passenger2={passenger2} setPassenger2={setPassenger2} onBack={()=>move('seats')} onContinue={()=>move('review')} />}
-          {screen==='review' && <Review trip={selectedTrip} seats={selectedSeats} passenger2={passenger2} onBack={()=>move('passengers')} onContinue={()=>move('payment')} />}
-          {screen==='payment' && <Payment method={payment} setMethod={setPayment} onBack={()=>move('review')} onContinue={()=>move('confirmation')} />}
-          {screen==='confirmation' && <Confirmation onTicket={()=>move('ticket')} onNew={()=>move('home')} />}
-          {screen==='ticket' && <Ticket trip={selectedTrip} seats={selectedSeats} passenger2={passenger2} onBack={()=>move('confirmation')} />}
+          {screen==='results' && <Results onBack={goBack} onSelect={chooseTrip} />}
+          {screen==='trip' && <TripView trip={selectedTrip} onBack={goBack} onContinue={()=>move('seats')} />}
+          {screen==='seats' && <Seats trip={selectedTrip} selected={selectedSeats} toggle={toggleSeat} onBack={goBack} onContinue={()=>move('passengers')} />}
+          {screen==='passengers' && <Passengers passenger2={passenger2} setPassenger2={setPassenger2} onBack={goBack} onContinue={()=>move('review')} />}
+          {screen==='review' && <Review trip={selectedTrip} seats={selectedSeats} passenger2={passenger2} onBack={goBack} onContinue={()=>move('payment')} />}
+          {screen==='payment' && <Payment method={payment} setMethod={setPayment} onBack={goBack} onContinue={()=>move('confirmation')} />}
+          {screen==='confirmation' && <Confirmation onBack={goBack} onTicket={()=>move('ticket')} onNew={resetFlow} />}
+          {screen==='ticket' && <Ticket trip={selectedTrip} seats={selectedSeats} passenger2={passenger2} onBack={goBack} />}
         </main>
       </div>
-      <BottomNav current={screen} onHome={()=>move('home')} onTrips={()=>move('results')} onTicket={()=>move('ticket')} />
+      <BottomNav current={screen} onHome={resetFlow} onTrips={()=>move('results')} onTicket={()=>move('ticket')} />
     </div>
   );
 }
 
-function Topbar(){
+function Topbar({onBook,onTrips}:{onBook:()=>void;onTrips:()=>void}){
   return <header className="topbar">
-    <div className="brand">
+    <button className="brand brand-button" type="button" onClick={onBook}>
       <img src="/logo.svg" alt="Encore Transport" />
       <div><strong>ENCORE</strong><span>Passenger</span></div>
-    </div>
+    </button>
     <nav>
-      <button>Book</button><button>Trips</button><button>Support</button>
+      <button onClick={onBook}>Book</button><button onClick={onTrips}>Trips</button><button>Support</button>
     </nav>
     <div className="user">
       <span>Maria Torres</span><b>MT</b>
@@ -78,13 +100,15 @@ function Topbar(){
   </header>
 }
 
-function ProgressRail({step}:{step:number}){
+const stepsForProgress:Screen[]=['home','results','trip','seats','passengers','review','payment','ticket'];
+
+function ProgressRail({step,onStep}:{step:number;onStep:(screen:Screen)=>void}){
   const labels=['Search','Results','Trip','Seats','Passengers','Review','Pay','Ticket'];
   const pct=Math.min(100,Math.round((step/8)*100));
   return <section className="progress-block">
     <div className="progress-head"><span>BOOKING JOURNEY</span><strong>{pct}%</strong></div>
     <div className="progress-line"><i style={{width:`${pct}%`}} /></div>
-    <div className="steps">{labels.map((x,i)=><div key={x} className={i<=Math.min(step,7)?'active':''}><em>{String(i+1).padStart(2,'0')}</em><span>{x}</span></div>)}</div>
+    <div className="steps">{labels.map((x,i)=>{const target=stepsForProgress[i];return <button type="button" key={x} disabled={i>step} onClick={()=>target&&onStep(target)} className={i<=Math.min(step,7)?'active':''}><em>{String(i+1).padStart(2,'0')}</em><span>{x}</span></button>})}</div>
   </section>
 }
 
@@ -250,28 +274,47 @@ function Review({trip,seats,passenger2,onBack,onContinue}:{trip:Trip;seats:strin
 }
 
 function Payment({method,setMethod,onBack,onContinue}:{method:string;setMethod:(m:any)=>void;onBack:()=>void;onContinue:()=>void}){
+  const [status,setStatus]=useState<'ready'|'verifying'|'approved'>('ready');
+  const authorize=()=>{
+    if(status!=='ready') return;
+    setStatus('verifying');
+    window.setTimeout(()=>{
+      setStatus('approved');
+      window.setTimeout(onContinue,720);
+    },1350);
+  };
   return <section>
     <PageHead eyebrow="PAYMENT" title="Secure your seats." onBack={onBack} />
     <div className="payment-grid">
       <div className="payment-main">
-        <div className="payment-methods">{['Card','CardNet','VisaNet'].map(m=><button key={m} className={method===m?'active':''} onClick={()=>setMethod(m)}>{m}</button>)}</div>
+        <div className="payment-methods">{['Card','CardNet','VisaNet'].map(m=><button type="button" key={m} className={method===m?'active':''} onClick={()=>setMethod(m)}>{m}</button>)}</div>
+        <div className="payment-trust"><span className="trust-dot"></span><div><strong>Secure preview checkout</strong><small>256-bit encrypted session · seat hold 08:00</small></div></div>
         <div className="card-form">
           <label><span>CARDHOLDER</span><input defaultValue="Maria Torres" /></label>
           <label><span>CARD NUMBER</span><input defaultValue="4821 0000 0000 4821" /></label>
           <div><label><span>EXPIRY</span><input defaultValue="09/29" /></label><label><span>CVV</span><input defaultValue="***" /></label></div>
         </div>
+        <div className={`verification-panel ${status}`}>
+          <span className="verification-icon">{status==='approved'?'✓':status==='verifying'?'◌':'⌁'}</span>
+          <div><strong>{status==='approved'?'Card verified':status==='verifying'?'Verifying card…':'Ready to verify'}</strong><small>{status==='approved'?'Authorization accepted for this preview.':status==='verifying'?'Contacting the selected payment route and validating card data.':'No charge will be made in this preview.'}</small></div>
+          <div className="verification-track"><i></i></div>
+        </div>
       </div>
-      <aside className="credit-card"><span>ENCORE</span><strong>••••  ••••  ••••  4821</strong><div><b>MARIA TORRES</b><b>09/29</b></div></aside>
+      <aside className={`credit-card ${status==='verifying'?'is-verifying':''} ${status==='approved'?'is-approved':''}`}><span>ENCORE</span><div className="card-chip"></div><strong>••••  ••••  ••••  4821</strong><div><b>MARIA TORRES</b><b>09/29</b></div><i className="card-shine"></i></aside>
     </div>
-    <div className="action-band"><div><span>TOTAL DUE</span><strong>{money(1405)}</strong></div><button className="cta" onClick={onContinue}>AUTHORIZE PAYMENT <span>→</span></button></div>
+    <div className="action-band"><div><span>TOTAL DUE</span><strong>{money(1405)}</strong></div><button className="cta" disabled={status!=='ready'} onClick={authorize}>{status==='verifying'?'VERIFYING…':status==='approved'?'APPROVED ✓':'AUTHORIZE PAYMENT'} <span>→</span></button></div>
   </section>
 }
 
-function Confirmation({onTicket,onNew}:{onTicket:()=>void;onNew:()=>void}){
-  return <section className="confirmation">
-    <div className="confirmation-mark">✓</div><span className="kicker">BOOKING RESERVED</span><h1>Your journey is ready.</h1>
-    <p>Seats 4B and 4C are reserved on EN-001. Your boarding pass is available now.</p>
-    <div className="confirmation-actions"><button className="ghost" onClick={onNew}>NEW SEARCH</button><button className="cta" onClick={onTicket}>VIEW BOARDING PASS <span>→</span></button></div>
+function Confirmation({onBack,onTicket,onNew}:{onBack:()=>void;onTicket:()=>void;onNew:()=>void}){
+  return <section>
+    <PageHead eyebrow="BOOKING RESERVED" title="Your journey is ready." onBack={onBack} />
+    <div className="confirmation">
+      <div className="confirmation-mark">✓</div><span className="kicker">PAYMENT VERIFIED · SEATS HELD</span>
+      <p>Seats 4B and 4C are reserved on EN-001. Your boarding pass is available now, and you can still return to the payment step during this preview.</p>
+      <div className="confirmation-strip"><div><span>TRIP</span><strong>EN-001</strong></div><div><span>SEATS</span><strong>4B · 4C</strong></div><div><span>STATUS</span><strong>Ready to board</strong></div></div>
+      <div className="confirmation-actions"><button className="ghost" onClick={onNew}>NEW SEARCH</button><button className="cta" onClick={onTicket}>VIEW BOARDING PASS <span>→</span></button></div>
+    </div>
   </section>
 }
 
