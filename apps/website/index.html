@@ -3,390 +3,205 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f5f7fa" />
-    <title>Encore Transport | Premium Door-to-Door Travel</title>
+    <meta name="theme-color" content="#f5f8fb" />
+    <meta name="description" content="Encore Transport — premium intercity transportation across the Dominican Republic." />
+    <title>Encore Transport | Move smarter. Travel better.</title>
     <link rel="stylesheet" href="../../packages/shared/styles.css" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="screen website-screen">
-      <header class="website-header app-shell">
-        <a class="brand brand--light" href="/">
-          <img class="brand-logo brand-logo--small" src="/logo.svg" alt="Encore Transport" />
-          <span>
-            <strong>Encore</strong>
-            <small>People closer together</small>
-          </span>
+    <div class="website-screen">
+      <header class="site-header shell" data-reveal>
+        <a class="site-brand" href="/website/" aria-label="Encore Transport home">
+          <img src="/logo.svg" alt="Encore Transport" />
+          <span><strong>Encore</strong><small>Transport</small></span>
         </a>
-
-        <nav class="website-nav" aria-label="Main sections">
-          <a href="#booking">Book</a>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href="#book">Book</a>
           <a href="#destinations">Destinations</a>
           <a href="#experience">Experience</a>
+          <a href="#tracking">Tracking</a>
           <a href="#partners">Partners</a>
-          <a href="#faq">FAQ</a>
         </nav>
-
-        <a class="button button--primary" href="/passenger/">Book a Trip</a>
+        <a class="site-cta" href="/passenger/">Book a trip <span>→</span></a>
       </header>
 
-      <main class="app-shell website-layout motion-slide-up" id="home">
-        <section class="hero hero-panel">
-          <div class="hero-copy">
-            <div class="eyebrow">Premium transport, clearly booked</div>
-            <h1 class="page-title page-title--light">Travel across the Dominican Republic with Encore.</h1>
-            <p class="page-lead">
-              Search scheduled routes, choose real seats, confirm passenger details, and board with a digital ticket that matches the driver and operations view.
+      <main>
+        <section class="hero shell" id="home">
+          <div class="hero-copy" data-reveal>
+            <div class="eyebrow">Premium transportation across the Dominican Republic</div>
+            <h1>Move smarter.<br />Travel better.</h1>
+            <p>
+              Encore connects passengers, drivers, and operations through one clear travel experience — from route search and seat selection to live trip context and digital boarding.
             </p>
-
-            <div class="hero-trust">
-              <span>Shared demo data</span>
-              <span>Clear fares</span>
-              <span>Seat-level booking</span>
+            <div class="hero-actions">
+              <a class="button button--primary" href="/passenger/">Book a trip</a>
+              <button class="button button--ghost" type="button" data-open-map>Explore live route</button>
             </div>
-
-            <div class="hero-illustration" aria-hidden="true">
-              <img src="/assets/media/Autobus.png" alt="" />
-            </div>
-          </div>
-
-          <aside class="booking-widget" aria-label="Book a ride">
-            <div class="ride-tabs">
-              <button class="ride-tab ride-tab--active" type="button"><span>↔</span>Route</button>
-              <button class="ride-tab" type="button"><span>✦</span>Premium</button>
-              <button class="ride-tab" type="button"><span>✈</span>Airport</button>
-              <button class="ride-tab" type="button"><span>●</span>Charter</button>
-            </div>
-
-            <button class="ride-field ride-field--location" type="button" data-open-map>
-              <span class="ride-field__icon"></span>
-              <span>
-                <small>From</small>
-                <strong id="pickupName">Agora Mall</strong>
-                <em id="pickupArea">Santo Domingo</em>
-              </span>
-            </button>
-
-            <a class="ride-field" href="/passenger/?origin=Santo%20Domingo&destination=Santiago">
-              <span class="ride-field__icon ride-field__icon--end"></span>
-              <span>
-                <small>To</small>
-                <strong>Monumento a los Heroes</strong>
-                <em>Santiago</em>
-              </span>
-            </a>
-
-            <div class="ride-field-grid">
-              <a class="ride-field" href="/passenger/">
-                <span>
-                  <small>When</small>
-                  <strong>Mon, Sep 14</strong>
-                  <em>08:30 AM</em>
-                </span>
-              </a>
-              <a class="ride-field" href="/passenger/">
-                <span>
-                  <small>Seats</small>
-                  <strong>2 passengers</strong>
-                  <em>4B, 4C available</em>
-                </span>
-              </a>
-            </div>
-
-            <a class="ride-submit" href="/passenger/?origin=Santo%20Domingo&destination=Santiago">Search available trips</a>
-            <p class="ride-note">EN-001 · Bus 203 · Ricardo Luna · DOP 685 per seat</p>
-          </aside>
-        </section>
-
-        <div class="map-modal" id="pickupMap" aria-hidden="true">
-          <div class="map-modal__backdrop" data-close-map></div>
-          <section class="map-modal__panel" role="dialog" aria-modal="true" aria-labelledby="mapTitle">
-            <header>
-              <h2 id="mapTitle">Pickup location — pick on map</h2>
-              <button type="button" data-close-map aria-label="Close map">×</button>
-            </header>
-            <div class="modal-map" id="modalMapCanvas">
-              <div class="modal-map__district modal-map__district--a"></div>
-              <div class="modal-map__district modal-map__district--b"></div>
-              <div class="modal-map__road modal-map__road--one"></div>
-              <div class="modal-map__road modal-map__road--two"></div>
-              <div class="modal-map__road modal-map__road--three"></div>
-              <span class="modal-map__label modal-map__label--one">PIANTINI</span>
-              <span class="modal-map__label modal-map__label--two">NACO</span>
-              <span class="modal-map__label modal-map__label--three">ENS. JULIETA</span>
-              <span class="modal-map__hint">Drag the map to move the pin</span>
-              <span class="modal-map__pin" id="modalMapPin"></span>
-            </div>
-            <footer>
-              <span id="pickupCoordinates">18.4822, -69.9369</span>
-              <button class="ride-submit" type="button" id="usePickupLocation">Use this location</button>
-            </footer>
-          </section>
-        </div>
-
-        <section class="product-strip" aria-label="Encore platform modules">
-          <a href="/website/" class="product-pill"><strong>Encore Website</strong><span>Modern. Informative. Easy to book.</span></a>
-          <a href="/passenger/" class="product-pill"><strong>Passenger App</strong><span>Book. Travel. Explore.</span></a>
-          <a href="/driver/" class="product-pill"><strong>Driver App</strong><span>Drive with confidence.</span></a>
-          <a href="/admin/" class="product-pill"><strong>Operations</strong><span>Live-style visibility for teams.</span></a>
-        </section>
-
-        <section class="impact-band" aria-label="Encore platform metrics">
-          <div>
-            <strong data-count="125000">0</strong>
-            <span>Trips coordinated</span>
-          </div>
-          <div>
-            <strong data-count="420">0</strong>
-            <span>Vehicles connected</span>
-          </div>
-          <div>
-            <strong data-count="38">0</strong>
-            <span>Destinations supported</span>
-          </div>
-          <div>
-            <strong data-count="96">0</strong>
-            <span>Passenger satisfaction</span>
-          </div>
-        </section>
-
-        <section id="booking" class="section-grid booking-search-section">
-          <div class="section-heading">
-            <div>
-              <div class="eyebrow">Booking search</div>
-              <h2>Start with the route. Encore handles the journey around it.</h2>
-            </div>
-            <p>Passengers move from route search to seat selection, payment authorization, confirmation, and a polished boarding pass.</p>
-          </div>
-          <div class="booking-strip card card--pad">
-            <a class="booking-strip__field" href="/passenger/?origin=Santo%20Domingo&destination=Santiago"><span>From</span><strong>Santo Domingo</strong></a>
-            <a class="booking-strip__field" href="/passenger/?origin=Santo%20Domingo&destination=Santiago"><span>To</span><strong>Santiago</strong></a>
-            <a class="booking-strip__field" href="/passenger/?origin=Santo%20Domingo&destination=Santiago"><span>Date</span><strong>Sep 14</strong></a>
-            <a class="button button--primary" href="/passenger/">Search trips</a>
-          </div>
-        </section>
-
-        <section id="destinations" class="section-grid">
-          <div class="section-heading">
-            <div>
-              <div class="eyebrow">Destinations</div>
-              <h2>Popular routes for everyday travel and premium transfers.</h2>
-            </div>
-            <p>The same trip, driver, vehicle, and booking status stay aligned across Passenger, Driver, and Operations.</p>
-          </div>
-          <div class="grid grid--3" id="destinationGrid"></div>
-        </section>
-
-        <section id="why" class="trust-band card card--pad">
-          <div>
-            <div class="eyebrow">Why Encore</div>
-            <h2>A transportation experience built around clarity.</h2>
-          </div>
-          <div class="trust-band__points">
-            <div>
-              <strong>Clear routes</strong>
-              <span>Departure, arrival, vehicle, seats, and status are easy to understand.</span>
-            </div>
-            <div>
-              <strong>Premium feel</strong>
-              <span>The brand shows up consistently from website to ticket.</span>
-            </div>
-            <div>
-              <strong>Operationally ready</strong>
-              <span>The same trip appears in driver tools and the operations center.</span>
+            <div class="hero-proof">
+              <span><strong>38</strong> destinations</span>
+              <span><strong>420</strong> connected vehicles</span>
+              <span><strong>96%</strong> passenger satisfaction</span>
             </div>
           </div>
-        </section>
 
-        <section id="experience" class="section-grid">
-          <div class="section-heading">
-            <div>
-              <div class="eyebrow">Travel experience</div>
-              <h2>Designed for passengers who want a simple, confident trip.</h2>
-            </div>
-          </div>
-          <div class="grid grid--3">
-            <article class="service-card card card--pad">
-              <span class="service-icon">01</span>
-              <img class="service-card__image" src="/website/public/yendo-shared.jpg" alt="Shared ride service" />
-              <h3>Shared rides</h3>
-              <p>Comfortable intercity routes with clear schedules, seat visibility, and included luggage.</p>
-            </article>
-            <article class="service-card card card--pad">
-              <span class="service-icon">02</span>
-              <img class="service-card__image" src="/website/public/yendo-private.jpg" alt="Private ride service" />
-              <h3>Private transfers</h3>
-              <p>Dedicated vehicles for families, executives, and groups that need a more private experience.</p>
-            </article>
-            <article class="service-card card card--pad">
-              <span class="service-icon">03</span>
-              <img class="service-card__image" src="/website/public/yendo-parcel.jpg" alt="Parcel transport service" />
-              <h3>Parcel support</h3>
-              <p>A future-ready extension for moving packages between active destinations.</p>
-            </article>
-          </div>
-        </section>
-
-        <section class="tracking-showcase">
-          <div class="tracking-map" aria-label="Route tracking">
-            <div class="tracking-map__district tracking-map__district--one"></div>
-            <div class="tracking-map__district tracking-map__district--two"></div>
-            <svg viewBox="0 0 760 380" aria-hidden="true">
-              <path class="tracking-road tracking-road--base" d="M70 265 C170 90 270 310 378 188 S594 86 700 138" />
-              <path class="tracking-road tracking-road--active" d="M70 265 C170 90 270 310 378 188 S594 86 700 138" />
-              <circle cx="70" cy="265" r="10" />
-              <circle cx="700" cy="138" r="10" />
-            </svg>
-            <span class="tracking-pin tracking-pin--start">Agora Mall</span>
-            <span class="tracking-pin tracking-pin--end">Monumento</span>
-            <span class="tracking-vehicle">Bus 203 · on schedule</span>
-          </div>
-          <div class="phone-mockup" aria-label="Mobile boarding pass">
-            <div class="phone-mockup__screen">
-              <span class="badge badge--success">Boarding</span>
-              <h3>SDQ → STI</h3>
-              <p>Mon, Sep 14 · 08:30</p>
-              <div class="phone-qr">
-                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          <div class="hero-stage" data-reveal>
+            <div class="hero-orbit hero-orbit--one"></div>
+            <div class="hero-orbit hero-orbit--two"></div>
+            <div class="hero-bus-glow"></div>
+            <img class="hero-bus" src="/assets/media/Autobus.png" alt="Encore Transport bus" />
+            <div class="hero-route-card">
+              <span class="status-live"><i></i> On schedule</span>
+              <div class="hero-route-row">
+                <div><small>From</small><strong>Santo Domingo</strong><span>08:30</span></div>
+                <div class="hero-route-track"><i></i><b></b><i></i></div>
+                <div class="hero-route-end"><small>To</small><strong>Santiago</strong><span>10:45</span></div>
               </div>
-              <div class="phone-ticket-row"><span>Seat</span><strong>4B, 4C</strong></div>
-              <div class="phone-ticket-row"><span>Booking</span><strong>BK-EN-001-4281</strong></div>
+              <div class="hero-route-meta"><span>Bus 203</span><span>18 seats</span><span>DOP 685</span></div>
             </div>
           </div>
         </section>
 
-        <section class="solutions-showcase section-grid">
-          <div class="section-heading">
-            <div>
-              <div class="eyebrow">Smart mobility platform</div>
-              <h2>One connected layer for booking, driving, and operating.</h2>
+        <section class="booking-zone" id="book">
+          <div class="shell booking-layout">
+            <div class="booking-copy" data-reveal>
+              <div class="eyebrow">Book in a few clear steps</div>
+              <h2>Your trip starts with one simple route.</h2>
+              <p>Choose where you are leaving from, where you are going, and when. Encore keeps the rest of the journey connected.</p>
             </div>
-            <p>Encore is focused on transport brands that need a beautiful passenger experience and a clear operational backbone.</p>
-          </div>
-          <div class="solution-stage">
-            <article>
-              <span>01</span>
-              <h3>Passenger booking</h3>
-              <p>Search, trip details, seat selection, payment authorization, confirmation, and digital tickets.</p>
-            </article>
-            <article>
-              <span>02</span>
-              <h3>Driver workflow</h3>
-              <p>Assigned trips, boarding, active route context, incident reporting, and completion states.</p>
-            </article>
-            <article>
-              <span>03</span>
-              <h3>Operations visibility</h3>
-              <p>Trips, fleet, drivers, bookings, occupancy, revenue, incidents, and activity in one control center.</p>
-            </article>
+            <form class="booking-card" action="/passenger/" data-reveal>
+              <div class="booking-field booking-field--wide">
+                <span class="booking-dot booking-dot--start"></span>
+                <label>From</label>
+                <input name="origin" value="Santo Domingo" aria-label="Origin" />
+              </div>
+              <button type="button" class="swap-route" aria-label="Swap route">⇅</button>
+              <div class="booking-field booking-field--wide">
+                <span class="booking-dot booking-dot--end"></span>
+                <label>To</label>
+                <input name="destination" value="Santiago" aria-label="Destination" />
+              </div>
+              <div class="booking-field"><label>Date</label><input type="date" name="date" value="2026-09-14" /></div>
+              <div class="booking-field"><label>Passengers</label><input type="number" min="1" max="8" value="2" /></div>
+              <button class="booking-submit" type="submit">Search available trips <span>→</span></button>
+            </form>
           </div>
         </section>
 
-        <section id="safety" class="section-grid split-layout">
-          <article class="card card--pad story-card">
-            <div class="eyebrow">Safety</div>
-            <h2>Visible status, assigned drivers, and structured trip controls.</h2>
-            <p>
-              Encore makes the important details visible before and during the trip: driver, vehicle, boarding point, route, seats, and booking status.
-            </p>
-          </article>
-          <article class="card card--pad story-card story-card--soft">
-            <div class="eyebrow">Technology</div>
-            <h2>Smart travel tools without making the customer think about software.</h2>
-            <p>
-              Passengers see a smooth booking experience, while the platform presents payments, maps, notifications, and live operations in one connected journey.
-            </p>
-          </article>
+        <section class="destinations shell section" id="destinations">
+          <div class="section-heading" data-reveal>
+            <div><div class="eyebrow">Popular destinations</div><h2>Built around the routes people actually travel.</h2></div>
+            <p>Clear schedules, comfortable vehicles, seat-level visibility, and one consistent booking experience.</p>
+          </div>
+          <div class="destination-grid" id="destinationGrid"></div>
         </section>
 
-        <section id="partners" class="section-grid testimonial-grid">
-          <div class="section-heading">
-            <div>
-              <div class="eyebrow">Drivers and partners</div>
-              <h2>Operational tools that keep the day moving.</h2>
+        <section class="experience section" id="experience">
+          <div class="shell experience-grid">
+            <div class="experience-copy" data-reveal>
+              <div class="eyebrow">The Encore experience</div>
+              <h2>More than booking. A connected journey.</h2>
+              <p>Every screen keeps the most important details visible: the route, driver, vehicle, boarding point, seats, status, and next action.</p>
+              <div class="experience-list">
+                <article><span>01</span><div><strong>Choose the right trip</strong><p>Compare departure time, duration, service level, and availability.</p></div></article>
+                <article><span>02</span><div><strong>Select real seats</strong><p>Reserve from a visual bus layout, not a generic list.</p></div></article>
+                <article><span>03</span><div><strong>Travel with context</strong><p>Live route preview, driver assignment, boarding pass, and trip status stay connected.</p></div></article>
+              </div>
             </div>
-          </div>
-          <div class="grid grid--3">
-            <article class="card card--pad testimonial-card">
-              <p>Drivers get assigned trips, boarding lists, large actions, incident reporting, and active-trip context.</p>
-              <strong>Driver Mobile</strong>
-              <span>Operational workflow</span>
-            </article>
-            <article class="card card--pad testimonial-card">
-              <p>Operations can monitor trips, bookings, occupancy, revenue, incidents, vehicles, and activity.</p>
-              <strong>Operations Center</strong>
-              <span>Control room workflow</span>
-            </article>
-            <article class="card card--pad testimonial-card">
-              <p>Business users can see how the brand, passenger journey, and daily operation connect.</p>
-              <strong>Business Preview</strong>
-              <span>Client-ready journey</span>
-            </article>
+
+            <div class="bus-cabin" data-reveal aria-label="Encore seat selection preview">
+              <div class="bus-cabin__windshield"></div>
+              <div class="bus-cabin__top"><span>Driver</span><span>Front door</span></div>
+              <div class="bus-cabin__rows" id="seatPreview"></div>
+              <div class="bus-cabin__legend"><span><i class="seat-dot seat-dot--available"></i>Available</span><span><i class="seat-dot seat-dot--selected"></i>Selected</span><span><i class="seat-dot seat-dot--occupied"></i>Occupied</span></div>
+            </div>
           </div>
         </section>
 
-        <section id="faq" class="section-grid faq-grid">
-          <div class="section-heading">
-            <div>
-              <div class="eyebrow">FAQ</div>
-              <h2>Quick answers before booking.</h2>
+        <section class="tracking section" id="tracking">
+          <div class="shell tracking-grid">
+            <div class="tracking-map-card" data-reveal>
+              <iframe
+                title="Encore route map"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=-70.85%2C18.35%2C-69.80%2C19.60&layer=mapnik&marker=18.4822%2C-69.9369"
+                loading="lazy"
+              ></iframe>
+              <svg class="tracking-route" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M160,470 C330,390 380,240 520,270 S700,180 840,120" />
+              </svg>
+              <span class="tracking-pin tracking-pin--start">Santo Domingo</span>
+              <span class="tracking-pin tracking-pin--end">Santiago</span>
+              <span class="tracking-bus">🚌</span>
+              <div class="tracking-map-status"><i></i><strong>Bus 203</strong><span>On schedule · ETA 10:45</span></div>
+              <small class="map-attribution">Map © OpenStreetMap contributors</small>
             </div>
-          </div>
-          <div class="faq-list">
-            <details class="card card--pad" open>
-              <summary>Can I book from the website?</summary>
-              <p>Yes. The website sends passengers into the Encore Passenger app to search, choose seats, review, and see a digital ticket.</p>
-            </details>
-            <details class="card card--pad">
-              <summary>Are payments live?</summary>
-              <p>Payments are represented as authorization states so the booking journey can be reviewed without charging a real card.</p>
-            </details>
-            <details class="card card--pad">
-              <summary>Does tracking use live GPS?</summary>
-              <p>The product view shows realistic route tracking and is structured for a live map provider when production credentials are connected.</p>
-            </details>
+            <div class="tracking-copy" data-reveal>
+              <div class="eyebrow">Trip visibility</div>
+              <h2>Know what is happening before you ask.</h2>
+              <p>Passenger, driver, and operations can share the same trip identity, route, vehicle, and status. The preview already demonstrates the experience; production will connect it to real GPS events.</p>
+              <div class="tracking-stats"><article><strong>EN-001</strong><span>Trip identity</span></article><article><strong>Bus 203</strong><span>Assigned vehicle</span></article><article><strong>Ricardo Luna</strong><span>Assigned driver</span></article></div>
+              <button class="button button--primary" type="button" data-open-map>Open route preview</button>
+            </div>
           </div>
         </section>
 
-        <section id="contact" class="section-grid contact-grid">
-          <div class="card card--pad contact-card">
-            <div class="eyebrow">Contact</div>
-            <h2>Ready to review Encore Transport?</h2>
-            <p>Open the passenger, driver, and operations experiences to see how the complete platform story fits together.</p>
-            <img class="contact-card__image" src="/website/public/yendo-destino-1.jpg" alt="Route reference" />
-            <div class="contact-actions">
-              <a class="button button--primary" href="/passenger/">Open Passenger</a>
-              <a class="button button--ghost button--ghost-light" href="/admin/">View Operations</a>
+        <section class="mobile-showcase section">
+          <div class="shell mobile-layout">
+            <div class="phone-frame" data-reveal>
+              <div class="phone-screen">
+                <div class="phone-notch"></div>
+                <div class="phone-kicker">Encore Passenger</div>
+                <h3>Digital Boarding Pass</h3>
+                <div class="phone-route"><span>SDQ<br /><strong>08:30</strong></span><i></i><span>STI<br /><strong>10:45</strong></span></div>
+                <div class="phone-qr" id="phoneQr"></div>
+                <div class="phone-ticket-info"><span>Seat<strong>4B, 4C</strong></span><span>Bus<strong>203</strong></span></div>
+              </div>
             </div>
-          </div>
-          <div class="card card--pad contact-card contact-card--info">
-            <span class="badge badge--info">Platform path</span>
-            <h3>Website → Passenger → Driver → Operations.</h3>
-            <p>The experience is structured so a client can understand the brand, booking flow, driver workflow, and operational control center in one review.</p>
-            <a class="button button--primary button--block" href="/passenger/">Book a Trip</a>
+            <div class="mobile-copy" data-reveal>
+              <div class="eyebrow">Passenger mobile</div>
+              <h2>The same journey, designed for the phone.</h2>
+              <p>Search, route details, bus seat map, passenger details, payment handoff, confirmation, tickets, and trip history — all designed as a native mobile flow.</p>
+              <a class="button button--primary" href="/passenger/">Preview Passenger Web</a>
+            </div>
           </div>
         </section>
 
-        <footer class="website-footer">
-          <div class="website-footer__brand">
-            <img src="/logo.svg" alt="Encore Transport" />
-            <div>
-              <strong>Encore Transport</strong>
-              <span>Premium door-to-door mobility</span>
+        <section class="platform section" id="partners">
+          <div class="shell">
+            <div class="section-heading" data-reveal>
+              <div><div class="eyebrow">One transport platform</div><h2>Passenger, Driver, and Operations stay aligned.</h2></div>
+              <p>One trip should never mean three versions of the truth.</p>
+            </div>
+            <div class="platform-grid">
+              <a href="/passenger/" class="platform-card platform-card--passenger" data-reveal><span>Passenger</span><h3>Book. Board. Travel.</h3><p>Search, seats, payment, ticket, trip history.</p><b>Open Passenger →</b></a>
+              <a href="/driver/" class="platform-card platform-card--driver" data-reveal><span>Driver</span><h3>Drive with context.</h3><p>Boarding, active trip, map, incidents, completion.</p><b>Open Driver →</b></a>
+              <a href="/admin/" class="platform-card platform-card--ops" data-reveal><span>Operations</span><h3>See the whole day.</h3><p>Trips, fleet, bookings, drivers, occupancy, alerts.</p><b>Open Operations →</b></a>
             </div>
           </div>
-          <div class="website-footer__links">
-            <a href="#experience">Experience</a>
-            <a href="#destinations">Destinations</a>
-            <a href="#faq">FAQ</a>
-            <a href="/admin/">Operations</a>
-          </div>
-          <span>Passenger, driver, and operations experiences powered by Encore.</span>
-        </footer>
+        </section>
+
+        <section class="final-cta shell" data-reveal>
+          <div><div class="eyebrow">Ready to move?</div><h2>Start your next trip with Encore.</h2></div>
+          <a class="button button--primary" href="/passenger/">Book a trip</a>
+        </section>
       </main>
+
+      <footer class="site-footer">
+        <div class="shell footer-grid"><div class="site-brand site-brand--footer"><img src="/logo.svg" alt="" /><span><strong>Encore</strong><small>Transport</small></span></div><p>Premium transportation designed around clear booking, reliable operations, and a better passenger experience.</p><span>© 2026 Encore Transport</span></div>
+      </footer>
+    </div>
+
+    <div class="map-modal" id="routeModal" aria-hidden="true">
+      <div class="map-modal__backdrop" data-close-map></div>
+      <section class="map-modal__panel" role="dialog" aria-modal="true" aria-labelledby="routeModalTitle">
+        <header><div><span>Live route preview</span><h2 id="routeModalTitle">Santo Domingo → Santiago</h2></div><button type="button" data-close-map aria-label="Close map">×</button></header>
+        <div class="map-modal__map">
+          <iframe title="Route map modal" src="https://www.openstreetmap.org/export/embed.html?bbox=-70.85%2C18.35%2C-69.80%2C19.60&layer=mapnik&marker=18.4822%2C-69.9369"></iframe>
+          <svg viewBox="0 0 1000 620" preserveAspectRatio="none"><path d="M160,470 C330,390 380,240 520,270 S700,180 840,120" /></svg>
+          <span class="tracking-pin tracking-pin--start">Agora Mall</span><span class="tracking-pin tracking-pin--end">Monumento</span><span class="tracking-bus">🚌</span>
+        </div>
+        <footer><div><small>Trip</small><strong>EN-001 · Bus 203</strong></div><div><small>Status</small><strong>On schedule</strong></div><a class="button button--primary" href="/passenger/">Book this trip</a></footer>
+      </section>
     </div>
 
     <script type="module" src="./app.mjs"></script>
