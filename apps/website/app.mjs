@@ -8,7 +8,7 @@ function destinationCard(route, trip, index) {
   const image = destinationImages[index % destinationImages.length];
   return `
     <article class="card card--pad destination-card motion-enter">
-      <img class="destination-card__image" src="${image}" alt="Route destination preview" />
+      <img class="destination-card__image" src="${image}" alt="Route destination" />
       <div class="destination-card__overlay">
         <span>${route.origin}</span>
         <strong>${route.destination}</strong>

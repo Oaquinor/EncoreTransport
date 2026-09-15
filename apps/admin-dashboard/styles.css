@@ -181,6 +181,97 @@
   background: var(--color-surface-secondary);
 }
 
+.ops-map {
+  position: relative;
+  min-height: 170px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(216, 226, 234, 0.9);
+  border-radius: 14px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.58) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255,255,255,0.58) 1px, transparent 1px),
+    linear-gradient(135deg, #dff3fb, #edf7f2 52%, #f7fafc);
+  background-size: 34px 34px, 34px 34px, auto;
+}
+
+.ops-map__road {
+  position: absolute;
+  left: -20px;
+  right: -20px;
+  top: 82px;
+  height: 16px;
+  border-radius: 999px;
+  background: #ffffff;
+  transform: rotate(-12deg);
+  box-shadow: 0 0 0 1px rgba(20, 34, 50, 0.06);
+}
+
+.ops-map__road--two {
+  top: 48px;
+  height: 10px;
+  opacity: 0.72;
+  transform: rotate(22deg);
+}
+
+.ops-map__pin,
+.ops-map__vehicle {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--color-text-primary);
+  font-weight: 900;
+  box-shadow: 0 10px 22px rgba(20, 34, 50, 0.12);
+}
+
+.ops-map__pin--start {
+  left: 18px;
+  bottom: 28px;
+}
+
+.ops-map__pin--end {
+  right: 18px;
+  top: 28px;
+}
+
+.ops-map__vehicle {
+  left: 44%;
+  top: 72px;
+  background: var(--color-primary-dark);
+  color: #ffffff;
+}
+
+.access-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.access-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid rgba(216, 226, 234, 0.86);
+  border-radius: 12px;
+  background: #f7fafc;
+}
+
+.access-row span {
+  color: var(--color-text-secondary);
+}
+
+.access-row em {
+  font-style: normal;
+  font-weight: 900;
+  color: var(--color-primary-dark);
+}
+
 @media (max-width: 1100px) {
   .admin-layout,
   .admin-columns,

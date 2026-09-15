@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 type Tab = 'home' | 'trips' | 'notifications' | 'profile';
 type Flow = 'splash' | 'login' | 'home' | 'boarding' | 'active' | 'complete' | 'incident';
@@ -115,10 +116,17 @@ function Home({ flow, setFlow }: { flow: Flow; setFlow: (flow: Flow) => void }) 
   return (
     <View style={styles.stack}>
       <View style={styles.commandCard}>
-        <Text style={styles.commandLabel}>Next assigned trip</Text>
+        <View style={styles.commandTop}>
+          <Text style={styles.commandLabel}>Next assigned trip</Text>
+          <Text style={styles.livePill}>Boarding soon</Text>
+        </View>
         <Text style={styles.commandTitle}>{trip.id}</Text>
         <Text style={styles.commandRoute}>{trip.route}</Text>
-        <Text style={styles.commandMeta}>{trip.departure} · {trip.vehicle} · {trip.passengers}/{trip.seats} passengers</Text>
+        <View style={styles.commandFacts}>
+          <Text style={styles.commandMeta}>{trip.departure}</Text>
+          <Text style={styles.commandMeta}>{trip.vehicle}</Text>
+          <Text style={styles.commandMeta}>{trip.passengers}/{trip.seats} passengers</Text>
+        </View>
         <PrimaryButton label="Start boarding" onPress={() => setFlow('boarding')} />
       </View>
       <View style={styles.grid}>
@@ -278,6 +286,7 @@ function Info({ label, value }: { label: string; value: string }) {
 function PrimaryButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
     <Pressable style={styles.primaryButton} onPress={onPress}>
+      <Ionicons name="arrow-forward-circle" size={20} color="#ffffff" />
       <Text style={styles.primaryButtonText}>{label}</Text>
     </Pressable>
   );
@@ -286,6 +295,7 @@ function PrimaryButton({ label, onPress }: { label: string; onPress: () => void 
 function SecondaryButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
     <Pressable style={styles.secondaryButton} onPress={onPress}>
+      <Ionicons name="alert-circle-outline" size={19} color={colors.ink} />
       <Text style={styles.secondaryButtonText}>{label}</Text>
     </Pressable>
   );
@@ -319,10 +329,13 @@ const styles = StyleSheet.create({
   content: { gap: 14, paddingBottom: 110 },
   stack: { gap: 14 },
   commandCard: { gap: 12, padding: 18, borderRadius: 28, backgroundColor: colors.ink },
+  commandTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   commandLabel: { color: '#bdefff', fontWeight: '900' },
+  livePill: { overflow: 'hidden', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(31,157,116,0.18)', color: '#bdf5df', fontWeight: '900', fontSize: 12 },
   commandTitle: { color: '#ffffff', fontSize: 44, fontWeight: '900' },
   commandRoute: { color: '#ffffff', fontSize: 22, fontWeight: '900' },
   commandMeta: { color: '#d8e2ea' },
+  commandFacts: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   card: { gap: 12, padding: 16, borderRadius: 24, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line },
   cardTitle: { color: colors.ink, fontSize: 22, fontWeight: '900' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
@@ -354,9 +367,9 @@ const styles = StyleSheet.create({
   input: { color: colors.ink, fontWeight: '900', fontSize: 16, padding: 0 },
   info: { gap: 2 },
   infoValue: { color: colors.ink, fontWeight: '900' },
-  primaryButton: { flex: 1, minHeight: 52, alignItems: 'center', justifyContent: 'center', borderRadius: 18, backgroundColor: colors.action },
+  primaryButton: { flex: 1, minHeight: 56, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 18, backgroundColor: colors.action },
   primaryButtonText: { color: '#ffffff', fontWeight: '900', fontSize: 16 },
-  secondaryButton: { flex: 1, minHeight: 52, alignItems: 'center', justifyContent: 'center', borderRadius: 18, backgroundColor: '#eef4f8', borderWidth: 1, borderColor: colors.line },
+  secondaryButton: { flex: 1, minHeight: 56, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 18, backgroundColor: '#eef4f8', borderWidth: 1, borderColor: colors.line },
   secondaryButtonText: { color: colors.ink, fontWeight: '900', fontSize: 16 },
   nav: { marginHorizontal: 16, marginBottom: 10, flexDirection: 'row', gap: 8, padding: 8, borderRadius: 24, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.line },
   navItem: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 16 },

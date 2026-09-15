@@ -113,6 +113,13 @@ function renderContent() {
             <h2>Operational status</h2>
           </div>
         </div>
+        <div class="ops-map">
+          <span class="ops-map__road"></span>
+          <span class="ops-map__road ops-map__road--two"></span>
+          <span class="ops-map__pin ops-map__pin--start">SDQ</span>
+          <span class="ops-map__pin ops-map__pin--end">STI</span>
+          <span class="ops-map__vehicle">EN-001</span>
+        </div>
         <div class="feed">
           <div class="feed-item"><strong>${dashboard.metrics.pendingBookings}</strong> bookings pending confirmation</div>
           <div class="feed-item"><strong>${dashboard.metrics.availableBuses}</strong> buses available for scheduling</div>
@@ -140,9 +147,9 @@ function renderModuleTables(filteredTrips, filteredBuses, filteredDrivers, filte
     case 'reports':
       return reportsPanel();
     case 'users':
-      return placeholderPanel('Users', 'Prepared for account and access administration.');
+      return accessPanel('Users', [['Operations Manager', 'Full access', 'Active'], ['Dispatcher', 'Trips and bookings', 'Active'], ['Finance Lead', 'Reports and revenue', 'Invited']]);
     case 'roles':
-      return placeholderPanel('Roles and permissions', 'Prepared for RBAC, policies, and granular permissions.');
+      return accessPanel('Roles and permissions', [['Admin', 'All modules', '8 users'], ['Operations', 'Trips, fleet, drivers', '14 users'], ['Driver', 'Assigned trips only', '42 users']]);
     default:
       return dashboardPanel(filteredTrips, filteredBuses, filteredDrivers, filteredPassengers, filteredInventory);
   }
@@ -216,17 +223,19 @@ function tableBlock(title, rows, headers) {
   `;
 }
 
-function placeholderPanel(title, description) {
+function accessPanel(title, rows) {
   return `
-    <section class="admin-panel admin-panel--pad">
+    <section class="admin-panel admin-panel--pad module-view">
       <div class="module-view__header">
         <div>
           <div class="eyebrow">${title}</div>
           <h2>${title}</h2>
         </div>
+        <button class="button button--primary">Add</button>
       </div>
-      <p>${description}</p>
-      <span class="badge badge--info">Ready for Laravel</span>
+      <div class="access-list">
+        ${rows.map((row) => `<div class="access-row"><strong>${row[0]}</strong><span>${row[1]}</span><em>${row[2]}</em></div>`).join('')}
+      </div>
     </section>
   `;
 }

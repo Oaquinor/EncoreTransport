@@ -782,7 +782,7 @@
   }
 }
 
-/* Client-preview polish: closer to the clean white product board reference. */
+/* Client-facing polish: clean white product board direction. */
 .website-screen {
   background: linear-gradient(180deg, #ffffff 0%, #f5f8fb 58%, #eef4f8 100%);
 }
