@@ -29,6 +29,7 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Drivers', description: 'Operaciones del conductor')]
 #[OA\Tag(name: 'Tracking', description: 'Ubicacion del vehiculo')]
 #[OA\Tag(name: 'Admin', description: 'Dashboard administrativo')]
+#[OA\Tag(name: 'Maps', description: 'Search, geocoding y routing mediante TomTom a traves de Laravel')]
 #[OA\Schema(
     schema: 'ApiError',
     type: 'object',

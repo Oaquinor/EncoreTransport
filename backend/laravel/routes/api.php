@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\BookingController;
 use App\Http\Controllers\Api\V1\DriverController;
 use App\Http\Controllers\Api\V1\DriverLocationController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\MapController;
 use App\Http\Controllers\Api\V1\RouteController;
 use App\Http\Controllers\Api\V1\SeatController;
 use App\Http\Controllers\Api\V1\TripController;
@@ -14,6 +15,11 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     Route::get('health', HealthController::class);
     Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+
+    Route::get('maps/search', [MapController::class, 'search'])->middleware('throttle:60,1');
+    Route::get('maps/geocode', [MapController::class, 'geocode'])->middleware('throttle:60,1');
+    Route::get('maps/reverse-geocode', [MapController::class, 'reverseGeocode'])->middleware('throttle:60,1');
+    Route::get('maps/route', [MapController::class, 'route'])->middleware('throttle:60,1');
 
     Route::get('routes', [RouteController::class, 'index']);
     Route::get('trips/search', [TripController::class, 'search']);

@@ -1,69 +1,76 @@
-# EncoreTransport - Swagger + Core corregido
+# EncoreTransport - Pack TomTom + Swagger + Core
 
-## Que corrige este pack
+Este pack se aplica SOBRE el repositorio existente. No contiene claves privadas y no intenta simular respuestas de TomTom ni pagos.
 
-1. Swagger/OpenAPI con PHP Attributes (`OpenApi\Attributes`) para evitar dependencia de anotaciones legacy.
-2. `@OA\Info` equivalente mediante `#[OA\Info]`.
-3. Endpoints documentados para Health, Auth, Routes, Trips, Seats, Bookings, Drivers, Tracking y Admin.
-4. Bearer Auth documentado para el boton **Authorize** de Swagger UI.
-5. Seeder idempotente: se puede ejecutar mas de una vez sin chocar por `buses.plate`.
-6. El seeder crea 42 asientos reales para `BUS-001`, por lo que `/api/v1/trips/{trip}/seats` deja de responder vacio.
-7. El seeder solo corre en `local` o `testing` para evitar cargar credenciales demo en produccion.
-8. `DriverController` deja de devolver un perfil hardcodeado y usa el conductor autenticado.
-9. Busqueda de viajes aplica filtros reales de origen, destino, fecha y cantidad de pasajeros.
-10. Reservas liberan holds vencidos y vuelven a calcular la disponibilidad.
-11. Se conserva la restriccion unica `(trip_id, bus_seat_id)` para impedir doble reserva.
-12. `config/encore.php` queda en la ruta correcta de Laravel.
+## Incluye
+
+- Swagger/OpenAPI con endpoints reales del core y Maps.
+- `MapServiceInterface` y `TomTomMapService`.
+- Endpoints backend para search, geocode, reverse geocode y routing.
+- Configuracion `MAP_PROVIDER=tomtom` y variables TomTom en `.env.example`.
+- `PricingService` para que el backend sea responsable del total de la reserva.
+- `ReleaseExpiredBookings` y Scheduler para liberar holds expirados aunque no llegue otra reserva.
+- Core previo: auth, trips, seats, bookings, driver location y Swagger.
+- Test TomTom que hace SKIP controlado cuando no existe `TOMTOM_API_KEY`.
 
 ## Aplicacion
 
-Desde la raiz de EncoreTransport:
+Desde la raiz del repositorio:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\EncoreTransport_SWAGGER_CORE_CORREGIDO\APLICAR_SWAGGER_CORE.ps1 .
+powershell -ExecutionPolicy Bypass -File .\EncoreTransport_TOMTOM_SWAGGER_CORE\APLICAR_TOMTOM_SWAGGER_CORE.ps1 .
 ```
 
-Si prefieres copiar manualmente, copia el contenido de `backend/laravel` del pack sobre `backend/laravel` del repo.
+Luego en `backend\laravel\.env` agrega tu clave real, sin subirla a Git:
 
-Luego:
+```env
+MAP_PROVIDER=tomtom
+TOMTOM_API_KEY=TU_CLAVE_REAL
+TOMTOM_SEARCH_BASE_URL=https://api.tomtom.com/search/2
+TOMTOM_ROUTING_BASE_URL=https://api.tomtom.com/routing/1
+```
+
+Despues:
 
 ```bat
 cd backend\laravel
-php artisan optimize:clear
+php artisan config:clear
 php artisan migrate
 php artisan db:seed --class=EncoreTransportSeeder
 php artisan l5-swagger:generate
-php artisan route:list --path=api/v1
+php artisan schedule:list
+php artisan test
 php artisan serve
 ```
 
 Swagger:
 
-```text
-http://127.0.0.1:8000/api/documentation
-```
+`http://127.0.0.1:8000/api/documentation`
 
-## Usuarios demo SOLO LOCAL/TESTING
+## Endpoints TomTom
 
-- Passenger: `passenger@example.test` / `password`
-- Driver: `driver@example.test` / `password`
-- Admin: `admin@example.test` / `password`
+- `GET /api/v1/maps/search?q=...`
+- `GET /api/v1/maps/geocode?address=...`
+- `GET /api/v1/maps/reverse-geocode?latitude=...&longitude=...`
+- `GET /api/v1/maps/route?origin_latitude=...&origin_longitude=...&destination_latitude=...&destination_longitude=...`
 
-## Pruebas
+La API key se usa exclusivamente en Laravel. No debe colocarse en JavaScript publico.
+
+## Scheduler
+
+En desarrollo puedes ejecutar:
 
 ```bat
-php artisan test --filter=ApiCoreSmokeTest
-php artisan test --filter=SeatConstraintTest
+php artisan schedule:work
 ```
 
-## Si Swagger vuelve a decir que no encuentra PathItem
+En produccion configura el cron/scheduler oficial de Laravel para ejecutar `schedule:run` cada minuto.
 
-Verifica en `config/l5-swagger.php`:
+## Lo que este pack NO declara terminado
 
-```php
-'annotations' => [
-    base_path('app'),
-],
-```
+- PowerTranz real: faltan credenciales/documentacion operativa del proveedor.
+- Realtime productivo: depende del proveedor/infraestructura final.
+- WhatsApp real: requiere credenciales y templates aprobados.
+- Frontend completo consumiendo TomTom: este pack deja lista la API backend para conectarlo sin exponer la key.
 
-El pack coloca `OpenApiSpec.php` dentro de `app/OpenApi` y los paths dentro de `app/Http/Controllers/Api/V1`, por lo que `base_path('app')` debe escanear ambos.
+No se debe marcar el proyecto como production ready mientras esos puntos y los tests E2E criticos sigan pendientes.
