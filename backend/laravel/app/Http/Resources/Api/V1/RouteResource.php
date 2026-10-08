@@ -13,7 +13,7 @@ class RouteResource extends JsonResource
             'id' => $this->id,
             'origin' => $this->origin,
             'destination' => $this->destination,
-            'distance_km' => $this->distance_km,
+            'distance_km' => (int) $this->distance_km,
             'active' => (bool) $this->active,
         ];
     }
