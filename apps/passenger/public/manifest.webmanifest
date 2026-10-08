@@ -1,0 +1,10 @@
+{
+  "name": "Encore Passenger",
+  "short_name": "Encore",
+  "start_url": "/passenger/",
+  "scope": "/passenger/",
+  "display": "standalone",
+  "background_color": "#f3f7f9",
+  "theme_color": "#102130",
+  "icons": [{"src":"/logo.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

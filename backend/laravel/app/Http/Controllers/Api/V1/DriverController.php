@@ -1,74 +1,25 @@
 <?php
-
 namespace App\Http\Controllers\Api\V1;
-
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\TripResource;
+use App\Models\BookingPassenger;
 use App\Models\Trip;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use OpenApi\Attributes as OA;
-
-class DriverController extends Controller
-{
-    #[OA\Get(
-        path: '/api/v1/driver/me',
-        operationId: 'driverProfile',
-        summary: 'Consultar perfil del conductor autenticado',
-        tags: ['Drivers'],
-        security: [['bearerAuth' => []]],
-        responses: [
-            new OA\Response(response: 200, description: 'Perfil del conductor'),
-            new OA\Response(response: 401, description: 'No autenticado'),
-            new OA\Response(response: 403, description: 'Rol no permitido'),
-            new OA\Response(response: 404, description: 'Perfil de conductor no encontrado'),
-        ]
-    )]
-    public function profile(Request $request)
-    {
-        $driver = $request->user()?->driver;
-
-        if (!$driver) {
-            return response()->json(['message' => 'Driver profile not found.'], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => $driver->load('user'),
-        ]);
-    }
-
-    #[OA\Get(
-        path: '/api/v1/driver/trips/current',
-        operationId: 'driverCurrentTrip',
-        summary: 'Consultar viaje actual o proximo del conductor',
-        tags: ['Drivers'],
-        security: [['bearerAuth' => []]],
-        responses: [
-            new OA\Response(response: 200, description: 'Viaje actual o null'),
-            new OA\Response(response: 401, description: 'No autenticado'),
-            new OA\Response(response: 403, description: 'Rol no permitido'),
-        ]
-    )]
-    public function currentTrip(Request $request)
-    {
-        $driver = $request->user()?->driver;
-
-        if (!$driver) {
-            return response()->json(['message' => 'Driver profile not found.'], 404);
-        }
-
-        $trip = Trip::query()
-            ->with(['route', 'bus', 'driver'])
-            ->where('driver_id', $driver->id)
-            ->whereIn('status', ['scheduled', 'boarding', 'in_progress'])
-            ->orderBy('departure_date')
-            ->orderBy('departure_time')
-            ->first();
-
-        if (!$trip) {
-            return response()->json(['data' => null]);
-        }
-
-        return new TripResource($trip);
-    }
+class DriverController extends Controller {
+    #[OA\Get(path:'/api/v1/driver/me',operationId:'driverProfile',summary:'Authenticated driver profile',tags:['Drivers'],security:[['bearerAuth'=>[]]],responses:[new OA\Response(response:200,description:'Driver'),new OA\Response(response:404,description:'Driver profile not found')])]
+    public function profile(Request $request){$driver=$request->user()?->driver;if(!$driver)return response()->json(['message'=>'Driver profile not found.'],404);return response()->json(['data'=>$driver->load('user')]);}
+    #[OA\Get(path:'/api/v1/driver/trips/current',operationId:'driverCurrentTrip',summary:'Current or next assigned trip',tags:['Drivers'],security:[['bearerAuth'=>[]]],responses:[new OA\Response(response:200,description:'Trip or null')])]
+    public function currentTrip(Request $request){$driver=$request->user()?->driver;if(!$driver)return response()->json(['message'=>'Driver profile not found.'],404);$trip=Trip::with(['route','bus','driver'])->where('driver_id',$driver->id)->whereIn('status',['scheduled','boarding','in_progress'])->orderBy('departure_date')->orderBy('departure_time')->first();return $trip?new TripResource($trip):response()->json(['data'=>null]);}
+    #[OA\Get(path:'/api/v1/driver/trips/{trip}/passengers',operationId:'driverTripPassengers',summary:'Passengers for driver trip',tags:['Drivers'],security:[['bearerAuth'=>[]]],parameters:[new OA\Parameter(name:'trip',in:'path',required:true,schema:new OA\Schema(type:'integer'))],responses:[new OA\Response(response:200,description:'Passengers')])]
+    public function passengers(Request $request,Trip $trip){$this->assertAssigned($request,$trip);$items=BookingPassenger::query()->whereHas('booking',fn($q)=>$q->where('trip_id',$trip->id)->whereIn('status',['pending_payment','confirmed']))->with('booking:id,reference,status')->get();return response()->json(['data'=>$items]);}
+    #[OA\Post(path:'/api/v1/driver/trips/{trip}/start',operationId:'driverStartTrip',summary:'Start assigned trip',tags:['Drivers'],security:[['bearerAuth'=>[]]],parameters:[new OA\Parameter(name:'trip',in:'path',required:true,schema:new OA\Schema(type:'integer'))],responses:[new OA\Response(response:200,description:'Trip started'),new OA\Response(response:422,description:'Invalid state')])]
+    public function start(Request $request,Trip $trip){$this->assertAssigned($request,$trip);if(!in_array($trip->status,['scheduled','boarding'],true))throw ValidationException::withMessages(['status'=>'Only scheduled or boarding trips can be started.']);$trip->update(['status'=>'in_progress']);return response()->json(['data'=>(new TripResource($trip->fresh(['route','bus','driver'])))->resolve()]);}
+    #[OA\Post(path:'/api/v1/driver/trips/{trip}/complete',operationId:'driverCompleteTrip',summary:'Complete assigned trip',tags:['Drivers'],security:[['bearerAuth'=>[]]],parameters:[new OA\Parameter(name:'trip',in:'path',required:true,schema:new OA\Schema(type:'integer'))],responses:[new OA\Response(response:200,description:'Trip completed'),new OA\Response(response:422,description:'Invalid state')])]
+    public function complete(Request $request,Trip $trip){$this->assertAssigned($request,$trip);if($trip->status!=='in_progress')throw ValidationException::withMessages(['status'=>'Only an in-progress trip can be completed.']);$trip->update(['status'=>'completed']);return response()->json(['data'=>(new TripResource($trip->fresh(['route','bus','driver'])))->resolve()]);}
+    #[OA\Post(path:'/api/v1/driver/trips/{trip}/passengers/{passenger}/board',operationId:'driverBoardPassenger',summary:'Mark passenger boarded',tags:['Drivers'],security:[['bearerAuth'=>[]]],parameters:[new OA\Parameter(name:'trip',in:'path',required:true,schema:new OA\Schema(type:'integer')),new OA\Parameter(name:'passenger',in:'path',required:true,schema:new OA\Schema(type:'integer'))],responses:[new OA\Response(response:200,description:'Passenger boarded')])]
+    public function board(Request $request,Trip $trip,BookingPassenger $passenger){$this->assertAssigned($request,$trip);if($passenger->booking?->trip_id!==$trip->id)return response()->json(['message'=>'Passenger does not belong to this trip.'],404);if(!in_array($trip->status,['boarding','in_progress'],true))throw ValidationException::withMessages(['status'=>'Boarding is only allowed during boarding or an active trip.']);$passenger->update(['boarded_at'=>now()]);return response()->json(['data'=>$passenger->fresh()]);}
+    private function assertAssigned(Request $request,Trip $trip): void {$driver=$request->user()?->driver;if(!$driver)abort(404,'Driver profile not found.');if($request->user()?->role!=='admin' && $trip->driver_id!==$driver->id)abort(403,'This trip is not assigned to the authenticated driver.');}
 }

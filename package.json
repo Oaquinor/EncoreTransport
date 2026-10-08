@@ -8,17 +8,20 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "node server.mjs",
-    "start": "node server.mjs",
-    "dev:website": "node server.mjs",
+    "dev": "node --env-file-if-exists=.env server.mjs",
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "dev:website": "node --env-file-if-exists=.env server.mjs",
     "dev:passenger": "npm --workspace @encore/passenger run dev",
-    "dev:operations": "node server.mjs",
+    "dev:operations": "node --env-file-if-exists=.env server.mjs",
     "mobile:passenger": "npm --workspace @encore/passenger-mobile run dev",
     "mobile:driver": "npm --workspace @encore/driver-mobile run dev",
     "build:passenger": "npm --workspace @encore/passenger run build",
     "preview:passenger": "npm --workspace @encore/passenger run preview",
+    "typecheck:passenger": "npm --workspace @encore/passenger run typecheck",
+    "typecheck:api-client": "npm --workspace @encore/api-client run typecheck",
     "test": "node tests/business-rules.test.mjs",
-    "check": "node tests/business-rules.test.mjs"
+    "check": "node tests/business-rules.test.mjs",
+    "validate:frontend": "npm run test && npm run typecheck:api-client && npm run typecheck:passenger && npm run build:passenger"
   },
   "engines": {
     "node": ">=24"

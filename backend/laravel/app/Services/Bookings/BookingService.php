@@ -6,6 +6,8 @@ use App\Models\Booking;
 use App\Models\BookingSeat;
 use App\Models\BusSeat;
 use App\Models\Trip;
+use App\Models\User;
+use App\Services\Audit\AuditService;
 use App\Services\Pricing\PricingService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -14,30 +16,22 @@ use Illuminate\Validation\ValidationException;
 
 class BookingService
 {
-    public function __construct(private readonly PricingService $pricing)
-    {
-    }
+    public function __construct(
+        private readonly PricingService $pricing,
+        private readonly AuditService $audit,
+    ) {}
 
-    public function create(array $data, ?int $userId = null): Booking
+    public function create(array $data, ?int $userId): Booking
     {
         return DB::transaction(function () use ($data, $userId) {
-            $trip = Trip::query()
-                ->with('bus')
-                ->whereKey($data['trip_id'])
-                ->lockForUpdate()
-                ->firstOrFail();
+            $trip = Trip::query()->with('bus')->lockForUpdate()->findOrFail($data['trip_id']);
+            $this->releaseExpiredHolds($trip);
 
             if (!in_array($trip->status, ['scheduled', 'boarding'], true)) {
                 throw ValidationException::withMessages(['trip_id' => 'This trip is not available for booking.']);
             }
 
-            $this->releaseExpiredHolds($trip);
-
             $seatIds = array_values(array_unique(array_map('intval', $data['seat_ids'])));
-            if (count($seatIds) !== count($data['seat_ids'])) {
-                throw ValidationException::withMessages(['seat_ids' => 'Duplicate seats are not allowed.']);
-            }
-
             $seats = BusSeat::query()
                 ->where('bus_id', $trip->bus_id)
                 ->where('active', true)
@@ -48,7 +42,6 @@ class BookingService
             if ($seats->count() !== count($seatIds)) {
                 throw ValidationException::withMessages(['seat_ids' => 'One or more seats do not belong to this trip bus.']);
             }
-
             if (count($data['passengers']) !== count($seatIds)) {
                 throw ValidationException::withMessages(['passengers' => 'A passenger is required for each selected seat.']);
             }
@@ -89,7 +82,7 @@ class BookingService
             ]);
 
             foreach ($data['passengers'] as $passenger) {
-                $booking->passengers()->create($passenger);
+                $booking->passengers()->create($passenger + ['status' => 'booked']);
             }
 
             try {
@@ -103,18 +96,37 @@ class BookingService
                 }
             } catch (QueryException $e) {
                 if (in_array($e->getCode(), ['23000', '23505'], true)) {
-                    throw ValidationException::withMessages(['seat_ids' => 'One of the selected seats was just reserved by another passenger.']);
+                    throw ValidationException::withMessages(['seat_ids' => 'One selected seat was just reserved by another passenger.']);
                 }
                 throw $e;
             }
 
             $this->refreshAvailableSeats($trip);
+            $this->audit->record($userId ? User::query()->find($userId) : null, 'booking.created', $booking);
 
-            return $booking->load(['trip.route', 'reservedSeats.seat', 'passengers']);
+            return $booking->load(['trip.route','trip.bus','reservedSeats.seat','passengers']);
         }, 3);
     }
 
-    private function releaseExpiredHolds(Trip $trip): void
+    public function cancel(Booking $booking, ?User $actor): Booking
+    {
+        return DB::transaction(function () use ($booking, $actor) {
+            $booking = Booking::query()->lockForUpdate()->findOrFail($booking->id);
+            if (!in_array($booking->status, ['draft','pending_payment'], true)) {
+                throw ValidationException::withMessages(['booking' => 'Only unpaid bookings can be cancelled from this endpoint.']);
+            }
+
+            BookingSeat::query()->where('booking_id', $booking->id)->where('status', 'held')->delete();
+            $booking->forceFill(['status' => 'cancelled', 'expires_at' => null])->save();
+            $trip = Trip::query()->find($booking->trip_id);
+            if ($trip) $this->refreshAvailableSeats($trip);
+            $this->audit->record($actor, 'booking.cancelled', $booking);
+
+            return $booking->fresh(['trip.route','reservedSeats.seat','passengers']);
+        }, 3);
+    }
+
+    public function releaseExpiredHolds(Trip $trip): void
     {
         $expired = BookingSeat::query()
             ->where('trip_id', $trip->id)
@@ -124,16 +136,14 @@ class BookingService
             ->lockForUpdate()
             ->get();
 
-        if ($expired->isEmpty()) {
-            return;
-        }
-
+        if ($expired->isEmpty()) return;
         $bookingIds = $expired->pluck('booking_id')->unique()->values();
         BookingSeat::query()->whereIn('id', $expired->pluck('id'))->delete();
         Booking::query()->whereIn('id', $bookingIds)->where('status', 'pending_payment')->update(['status' => 'expired']);
+        $this->refreshAvailableSeats($trip);
     }
 
-    private function refreshAvailableSeats(Trip $trip): void
+    public function refreshAvailableSeats(Trip $trip): void
     {
         $totalSeats = BusSeat::query()->where('bus_id', $trip->bus_id)->where('active', true)->count();
         $reservedSeats = BookingSeat::query()
@@ -146,9 +156,7 @@ class BookingService
                                 $time->whereNull('held_until')->orWhere('held_until', '>', now());
                             });
                     });
-            })
-            ->count();
-
+            })->count();
         $trip->forceFill(['available_seats' => max(0, $totalSeats - $reservedSeats)])->save();
     }
 }

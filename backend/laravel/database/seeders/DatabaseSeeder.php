@@ -2,12 +2,15 @@
 
 namespace Database\Seeders;
 
+use Database\Seeders\Demo\EncoreTransportDemoSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call(EncoreTransportSeeder::class);
+        if (app()->environment(['local','testing'])) {
+            $this->call(EncoreTransportDemoSeeder::class);
+        }
     }
 }

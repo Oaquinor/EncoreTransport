@@ -12,60 +12,45 @@ use Throwable;
 
 class MapController extends Controller
 {
-    public function __construct(private readonly MapServiceInterface $maps)
+    public function __construct(private readonly MapServiceInterface $maps) {}
+
+    public function search(Request $request) { $d=$request->validate(['q'=>['required','string','max:250'],'limit'=>['nullable','integer','min:1','max:20']]); return $this->call(fn()=>['raw'=>$this->maps->search($d['q'],['limit'=>$d['limit']??10])]); }
+    public function geocode(Request $request) { $d=$request->validate(['address'=>['required','string','max:300']]); return $this->call(fn()=>$this->normalizeGeocode($this->maps->geocode($d['address']))); }
+    public function reverseGeocode(Request $request) { $d=$request->validate(['latitude'=>['required','numeric','between:-90,90'],'longitude'=>['required','numeric','between:-180,180']]); return $this->call(fn()=>['raw'=>$this->maps->reverseGeocode((float)$d['latitude'],(float)$d['longitude'])]); }
+    public function route(Request $request) { $d=$request->validate(['origin_latitude'=>['required','numeric','between:-90,90'],'origin_longitude'=>['required','numeric','between:-180,180'],'destination_latitude'=>['required','numeric','between:-90,90'],'destination_longitude'=>['required','numeric','between:-180,180']]); return $this->call(fn()=>$this->normalizeRoute($this->maps->calculateRoute((float)$d['origin_latitude'],(float)$d['origin_longitude'],(float)$d['destination_latitude'],(float)$d['destination_longitude']))); }
+
+    #[OA\Get(path:'/api/v1/maps/journey',operationId:'mapJourney',summary:'Geocodificar origen/destino y calcular ruta TomTom',tags:['Maps'],parameters:[new OA\Parameter(name:'origin',in:'query',required:true,schema:new OA\Schema(type:'string')),new OA\Parameter(name:'destination',in:'query',required:true,schema:new OA\Schema(type:'string'))],responses:[new OA\Response(response:200,description:'Ruta normalizada'),new OA\Response(response:422,description:'Direccion no resuelta'),new OA\Response(response:503,description:'TomTom no configurado')])]
+    public function journey(Request $request)
     {
+        $d=$request->validate(['origin'=>['required','string','max:250'],'destination'=>['required','string','max:250']]);
+        return $this->call(function() use($d){
+            $origin=$this->normalizeGeocode($this->maps->geocode($d['origin']));
+            $destination=$this->normalizeGeocode($this->maps->geocode($d['destination']));
+            if (!$origin || !$destination) throw new RuntimeException('Unable to resolve origin or destination.');
+            $route=$this->normalizeRoute($this->maps->calculateRoute($origin['latitude'],$origin['longitude'],$destination['latitude'],$destination['longitude']));
+            return ['origin'=>$origin,'destination'=>$destination,'route'=>$route];
+        }, 422);
     }
 
-    #[OA\Get(path: '/api/v1/maps/search', operationId: 'mapSearch', summary: 'Buscar lugares con TomTom', tags: ['Maps'], parameters: [new OA\Parameter(name: 'q', in: 'query', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 200, description: 'Resultados de TomTom'), new OA\Response(response: 422, description: 'Parametros invalidos'), new OA\Response(response: 503, description: 'Proveedor de mapas no disponible')])]
-    public function search(Request $request)
+    private function normalizeGeocode(array $payload): ?array
     {
-        $data = $request->validate(['q' => ['required', 'string', 'max:250'], 'limit' => ['nullable', 'integer', 'min:1', 'max:20']]);
-        return $this->call(fn () => $this->maps->search($data['q'], ['limit' => $data['limit'] ?? 10]));
+        $item=$payload['results'][0]??null;
+        if (!$item || !isset($item['position']['lat'],$item['position']['lon'])) return null;
+        return ['name'=>$item['address']['freeformAddress']??$item['poi']['name']??null,'latitude'=>(float)$item['position']['lat'],'longitude'=>(float)$item['position']['lon']];
     }
 
-    #[OA\Get(path: '/api/v1/maps/geocode', operationId: 'mapGeocode', summary: 'Convertir direccion en coordenadas', tags: ['Maps'], parameters: [new OA\Parameter(name: 'address', in: 'query', required: true, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 200, description: 'Resultado de geocodificacion'), new OA\Response(response: 422, description: 'Parametros invalidos'), new OA\Response(response: 503, description: 'Proveedor de mapas no disponible')])]
-    public function geocode(Request $request)
+    private function normalizeRoute(array $payload): array
     {
-        $data = $request->validate(['address' => ['required', 'string', 'max:300']]);
-        return $this->call(fn () => $this->maps->geocode($data['address']));
+        $route=$payload['routes'][0]??[]; $summary=$route['summary']??[]; $points=[];
+        foreach (($route['legs']??[]) as $leg) foreach (($leg['points']??[]) as $point) if(isset($point['latitude'],$point['longitude'])) $points[]=['latitude'=>(float)$point['latitude'],'longitude'=>(float)$point['longitude']];
+        return ['distanceMeters'=>(int)($summary['lengthInMeters']??0),'durationSeconds'=>(int)($summary['travelTimeInSeconds']??0),'trafficDelaySeconds'=>(int)($summary['trafficDelayInSeconds']??0),'points'=>$points];
     }
 
-    #[OA\Get(path: '/api/v1/maps/reverse-geocode', operationId: 'mapReverseGeocode', summary: 'Convertir coordenadas en direccion', tags: ['Maps'], parameters: [new OA\Parameter(name: 'latitude', in: 'query', required: true, schema: new OA\Schema(type: 'number', format: 'double')), new OA\Parameter(name: 'longitude', in: 'query', required: true, schema: new OA\Schema(type: 'number', format: 'double'))], responses: [new OA\Response(response: 200, description: 'Resultado de geocodificacion inversa'), new OA\Response(response: 422, description: 'Parametros invalidos'), new OA\Response(response: 503, description: 'Proveedor de mapas no disponible')])]
-    public function reverseGeocode(Request $request)
+    private function call(callable $callback, int $runtimeStatus=503)
     {
-        $data = $request->validate(['latitude' => ['required', 'numeric', 'between:-90,90'], 'longitude' => ['required', 'numeric', 'between:-180,180']]);
-        return $this->call(fn () => $this->maps->reverseGeocode((float) $data['latitude'], (float) $data['longitude']));
-    }
-
-    #[OA\Get(path: '/api/v1/maps/route', operationId: 'mapRoute', summary: 'Calcular ruta real con TomTom', tags: ['Maps'], parameters: [new OA\Parameter(name: 'origin_latitude', in: 'query', required: true, schema: new OA\Schema(type: 'number', format: 'double')), new OA\Parameter(name: 'origin_longitude', in: 'query', required: true, schema: new OA\Schema(type: 'number', format: 'double')), new OA\Parameter(name: 'destination_latitude', in: 'query', required: true, schema: new OA\Schema(type: 'number', format: 'double')), new OA\Parameter(name: 'destination_longitude', in: 'query', required: true, schema: new OA\Schema(type: 'number', format: 'double'))], responses: [new OA\Response(response: 200, description: 'Ruta calculada'), new OA\Response(response: 422, description: 'Parametros invalidos'), new OA\Response(response: 503, description: 'Proveedor de mapas no disponible')])]
-    public function route(Request $request)
-    {
-        $data = $request->validate([
-            'origin_latitude' => ['required', 'numeric', 'between:-90,90'],
-            'origin_longitude' => ['required', 'numeric', 'between:-180,180'],
-            'destination_latitude' => ['required', 'numeric', 'between:-90,90'],
-            'destination_longitude' => ['required', 'numeric', 'between:-180,180'],
-        ]);
-
-        return $this->call(fn () => $this->maps->calculateRoute(
-            (float) $data['origin_latitude'],
-            (float) $data['origin_longitude'],
-            (float) $data['destination_latitude'],
-            (float) $data['destination_longitude']
-        ));
-    }
-
-    private function call(callable $callback)
-    {
-        try {
-            return response()->json(['data' => $callback()]);
-        } catch (RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 503);
-        } catch (ConnectionException) {
-            return response()->json(['message' => 'Map provider is temporarily unavailable.'], 503);
-        } catch (Throwable $e) {
-            report($e);
-            return response()->json(['message' => 'Unable to complete the map request.'], 502);
-        }
+        try { return response()->json(['data'=>$callback()]); }
+        catch (RuntimeException $e) { $status=str_contains($e->getMessage(),'Unable to resolve')?$runtimeStatus:503; return response()->json(['message'=>$e->getMessage()],$status); }
+        catch (ConnectionException) { return response()->json(['message'=>'Map provider is temporarily unavailable.'],503); }
+        catch (Throwable $e) { report($e); return response()->json(['message'=>'Unable to complete the map request.'],502); }
     }
 }

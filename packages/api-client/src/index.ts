@@ -1,202 +1,47 @@
-import { bookingStatuses, createBookingQuote, formatCurrency, getAvailableSeats, reserveSeats, searchTrips } from '@encore/domain';
-import type { Booking, Driver, Incident, Passenger, Route, Trip, TripSearchFilters, TripSearchResult, Vehicle } from '@encore/types';
+import type { AuthResponse, Booking, BookingPassengerInput, Driver, Incident, MapJourney, Passenger, Quote, Route, Seat, Trip, TripSearchFilters, User, Vehicle } from '@encore/types';
 
-const delay = <T>(value: T, timeout = 240): Promise<T> =>
-  new Promise((resolve) => {
-    window.setTimeout(() => resolve(structuredClone(value)), timeout);
-  });
-
-function seatRow(row: number, letters: string[]) {
-  return letters.map((letter, index) => {
-    const seatNumber = `${row}${letter}`;
-    return {
-      id: seatNumber,
-      label: seatNumber,
-      reserved: ['3B', '5C', '6B', '9A'].includes(seatNumber),
-      blocked: ['10C', '10D'].includes(seatNumber),
-      window: index === 0 || index === 3,
-      aisle: index === 1 || index === 2
-    };
-  });
+export class ApiError extends Error {
+  constructor(public status:number, message:string, public payload:unknown=null){ super(message); }
 }
 
-function createSeatMap(totalRows = 10) {
-  return Array.from({ length: totalRows }, (_, index) => seatRow(index + 1, ['A', 'B', 'C', 'D'])).flat();
-}
+export interface EncoreApiClientOptions { baseUrl?:string; token?:string|null; }
 
-const mockRoutes: Route[] = [
-  { id: 'route-sdq-sti', origin: 'Santo Domingo', destination: 'Santiago', durationMinutes: 135 },
-  { id: 'route-sdq-puj', origin: 'Santo Domingo', destination: 'Punta Cana', durationMinutes: 165 },
-  { id: 'route-sti-pop', origin: 'Santiago', destination: 'Puerto Plata', durationMinutes: 95 },
-  { id: 'route-sdq-lrm', origin: 'Santo Domingo', destination: 'La Romana', durationMinutes: 90 }
-];
+export class EncoreApiClient {
+  private baseUrl:string;
+  private token:string|null;
+  constructor(options:EncoreApiClientOptions={}) { this.baseUrl=(options.baseUrl??'/api/v1').replace(/\/$/,''); this.token=options.token??null; }
+  setToken(token:string|null){ this.token=token; }
+  getToken(){ return this.token; }
+  private normalizeTrip(raw:any):Trip { return { ...raw, id:raw.id, routeId:String(raw.routeId??raw.transport_route_id??''), routeName:raw.routeName??'', origin:raw.origin??'', destination:raw.destination??'', date:raw.date??'', departureTime:raw.departureTime??'', arrivalTime:raw.arrivalTime??'', durationMinutes:Number(raw.durationMinutes??0), baseFare:Number(raw.baseFare??raw.price_per_passenger??0), demandMultiplier:Number(raw.demandMultiplier??1), serviceFee:Number(raw.serviceFee??0), occupancy:Number(raw.occupancy??0), seatsAvailable:Number(raw.seatsAvailable??raw.availableSeats??0), availableSeats:Number(raw.availableSeats??raw.seatsAvailable??0), busId:String(raw.busId??raw.bus_id??''), driverId:String(raw.driverId??raw.driver_id??''), status:raw.status??'scheduled', featured:Boolean(raw.featured??false), highlights:Array.isArray(raw.highlights)?raw.highlights:[], seatMap:Array.isArray(raw.seatMap)?raw.seatMap:[] }; }
 
-const mockVehicles: Vehicle[] = [
-  { id: 'bus-203', plate: 'A874512', name: 'Bus 203', capacity: 40, features: ['Wi-Fi', 'USB', 'A/C', 'Reclining seats'], status: 'operational' },
-  { id: 'bus-118', plate: 'A662104', name: 'Bus 118', capacity: 36, features: ['Wi-Fi', 'A/C', 'Included luggage'], status: 'operational' },
-  { id: 'van-045', plate: 'V140882', name: 'Executive Van 045', capacity: 14, features: ['A/C', 'Private service', 'USB'], status: 'maintenance' }
-];
-
-const mockDrivers: Driver[] = [
-  { id: 'driver-ricardo-luna', name: 'Ricardo Luna', license: 'DOP-D-5520', status: 'active' },
-  { id: 'driver-laura-medina', name: 'Laura Medina', license: 'DOP-D-8841', status: 'next' },
-  { id: 'driver-manuel-rojas', name: 'Manuel Rojas', license: 'DOP-D-9012', status: 'finished' }
-];
-
-const mockTrips: Trip[] = [
-  {
-    id: 'EN-001',
-    routeId: 'route-sdq-sti',
-    routeName: 'Santo Domingo → Santiago',
-    origin: 'Santo Domingo',
-    destination: 'Santiago',
-    date: '2026-09-14',
-    departureTime: '08:30',
-    arrivalTime: '10:45',
-    durationMinutes: 135,
-    baseFare: 650,
-    demandMultiplier: 1,
-    serviceFee: 35,
-    occupancy: 55,
-    seatsAvailable: 18,
-    busId: 'bus-203',
-    driverId: 'driver-ricardo-luna',
-    status: 'boarding',
-    featured: true,
-    highlights: ['Direct', 'Wi-Fi', 'A/C', 'Luggage included'],
-    seatMap: createSeatMap(10)
-  },
-  {
-    id: 'EN-002',
-    routeId: 'route-sdq-puj',
-    routeName: 'Santo Domingo → Punta Cana',
-    origin: 'Santo Domingo',
-    destination: 'Punta Cana',
-    date: '2026-09-14',
-    departureTime: '11:15',
-    arrivalTime: '14:00',
-    durationMinutes: 165,
-    baseFare: 950,
-    demandMultiplier: 1.05,
-    serviceFee: 50,
-    occupancy: 61,
-    seatsAvailable: 14,
-    busId: 'bus-118',
-    driverId: 'driver-laura-medina',
-    status: 'scheduled',
-    featured: true,
-    highlights: ['Express', 'USB', 'Reclining seats'],
-    seatMap: createSeatMap(9)
-  },
-  {
-    id: 'EN-003',
-    routeId: 'route-sti-pop',
-    routeName: 'Santiago → Puerto Plata',
-    origin: 'Santiago',
-    destination: 'Puerto Plata',
-    date: '2026-09-14',
-    departureTime: '16:20',
-    arrivalTime: '17:55',
-    durationMinutes: 95,
-    baseFare: 520,
-    demandMultiplier: 1,
-    serviceFee: 30,
-    occupancy: 70,
-    seatsAvailable: 11,
-    busId: 'bus-203',
-    driverId: 'driver-manuel-rojas',
-    status: 'scheduled',
-    featured: false,
-    highlights: ['Fast', 'A/C', 'Luggage included'],
-    seatMap: createSeatMap(10)
+  private async request<T>(path:string, init:RequestInit={}):Promise<T> {
+    const headers = new Headers(init.headers);
+    headers.set('Accept','application/json');
+    if(init.body && !headers.has('Content-Type')) headers.set('Content-Type','application/json');
+    if(this.token) headers.set('Authorization',`Bearer ${this.token}`);
+    const response = await fetch(`${this.baseUrl}${path}`, {...init, headers});
+    const payload = response.status===204 ? null : await response.json().catch(()=>null);
+    if(!response.ok) throw new ApiError(response.status, (payload as any)?.message ?? `Request failed (${response.status})`, payload);
+    return payload as T;
   }
-];
 
-export interface AppShellResponse {
-  routes: Route[];
-  vehicles: Vehicle[];
+  async login(email:string,password:string){ const r=await this.request<AuthResponse>('/auth/login',{method:'POST',body:JSON.stringify({email,password})}); this.token=r.token; return r; }
+  me(){ return this.request<{user:User}>('/auth/me'); }
+  async logout(){ const r=await this.request<{message:string}>('/auth/logout',{method:'POST'}); this.token=null; return r; }
+  routes(){ return this.request<{data:Route[]}>('/routes'); }
+  async searchTrips(filters:TripSearchFilters){ const p=new URLSearchParams(); if(filters.origin)p.set('origin',filters.origin); if(filters.destination)p.set('destination',filters.destination); if(filters.date)p.set('date',filters.date); p.set('passengers',String(filters.passengers||1)); const r=await this.request<{data:any[]}>(`/trips/search?${p}`); return {data:r.data.map(x=>this.normalizeTrip(x))}; }
+  async trip(id:number|string){ const r=await this.request<{data:any}>(`/trips/${id}`); return {data:this.normalizeTrip(r.data)}; }
+  seats(id:number|string){ return this.request<{data:Seat[]}>(`/trips/${id}/seats`); }
+  quote(id:number|string,passengers:number){ return this.request<{data:Quote}>(`/trips/${id}/quote?passengers=${passengers}`); }
+  mapJourney(origin:string,destination:string){ const p=new URLSearchParams({origin,destination}); return this.request<{data:MapJourney}>(`/maps/journey?${p}`); }
+  bookings(){ return this.request<{data:Booking[]}>('/bookings'); }
+  booking(id:number|string){ return this.request<{data:Booking}>(`/bookings/${id}`); }
+  createBooking(tripId:number|string, seatIds:number[], passengers:BookingPassengerInput[]){ return this.request<{data:Booking}>('/bookings',{method:'POST',body:JSON.stringify({trip_id:Number(tripId),seat_ids:seatIds,passengers})}); }
+  cancelBooking(id:number|string){ return this.request<{data:Booking}>(`/bookings/${id}/cancel`,{method:'POST'}); }
+  initiatePayment(id:number|string,idempotencyKey:string){ return this.request(`/bookings/${id}/payments`,{method:'POST',body:JSON.stringify({idempotency_key:idempotencyKey})}); }
+  ticket(id:number|string){ return this.request(`/bookings/${id}/ticket`); }
 }
 
-export interface TripDetailsResponse {
-  trip: Trip & {
-    vehicle: Vehicle;
-    driver: Driver;
-    availableSeats: ReturnType<typeof getAvailableSeats>;
-    priceLabel: string;
-    boardingPoint: string;
-    dropoffPoint: string;
-    serviceClass: string;
-  };
-}
-
-export interface PassengerSearchResponse {
-  filters: TripSearchFilters;
-  trips: TripSearchResult[];
-  total: number;
-}
-
-export interface ReserveSeatsResponse {
-  booking: Booking;
-  reservation: ReturnType<typeof reserveSeats>;
-}
-
-export interface EncoreApiClient {
-  fetchAppShell(): Promise<AppShellResponse>;
-  fetchPassengerSearch(filters: TripSearchFilters): Promise<PassengerSearchResponse>;
-  fetchTripDetails(tripId: string): Promise<TripDetailsResponse>;
-  reserveTripSeats(tripId: string, seatIds: string[], passengerCount: number): Promise<ReserveSeatsResponse>;
-}
-
-export function createMockEncoreApiClient(): EncoreApiClient {
-  return {
-    fetchAppShell() {
-      return delay({ routes: mockRoutes, vehicles: mockVehicles });
-    },
-    fetchPassengerSearch(filters) {
-      const trips = searchTrips(mockTrips, filters).map((trip) => ({
-        ...trip,
-        availableSeats: getAvailableSeats(trip).length,
-        priceLabel: formatCurrency(createBookingQuote(trip, filters.passengers).total)
-      }));
-
-      return delay({ filters, trips, total: trips.length });
-    },
-    fetchTripDetails(tripId) {
-      const trip = mockTrips.find((entry) => entry.id === tripId) ?? mockTrips[0];
-      const vehicle = mockVehicles.find((entry) => entry.id === trip.busId) ?? mockVehicles[0];
-      const driver = mockDrivers.find((entry) => entry.id === trip.driverId) ?? mockDrivers[0];
-      return delay({
-        trip: {
-          ...trip,
-          vehicle,
-          driver,
-          availableSeats: getAvailableSeats(trip),
-          priceLabel: formatCurrency(createBookingQuote(trip, 1).total),
-          boardingPoint: trip.id === 'EN-001' ? 'Agora Mall, north entrance' : 'Main pickup point',
-          dropoffPoint: trip.id === 'EN-001' ? 'Monumento a los Heroes' : 'Destination lobby',
-          serviceClass: trip.id === 'EN-002' ? 'Coastal Express' : 'Premium Shuttle'
-        }
-      });
-    },
-    reserveTripSeats(tripId, seatIds, passengerCount) {
-      const trip = mockTrips.find((entry) => entry.id === tripId) ?? mockTrips[0];
-      const reservation = reserveSeats(trip, seatIds);
-      const quote = createBookingQuote(trip, passengerCount);
-      return delay({
-        reservation,
-        booking: {
-          id: `BK-${tripId}-4281`,
-          status: bookingStatuses.pendingPayment,
-          tripId,
-          seatIds,
-          passengerCount,
-          total: quote.total,
-          totalLabel: quote.totalLabel,
-          createdAt: new Date().toISOString()
-        }
-      });
-    }
-  };
-}
+export const createEncoreApiClient = (options:EncoreApiClientOptions={}) => new EncoreApiClient(options);
 
 export type { Driver, Incident, Passenger, Route, Trip, Vehicle };

@@ -16,45 +16,20 @@ class ReleaseExpiredBookings implements ShouldQueue
 
     public function handle(): void
     {
-        $ids = Booking::query()
-            ->where('status', 'pending_payment')
-            ->whereNotNull('expires_at')
-            ->where('expires_at', '<=', now())
-            ->pluck('id');
-
-        foreach ($ids as $bookingId) {
-            DB::transaction(function () use ($bookingId) {
-                $booking = Booking::query()->whereKey($bookingId)->lockForUpdate()->first();
-                if (!$booking || $booking->status !== 'pending_payment' || !$booking->expires_at?->isPast()) {
-                    return;
+        $ids=Booking::query()->where('status','pending_payment')->whereNotNull('expires_at')->where('expires_at','<=',now())->pluck('id');
+        foreach($ids as $bookingId){
+            DB::transaction(function()use($bookingId){
+                $booking=Booking::query()->whereKey($bookingId)->lockForUpdate()->first();
+                if(!$booking || $booking->status!=='pending_payment' || !$booking->expires_at?->isPast()) return;
+                $trip=Trip::query()->whereKey($booking->trip_id)->lockForUpdate()->first();
+                BookingSeat::query()->where('booking_id',$booking->id)->where('status','held')->delete();
+                $booking->forceFill(['status'=>'expired'])->save();
+                if($trip){
+                    $total=BusSeat::query()->where('bus_id',$trip->bus_id)->where('active',true)->count();
+                    $reserved=BookingSeat::query()->where('trip_id',$trip->id)->where(function($q){$q->where('status','confirmed')->orWhere(fn($held)=>$held->where('status','held')->where(fn($time)=>$time->whereNull('held_until')->orWhere('held_until','>',now())));})->count();
+                    $trip->forceFill(['available_seats'=>max(0,$total-$reserved)])->save();
                 }
-
-                $trip = Trip::query()->whereKey($booking->trip_id)->lockForUpdate()->first();
-
-                BookingSeat::query()
-                    ->where('booking_id', $booking->id)
-                    ->where('status', 'held')
-                    ->delete();
-
-                $booking->forceFill(['status' => 'expired'])->save();
-
-                if ($trip) {
-                    $total = BusSeat::query()->where('bus_id', $trip->bus_id)->where('active', true)->count();
-                    $reserved = BookingSeat::query()
-                        ->where('trip_id', $trip->id)
-                        ->where(function ($query) {
-                            $query->where('status', 'confirmed')
-                                ->orWhere(function ($held) {
-                                    $held->where('status', 'held')
-                                        ->where(function ($time) {
-                                            $time->whereNull('held_until')->orWhere('held_until', '>', now());
-                                        });
-                                });
-                        })
-                        ->count();
-                    $trip->forceFill(['available_seats' => max(0, $total - $reserved)])->save();
-                }
-            }, 3);
+            },3);
         }
     }
 }

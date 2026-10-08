@@ -16,5 +16,5 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias(['api.token' => ApiTokenAuth::class]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Keep API exceptions in Laravel's standard JSON response pipeline.
+        // Keep Laravel's standard JSON error pipeline for API requests.
     })->create();
