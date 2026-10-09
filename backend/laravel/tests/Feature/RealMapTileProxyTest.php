@@ -42,7 +42,8 @@ class RealMapTileProxyTest extends TestCase
                 'https://api.tomtom.test/maps/orbis/map-display/tile/10/300/400.png'
             )
                 && str_contains($request->url(), 'key=test-secret-map-key')
-                && str_contains($request->url(), 'style=street-light');
+                && str_contains($request->url(), 'style=street-light')
+                && $request->hasHeader('TomTom-Api-Version', '1');
         });
 
         $this->assertStringNotContainsString(
@@ -65,5 +66,36 @@ class RealMapTileProxyTest extends TestCase
             ->assertJsonPath('message', 'Invalid map tile coordinates.');
 
         Http::assertNothingSent();
+    }
+
+    public function test_map_tile_proxy_classifies_tomtom_authorization_failure_without_leaking_key(): void
+    {
+        config([
+            'maps.provider' => 'tomtom',
+            'maps.tomtom.api_key' => 'test-secret-map-key',
+            'maps.tomtom.display_base_url' => 'https://api.tomtom.test',
+        ]);
+
+        Http::fake([
+            'https://api.tomtom.test/maps/orbis/map-display/tile/0/0/0.png*' =>
+                Http::response([
+                    'detailedError' => [
+                        'code' => 'FORBIDDEN',
+                        'message' => 'Invalid key',
+                    ],
+                ], 403),
+        ]);
+
+        $response = $this->getJson('/api/v1/maps/tiles/0/0/0.png');
+
+        $response
+            ->assertStatus(502)
+            ->assertJsonPath('code', 'MAP_PROVIDER_AUTHORIZATION_FAILED')
+            ->assertJsonPath('service', 'map-display');
+
+        $this->assertStringNotContainsString(
+            'test-secret-map-key',
+            $response->getContent()
+        );
     }
 }

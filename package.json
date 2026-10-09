@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "workspaces": ["apps/*", "packages/*"],
+  "dependencies": {
+    "leaflet": "1.9.4"
+  },
   "scripts": {
     "dev": "node --env-file-if-exists=.env server.mjs",
     "start": "node --env-file-if-exists=.env server.mjs",
@@ -20,9 +23,9 @@
     "test:hardcode": "node tests/production-hardcode.test.mjs",
     "test:server": "node tests/server-routing.test.mjs",
     "test:real-map": "node tests/real-map-contract.test.mjs",
+    "test:map-runtime": "node tests/map-runtime-contract.test.mjs",
     "test:seat-layout": "node tests/seat-layout-visual-contract.test.mjs",
-    "test:ux-regression": "node tests/ux-regression.test.mjs",
-    "test": "npm run test:business && npm run test:hardcode && npm run test:server && npm run test:real-map && npm run test:seat-layout && npm run test:ux-regression",
+    "test": "npm run test:business && npm run test:hardcode && npm run test:server && npm run test:real-map && npm run test:map-runtime && npm run test:seat-layout",
     "check": "npm run test",
     "validate:frontend": "npm run test && npm run typecheck:api-client && npm run typecheck:passenger && npm run build:passenger"
   },

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Contracts\Maps\MapServiceInterface;
+use App\Exceptions\MapProviderException;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
@@ -83,7 +84,8 @@ class MapController extends Controller
         responses: [
             new OA\Response(response: 200, description: 'Normalized route'),
             new OA\Response(response: 422, description: 'Location could not be resolved'),
-            new OA\Response(response: 503, description: 'TomTom is not configured or unavailable'),
+            new OA\Response(response: 502, description: 'TomTom rejected the upstream request'),
+            new OA\Response(response: 503, description: 'TomTom is not configured, rate-limited, or unavailable'),
         ]
     )]
     public function journey(Request $request)
@@ -142,14 +144,25 @@ class MapController extends Controller
             }
 
             return response($tile['body'], 200, $headers);
+        } catch (MapProviderException $e) {
+            return $this->providerError($e);
         } catch (RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 503);
+            return response()->json([
+                'message' => $e->getMessage(),
+                'code' => 'MAP_CONFIGURATION_ERROR',
+            ], 503);
         } catch (ConnectionException) {
-            return response()->json(['message' => 'Map provider is temporarily unavailable.'], 503);
+            return response()->json([
+                'message' => 'Unable to connect to TomTom from the Laravel server.',
+                'code' => 'MAP_PROVIDER_CONNECTION_FAILED',
+            ], 503);
         } catch (Throwable $e) {
             report($e);
 
-            return response()->json(['message' => 'Unable to load the map tile.'], 502);
+            return response()->json([
+                'message' => 'Unable to load the map tile.',
+                'code' => 'MAP_TILE_ERROR',
+            ], 502);
         }
     }
 
@@ -197,18 +210,40 @@ class MapController extends Controller
     {
         try {
             return response()->json(['data' => $callback()]);
+        } catch (MapProviderException $e) {
+            return $this->providerError($e);
         } catch (RuntimeException $e) {
             $status = str_contains($e->getMessage(), 'Unable to resolve')
                 ? $runtimeStatus
                 : 503;
 
-            return response()->json(['message' => $e->getMessage()], $status);
+            return response()->json([
+                'message' => $e->getMessage(),
+                'code' => $status === 422
+                    ? 'MAP_LOCATION_NOT_RESOLVED'
+                    : 'MAP_CONFIGURATION_ERROR',
+            ], $status);
         } catch (ConnectionException) {
-            return response()->json(['message' => 'Map provider is temporarily unavailable.'], 503);
+            return response()->json([
+                'message' => 'Unable to connect to TomTom from the Laravel server.',
+                'code' => 'MAP_PROVIDER_CONNECTION_FAILED',
+            ], 503);
         } catch (Throwable $e) {
             report($e);
 
-            return response()->json(['message' => 'Unable to complete the map request.'], 502);
+            return response()->json([
+                'message' => 'Unable to complete the map request.',
+                'code' => 'MAP_REQUEST_ERROR',
+            ], 502);
         }
+    }
+
+    private function providerError(MapProviderException $e)
+    {
+        return response()->json([
+            'message' => $e->getMessage(),
+            'code' => $e->publicCode(),
+            'service' => $e->service(),
+        ], $e->clientStatus());
     }
 }

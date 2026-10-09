@@ -3,7 +3,9 @@
 namespace App\Services\Maps;
 
 use App\Contracts\Maps\MapServiceInterface;
+use App\Exceptions\MapProviderException;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -23,7 +25,7 @@ class TomTomMapService implements MapServiceInterface
             ], fn ($value) => $value !== null && $value !== '')
         );
 
-        $response->throw();
+        $this->assertSuccessful($response, 'search');
 
         return $response->json();
     }
@@ -40,7 +42,7 @@ class TomTomMapService implements MapServiceInterface
             ], fn ($value) => $value !== null && $value !== '')
         );
 
-        $response->throw();
+        $this->assertSuccessful($response, 'geocoding');
 
         return $response->json();
     }
@@ -56,7 +58,7 @@ class TomTomMapService implements MapServiceInterface
             ]
         );
 
-        $response->throw();
+        $this->assertSuccessful($response, 'reverse-geocoding');
 
         return $response->json();
     }
@@ -82,7 +84,7 @@ class TomTomMapService implements MapServiceInterface
             ]
         );
 
-        $response->throw();
+        $this->assertSuccessful($response, 'routing');
 
         return $response->json();
     }
@@ -94,16 +96,19 @@ class TomTomMapService implements MapServiceInterface
         }
 
         $maximumTile = (2 ** $zoom) - 1;
+
         if ($x < 0 || $y < 0 || $x > $maximumTile || $y > $maximumTile) {
             throw new RuntimeException('Invalid map tile coordinates.');
         }
 
         $style = (string) ($options['style'] ?? config('maps.tomtom.style', 'street-light'));
+
         if (!in_array($style, ['street-light', 'street-dark'], true)) {
             $style = 'street-light';
         }
 
         $tileSize = (int) ($options['tile_size'] ?? config('maps.tomtom.tile_size', 256));
+
         if (!in_array($tileSize, [256, 512], true)) {
             $tileSize = 256;
         }
@@ -111,7 +116,11 @@ class TomTomMapService implements MapServiceInterface
         $url = rtrim((string) config('maps.tomtom.display_base_url'), '/')
             ."/maps/orbis/map-display/tile/{$zoom}/{$x}/{$y}.png";
 
-        $response = Http::timeout((int) config('maps.tomtom.timeout', 15))
+        $response = Http::withHeaders([
+                'Accept' => 'image/png,*/*;q=0.8',
+                'TomTom-Api-Version' => '1',
+            ])
+            ->timeout((int) config('maps.tomtom.timeout', 15))
             ->retry(2, 250, throw: false)
             ->get($url, [
                 'apiVersion' => 1,
@@ -122,7 +131,18 @@ class TomTomMapService implements MapServiceInterface
                 'view' => config('maps.tomtom.view', 'Unified'),
             ]);
 
-        $response->throw();
+        $this->assertSuccessful($response, 'map-display');
+
+        $contentType = strtolower((string) $response->header('Content-Type'));
+
+        if ($contentType !== '' && !str_starts_with($contentType, 'image/')) {
+            throw new MapProviderException(
+                'map-display',
+                502,
+                'MAP_PROVIDER_INVALID_TILE_RESPONSE',
+                'TomTom returned a non-image response for the map tile.'
+            );
+        }
 
         return [
             'body' => $response->body(),
@@ -144,9 +164,49 @@ class TomTomMapService implements MapServiceInterface
         $key = trim((string) config('maps.tomtom.api_key'));
 
         if ($key === '') {
-            throw new RuntimeException('TOMTOM_API_KEY is not configured.');
+            throw new RuntimeException('TOMTOM_API_KEY is not configured in the Laravel runtime.');
         }
 
         return $key;
+    }
+
+    private function assertSuccessful(Response $response, string $service): void
+    {
+        if ($response->successful()) {
+            return;
+        }
+
+        $status = $response->status();
+
+        [$code, $message] = match ($status) {
+            401, 403 => [
+                'MAP_PROVIDER_AUTHORIZATION_FAILED',
+                "TomTom rejected the configured credentials for {$service}. Verify that the API key is valid and enabled for this TomTom service.",
+            ],
+            429 => [
+                'MAP_PROVIDER_RATE_LIMITED',
+                "TomTom rate-limited the {$service} request. Wait and retry or review the key quota.",
+            ],
+            400 => [
+                'MAP_PROVIDER_BAD_REQUEST',
+                "TomTom rejected the {$service} request parameters.",
+            ],
+            default => $status >= 500
+                ? [
+                    'MAP_PROVIDER_UNAVAILABLE',
+                    "TomTom {$service} is temporarily unavailable.",
+                ]
+                : [
+                    'MAP_PROVIDER_REQUEST_FAILED',
+                    "TomTom rejected the {$service} request.",
+                ],
+        };
+
+        throw new MapProviderException(
+            $service,
+            $status,
+            $code,
+            $message
+        );
     }
 }
