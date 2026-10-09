@@ -20,73 +20,85 @@ const mimeTypes = new Map([
   ['.png', 'image/png'],
   ['.jpg', 'image/jpeg'],
   ['.jpeg', 'image/jpeg'],
+  ['.webp', 'image/webp'],
+  ['.woff', 'font/woff'],
   ['.woff2', 'font/woff2'],
 ]);
 
 const appAliases = new Map([
   ['/website', '/apps/website'],
-  ['/move', '/apps/passenger-pwa'],
+  ['/login', '/apps/auth'],
+  ['/track-package', '/apps/package-tracking'],
   ['/passenger', '/apps/passenger/dist'],
   ['/driver', '/apps/driver-pwa'],
   ['/admin', '/apps/admin-dashboard'],
 ]);
 
+const securityHeaders = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'X-Frame-Options': 'SAMEORIGIN',
+  'Permissions-Policy': 'geolocation=(self)',
+};
+
 function redirect(response, location, statusCode = 302) {
   response.writeHead(statusCode, {
+    ...securityHeaders,
     Location: location,
     'Cache-Control': 'no-store',
   });
   response.end();
 }
 
-function safeJoin(baseDirectory, relativePath) {
-  const resolved = path.resolve(baseDirectory, relativePath);
-  const relative = path.relative(baseDirectory, resolved);
-  if (relative.startsWith('..') || path.isAbsolute(relative)) return null;
-  return resolved;
+function safeJoin(base, relativePath) {
+  const candidate = path.resolve(base, `.${relativePath}`);
+  const normalizedBase = path.resolve(base);
+  return candidate === normalizedBase || candidate.startsWith(`${normalizedBase}${path.sep}`)
+    ? candidate
+    : null;
 }
 
 function resolveRequestPath(requestUrl) {
   const parsedUrl = new URL(requestUrl, `http://localhost:${port}`);
-  const normalizedPathname = parsedUrl.pathname.replace(/\/$/, '');
+  const pathname = decodeURIComponent(parsedUrl.pathname);
 
   for (const [aliasPath, targetPath] of appAliases.entries()) {
-    const appDirectory = path.resolve(rootDirectory, `.${targetPath}`);
-
-    if (normalizedPathname === aliasPath) {
-      return safeJoin(appDirectory, 'index.html');
+    if (pathname === `${aliasPath}/`) {
+      return path.join(rootDirectory, targetPath, 'index.html');
     }
 
-    if (normalizedPathname.startsWith(`${aliasPath}/`)) {
-      const remainingPath = normalizedPathname.slice(aliasPath.length + 1);
-      return safeJoin(appDirectory, remainingPath);
+    if (pathname.startsWith(`${aliasPath}/`)) {
+      const remainder = pathname.slice(aliasPath.length);
+      return safeJoin(path.join(rootDirectory, targetPath), remainder);
     }
   }
 
-  return safeJoin(rootDirectory, parsedUrl.pathname.replace(/^\/+/, ''));
+  return safeJoin(rootDirectory, pathname);
 }
 
-async function serveFile(response, filePath) {
-  if (!filePath) {
-    response.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-    response.end('Bad request');
-    return;
-  }
-
+async function serveFile(request, response, filePath) {
   try {
     const fileStat = await stat(filePath);
-    if (fileStat.isDirectory()) return serveFile(response, path.join(filePath, 'index.html'));
+    const effectivePath = fileStat.isDirectory() ? path.join(filePath, 'index.html') : filePath;
+    const extension = path.extname(effectivePath).toLowerCase();
+    const fileContents = await readFile(effectivePath);
+    const isHtml = extension === '.html';
 
-    const extension = path.extname(filePath).toLowerCase();
-    const fileContents = await readFile(filePath);
     response.writeHead(200, {
+      ...securityHeaders,
       'Content-Type': mimeTypes.get(extension) ?? 'application/octet-stream',
-      'Cache-Control': 'no-store',
-      'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': isHtml ? 'no-store' : 'public, max-age=300',
     });
+
+    if (request.method === 'HEAD') {
+      response.end();
+      return;
+    }
+
     response.end(fileContents);
   } catch {
     response.writeHead(404, {
+      ...securityHeaders,
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'no-store',
     });
@@ -96,28 +108,31 @@ async function serveFile(response, filePath) {
 
 function proxyApi(request, response) {
   const incomingUrl = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`);
-  const targetUrl = new URL(incomingUrl.pathname + incomingUrl.search, apiTarget);
+  const targetUrl = new URL(`${incomingUrl.pathname}${incomingUrl.search}`, apiTarget);
   const transport = targetUrl.protocol === 'https:' ? httpsRequest : httpRequest;
   const headers = { ...request.headers, host: targetUrl.host };
-
   delete headers['content-length'];
-  delete headers['connection'];
 
   const proxy = transport(targetUrl, { method: request.method, headers }, (upstream) => {
     const outHeaders = { ...upstream.headers };
     delete outHeaders['transfer-encoding'];
-    response.writeHead(upstream.statusCode ?? 502, outHeaders);
+    response.writeHead(upstream.statusCode ?? 502, {
+      ...securityHeaders,
+      ...outHeaders,
+      'Cache-Control': 'no-store',
+    });
     upstream.pipe(response);
   });
 
   proxy.on('error', (error) => {
     if (!response.headersSent) {
       response.writeHead(502, {
+        ...securityHeaders,
         'Content-Type': 'application/json; charset=utf-8',
         'Cache-Control': 'no-store',
       });
     }
-    response.end(JSON.stringify({ message: 'Laravel API is unavailable.', detail: error.message }));
+    response.end(JSON.stringify({ message: 'Encore API is unavailable.', detail: error.message }));
   });
 
   request.pipe(proxy);
@@ -126,25 +141,45 @@ function proxyApi(request, response) {
 createServer(async (request, response) => {
   const parsedUrl = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`);
 
-  if (parsedUrl.pathname.startsWith('/api/')) return proxyApi(request, response);
+  if (parsedUrl.pathname.startsWith('/api/')) {
+    proxyApi(request, response);
+    return;
+  }
 
-  // Important: the public website uses relative ./styles.css and ./app.mjs paths.
-  // Serving apps/website/index.html directly at / makes those assets resolve from /
-  // and produces an unstyled page. Redirecting keeps the original visual intact.
   if (parsedUrl.pathname === '/') {
-    return redirect(response, `/website/${parsedUrl.search}`);
+    redirect(response, '/website/');
+    return;
+  }
+
+  if (parsedUrl.pathname === '/move' || parsedUrl.pathname.startsWith('/move/')) {
+    redirect(response, '/passenger/');
+    return;
   }
 
   for (const aliasPath of appAliases.keys()) {
     if (parsedUrl.pathname === aliasPath) {
-      return redirect(response, `${aliasPath}/${parsedUrl.search}`);
+      redirect(response, `${aliasPath}/${parsedUrl.search}`);
+      return;
     }
   }
 
-  await serveFile(response, resolveRequestPath(request.url ?? '/'));
+  const requestPath = resolveRequestPath(request.url ?? '/');
+  if (!requestPath) {
+    response.writeHead(400, {
+      ...securityHeaders,
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-store',
+    });
+    response.end('Bad request');
+    return;
+  }
+
+  await serveFile(request, response, requestPath);
 }).listen(port, host, () => {
   console.log(`Encore Transport running on http://${host}:${port}`);
   console.log(`Website:   http://${host}:${port}/website/`);
+  console.log(`Login:     http://${host}:${port}/login/`);
+  console.log(`Tracking:  http://${host}:${port}/track-package/`);
   console.log(`Passenger: http://${host}:${port}/passenger/`);
   console.log(`Driver:    http://${host}:${port}/driver/`);
   console.log(`Admin:     http://${host}:${port}/admin/`);

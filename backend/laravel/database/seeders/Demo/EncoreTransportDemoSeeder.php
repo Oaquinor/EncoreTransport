@@ -32,19 +32,18 @@ class EncoreTransportDemoSeeder extends Seeder
             'name'=>'Admin Demo','role'=>'admin','phone'=>'+18095550003','active'=>true,'password'=>Hash::make('password'),
         ]);
 
-        $route=TransportRoute::query()->updateOrCreate(
-            ['origin'=>'Boston','destination'=>'New York'],
-            ['distance_km'=>346,'active'=>true]
-        );
+        $route=TransportRoute::query()->updateOrCreate(['origin'=>'Boston','destination'=>'New York'],['distance_km'=>346,'active'=>true]);
         $bus=Bus::query()->updateOrCreate(['code'=>'BUS-001'],['plate'=>'ET-314-AX','capacity'=>42,'status'=>'operational']);
         $driver=Driver::query()->updateOrCreate(['license_number'=>'D-AL-5520'],['user_id'=>$driverUser->id,'name'=>'Driver Demo','status'=>'upcoming']);
 
-        $letters=['A','B','C','D']; $created=0; $row=1;
+        $layout=[['A',1,true,false],['B',2,false,true],['C',4,false,true],['D',5,true,false]];
+        $created=0;$row=1;
         while($created<$bus->capacity){
-            foreach($letters as $index=>$letter){
+            foreach($layout as [$letter,$position,$window,$aisle]){
                 if($created>=$bus->capacity)break;
                 BusSeat::query()->updateOrCreate(['bus_id'=>$bus->id,'seat_number'=>$row.$letter],[
-                    'seat_class'=>'standard','window'=>in_array($index,[0,3],true),'aisle'=>in_array($index,[1,2],true),'active'=>true,
+                    'row_number'=>$row,'position_index'=>$position,'seat_class'=>'standard','seat_type'=>'seat',
+                    'window'=>$window,'aisle'=>$aisle,'accessible'=>false,'blocked'=>false,'active'=>true,
                 ]);
                 $created++;
             }
