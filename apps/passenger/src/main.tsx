@@ -3,8 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './styles.css';
 import './enhancements.css';
 import './visual-gap.css';
-import './premium.css';
-import '../../../packages/shared/premium.css';
+import './mandate-motion.css';
 import { PassengerApp } from './passenger-app';
 
 createRoot(document.getElementById('root')!).render(

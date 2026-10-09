@@ -1,7 +1,42 @@
-const topbar=document.querySelector('.topbar');
-const progress=document.createElement('div');progress.className='scroll-progress';document.body.append(progress);
-const glow=document.createElement('div');glow.className='pointer-glow';document.body.append(glow);
-window.addEventListener('scroll',()=>{const y=window.scrollY;topbar?.classList.toggle('is-scrolled',y>12);const max=document.documentElement.scrollHeight-innerHeight;progress.style.width=`${max?Math.min(100,y/max*100):0}%`;const bus=document.querySelector('.hero-bus');if(bus)bus.style.transform=`translate3d(0,${Math.min(18,y*.022)}px,0)`},{passive:true});
-window.addEventListener('pointermove',e=>{glow.style.left=`${e.clientX}px`;glow.style.top=`${e.clientY}px`;glow.classList.add('visible')},{passive:true});
-window.addEventListener('pointerleave',()=>glow.classList.remove('visible'));
-document.querySelectorAll('.destination-card,.platform-card').forEach(card=>{card.addEventListener('pointermove',e=>{if(matchMedia('(max-width:800px)').matches)return;const r=card.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;card.style.transform=`translateY(-5px) rotateX(${(-y*2).toFixed(2)}deg) rotateY(${(x*2).toFixed(2)}deg)`});card.addEventListener('pointerleave',()=>card.style.transform='')});
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const topbar = document.querySelector('.topbar');
+
+const progress = document.createElement('div');
+progress.className = 'scroll-progress';
+document.body.append(progress);
+
+const glow = document.createElement('div');
+glow.className = 'pointer-glow';
+document.body.append(glow);
+
+function updateScrollEffects() {
+  const y = window.scrollY;
+  topbar?.classList.toggle('is-scrolled', y > 12);
+
+  const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  progress.style.width = `${max ? Math.min(100, y / max * 100) : 0}%`;
+
+  if (!reducedMotion) {
+    const bus = document.querySelector('.hero-bus');
+    if (bus) {
+      bus.style.setProperty('--bus-parallax-y', `${Math.min(18, y * 0.022)}px`);
+    }
+  }
+}
+
+window.addEventListener('scroll', updateScrollEffects, { passive: true });
+updateScrollEffects();
+
+if (!reducedMotion && window.matchMedia('(pointer:fine)').matches) {
+  window.addEventListener('pointermove', (event) => {
+    glow.style.left = `${event.clientX}px`;
+    glow.style.top = `${event.clientY}px`;
+    glow.classList.add('visible');
+  }, { passive: true });
+
+  document.documentElement.addEventListener('mouseleave', () => {
+    glow.classList.remove('visible');
+  });
+} else {
+  glow.hidden = true;
+}

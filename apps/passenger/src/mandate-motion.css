@@ -1,0 +1,50 @@
+.screen-animate {
+  animation: passengerViewIn .28s cubic-bezier(.2,.8,.2,1);
+}
+
+.departure,
+.passenger-card,
+.trip-map-card,
+.seat-summary,
+.review-card,
+.total-panel {
+  transition:
+    transform .2s cubic-bezier(.2,.8,.2,1),
+    box-shadow .2s ease,
+    border-color .2s ease;
+}
+
+.departure:hover {
+  transform: translateY(-2px);
+}
+
+.primary:not(:disabled):active,
+.ghost:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+@keyframes passengerViewIn {
+  from {
+    opacity: .4;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-animate {
+    animation: none !important;
+  }
+
+  .departure,
+  .passenger-card,
+  .trip-map-card,
+  .seat-summary,
+  .review-card,
+  .total-panel {
+    transition: none !important;
+  }
+}

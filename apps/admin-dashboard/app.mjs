@@ -15,8 +15,6 @@ import {
   dashboardView,
   table,
   reportView,
-  incidentsView,
-  schedulesView,
 } from './src/views.mjs';
 
 const root = document.querySelector('#app');
@@ -25,6 +23,7 @@ const state = {
   module: 'dashboard',
   loading: true,
   error: '',
+  accessDenied: false,
   dashboard: null,
   incidents: [],
   schedules: [],
@@ -49,6 +48,12 @@ function redirectLogin() {
   location.replace('/login/?return=' + encodeURIComponent('/admin/'));
 }
 
+function roleHome(role) {
+  if (role === 'driver') return '/driver/';
+  if (role === 'passenger') return '/passenger/';
+  return '/website/';
+}
+
 async function ensureAdmin() {
   if (!getApiToken()) {
     redirectLogin();
@@ -60,13 +65,23 @@ async function ensureAdmin() {
     state.user = payload.user ?? payload.data?.user ?? payload;
 
     if (state.user?.role !== 'admin') {
-      state.error = 'This account does not have access to Operations.';
+      state.loading = false;
+      state.accessDenied = true;
+      state.error = 'Your account is signed in, but it does not have permission to access Operations.';
       return false;
     }
 
+    state.accessDenied = false;
     return true;
-  } catch {
-    redirectLogin();
+  } catch (error) {
+    state.loading = false;
+
+    if (error?.status === 401 || error?.status === 403) {
+      redirectLogin();
+      return false;
+    }
+
+    state.error = error?.message ?? 'Unable to verify your account.';
     return false;
   }
 }
@@ -95,7 +110,8 @@ function sidebar() {
           return `${group}
             <button
               class="admin-nav__item ${state.module === module.id ? 'admin-nav__item--active' : ''}"
-              data-module="${module.id}">
+              data-module="${module.id}"
+              ${state.accessDenied ? 'disabled' : ''}>
               ${esc(module.label)}
             </button>`;
         }).join('')}
@@ -130,6 +146,7 @@ function liveMapPanel() {
           <h2>${esc(trip.route?.origin ?? '')} → ${esc(trip.route?.destination ?? '')}</h2>
           <small>Vehicle position appears only when the assigned driver has sent authorized GPS data.</small>
         </div>
+
         <span class="badge badge--neutral">${esc(trip.status ?? '')}</span>
       </div>
 
@@ -143,47 +160,37 @@ function liveMapPanel() {
     </section>`;
 }
 
-function reportsShell() {
-  return `
-    <section class="admin-panel admin-panel--pad premium-report-picker">
-      <div class="module-view__header">
-        <div>
-          <div class="eyebrow">Reports</div>
-          <h2>Choose a business question</h2>
-        </div>
-
-        <select id="reportType" class="select">
-          <option value="executive" ${state.reportType === 'executive' ? 'selected' : ''}>Executive dashboard</option>
-          <option value="travel" ${state.reportType === 'travel' ? 'selected' : ''}>Travel Report</option>
-          <option value="vehicles" ${state.reportType === 'vehicles' ? 'selected' : ''}>Vehicle Report</option>
-          <option value="trips" ${state.reportType === 'trips' ? 'selected' : ''}>Trip Report</option>
-          <option value="trip-costs" ${state.reportType === 'trip-costs' ? 'selected' : ''}>Trip Cost Summary</option>
-        </select>
-      </div>
-    </section>
-
-    ${state.reportData ? reportView(state.reportType, state.reportData) : ''}`;
-}
-
 function content() {
   if (state.loading) {
     return `
-      <section class="admin-panel admin-panel--pad">
-        <div class="premium-loading-state">
-          <span></span>
-          <div>
-            <strong>Loading operations data…</strong>
-            <p>Retrieving the latest available information.</p>
-          </div>
+      <section class="admin-panel admin-panel--pad admin-loading-state" aria-live="polite">
+        <span class="admin-loading-state__spinner" aria-hidden="true"></span>
+        <div>
+          <h2>Loading Operations…</h2>
+          <p>Checking your access and retrieving current data.</p>
+        </div>
+      </section>`;
+  }
+
+  if (state.accessDenied) {
+    return `
+      <section class="admin-panel admin-panel--pad admin-access-denied">
+        <div class="eyebrow">Access denied</div>
+        <h2>Operations is restricted to administrative accounts.</h2>
+        <p>${esc(state.error)}</p>
+
+        <div class="admin-access-denied__actions">
+          <a class="button button--primary" href="${roleHome(state.user?.role)}">Go to my area</a>
+          <button class="button button--ghost" id="logout">Sign out</button>
         </div>
       </section>`;
   }
 
   if (state.error) {
     return `
-      <section class="admin-panel admin-panel--pad premium-error-state">
+      <section class="admin-panel admin-panel--pad admin-error-state">
         <div class="eyebrow">Unable to load</div>
-        <h2>This area could not be loaded.</h2>
+        <h2>Operations data could not be loaded.</h2>
         <p>${esc(state.error)}</p>
         <button class="button button--primary" id="retry">Retry</button>
       </section>`;
@@ -209,7 +216,6 @@ function content() {
         trip.driver?.name,
         trip.status,
       ]),
-      { id: 'trips', eyebrow: 'Network operations' },
     );
   }
 
@@ -223,7 +229,6 @@ function content() {
         booking.status,
         booking.total_amount,
       ]),
-      { id: 'bookings', eyebrow: 'Passenger operations' },
     );
   }
 
@@ -237,7 +242,6 @@ function content() {
         bus.capacity,
         bus.status,
       ]),
-      { id: 'vehicles', eyebrow: 'Fleet' },
     );
   }
 
@@ -250,7 +254,6 @@ function content() {
         driver.license_number,
         driver.status,
       ]),
-      { id: 'drivers', eyebrow: 'People' },
     );
   }
 
@@ -264,16 +267,36 @@ function content() {
         route.distance_km ? `${route.distance_km} km` : '—',
         route.active ? 'Yes' : 'No',
       ]),
-      { id: 'routes', eyebrow: 'Network' },
     );
   }
 
   if (state.module === 'incidents') {
-    return incidentsView(state.incidents);
+    return table(
+      'Incidents',
+      ['Trip', 'Title', 'Severity', 'Status', 'Created'],
+      state.incidents.map((incident) => [
+        incident.trip?.id,
+        incident.title,
+        incident.severity,
+        incident.status,
+        incident.created_at,
+      ]),
+    );
   }
 
   if (state.module === 'schedules') {
-    return schedulesView(state.schedules, dashboard);
+    return table(
+      'Driver schedules',
+      ['Date', 'Driver', 'Vehicle', 'Start', 'End', 'Status'],
+      state.schedules.map((schedule) => [
+        String(schedule.work_date ?? '').slice(0, 10),
+        schedule.driver?.name,
+        schedule.bus?.code,
+        schedule.starts_at,
+        schedule.ends_at,
+        schedule.status,
+      ]),
+    );
   }
 
   if (state.module === 'packages') {
@@ -287,14 +310,31 @@ function content() {
           : '—',
         item.recipient_name,
         item.status,
-        String(item.created_at ?? '').slice(0, 16),
+        item.created_at,
       ]),
-      { id: 'packages', eyebrow: 'Parcel operations' },
     );
   }
 
   if (state.module === 'reports') {
-    return reportsShell();
+    return `
+      <section class="admin-panel admin-panel--pad">
+        <div class="module-view__header">
+          <div>
+            <div class="eyebrow">Reports</div>
+            <h2>Choose a business question</h2>
+          </div>
+
+          <select id="reportType" class="select">
+            <option value="executive" ${state.reportType === 'executive' ? 'selected' : ''}>Executive dashboard</option>
+            <option value="travel" ${state.reportType === 'travel' ? 'selected' : ''}>Travel Report</option>
+            <option value="vehicles" ${state.reportType === 'vehicles' ? 'selected' : ''}>Vehicle Report</option>
+            <option value="trips" ${state.reportType === 'trips' ? 'selected' : ''}>Trip Report</option>
+            <option value="trip-costs" ${state.reportType === 'trip-costs' ? 'selected' : ''}>Trip Cost Summary</option>
+          </select>
+        </div>
+      </section>
+
+      ${state.reportData ? reportView(state.reportType, state.reportData) : ''}`;
   }
 
   return '';
@@ -314,7 +354,7 @@ function render() {
 
           <div class="admin-controls">
             <span>${esc(state.user?.name ?? '')}</span>
-            <button class="button button--ghost" id="refresh">Refresh</button>
+            ${state.accessDenied ? '' : '<button class="button button--ghost" id="refresh">Refresh</button>'}
             <button class="button button--ghost" id="logout">Logout</button>
           </div>
         </header>
@@ -324,8 +364,10 @@ function render() {
     </div>`;
 
   wire();
-  wireTables();
-  void hydrateAdminMap();
+
+  if (!state.accessDenied && !state.loading && !state.error) {
+    void hydrateAdminMap();
+  }
 }
 
 async function hydrateAdminMap() {
@@ -401,6 +443,8 @@ async function loadModule() {
 function wire() {
   document.querySelectorAll('[data-module]').forEach((button) => {
     button.addEventListener('click', () => {
+      if (state.accessDenied) return;
+
       const mapContainer = document.querySelector('#adminLiveMap');
       if (mapContainer) destroyRealMap(mapContainer);
 
@@ -418,8 +462,11 @@ function wire() {
   document.querySelector('#retry')?.addEventListener('click', loadModule);
 
   document.querySelector('#logout')?.addEventListener('click', async () => {
-    await logout();
-    redirectLogin();
+    try {
+      await logout();
+    } finally {
+      redirectLogin();
+    }
   });
 
   document.querySelector('#reportType')?.addEventListener('change', (event) => {
@@ -427,182 +474,12 @@ function wire() {
     state.reportData = null;
     void loadModule();
   });
-
-  document.querySelectorAll('[data-save-incident]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      const id = button.dataset.saveIncident;
-      const select = document.querySelector(`[data-incident-status="${CSS.escape(id)}"]`);
-
-      if (!id || !select) return;
-
-      button.disabled = true;
-
-      try {
-        await api.updateIncident(id, { status: select.value });
-        state.incidents = await api.incidents();
-        state.error = '';
-        render();
-      } catch (error) {
-        state.error = error.message;
-        render();
-      }
-    });
-  });
-
-  document.querySelector('#scheduleForm')?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    const message = document.querySelector('#scheduleMessage');
-
-    const startsAt = String(data.get('starts_at') ?? '');
-    const endsAt = String(data.get('ends_at') ?? '');
-
-    if (startsAt && endsAt && endsAt <= startsAt) {
-      if (message) {
-        message.className = 'premium-form-message premium-form-message--error';
-        message.textContent = 'End time must be later than start time.';
-      }
-      return;
-    }
-
-    const payload = {
-      driver_id: Number(data.get('driver_id')),
-      bus_id: data.get('bus_id') ? Number(data.get('bus_id')) : null,
-      work_date: String(data.get('work_date') ?? ''),
-      starts_at: startsAt,
-      ends_at: endsAt,
-      status: 'scheduled',
-      notes: String(data.get('notes') ?? '').trim() || null,
-    };
-
-    const submit = form.querySelector('button[type="submit"]');
-    if (submit) submit.disabled = true;
-
-    try {
-      await api.saveSchedule(payload);
-      state.schedules = await api.schedules();
-      form.reset();
-
-      if (message) {
-        message.className = 'premium-form-message premium-form-message--success';
-        message.textContent = 'Schedule created.';
-      }
-
-      render();
-    } catch (error) {
-      if (message) {
-        message.className = 'premium-form-message premium-form-message--error';
-        message.textContent = error.message;
-      }
-
-      if (submit) submit.disabled = false;
-    }
-  });
 }
 
-function wireTables() {
-  document.querySelectorAll('[data-table-shell]').forEach((shell) => {
-    const id = shell.dataset.tableShell;
-    const tableElement = shell.querySelector(`[data-admin-table="${CSS.escape(id)}"]`);
-    if (!tableElement) return;
+const isAdmin = await ensureAdmin();
 
-    const allRows = [...tableElement.querySelectorAll('tbody [data-table-row]')];
-    const search = shell.querySelector(`[data-table-search="${CSS.escape(id)}"]`);
-    const size = shell.querySelector(`[data-table-size="${CSS.escape(id)}"]`);
-    const footer = shell.querySelector(`[data-table-footer="${CSS.escape(id)}"]`);
-    const count = footer?.querySelector('[data-table-count]');
-    const pageLabel = footer?.querySelector('[data-table-page]');
-    const previous = footer?.querySelector('[data-table-prev]');
-    const next = footer?.querySelector('[data-table-next]');
-
-    let page = 1;
-    let sortColumn = null;
-    let sortDirection = 1;
-
-    const visibleRows = () => {
-      const query = String(search?.value ?? '').trim().toLowerCase();
-
-      let rows = allRows.filter((row) =>
-        !query || row.textContent.toLowerCase().includes(query)
-      );
-
-      if (sortColumn != null) {
-        rows = [...rows].sort((left, right) => {
-          const a = left.children[sortColumn]?.textContent?.trim() ?? '';
-          const b = right.children[sortColumn]?.textContent?.trim() ?? '';
-          return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }) * sortDirection;
-        });
-      }
-
-      return rows;
-    };
-
-    const apply = () => {
-      const rows = visibleRows();
-      const pageSize = Number(size?.value ?? 25);
-      const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
-
-      if (page > totalPages) page = totalPages;
-
-      allRows.forEach((row) => {
-        row.hidden = true;
-      });
-
-      const start = (page - 1) * pageSize;
-      rows.slice(start, start + pageSize).forEach((row) => {
-        row.hidden = false;
-      });
-
-      if (count) count.textContent = `${rows.length} matching record${rows.length === 1 ? '' : 's'}`;
-      if (pageLabel) pageLabel.textContent = `${page} / ${totalPages}`;
-      if (previous) previous.disabled = page <= 1;
-      if (next) next.disabled = page >= totalPages;
-    };
-
-    search?.addEventListener('input', () => {
-      page = 1;
-      apply();
-    });
-
-    size?.addEventListener('change', () => {
-      page = 1;
-      apply();
-    });
-
-    previous?.addEventListener('click', () => {
-      page = Math.max(1, page - 1);
-      apply();
-    });
-
-    next?.addEventListener('click', () => {
-      page += 1;
-      apply();
-    });
-
-    shell.querySelectorAll('[data-sort-column]').forEach((button) => {
-      button.addEventListener('click', () => {
-        const column = Number(button.dataset.sortColumn);
-
-        if (sortColumn === column) {
-          sortDirection *= -1;
-        } else {
-          sortColumn = column;
-          sortDirection = 1;
-        }
-
-        page = 1;
-        apply();
-      });
-    });
-
-    apply();
-  });
-}
-
-if (await ensureAdmin()) {
+if (isAdmin) {
   await loadModule();
-} else {
+} else if (!location.pathname.startsWith('/login')) {
   render();
 }

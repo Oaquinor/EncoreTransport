@@ -30,8 +30,8 @@ class SeatController extends Controller
 
         $seats = $trip->bus->seats()
             ->where('active', true)
-            ->orderByRaw('COALESCE(row_number, 9999)')
-            ->orderByRaw('COALESCE(position_index, 9999)')
+            ->orderByRaw('COALESCE(`row_number`, 9999) ASC')
+            ->orderByRaw('COALESCE(`position_index`, 9999) ASC')
             ->orderBy('seat_number')
             ->get()
             ->map(fn ($seat) => [

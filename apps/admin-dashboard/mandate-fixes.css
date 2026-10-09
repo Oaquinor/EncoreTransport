@@ -1,0 +1,63 @@
+.admin-loading-state {
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: var(--muted);
+}
+
+.admin-loading-state h2,
+.admin-access-denied h2,
+.admin-error-state h2 {
+  margin: 0 0 6px;
+}
+
+.admin-loading-state p,
+.admin-access-denied p,
+.admin-error-state p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.admin-loading-state__spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid #d7e5ec;
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: adminSpin .8s linear infinite;
+}
+
+.admin-access-denied,
+.admin-error-state {
+  max-width: 720px;
+}
+
+.admin-access-denied__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.admin-nav__item:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+@keyframes adminSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-enter {
+    animation: none !important;
+  }
+
+  .admin-loading-state__spinner {
+    animation: none;
+    border-top-color: #d7e5ec;
+    background: var(--blue);
+  }
+}
