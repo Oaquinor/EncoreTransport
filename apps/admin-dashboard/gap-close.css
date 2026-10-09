@@ -1,0 +1,45 @@
+.admin-brand__logo{
+  width:52px;
+  height:52px;
+  filter:none;
+  background:#fff;
+  border-radius:12px;
+  padding:4px;
+}
+.admin-brand strong{
+  text-transform:lowercase;
+  font-size:1.05rem;
+}
+.admin-brand small{
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.admin-live-map{
+  min-height:360px;
+  height:360px;
+  border-radius:20px;
+  overflow:hidden;
+  border:1px solid var(--line);
+}
+.admin-map-panel{
+  margin-bottom:16px;
+}
+.admin-map-panel__head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:16px;
+  margin-bottom:14px;
+}
+.admin-map-panel__head h2{
+  margin:4px 0 0;
+}
+.admin-map-panel__head small{
+  color:var(--muted);
+}
+.admin-nav .eyebrow{
+  color:#8fb6ca;
+}
+@media(max-width:760px){
+  .admin-live-map{min-height:300px;height:300px}
+}

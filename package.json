@@ -19,9 +19,13 @@
     "test:business": "node tests/business-rules.test.mjs",
     "test:hardcode": "node tests/production-hardcode.test.mjs",
     "test:server": "node tests/server-routing.test.mjs",
-    "test": "npm run test:business && npm run test:hardcode && npm run test:server",
+    "test:real-map": "node tests/real-map-contract.test.mjs",
+    "test:seat-layout": "node tests/seat-layout-visual-contract.test.mjs",
+    "test": "npm run test:business && npm run test:hardcode && npm run test:server && npm run test:real-map && npm run test:seat-layout",
     "check": "npm run test",
     "validate:frontend": "npm run test && npm run typecheck:api-client && npm run typecheck:passenger && npm run build:passenger"
   },
-  "engines": {"node": ">=24"}
+  "engines": {
+    "node": ">=24"
+  }
 }

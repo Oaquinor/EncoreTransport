@@ -1,174 +1,250 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Encore Transport | Preview Hub</title>
-    <meta name="theme-color" content="#0f172a" />
-    <link rel="stylesheet" href="./packages/shared/styles.css" />
-    <style>
-      .hub-shell {
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        padding: 32px;
-        background:
-          radial-gradient(circle at top left, rgba(57, 169, 225, 0.16), transparent 30%),
-          radial-gradient(circle at bottom right, rgba(31, 157, 116, 0.1), transparent 28%),
-          linear-gradient(180deg, #ffffff 0%, #eef4f8 100%);
-        color: var(--color-text-primary);
-      }
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f4f7f9" />
+  <meta name="description" content="Encore Transport — reliable intercity travel with live schedules, seat availability and route information." />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="/website/" />
+  <meta property="og:title" content="Encore Transport" />
+  <meta property="og:description" content="Search routes, departures and seat availability with Encore Transport." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="/website/" />
+  <meta name="twitter:card" content="summary" />
+  <title>Encore Transport | Move smarter. Travel better.</title>
+  <link rel="stylesheet" href="../../packages/shared/styles.css" />
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./enhancements.css" />
+  <link rel="stylesheet" href="./brand-lockup.css" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Encore Transport","url":"/website/"}</script>
+</head>
+<body>
+<div class="site-shell">
+<header class="topbar shell" data-reveal>
+  <a class="brand brand-lockup" href="#home" aria-label="Encore Transport home">
+    <img class="brand-lockup__logo" src="/logo.svg" alt="" aria-hidden="true" />
+    <span class="brand-lockup__copy">
+      <strong class="brand-lockup__name">encore</strong>
+      <small class="brand-lockup__descriptor">transport</small>
+    </span>
+  </a>
 
-      .hub-card {
-        width: min(1120px, 100%);
-        border: 1px solid rgba(216, 226, 234, 0.92);
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(18px);
-        box-shadow: 0 30px 80px rgba(20, 34, 50, 0.12);
-        overflow: hidden;
-      }
+  <nav class="nav" aria-label="Primary navigation">
+    <a href="#book">Book</a>
+    <a href="#destinations">Destinations</a>
+    <a href="#experience">Seats</a>
+    <a href="#tracking">Route</a>
+    <a href="#platform">Services</a>
+  </nav>
 
-      .hub-grid {
-        display: grid;
-        grid-template-columns: 1.25fr 0.95fr;
-      }
+  <a class="nav-cta" href="/login/">Sign in <span>→</span></a>
+</header>
 
-      .hub-hero,
-      .hub-links {
-        padding: clamp(24px, 4vw, 44px);
-      }
+<main>
+<section class="hero shell" id="home">
+  <div class="hero-copy" data-reveal>
+    <span class="eyebrow">Intercity travel with clear, up-to-date information</span>
+    <h1>Move with clarity.<br/><span>Arrive with confidence.</span></h1>
+    <p>Find available departures, choose the right trip and continue to seat selection with the information currently available for your journey.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#book">Search a trip</a>
+      <button class="btn btn-secondary" type="button" data-open-map>Explore route</button>
+    </div>
+    <div class="hero-proof">
+      <div><strong id="routeCount">—</strong><span>active routes</span></div>
+      <div><strong id="tripCount">—</strong><span>available departures</span></div>
+      <div><strong id="serviceStatus">…</strong><span>service status</span></div>
+    </div>
+  </div>
 
-      .hub-hero {
-        border-right: 1px solid rgba(216, 226, 234, 0.92);
-      }
+  <div class="hero-visual" data-reveal>
+    <div class="hero-sky"></div>
+    <div class="hero-road"></div>
+    <div class="hero-glow"></div>
+    <img class="hero-bus" src="/assets/media/Autobus.png" alt="Encore intercity bus"/>
+    <article class="floating-trip-card" id="featuredTrip">
+      <div class="trip-status"><i></i> Looking for the next available trip…</div>
+    </article>
+  </div>
+</section>
 
-      .hub-kicker {
-        text-transform: uppercase;
-        letter-spacing: 0.24em;
-        color: var(--color-primary-dark);
-        font-size: 0.74rem;
-      }
+<section class="booking-band" id="book">
+  <div class="shell booking-grid">
+    <div class="booking-intro" data-reveal>
+      <span class="eyebrow eyebrow-light">Plan your trip</span>
+      <h2>Choose where and when you want to travel.</h2>
+      <p>Search the current schedule and continue with the exact passenger count you need.</p>
+      <div id="searchMessage" class="booking-note" aria-live="polite">Ready to search</div>
+    </div>
 
-      .hub-title {
-        font-size: clamp(2.4rem, 6vw, 4.8rem);
-        line-height: 0.95;
-        margin: 16px 0 18px;
-      }
+    <form class="booking-card" id="bookingForm" data-reveal>
+      <label class="booking-field booking-field-wide">
+        <span class="booking-label">From</span>
+        <input name="origin" required autocomplete="off"/>
+      </label>
 
-      .hub-description {
-        color: var(--color-text-secondary);
-        max-width: 58ch;
-        font-size: 1.03rem;
-        line-height: 1.75;
-      }
+      <button class="swap" type="button" aria-label="Swap origin and destination">⇅</button>
 
-      .hub-stats {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
-        margin-top: 28px;
-      }
+      <label class="booking-field booking-field-wide">
+        <span class="booking-label">To</span>
+        <input name="destination" required autocomplete="off"/>
+      </label>
 
-      .hub-stat {
-        padding: 16px;
-        border-radius: 12px;
-        background: #f7fafc;
-        border: 1px solid rgba(216, 226, 234, 0.92);
-      }
+      <label class="booking-field">
+        <span class="booking-label">Date</span>
+        <input type="date" name="date"/>
+      </label>
 
-      .hub-stat strong {
-        display: block;
-        font-size: 1.15rem;
-        margin-bottom: 4px;
-      }
+      <label class="booking-field">
+        <span class="booking-label">Passengers</span>
+        <input type="number" name="passengers" min="1" max="10" value="1"/>
+      </label>
 
-      .hub-links {
-        display: grid;
-        gap: 16px;
-        background: rgba(245, 248, 251, 0.72);
-      }
+      <button class="booking-submit" type="submit">
+        Search available trips <span>→</span>
+      </button>
+    </form>
+  </div>
+</section>
 
-      .app-link {
-        display: grid;
-        gap: 6px;
-        padding: 18px 20px;
-        border-radius: 12px;
-        background: #ffffff;
-        border: 1px solid rgba(216, 226, 234, 0.92);
-        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
-      }
+<section class="section shell" id="destinations">
+  <header class="section-head" data-reveal>
+    <div>
+      <span class="eyebrow">Available destinations</span>
+      <h2>Routes that fit the way people move.</h2>
+    </div>
+    <p id="routesState">Loading current routes…</p>
+  </header>
+  <div class="destination-grid" id="destinationGrid"></div>
+</section>
 
-      .app-link:hover {
-        transform: translateY(-2px);
-        border-color: rgba(57, 169, 225, 0.45);
-        background: #f7fbfe;
-      }
+<section class="section experience" id="experience">
+  <div class="shell experience-grid">
+    <div class="experience-copy" data-reveal>
+      <span class="eyebrow">Seat information</span>
+      <h2>See the actual layout configured for the assigned vehicle.</h2>
+      <p id="seatState">When a current trip is available, this preview reflects its configured seating layout and availability.</p>
+    </div>
 
-      .app-link strong {
-        font-size: 1.05rem;
-      }
+    <div class="bus-preview" data-reveal>
+      <div class="bus-windshield"><span></span><span></span></div>
+      <div class="bus-front">
+        <div><b>◉</b><small>Driver</small></div>
+        <div><small>Front door</small><b>↗</b></div>
+      </div>
+      <div class="bus-seat-rows" id="seatPreview"></div>
+      <div class="bus-rear">REAR · EMERGENCY EXIT</div>
+      <div class="seat-legend">
+        <span><i class="available"></i>Available</span>
+        <span><i class="reserved"></i>Unavailable</span>
+      </div>
+    </div>
+  </div>
+</section>
 
-      .app-link span {
-        color: var(--color-text-secondary);
-        line-height: 1.5;
-      }
+<section class="section tracking" id="tracking">
+  <div class="shell tracking-grid">
+    <div class="map-card" data-reveal id="routeMap">
+      <svg class="route-svg" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
+        <path id="routePath" d=""/>
+      </svg>
+      <span class="map-pin pin-start" id="mapOrigin">Origin</span>
+      <span class="map-pin pin-end" id="mapDestination">Destination</span>
+      <div class="map-status">
+        <i></i>
+        <div><small>Route information</small><strong id="mapStatus">Select a route</strong></div>
+        <span id="mapEta">—</span>
+      </div>
+    </div>
 
-      .cta-row {
-        margin-top: 24px;
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
+    <div class="tracking-copy" data-reveal>
+      <span class="eyebrow eyebrow-light">Journey context</span>
+      <h2>Distance and route geometry come from the configured map service.</h2>
+      <p>When route information is available, Encore shows it here. If the map service cannot respond, the booking flow remains usable and the page reports the problem clearly.</p>
+      <button class="btn btn-light" type="button" data-open-map>Open route details</button>
+    </div>
+  </div>
+</section>
 
-      @media (max-width: 900px) {
-        .hub-grid {
-          grid-template-columns: 1fr;
-        }
+<section class="section platform" id="platform">
+  <div class="shell">
+    <header class="section-head section-head-light" data-reveal>
+      <div>
+        <span class="eyebrow eyebrow-light">Connected travel</span>
+        <h2>Passenger. Driver. Operations.</h2>
+      </div>
+      <p>Each experience is designed for the people who use it while sharing consistent trip information.</p>
+    </header>
 
-        .hub-hero {
-          border-right: 0;
-          border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-        }
+    <div class="platform-grid">
+      <a href="/passenger/" class="platform-card">
+        <span>01</span>
+        <h3>Passenger</h3>
+        <p>Search, seats and booking.</p>
+        <b>Open Passenger →</b>
+      </a>
 
-        .hub-stats {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <main class="hub-shell">
-      <section class="hub-card">
-        <div class="hub-grid">
-          <div class="hub-hero">
-            <img class="brand-logo-hero" src="/logo.svg" alt="Encore Transport" />
-            <div class="hub-kicker">Encore Transport</div>
-            <h1 class="hub-title">A transport platform preview ready to grow into production.</h1>
-            <p class="hub-description">
-              This workspace brings the product foundation together: public website,
-              passenger experience, driver tools, and operations dashboard, all prepared
-              to connect to one central Laravel API.
-            </p>
-            <div class="cta-row">
-              <a class="button button--primary" href="/website/">Open website</a>
-              <a class="button button--ghost" href="/passenger/">Open Passenger Web</a>
-            </div>
-            <div class="hub-stats">
-              <div class="hub-stat"><strong>5 apps</strong><span>Separated by responsibility</span></div>
-              <div class="hub-stat"><strong>1 API</strong><span>Central contracts</span></div>
-              <div class="hub-stat"><strong>Mobile-ready</strong><span>Prepared for iOS and Android</span></div>
-            </div>
-          </div>
-          <div class="hub-links">
-            <a class="app-link" href="/website/"><strong>Public Website</strong><span>Brand trust, destinations, services, and booking CTA.</span></a>
-            <a class="app-link" href="/passenger/"><strong>Passenger Web</strong><span>Search, trip details, seats, payment preview, confirmation, and ticket.</span></a>
-            <a class="app-link" href="/move/"><strong>Passenger PWA Legacy</strong><span>Mobile-first legacy booking flow kept for continuity.</span></a>
-            <a class="app-link" href="/driver/"><strong>Driver PWA</strong><span>Fast operational workflow with trip states and passenger validation.</span></a>
-            <a class="app-link" href="/admin/"><strong>Operations Center</strong><span>Trips, bookings, routes, vehicles, inventory, and incidents.</span></a>
-          </div>
-        </div>
-      </section>
-    </main>
-  </body>
+      <a href="/driver/" class="platform-card">
+        <span>02</span>
+        <h3>Driver</h3>
+        <p>Assigned trips, boarding and location.</p>
+        <b>Open Driver →</b>
+      </a>
+
+      <a href="/admin/" class="platform-card">
+        <span>03</span>
+        <h3>Operations</h3>
+        <p>Trips, fleet and operational oversight.</p>
+        <b>Open Operations →</b>
+      </a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="shell footer-grid">
+    <a class="brand-lockup brand-lockup--footer" href="#home" aria-label="Encore Transport home">
+      <img class="brand-lockup__logo" src="/logo.svg" alt="" aria-hidden="true" />
+      <span class="brand-lockup__copy">
+        <strong class="brand-lockup__name">encore</strong>
+        <small class="brand-lockup__descriptor">transport</small>
+      </span>
+    </a>
+    <p>Reliable transport information from search to arrival.</p>
+    <span>© 2026 Encore Transport</span>
+  </div>
+</footer>
+</div>
+
+<div class="route-modal" id="routeModal" aria-hidden="true">
+  <div class="route-modal-backdrop" data-close-map></div>
+
+  <section class="route-modal-panel" role="dialog" aria-modal="true" aria-labelledby="routeTitle">
+    <header>
+      <div>
+        <span>Route details</span>
+        <h2 id="routeTitle">Encore route</h2>
+      </div>
+      <button type="button" data-close-map aria-label="Close">×</button>
+    </header>
+
+    <div class="route-modal-map">
+      <svg viewBox="0 0 1000 620" preserveAspectRatio="none">
+        <path id="modalRoutePath" d=""/>
+      </svg>
+    </div>
+
+    <footer>
+      <div><small>Distance</small><strong id="routeDistance">—</strong></div>
+      <div><small>Duration</small><strong id="routeDuration">—</strong></div>
+      <a class="btn btn-primary" id="bookRouteLink" href="/passenger/">Continue to booking</a>
+    </footer>
+  </section>
+</div>
+
+<script type="module" src="./app.mjs"></script>
+<script type="module" src="./enhancements.mjs"></script>
+</body>
 </html>

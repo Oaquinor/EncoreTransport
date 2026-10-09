@@ -1,28 +1,29 @@
-# Matriz de estado despues de aplicar el pack
+# Matriz de estado real
 
-| Area | Estado esperado | Fuente de verdad | Observacion |
-|---|---|---|---|
-| Website layout | Restaurado | Git main | HTML/CSS/assets no se redisenan |
-| Website routes | Real | Laravel/MySQL | `/api/v1/routes` |
-| Website search handoff | Real | Query params | Abre Passenger con filtros |
-| Website route geometry | Real si TomTom esta configurado | Laravel -> TomTom | Se dibuja geometria real; no key en browser |
-| Passenger search | Real | Laravel/MySQL | `/trips/search` |
-| Passenger trip | Real | Laravel/MySQL | `/trips/{id}` |
-| Passenger seats | Real | Laravel/MySQL | `/trips/{id}/seats` |
-| Passenger booking | Real | Laravel transaction | seat IDs + passengers |
-| Booking hold | Real | booking_seats / expires_at | conserva locks existentes |
-| Payment | Dependencia externa | PaymentGatewayInterface | NO se simula exito |
-| Ticket final | Pendiente de pago real | tickets | no se muestra como emitido antes de pago |
-| Driver login | Real | API token | sin user/code hardcodeado |
-| Driver assigned trip | Real | trips.driver_id | `/driver/trips/current` |
-| Driver start/complete | Real | MySQL | transiciones controladas |
-| Boarding | Real | booking_passengers.boarded_at | persistente |
-| GPS | Real | driver_locations | usa navegador + API |
-| Incidents | Real | incidents | migracion nueva |
-| Admin login | Real | API token role admin | middleware `api.token:admin` |
-| Admin dashboard | Real | MySQL | sin fallback a mocks |
-| Admin report | Real | MySQL | periodo real |
-| Swagger | Real | Controller attributes | se elimina supplement duplicado |
-| WhatsApp/email | No configurado | proveedor externo | no simulado |
-| Realtime websocket | No configurado | futuro broadcaster | latest location sigue disponible |
-| Mobile apps nativas | No incluidas en esta reparacion visual web | codigo existente | requieren fase separada de integracion de API nativa |
+| Área | Estado | Evidencia / limitación |
+|---|---|---|
+| Website root/assets | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | El servidor ya redirige a `/website/`; este pack conserva ese flujo y no lo reemplaza. |
+| Branding Website | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Lockup visible `encore / transport`; requiere revisión visual local. |
+| Website search | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Consume `trips/search` y transfiere filtros a Passenger. |
+| Website seat preview | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Usa filas/posiciones reales del endpoint de seats. |
+| Website real map | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Leaflet + TomTom tiles vía Laravel + `maps/journey`; requiere clave TomTom y prueba de navegador. |
+| Passenger PWA search | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | API real. |
+| Passenger PWA seat selection | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Layout dinámico; concurrencia sigue validándose en backend. |
+| Passenger PWA route map | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Mismo mapa compartido que Website. |
+| Passenger booking hold | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | `POST /bookings`, login centralizado, draft preservado. |
+| Payment final | BLOQUEADA EXTERNAMENTE | No se declara pago completado sin proveedor configurado. |
+| Ticket final | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Backend existente emite solo tras pago verificado. |
+| Driver PWA | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Viaje, schedule, pasajeros, boarding, vehículo, incidentes, paquetes y GPS. |
+| Driver PWA map | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Ruta TomTom + última ubicación real si existe. |
+| Admin Dashboard | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Datos reales + mapa operativo. |
+| Admin schedules/packages/incidents | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Endpoints ya existentes; pack conserva integración. |
+| Admin módulos sin entidades de negocio | PENDIENTE / BLOQUEADA | No se crearon CRUDs ficticios. |
+| Passenger Mobile | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Búsqueda, mapa, asiento, login y booking. |
+| Driver Mobile | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Login, schedule, trip, mapa, passengers, boarding, incident. |
+| Driver Mobile GPS send | BLOQUEADA POR DEPENDENCIA | Falta `expo-location` y permisos nativos; no se simula GPS. |
+| TomTom Search/Routing | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Requiere `TOMTOM_API_KEY`. |
+| TomTom raster map display | IMPLEMENTADA, PENDIENTE DE VALIDACIÓN | Nuevo proxy de tiles; requiere clave y prueba real. |
+| PowerTranz | BLOQUEADA EXTERNAMENTE | Credenciales/aprobación/sandbox. |
+| Stripe | BLOQUEADA EXTERNAMENTE | Credenciales/webhook. |
+| PayPal | BLOQUEADA EXTERNAMENTE | Credenciales/webhook. |
+| WhatsApp/FCM | BLOQUEADA EXTERNAMENTE | Tokens/cuentas/proveedor. |

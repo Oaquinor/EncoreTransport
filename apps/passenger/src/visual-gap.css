@@ -1,0 +1,135 @@
+.passenger-brand img{
+  width:52px;
+  height:52px;
+  object-fit:contain;
+}
+.passenger-brand strong{
+  text-transform:lowercase;
+  letter-spacing:-.03em;
+}
+.passenger-brand span{
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  font-size:.66rem;
+}
+
+.smart-banner--error{
+  border-color:#efc4c4;
+  background:#fff5f5;
+}
+.smart-banner--error b{
+  color:#8c2f2f;
+}
+
+.trip-map-card{
+  margin:18px 0;
+  padding:18px;
+  border:1px solid var(--line);
+  border-radius:24px;
+  background:#fff;
+  box-shadow:var(--shadow);
+}
+.trip-map-card__head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:16px;
+  margin-bottom:14px;
+}
+.trip-map-card__head h2{
+  margin:5px 0 0;
+  font-size:1.35rem;
+}
+.trip-map-card__provider{
+  padding:7px 10px;
+  border-radius:999px;
+  background:#eef6f8;
+  color:var(--muted);
+  font-size:.72rem;
+  font-weight:800;
+}
+.passenger-real-map{
+  min-height:380px;
+  height:380px;
+  overflow:hidden;
+  border-radius:18px;
+  border:1px solid var(--line);
+}
+
+.coach--flexible{
+  overflow-x:auto;
+}
+.seat-row--flexible{
+  display:grid !important;
+  grid-template-columns:24px repeat(var(--seat-columns),minmax(52px,1fr)) !important;
+  min-width:max-content;
+}
+.seat-gap{
+  display:block;
+  min-width:34px;
+}
+.seat.blocked{
+  background:#eee7e7;
+  color:#896969;
+  border-style:dashed;
+}
+.seat.accessible small{
+  position:absolute;
+  right:4px;
+  bottom:3px;
+  font-size:.68rem;
+}
+.legend--professional{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 14px;
+}
+.legend--professional span{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.legend-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  display:inline-block;
+}
+.legend-dot--available{background:#fff;border:1px solid #aabac4}
+.legend-dot--selected{background:var(--green)}
+.legend-dot--occupied{background:#aab4bb}
+.legend-dot--blocked{background:#b98f8f}
+.legend-dot--accessible{background:var(--blue)}
+.seat-price-summary{
+  display:grid;
+  gap:4px;
+  padding:16px;
+  margin:16px 0;
+  border-radius:16px;
+  background:#f5f9fb;
+  border:1px solid var(--line);
+}
+.seat-price-summary span,
+.seat-price-summary small{
+  color:var(--muted);
+}
+.seat-price-summary strong{
+  font-size:1.55rem;
+}
+
+@media(max-width:650px){
+  .passenger-real-map{
+    min-height:300px;
+    height:300px;
+  }
+  .trip-map-card{
+    padding:12px;
+    border-radius:18px;
+  }
+  .trip-map-card__head{
+    align-items:flex-start;
+  }
+  .seat-row--flexible{
+    grid-template-columns:18px repeat(var(--seat-columns),minmax(46px,1fr)) !important;
+  }
+}

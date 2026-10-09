@@ -16,34 +16,201 @@
   <link rel="stylesheet" href="../../packages/shared/styles.css" />
   <link rel="stylesheet" href="./styles.css" />
   <link rel="stylesheet" href="./enhancements.css" />
+  <link rel="stylesheet" href="./gap-close.css" />
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Encore Transport","url":"/website/"}</script>
 </head>
 <body>
 <div class="site-shell">
 <header class="topbar shell" data-reveal>
-  <a class="brand" href="#home" aria-label="Encore Transport home"><img src="/logo.svg" alt="Encore Transport" style="height:48px;width:auto;max-width:210px;object-fit:contain" /></a>
-  <nav class="nav" aria-label="Primary navigation"><a href="#book">Book</a><a href="#destinations">Destinations</a><a href="#experience">Seats</a><a href="#tracking">Route</a><a href="#platform">Services</a></nav>
+  <a class="brand encore-lockup" href="#home" aria-label="Encore Transport home">
+    <img class="encore-lockup__logo" src="/logo.svg" alt="" aria-hidden="true" />
+    <span class="encore-lockup__copy">
+      <strong>encore</strong>
+      <small>transport</small>
+    </span>
+  </a>
+
+  <nav class="nav" aria-label="Primary navigation">
+    <a href="#book">Book</a>
+    <a href="#destinations">Destinations</a>
+    <a href="#experience">Seats</a>
+    <a href="#tracking">Route</a>
+    <a href="#platform">Services</a>
+  </nav>
+
   <a class="nav-cta" href="/login/">Sign in <span>→</span></a>
 </header>
+
 <main>
 <section class="hero shell" id="home">
   <div class="hero-copy" data-reveal>
     <span class="eyebrow">Intercity travel with clear, up-to-date information</span>
     <h1>Move with clarity.<br/><span>Arrive with confidence.</span></h1>
     <p>Find available departures, choose the right trip and continue to seat selection with the information currently available for your journey.</p>
-    <div class="hero-actions"><a class="btn btn-primary" href="#book">Search a trip</a><button class="btn btn-secondary" type="button" data-open-map>Explore route</button></div>
-    <div class="hero-proof"><div><strong id="routeCount">—</strong><span>active routes</span></div><div><strong id="tripCount">—</strong><span>available departures</span></div><div><strong id="serviceStatus">…</strong><span>service status</span></div></div>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#book">Search a trip</a>
+      <button class="btn btn-secondary" type="button" data-open-map>Explore route</button>
+    </div>
+    <div class="hero-proof">
+      <div><strong id="routeCount">—</strong><span>active routes</span></div>
+      <div><strong id="tripCount">—</strong><span>available departures</span></div>
+      <div><strong id="serviceStatus">…</strong><span>service status</span></div>
+    </div>
   </div>
-  <div class="hero-visual" data-reveal><div class="hero-sky"></div><div class="hero-road"></div><div class="hero-glow"></div><img class="hero-bus" src="/assets/media/Autobus.png" alt="Encore intercity bus"/><article class="floating-trip-card" id="featuredTrip"><div class="trip-status"><i></i> Looking for the next available trip…</div></article></div>
+
+  <div class="hero-visual" data-reveal>
+    <div class="hero-sky"></div>
+    <div class="hero-road"></div>
+    <div class="hero-glow"></div>
+    <img class="hero-bus" src="/assets/media/Autobus.png" alt="Encore intercity bus"/>
+    <article class="floating-trip-card" id="featuredTrip">
+      <div class="trip-status"><i></i> Looking for the next available trip…</div>
+    </article>
+  </div>
 </section>
-<section class="booking-band" id="book"><div class="shell booking-grid"><div class="booking-intro" data-reveal><span class="eyebrow eyebrow-light">Plan your trip</span><h2>Choose where and when you want to travel.</h2><p>Search the current schedule and continue with the exact passenger count you need.</p><div id="searchMessage" class="booking-note" aria-live="polite">Ready to search</div></div><form class="booking-card" id="bookingForm" data-reveal><label class="booking-field booking-field-wide"><span class="booking-label">From</span><input name="origin" required autocomplete="off"/></label><button class="swap" type="button" aria-label="Swap origin and destination">⇅</button><label class="booking-field booking-field-wide"><span class="booking-label">To</span><input name="destination" required autocomplete="off"/></label><label class="booking-field"><span class="booking-label">Date</span><input type="date" name="date"/></label><label class="booking-field"><span class="booking-label">Passengers</span><input type="number" name="passengers" min="1" max="10" value="1"/></label><button class="booking-submit" type="submit">Search available trips <span>→</span></button></form></div></section>
-<section class="section shell" id="destinations"><header class="section-head" data-reveal><div><span class="eyebrow">Available destinations</span><h2>Routes that fit the way people move.</h2></div><p id="routesState">Loading current routes…</p></header><div class="destination-grid" id="destinationGrid"></div></section>
-<section class="section experience" id="experience"><div class="shell experience-grid"><div class="experience-copy" data-reveal><span class="eyebrow">Seat information</span><h2>See the actual layout configured for the assigned vehicle.</h2><p id="seatState">When a current trip is available, this preview reflects its configured seating layout and availability.</p></div><div class="bus-preview" data-reveal><div class="bus-windshield"><span></span><span></span></div><div class="bus-front"><div><b>◉</b><small>Driver</small></div><div><small>Front door</small><b>↗</b></div></div><div class="bus-seat-rows" id="seatPreview"></div><div class="bus-rear">REAR · EMERGENCY EXIT</div><div class="seat-legend"><span><i class="available"></i>Available</span><span><i class="reserved"></i>Unavailable</span></div></div></div></section>
-<section class="section tracking" id="tracking"><div class="shell tracking-grid"><div class="map-card" data-reveal id="routeMap"><svg class="route-svg" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true"><path id="routePath" d=""/></svg><span class="map-pin pin-start" id="mapOrigin">Origin</span><span class="map-pin pin-end" id="mapDestination">Destination</span><div class="map-status"><i></i><div><small>Route information</small><strong id="mapStatus">Select a route</strong></div><span id="mapEta">—</span></div></div><div class="tracking-copy" data-reveal><span class="eyebrow eyebrow-light">Journey context</span><h2>Distance and route geometry come from the configured map service.</h2><p>When route information is available, Encore shows it here. If the map service cannot respond, the booking flow remains usable and the page reports the problem clearly.</p><button class="btn btn-light" type="button" data-open-map>Open route details</button></div></div></section>
-<section class="section platform" id="platform"><div class="shell"><header class="section-head section-head-light" data-reveal><div><span class="eyebrow eyebrow-light">Connected travel</span><h2>Passenger. Driver. Operations.</h2></div><p>Each experience is designed for the people who use it while sharing consistent trip information.</p></header><div class="platform-grid"><a href="/passenger/" class="platform-card"><span>01</span><h3>Passenger</h3><p>Search, seats and booking.</p><b>Open Passenger →</b></a><a href="/driver/" class="platform-card"><span>02</span><h3>Driver</h3><p>Assigned trips, boarding and location.</p><b>Open Driver →</b></a><a href="/admin/" class="platform-card"><span>03</span><h3>Operations</h3><p>Trips, fleet and operational oversight.</p><b>Open Operations →</b></a></div></div></section>
+
+<section class="booking-band" id="book">
+  <div class="shell booking-grid">
+    <div class="booking-intro" data-reveal>
+      <span class="eyebrow eyebrow-light">Plan your trip</span>
+      <h2>Choose where and when you want to travel.</h2>
+      <p>Search the current schedule and continue with the exact passenger count you need.</p>
+      <div id="searchMessage" class="booking-note" aria-live="polite">Ready to search</div>
+    </div>
+
+    <form class="booking-card" id="bookingForm" data-reveal>
+      <label class="booking-field booking-field-wide">
+        <span class="booking-label">From</span>
+        <input name="origin" required autocomplete="off"/>
+      </label>
+      <button class="swap" type="button" aria-label="Swap origin and destination">⇅</button>
+      <label class="booking-field booking-field-wide">
+        <span class="booking-label">To</span>
+        <input name="destination" required autocomplete="off"/>
+      </label>
+      <label class="booking-field">
+        <span class="booking-label">Date</span>
+        <input type="date" name="date"/>
+      </label>
+      <label class="booking-field">
+        <span class="booking-label">Passengers</span>
+        <input type="number" name="passengers" min="1" max="10" value="1"/>
+      </label>
+      <button class="booking-submit" type="submit">Search available trips <span>→</span></button>
+    </form>
+  </div>
+</section>
+
+<section class="section shell" id="destinations">
+  <header class="section-head" data-reveal>
+    <div>
+      <span class="eyebrow">Available destinations</span>
+      <h2>Routes that fit the way people move.</h2>
+    </div>
+    <p id="routesState">Loading current routes…</p>
+  </header>
+  <div class="destination-grid" id="destinationGrid"></div>
+</section>
+
+<section class="section experience" id="experience">
+  <div class="shell experience-grid">
+    <div class="experience-copy" data-reveal>
+      <span class="eyebrow">Seat information</span>
+      <h2>See the actual layout configured for the assigned vehicle.</h2>
+      <p id="seatState">When a current trip is available, this preview reflects its configured seating layout and availability.</p>
+    </div>
+
+    <div class="bus-preview" data-reveal>
+      <div class="bus-windshield"><span></span><span></span></div>
+      <div class="bus-front">
+        <div><b>◉</b><small>Driver</small></div>
+        <div><small>Front door</small><b>↗</b></div>
+      </div>
+      <div class="bus-seat-rows flexible-seat-preview" id="seatPreview"></div>
+      <div class="bus-rear">REAR · EMERGENCY EXIT</div>
+      <div class="seat-legend">
+        <span><i class="available"></i>Available</span>
+        <span><i class="reserved"></i>Occupied</span>
+        <span><i class="blocked"></i>Blocked</span>
+        <span><i class="accessible"></i>Accessible</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section tracking" id="tracking">
+  <div class="shell tracking-grid">
+    <div class="map-card" data-reveal>
+      <div id="routeMapCanvas" class="website-real-map" aria-label="Interactive route map"></div>
+      <div class="map-status">
+        <i></i>
+        <div>
+          <small>Route information</small>
+          <strong id="mapStatus">Select a route</strong>
+        </div>
+        <span id="mapEta">—</span>
+      </div>
+    </div>
+
+    <div class="tracking-copy" data-reveal>
+      <span class="eyebrow eyebrow-light">Journey context</span>
+      <h2>Explore the actual roads for the selected trip.</h2>
+      <p>Street tiles, route geometry, distance and duration are loaded from the configured TomTom integration. If the map service cannot respond, Encore reports that state without inventing a route.</p>
+      <button class="btn btn-light" type="button" data-open-map>Open route details</button>
+    </div>
+  </div>
+</section>
+
+<section class="section platform" id="platform">
+  <div class="shell">
+    <header class="section-head section-head-light" data-reveal>
+      <div>
+        <span class="eyebrow eyebrow-light">Connected travel</span>
+        <h2>Passenger. Driver. Operations.</h2>
+      </div>
+      <p>Each experience is designed for the people who use it while sharing consistent trip information.</p>
+    </header>
+
+    <div class="platform-grid">
+      <a href="/passenger/" class="platform-card"><span>01</span><h3>Passenger</h3><p>Search, seats and booking.</p><b>Open Passenger →</b></a>
+      <a href="/driver/" class="platform-card"><span>02</span><h3>Driver</h3><p>Assigned trips, boarding and location.</p><b>Open Driver →</b></a>
+      <a href="/admin/" class="platform-card"><span>03</span><h3>Operations</h3><p>Trips, fleet and operational oversight.</p><b>Open Operations →</b></a>
+    </div>
+  </div>
+</section>
 </main>
-<footer class="footer"><div class="shell footer-grid"><img src="/logo.svg" alt="Encore Transport" style="height:46px;width:auto;max-width:210px;object-fit:contain"/><p>Reliable transport information from search to arrival.</p><span>© 2026 Encore Transport</span></div></footer>
+
+<footer class="footer">
+  <div class="shell footer-grid">
+    <a class="encore-lockup encore-lockup--footer" href="#home" aria-label="Encore Transport home">
+      <img class="encore-lockup__logo" src="/logo.svg" alt="" aria-hidden="true"/>
+      <span class="encore-lockup__copy"><strong>encore</strong><small>transport</small></span>
+    </a>
+    <p>Reliable transport information from search to arrival.</p>
+    <span>© 2026 Encore Transport</span>
+  </div>
+</footer>
 </div>
-<div class="route-modal" id="routeModal" aria-hidden="true"><div class="route-modal-backdrop" data-close-map></div><section class="route-modal-panel" role="dialog" aria-modal="true" aria-labelledby="routeTitle"><header><div><span>Route details</span><h2 id="routeTitle">Encore route</h2></div><button type="button" data-close-map aria-label="Close">×</button></header><div class="route-modal-map"><svg viewBox="0 0 1000 620" preserveAspectRatio="none"><path id="modalRoutePath" d=""/></svg></div><footer><div><small>Distance</small><strong id="routeDistance">—</strong></div><div><small>Duration</small><strong id="routeDuration">—</strong></div><a class="btn btn-primary" id="bookRouteLink" href="/passenger/">Continue to booking</a></footer></section></div>
-<script type="module" src="./app.mjs"></script><script type="module" src="./enhancements.mjs"></script>
-</body></html>
+
+<div class="route-modal" id="routeModal" aria-hidden="true">
+  <div class="route-modal-backdrop" data-close-map></div>
+  <section class="route-modal-panel" role="dialog" aria-modal="true" aria-labelledby="routeTitle">
+    <header>
+      <div><span>Route details</span><h2 id="routeTitle">Encore route</h2></div>
+      <button type="button" data-close-map aria-label="Close">×</button>
+    </header>
+    <div class="route-modal-map">
+      <div id="modalMapCanvas" class="website-real-map website-real-map--modal" aria-label="Interactive route detail map"></div>
+    </div>
+    <footer>
+      <div><small>Distance</small><strong id="routeDistance">—</strong></div>
+      <div><small>Duration</small><strong id="routeDuration">—</strong></div>
+      <a class="btn btn-primary" id="bookRouteLink" href="/passenger/">Continue to booking</a>
+    </footer>
+  </section>
+</div>
+
+<script type="module" src="./app.mjs"></script>
+<script type="module" src="./enhancements.mjs"></script>
+</body>
+</html>
