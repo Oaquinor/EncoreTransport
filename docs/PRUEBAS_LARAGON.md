@@ -1,11 +1,20 @@
-# Pruebas en Laragon
+# Ejecución y validación en Laragon
 
-## 1. Backend
+## 1. Aplicar overlay
 
-Desde la raíz de Laravel:
+Desde la raíz del repo:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\EncoreTransport_PREMIUM_VISUAL_20261008\APLICAR_PREMIUM.ps1 .
+```
+
+El script crea backup antes de reemplazar archivos.
+
+## 2. Backend
 
 ```bat
 cd "C:\Users\Laptop (Martinez)\source\repos\EncoreTransport\backend\laravel"
+
 composer install
 php artisan optimize:clear
 php artisan migrate
@@ -14,77 +23,84 @@ php artisan test
 php artisan serve
 ```
 
-No usar `migrate:fresh` sobre una base con información que deba conservarse.
+No ejecutar `migrate:fresh` sobre información que deba conservarse.
 
-## 2. Frontend web
+## 3. Frontend
 
-En otra consola, desde la raíz del repositorio:
+En otra consola:
 
 ```bat
 cd "C:\Users\Laptop (Martinez)\source\repos\EncoreTransport"
+
 npm install
 npm run validate:frontend
 npm run dev
 ```
 
-## 3. URLs
+## 4. URLs
 
 - Website: `http://127.0.0.1:4173/website/`
 - Passenger: `http://127.0.0.1:4173/passenger/`
 - Driver: `http://127.0.0.1:4173/driver/`
 - Admin: `http://127.0.0.1:4173/admin/`
+- Login: `http://127.0.0.1:4173/login/`
+- Package tracking: `http://127.0.0.1:4173/track-package/`
 - Swagger: `http://127.0.0.1:8000/api/documentation`
 
-## 4. Verificación del mapa
+## 5. Visual responsive
 
-En DevTools > Network:
+Probar mínimo:
+- 390×844
+- 768×1024
+- 1366×768
+- 1440×900
+- 1920×1080
 
-- Deben aparecer peticiones a `/api/v1/maps/tiles/...png`.
-- NO debe aparecer `TOMTOM_API_KEY` en la URL del navegador.
-- `/api/v1/maps/journey` debe devolver origen, destino y `route.points`.
+Validar:
+- sin scroll horizontal accidental;
+- header accesible;
+- textos no cortados;
+- tablas admin navegables;
+- botones de 44px o más en móvil;
+- foco visible con teclado.
 
-Si falta la clave, la UI debe mostrar `Route map unavailable`, no una línea falsa.
+## 6. Functional smoke test
 
-## 5. Asientos
+### Website
+- Buscar ruta.
+- Confirmar que filtros llegan a Passenger.
+- Abrir mapa.
+- Ir a tracking package.
 
-1. Buscar un viaje real.
-2. Abrir Passenger.
-3. Verificar que la disposición corresponda a `row_number` y `position_index`.
-4. Marcar un asiento disponible.
-5. Intentar reservar el mismo asiento desde una segunda sesión.
-6. La segunda operación debe recibir `422` y no crear una reserva duplicada.
+### Passenger
+- Search.
+- Select trip.
+- Map.
+- Seats.
+- Passenger data.
+- Review.
+- Login preserve draft.
+- Create booking.
 
-## 6. Driver
+### Driver
+- Login driver.
+- Assigned trip.
+- Passengers.
+- Board passenger.
+- Map.
+- GPS browser permission.
+- Vehicle status.
+- Incident.
 
-- Login de rol driver.
-- Ver viaje asignado.
-- Cambiar estado solo en transiciones válidas.
-- Marcar passenger boarded.
-- Enviar GPS solo con permiso del navegador y viaje en `boarding` / `in_progress`.
-- Confirmar registro en `driver_locations`.
-- Confirmar que el mapa se actualiza con esa ubicación.
-
-## 7. Admin
-
+### Admin
 - Login admin.
-- Dashboard debe mostrar datos de DB.
-- El mapa debe usar un viaje real.
-- Sin `driver_locations`, no debe aparecer marcador de vehículo.
-- Verificar tablas de horarios, paquetes e incidencias.
+- Dashboard.
+- Search/sort/paginate tables.
+- Create schedule.
+- Change incident status.
+- Reports.
 
-## 8. Mobile
+### Mobile
+Configurar `EXPO_PUBLIC_API_URL` con la IP LAN del equipo de desarrollo.
 
-Desde la raíz:
-
-```bat
-npm run mobile:passenger
-npm run mobile:driver
-```
-
-En dispositivo físico configurar `EXPO_PUBLIC_API_URL` con la IP LAN del equipo Laragon, por ejemplo:
-
-```text
-http://192.168.1.20:8000/api/v1
-```
-
-No usar ese ejemplo como valor fijo; usar la IP real del equipo.
+No usar `127.0.0.1` desde un teléfono físico.

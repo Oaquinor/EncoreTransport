@@ -3,32 +3,65 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#f4f7f9" />
+  <meta name="theme-color" content="#071722" />
   <meta name="description" content="Secure access to Encore Transport." />
   <title>Encore Transport | Sign in</title>
   <link rel="stylesheet" href="../../packages/shared/styles.css" />
+  <link rel="stylesheet" href="../../packages/shared/premium.css" />
   <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./premium.css" />
 </head>
 <body>
-  <main class="auth-shell">
-    <section class="auth-card" aria-labelledby="authTitle">
-      <a class="auth-brand" href="/website/" aria-label="Encore Transport home">
-        <img src="/logo.svg" alt="Encore Transport" />
+  <main class="premium-auth-shell">
+    <section class="premium-auth-visual" aria-hidden="true">
+      <div class="premium-auth-visual__shade"></div>
+      <img src="/assets/media/Autobus.png" alt="" />
+      <div class="premium-auth-visual__copy">
+        <span>Encore Transport</span>
+        <strong>One secure entrance.<br>Only the areas your role allows.</strong>
+      </div>
+    </section>
+
+    <section class="premium-auth-panel" aria-labelledby="authTitle">
+      <a class="et-brand-lockup premium-auth-brand" href="/website/" aria-label="Encore Transport home">
+        <img class="et-brand-lockup__logo" src="/logo.svg" alt="" aria-hidden="true" />
+        <span class="et-brand-lockup__copy">
+          <strong>encore</strong>
+          <small>transport</small>
+        </span>
       </a>
-      <div class="auth-copy">
-        <span class="eyebrow">Secure access</span>
-        <h1 id="authTitle">Sign in to continue.</h1>
+
+      <div class="premium-auth-copy">
+        <span class="et-kicker">Secure access</span>
+        <h1 id="authTitle">Welcome back.</h1>
         <p>Use the account assigned to you. Encore will direct you to the area permitted by your role.</p>
       </div>
+
       <div id="authMessage" class="auth-message" aria-live="polite" hidden></div>
-      <form id="loginForm" class="auth-form">
-        <label><span>Email</span><input name="email" type="email" autocomplete="username" required /></label>
-        <label><span>Password</span><input name="password" type="password" autocomplete="current-password" required /></label>
-        <button class="button button--primary button--block" type="submit">Sign in</button>
+
+      <form id="loginForm" class="premium-auth-form">
+        <label>
+          <span>Email</span>
+          <input name="email" type="email" autocomplete="username" required placeholder="you@example.com" />
+        </label>
+
+        <label>
+          <span>Password</span>
+          <input name="password" type="password" autocomplete="current-password" required placeholder="••••••••" />
+        </label>
+
+        <button class="premium-auth-submit" type="submit">
+          Sign in <span>→</span>
+        </button>
       </form>
-      <div class="auth-footer"><a href="/website/">← Back to website</a></div>
+
+      <div class="premium-auth-footer">
+        <a href="/website/">← Back to website</a>
+        <span>Access is determined by your account role.</span>
+      </div>
     </section>
   </main>
+
   <script type="module" src="./app.mjs"></script>
 </body>
 </html>

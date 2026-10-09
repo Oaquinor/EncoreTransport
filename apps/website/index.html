@@ -3,209 +3,314 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#f4f7f9" />
-  <meta name="description" content="Encore Transport — reliable intercity travel with live schedules, seat availability and route information." />
+  <meta name="theme-color" content="#071722" />
+  <meta name="description" content="Encore Transport — search real departures, choose your seat and travel with clear route information." />
   <meta name="robots" content="index,follow" />
   <link rel="canonical" href="/website/" />
   <meta property="og:title" content="Encore Transport" />
   <meta property="og:description" content="Search routes, departures and seat availability with Encore Transport." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="/website/" />
-  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:card" content="summary_large_image" />
   <title>Encore Transport | Move smarter. Travel better.</title>
+
   <link rel="stylesheet" href="../../packages/shared/styles.css" />
+  <link rel="stylesheet" href="../../packages/shared/premium.css" />
   <link rel="stylesheet" href="./styles.css" />
   <link rel="stylesheet" href="./enhancements.css" />
   <link rel="stylesheet" href="./gap-close.css" />
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Encore Transport","url":"/website/"}</script>
+  <link rel="stylesheet" href="./premium.css" />
+
+  <script type="application/ld+json">
+    {
+      "@context":"https://schema.org",
+      "@type":"Organization",
+      "name":"Encore Transport",
+      "url":"/website/"
+    }
+  </script>
 </head>
 <body>
-<div class="site-shell">
-<header class="topbar shell" data-reveal>
-  <a class="brand encore-lockup" href="#home" aria-label="Encore Transport home">
-    <img class="encore-lockup__logo" src="/logo.svg" alt="" aria-hidden="true" />
-    <span class="encore-lockup__copy">
-      <strong>encore</strong>
-      <small>transport</small>
-    </span>
-  </a>
-
-  <nav class="nav" aria-label="Primary navigation">
-    <a href="#book">Book</a>
-    <a href="#destinations">Destinations</a>
-    <a href="#experience">Seats</a>
-    <a href="#tracking">Route</a>
-    <a href="#platform">Services</a>
-  </nav>
-
-  <a class="nav-cta" href="/login/">Sign in <span>→</span></a>
-</header>
-
-<main>
-<section class="hero shell" id="home">
-  <div class="hero-copy" data-reveal>
-    <span class="eyebrow">Intercity travel with clear, up-to-date information</span>
-    <h1>Move with clarity.<br/><span>Arrive with confidence.</span></h1>
-    <p>Find available departures, choose the right trip and continue to seat selection with the information currently available for your journey.</p>
-    <div class="hero-actions">
-      <a class="btn btn-primary" href="#book">Search a trip</a>
-      <button class="btn btn-secondary" type="button" data-open-map>Explore route</button>
-    </div>
-    <div class="hero-proof">
-      <div><strong id="routeCount">—</strong><span>active routes</span></div>
-      <div><strong id="tripCount">—</strong><span>available departures</span></div>
-      <div><strong id="serviceStatus">…</strong><span>service status</span></div>
-    </div>
-  </div>
-
-  <div class="hero-visual" data-reveal>
-    <div class="hero-sky"></div>
-    <div class="hero-road"></div>
-    <div class="hero-glow"></div>
-    <img class="hero-bus" src="/assets/media/Autobus.png" alt="Encore intercity bus"/>
-    <article class="floating-trip-card" id="featuredTrip">
-      <div class="trip-status"><i></i> Looking for the next available trip…</div>
-    </article>
-  </div>
-</section>
-
-<section class="booking-band" id="book">
-  <div class="shell booking-grid">
-    <div class="booking-intro" data-reveal>
-      <span class="eyebrow eyebrow-light">Plan your trip</span>
-      <h2>Choose where and when you want to travel.</h2>
-      <p>Search the current schedule and continue with the exact passenger count you need.</p>
-      <div id="searchMessage" class="booking-note" aria-live="polite">Ready to search</div>
-    </div>
-
-    <form class="booking-card" id="bookingForm" data-reveal>
-      <label class="booking-field booking-field-wide">
-        <span class="booking-label">From</span>
-        <input name="origin" required autocomplete="off"/>
-      </label>
-      <button class="swap" type="button" aria-label="Swap origin and destination">⇅</button>
-      <label class="booking-field booking-field-wide">
-        <span class="booking-label">To</span>
-        <input name="destination" required autocomplete="off"/>
-      </label>
-      <label class="booking-field">
-        <span class="booking-label">Date</span>
-        <input type="date" name="date"/>
-      </label>
-      <label class="booking-field">
-        <span class="booking-label">Passengers</span>
-        <input type="number" name="passengers" min="1" max="10" value="1"/>
-      </label>
-      <button class="booking-submit" type="submit">Search available trips <span>→</span></button>
-    </form>
-  </div>
-</section>
-
-<section class="section shell" id="destinations">
-  <header class="section-head" data-reveal>
-    <div>
-      <span class="eyebrow">Available destinations</span>
-      <h2>Routes that fit the way people move.</h2>
-    </div>
-    <p id="routesState">Loading current routes…</p>
-  </header>
-  <div class="destination-grid" id="destinationGrid"></div>
-</section>
-
-<section class="section experience" id="experience">
-  <div class="shell experience-grid">
-    <div class="experience-copy" data-reveal>
-      <span class="eyebrow">Seat information</span>
-      <h2>See the actual layout configured for the assigned vehicle.</h2>
-      <p id="seatState">When a current trip is available, this preview reflects its configured seating layout and availability.</p>
-    </div>
-
-    <div class="bus-preview" data-reveal>
-      <div class="bus-windshield"><span></span><span></span></div>
-      <div class="bus-front">
-        <div><b>◉</b><small>Driver</small></div>
-        <div><small>Front door</small><b>↗</b></div>
-      </div>
-      <div class="bus-seat-rows flexible-seat-preview" id="seatPreview"></div>
-      <div class="bus-rear">REAR · EMERGENCY EXIT</div>
-      <div class="seat-legend">
-        <span><i class="available"></i>Available</span>
-        <span><i class="reserved"></i>Occupied</span>
-        <span><i class="blocked"></i>Blocked</span>
-        <span><i class="accessible"></i>Accessible</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section tracking" id="tracking">
-  <div class="shell tracking-grid">
-    <div class="map-card" data-reveal>
-      <div id="routeMapCanvas" class="website-real-map" aria-label="Interactive route map"></div>
-      <div class="map-status">
-        <i></i>
-        <div>
-          <small>Route information</small>
-          <strong id="mapStatus">Select a route</strong>
-        </div>
-        <span id="mapEta">—</span>
-      </div>
-    </div>
-
-    <div class="tracking-copy" data-reveal>
-      <span class="eyebrow eyebrow-light">Journey context</span>
-      <h2>Explore the actual roads for the selected trip.</h2>
-      <p>Street tiles, route geometry, distance and duration are loaded from the configured TomTom integration. If the map service cannot respond, Encore reports that state without inventing a route.</p>
-      <button class="btn btn-light" type="button" data-open-map>Open route details</button>
-    </div>
-  </div>
-</section>
-
-<section class="section platform" id="platform">
-  <div class="shell">
-    <header class="section-head section-head-light" data-reveal>
-      <div>
-        <span class="eyebrow eyebrow-light">Connected travel</span>
-        <h2>Passenger. Driver. Operations.</h2>
-      </div>
-      <p>Each experience is designed for the people who use it while sharing consistent trip information.</p>
-    </header>
-
-    <div class="platform-grid">
-      <a href="/passenger/" class="platform-card"><span>01</span><h3>Passenger</h3><p>Search, seats and booking.</p><b>Open Passenger →</b></a>
-      <a href="/driver/" class="platform-card"><span>02</span><h3>Driver</h3><p>Assigned trips, boarding and location.</p><b>Open Driver →</b></a>
-      <a href="/admin/" class="platform-card"><span>03</span><h3>Operations</h3><p>Trips, fleet and operational oversight.</p><b>Open Operations →</b></a>
-    </div>
-  </div>
-</section>
-</main>
-
-<footer class="footer">
-  <div class="shell footer-grid">
-    <a class="encore-lockup encore-lockup--footer" href="#home" aria-label="Encore Transport home">
-      <img class="encore-lockup__logo" src="/logo.svg" alt="" aria-hidden="true"/>
-      <span class="encore-lockup__copy"><strong>encore</strong><small>transport</small></span>
+<div class="site-shell premium-site">
+  <header class="premium-header shell" data-reveal>
+    <a class="et-brand-lockup premium-header__brand" href="#home" aria-label="Encore Transport home">
+      <img class="et-brand-lockup__logo" src="/logo.svg" alt="" aria-hidden="true" />
+      <span class="et-brand-lockup__copy">
+        <strong>encore</strong>
+        <small>transport</small>
+      </span>
     </a>
-    <p>Reliable transport information from search to arrival.</p>
-    <span>© 2026 Encore Transport</span>
-  </div>
-</footer>
+
+    <nav class="premium-nav" aria-label="Primary navigation">
+      <a href="#book">Book</a>
+      <a href="#destinations">Destinations</a>
+      <a href="#experience">Seats</a>
+      <a href="#tracking">Route</a>
+      <a href="#services">Services</a>
+    </nav>
+
+    <div class="premium-header__actions">
+      <a class="premium-header__track" href="/track-package/">Track package</a>
+      <a class="premium-header__signin" href="/login/">Sign in <span>→</span></a>
+    </div>
+  </header>
+
+  <main>
+    <section class="premium-hero" id="home">
+      <div class="premium-hero__media" aria-hidden="true">
+        <div class="premium-hero__shade"></div>
+        <img src="/assets/media/Autobus.png" alt="" />
+      </div>
+
+      <div class="shell premium-hero__content">
+        <div class="premium-hero__copy" data-reveal>
+          <span class="premium-kicker">Intercity travel, made clearer</span>
+          <h1>Your journey,<br><span>beautifully organized.</span></h1>
+          <p>
+            Compare current departures, select your real seat and continue with the information
+            that is available for your trip — from search to arrival.
+          </p>
+
+          <div class="premium-hero__actions">
+            <a class="premium-cta premium-cta--light" href="#book">Find a trip</a>
+            <button class="premium-cta premium-cta--outline" type="button" data-open-map>
+              View route
+            </button>
+          </div>
+
+          <div class="premium-hero__metrics" aria-label="Service summary">
+            <div>
+              <strong id="routeCount">—</strong>
+              <span>active routes</span>
+            </div>
+            <div>
+              <strong id="tripCount">—</strong>
+              <span>departures</span>
+            </div>
+            <div>
+              <strong id="serviceStatus">…</strong>
+              <span>service status</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="premium-trip-glass" id="featuredTrip" data-reveal>
+          <div class="premium-trip-glass__loading">
+            <span></span>
+            Looking for the next available trip…
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="premium-booking-section" id="book">
+      <div class="shell premium-booking">
+        <div class="premium-booking__intro" data-reveal>
+          <span class="et-kicker">Plan your trip</span>
+          <h2>Search once. Keep your context through every step.</h2>
+          <p>Choose your route, date and passenger count. Encore carries those choices into the booking flow.</p>
+          <div id="searchMessage" class="premium-booking__status" aria-live="polite">Ready to search</div>
+        </div>
+
+        <form class="premium-search" id="bookingForm" data-reveal>
+          <label class="premium-search__field premium-search__field--route">
+            <span>From</span>
+            <input name="origin" required autocomplete="off" placeholder="Origin" />
+          </label>
+
+          <button class="premium-search__swap" type="button" aria-label="Swap origin and destination">⇄</button>
+
+          <label class="premium-search__field premium-search__field--route">
+            <span>To</span>
+            <input name="destination" required autocomplete="off" placeholder="Destination" />
+          </label>
+
+          <label class="premium-search__field">
+            <span>Date</span>
+            <input type="date" name="date" />
+          </label>
+
+          <label class="premium-search__field">
+            <span>Passengers</span>
+            <input type="number" name="passengers" min="1" max="10" value="1" />
+          </label>
+
+          <button class="premium-search__submit" type="submit">
+            Search departures <span>→</span>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <section class="premium-section shell" id="destinations">
+      <header class="premium-section__head" data-reveal>
+        <div>
+          <span class="et-kicker">Available destinations</span>
+          <h2>Routes for the way people actually move.</h2>
+        </div>
+        <p id="routesState">Loading current routes…</p>
+      </header>
+
+      <div class="destination-grid premium-destination-grid" id="destinationGrid"></div>
+    </section>
+
+    <section class="premium-section premium-section--split" id="experience">
+      <div class="shell premium-seat-section">
+        <div class="premium-seat-section__copy" data-reveal>
+          <span class="et-kicker">Choose your place on board</span>
+          <h2>Seat selection that reflects the assigned vehicle.</h2>
+          <p id="seatState">
+            When a current trip is available, this preview reflects the configured seating layout and availability.
+          </p>
+
+          <ul class="premium-feature-list">
+            <li><span></span>Real vehicle layout</li>
+            <li><span></span>Availability validated by the server</li>
+            <li><span></span>Accessible and blocked positions identified</li>
+          </ul>
+
+          <a class="premium-text-link" href="/passenger/">Open Passenger booking →</a>
+        </div>
+
+        <div class="premium-bus-shell" data-reveal>
+          <div class="premium-bus-shell__front">
+            <span>FRONT</span>
+            <strong>Driver</strong>
+          </div>
+
+          <div class="bus-seat-rows flexible-seat-preview" id="seatPreview"></div>
+
+          <div class="premium-bus-shell__rear">REAR · EMERGENCY EXIT</div>
+
+          <div class="premium-seat-legend">
+            <span><i class="available"></i>Available</span>
+            <span><i class="reserved"></i>Occupied</span>
+            <span><i class="blocked"></i>Blocked</span>
+            <span><i class="accessible"></i>Accessible</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="premium-map-section" id="tracking">
+      <div class="shell premium-map-grid">
+        <div class="premium-map-copy" data-reveal>
+          <span class="premium-kicker">Route context</span>
+          <h2>See the roads behind the itinerary.</h2>
+          <p>
+            Street detail, route geometry, distance and duration come from the configured mapping service.
+            If the provider is unavailable, Encore reports the problem instead of drawing a fake route.
+          </p>
+
+          <div class="premium-map-copy__stats">
+            <div><span>Route</span><strong id="mapStatus">Select a route</strong></div>
+            <div><span>ETA</span><strong id="mapEta">—</strong></div>
+          </div>
+
+          <button class="premium-cta premium-cta--light" type="button" data-open-map>Open route details</button>
+        </div>
+
+        <div class="premium-map-frame" data-reveal>
+          <div id="routeMapCanvas" class="website-real-map" aria-label="Interactive route map"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="premium-section shell" id="services">
+      <header class="premium-section__head premium-section__head--compact" data-reveal>
+        <div>
+          <span class="et-kicker">More than a seat</span>
+          <h2>One transport experience, connected end to end.</h2>
+        </div>
+      </header>
+
+      <div class="premium-services">
+        <a class="premium-service premium-service--large" href="/passenger/">
+          <div class="premium-service__eyebrow">Passenger</div>
+          <h3>Book, board and keep the details that matter in one place.</h3>
+          <p>Search departures, select seats, review bookings and access travel status.</p>
+          <span>Open Passenger →</span>
+        </a>
+
+        <a class="premium-service" href="/track-package/">
+          <div class="premium-service__eyebrow">Packages</div>
+          <h3>Track a shipment securely.</h3>
+          <p>Use the tracking token supplied with the package.</p>
+          <span>Track package →</span>
+        </a>
+
+        <a class="premium-service" href="/login/?return=%2Fdriver%2F">
+          <div class="premium-service__eyebrow">Drivers</div>
+          <h3>Operational tools for the road.</h3>
+          <p>Assigned trips, passengers, incidents and route context.</p>
+          <span>Driver access →</span>
+        </a>
+
+        <a class="premium-service" href="/login/?return=%2Fadmin%2F">
+          <div class="premium-service__eyebrow">Operations</div>
+          <h3>Clear visibility across the network.</h3>
+          <p>Trips, reservations, fleet, schedules, packages and reports.</p>
+          <span>Operations access →</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="premium-support-band">
+      <div class="shell premium-support-band__inner">
+        <div>
+          <span class="premium-kicker">Need help?</span>
+          <h2>Start with the right information, not a dead-end screen.</h2>
+        </div>
+        <div class="premium-support-band__actions">
+          <a href="/track-package/">Track a package</a>
+          <a href="/passenger/">Manage travel</a>
+          <a href="/login/">Sign in</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="premium-footer">
+    <div class="shell premium-footer__grid">
+      <a class="et-brand-lockup premium-footer__brand" href="#home" aria-label="Encore Transport home">
+        <img class="et-brand-lockup__logo" src="/logo.svg" alt="" aria-hidden="true" />
+        <span class="et-brand-lockup__copy">
+          <strong>encore</strong>
+          <small>transport</small>
+        </span>
+      </a>
+
+      <div class="premium-footer__links">
+        <a href="#book">Book</a>
+        <a href="/track-package/">Track package</a>
+        <a href="/passenger/">Passenger</a>
+        <a href="/login/">Sign in</a>
+      </div>
+
+      <p>© 2026 Encore Transport. Reliable transport information from search to arrival.</p>
+    </div>
+  </footer>
 </div>
 
 <div class="route-modal" id="routeModal" aria-hidden="true">
   <div class="route-modal-backdrop" data-close-map></div>
-  <section class="route-modal-panel" role="dialog" aria-modal="true" aria-labelledby="routeTitle">
+  <section class="route-modal-panel premium-route-modal" role="dialog" aria-modal="true" aria-labelledby="routeTitle">
     <header>
-      <div><span>Route details</span><h2 id="routeTitle">Encore route</h2></div>
+      <div>
+        <span>Route details</span>
+        <h2 id="routeTitle">Encore route</h2>
+      </div>
       <button type="button" data-close-map aria-label="Close">×</button>
     </header>
+
     <div class="route-modal-map">
       <div id="modalMapCanvas" class="website-real-map website-real-map--modal" aria-label="Interactive route detail map"></div>
     </div>
+
     <footer>
       <div><small>Distance</small><strong id="routeDistance">—</strong></div>
       <div><small>Duration</small><strong id="routeDuration">—</strong></div>
-      <a class="btn btn-primary" id="bookRouteLink" href="/passenger/">Continue to booking</a>
+      <a class="premium-cta premium-cta--dark" id="bookRouteLink" href="/passenger/">Continue to booking</a>
     </footer>
   </section>
 </div>

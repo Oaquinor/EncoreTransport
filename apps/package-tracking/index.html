@@ -1,1 +1,48 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f4f7f9"><title>Encore Transport | Package tracking</title><link rel="stylesheet" href="../../packages/shared/styles.css"><link rel="stylesheet" href="./styles.css"></head><body><main class="tracking-shell"><section class="tracking-card"><a href="/website/" class="tracking-brand"><img src="/logo.svg" alt="Encore Transport"></a><span class="eyebrow">Package tracking</span><h1>Check your package status.</h1><p>Enter the secure tracking token supplied with your shipment.</p><form id="trackForm"><label><span>Tracking token</span><input name="token" autocomplete="off" required></label><button class="button button--primary" type="submit">Track package</button></form><div id="result" aria-live="polite"></div></section></main><script type="module" src="./app.mjs"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#071722">
+  <meta name="description" content="Track an Encore Transport package with its secure tracking token.">
+  <title>Encore Transport | Package tracking</title>
+  <link rel="stylesheet" href="../../packages/shared/styles.css">
+  <link rel="stylesheet" href="../../packages/shared/premium.css">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./premium.css">
+</head>
+<body>
+  <main class="premium-tracking-shell">
+    <section class="premium-tracking-intro">
+      <a href="/website/" class="et-brand-lockup premium-tracking-brand" aria-label="Encore Transport home">
+        <img class="et-brand-lockup__logo" src="/logo.svg" alt="" aria-hidden="true">
+        <span class="et-brand-lockup__copy">
+          <strong>encore</strong>
+          <small>transport</small>
+        </span>
+      </a>
+
+      <div>
+        <span class="premium-tracking-kicker">Package tracking</span>
+        <h1>Know where the shipment stands.</h1>
+        <p>Enter the secure tracking token supplied with the shipment. Encore returns only the package information that token is allowed to reveal.</p>
+      </div>
+    </section>
+
+    <section class="premium-tracking-panel">
+      <form id="trackForm" class="premium-tracking-form">
+        <label>
+          <span>Tracking token</span>
+          <input name="token" autocomplete="off" required placeholder="Enter secure token">
+        </label>
+
+        <button type="submit">Track package <span>→</span></button>
+      </form>
+
+      <div id="result" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

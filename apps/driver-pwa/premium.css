@@ -1,0 +1,249 @@
+body {
+  background: #edf3f6;
+}
+
+.driver-screen {
+  min-height: 100vh;
+  padding: 0;
+  background:
+    linear-gradient(180deg, #071722 0 300px, #eef4f7 300px 100%);
+}
+
+.driver-shell {
+  width: min(920px, calc(100% - 28px));
+  padding: 22px 0 42px;
+}
+
+.driver-dashboard {
+  gap: 14px;
+}
+
+.driver-dashboard > .driver-header {
+  position: sticky;
+  z-index: 50;
+  top: 12px;
+  min-height: 74px;
+  margin-bottom: 4px;
+  padding: 10px 12px 10px 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 16px;
+  background: rgba(7,23,34,.86);
+  color: #fff;
+  box-shadow: 0 18px 48px rgba(0,0,0,.18);
+  backdrop-filter: blur(18px);
+}
+
+.driver-dashboard > .driver-header .driver-brand strong {
+  color: #fff;
+  font-size: 1.08rem;
+  text-transform: lowercase;
+}
+
+.driver-dashboard > .driver-header .driver-brand small {
+  color: rgba(255,255,255,.50);
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.driver-dashboard > .driver-header .driver-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 11px;
+  padding: 3px;
+  background: #fff;
+}
+
+.driver-dashboard > .driver-header .button--ghost {
+  border-color: rgba(255,255,255,.18);
+  background: rgba(255,255,255,.08);
+  color: #fff;
+}
+
+.driver-card {
+  border: 1px solid var(--et-line);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(7,23,34,.06);
+}
+
+.driver-card:hover {
+  transform: none;
+}
+
+.driver-dashboard > .driver-card:nth-of-type(2) {
+  position: relative;
+  overflow: hidden;
+  min-height: 430px;
+  padding: 28px;
+  border-color: rgba(255,255,255,.06);
+  background:
+    linear-gradient(90deg, rgba(7,23,34,.98), rgba(7,23,34,.68)),
+    url("/assets/media/Autobus.png") right 22% bottom 28% / 68% auto no-repeat,
+    var(--et-navy-950);
+  color: #fff;
+  box-shadow: 0 30px 70px rgba(7,23,34,.24);
+}
+
+.driver-dashboard > .driver-card:nth-of-type(2) .trip-state {
+  position: relative;
+  z-index: 2;
+}
+
+.driver-dashboard > .driver-card:nth-of-type(2) .trip-state h2 {
+  max-width: 520px;
+  margin: 9px 0 8px;
+  color: #fff;
+  font-size: clamp(2.6rem, 7vw, 5.4rem);
+  line-height: .92;
+  letter-spacing: -.055em;
+}
+
+.driver-dashboard > .driver-card:nth-of-type(2) .driver-copy,
+.driver-dashboard > .driver-card:nth-of-type(2) .driver-map-head small {
+  color: rgba(255,255,255,.58);
+}
+
+.driver-dashboard > .driver-card:nth-of-type(2) .driver-map-head {
+  position: relative;
+  z-index: 2;
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,.14);
+}
+
+.driver-route-map {
+  position: relative;
+  z-index: 2;
+  height: 300px;
+  min-height: 300px;
+  margin-top: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.22);
+}
+
+.driver-grid--2 {
+  gap: 12px;
+}
+
+.driver-grid--2 > .card,
+.driver-grid--2 > article,
+.driver-grid--2 > .stat-card {
+  border-radius: 16px;
+}
+
+.passenger-list {
+  gap: 8px;
+}
+
+.passenger-row {
+  min-height: 62px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid #e6edf1;
+  border-radius: 12px;
+  background: #f8fafb;
+}
+
+.passenger-row strong {
+  color: var(--et-navy-900);
+}
+
+.passenger-row small {
+  display: block;
+  margin-top: 3px;
+  color: var(--et-muted);
+}
+
+.driver-card h3 {
+  margin: 0 0 14px;
+  color: var(--et-navy-900);
+  font-size: 1.05rem;
+}
+
+.driver-card .field {
+  min-height: 48px;
+  border-radius: 11px;
+  border-color: var(--et-line-strong);
+}
+
+.driver-card textarea.field {
+  padding-block: 12px;
+}
+
+.driver-card .button {
+  border-radius: 11px;
+}
+
+.driver-card .button--primary {
+  background: var(--et-navy-900);
+  box-shadow: none;
+}
+
+.driver-card .button--ghost {
+  background: #fff;
+  border-color: var(--et-line-strong);
+}
+
+.incident-box {
+  border-left: 4px solid var(--et-blue-500);
+}
+
+.driver-actions {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.feed-item {
+  border-radius: 12px;
+  background: #f7fafb;
+}
+
+.badge {
+  border-radius: 999px;
+}
+
+.badge--primary,
+.badge--info {
+  background: #e5f5fb;
+  color: var(--et-blue-600);
+}
+
+@media (max-width: 720px) {
+  .driver-screen {
+    background:
+      linear-gradient(180deg, #071722 0 220px, #eef4f7 220px 100%);
+  }
+
+  .driver-shell {
+    width: min(100% - 18px, 920px);
+    padding-top: 10px;
+  }
+
+  .driver-dashboard > .driver-header {
+    top: 8px;
+    border-radius: 14px;
+  }
+
+  .driver-dashboard > .driver-card:nth-of-type(2) {
+    min-height: 500px;
+    padding: 22px;
+    background:
+      linear-gradient(180deg, rgba(7,23,34,.98), rgba(7,23,34,.72)),
+      url("/assets/media/Autobus.png") 78% 30% / 110% auto no-repeat,
+      var(--et-navy-950);
+  }
+
+  .driver-dashboard > .driver-card:nth-of-type(2) .trip-state {
+    display: grid;
+    align-items: start;
+  }
+
+  .driver-route-map {
+    min-height: 280px;
+    height: 280px;
+  }
+
+  .driver-actions {
+    grid-template-columns: 1fr;
+  }
+}

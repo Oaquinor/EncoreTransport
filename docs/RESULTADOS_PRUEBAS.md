@@ -1,76 +1,63 @@
-# Resultados de pruebas ejecutadas en este entorno
+# Resultados de pruebas
 
-## Aprobadas
+## Ejecutadas y aprobadas en este entorno
 
-### JavaScript — sintaxis
-Ejecutado:
+### Sintaxis JavaScript
+- `apps/admin-dashboard/app.mjs` — **APROBADA**
+- `apps/admin-dashboard/src/api.mjs` — **APROBADA**
+- `apps/admin-dashboard/src/views.mjs` — **APROBADA**
+- `tests/premium-design-contract.test.mjs` — **APROBADA**
+- `tests/premium-responsive-contract.test.mjs` — **APROBADA**
 
-```text
-node --check packages/shared/real-map.mjs
-node --check apps/website/app.mjs
-node --check apps/driver-pwa/app.mjs
-node --check apps/admin-dashboard/app.mjs
-node --check tests/real-map-contract.test.mjs
-node --check tests/seat-layout-visual-contract.test.mjs
-```
+### Contratos premium
+- `node tests/premium-design-contract.test.mjs` — **APROBADA**
+- `node tests/premium-responsive-contract.test.mjs` — **APROBADA**
 
-Resultado: **APROBADO**.
+## TypeScript
 
-### PHP — sintaxis
-Ejecutado:
+Se ejecutó un chequeo aislado con `tsc`.
 
-```text
-php -l backend/laravel/app/Contracts/Maps/MapServiceInterface.php
-php -l backend/laravel/app/Services/Maps/TomTomMapService.php
-php -l backend/laravel/app/Http/Controllers/Api/V1/MapController.php
-php -l backend/laravel/app/Http/Controllers/Api/V1/SeatController.php
-php -l backend/laravel/config/maps.php
-php -l backend/laravel/routes/api.php
-php -l backend/laravel/tests/Feature/RealMapTileProxyTest.php
-```
+Resultado: **NO CLASIFICADO COMO BUILD**.
 
-Resultado: **APROBADO**.
+Los errores obtenidos son dependencias ausentes en el directorio overlay:
+- `react`
+- `react-dom/client`
+- `react-native`
+- `react-native-maps`
+- `react/jsx-runtime`
+- tipos de `process`
 
-### Contratos estáticos nuevos
-Ejecutado:
+Esto es esperable porque el overlay no contiene `node_modules`.
 
-```text
-node tests/real-map-contract.test.mjs
-node tests/seat-layout-visual-contract.test.mjs
-```
+No se observaron errores de sintaxis antes de la resolución de dependencias, pero esta observación NO sustituye `npm run validate:frontend`.
 
-Resultado: **APROBADO**.
-
-## No declaradas como aprobadas
-
-### TypeScript / React / React Native
-Se intentó una compilación aislada del overlay, pero este directorio no contiene `node_modules`. El compilador solo reportó dependencias ausentes (`react`, `react-native`, `react-native-maps`, `react/jsx-runtime`); no se registraron errores sintácticos de los archivos antes de esas resoluciones.
-
-La validación real debe ejecutarse dentro del repositorio:
+## Deben ejecutarse dentro del repo real
 
 ```text
 npm install
 npm run validate:frontend
 ```
 
-y para las aplicaciones Expo:
+Para móviles:
 
 ```text
 npm run mobile:passenger
 npm run mobile:driver
 ```
 
-### Laravel Feature Tests
-No se ejecutaron aquí porque el overlay no contiene `vendor/`, configuración de DB ni una instalación Laravel completa.
-
-Ejecutar localmente:
+Laravel:
 
 ```text
 php artisan test
+php artisan l5-swagger:generate
 ```
 
-### TomTom real
-No se probó una petición real contra TomTom porque este entorno no dispone de la clave del usuario.
+## No ejecutadas aquí
 
-### Capturas responsive
-No se fabricaron capturas. Deben obtenerse desde el navegador/dispositivo local después de aplicar el pack.
+- Navegación real contra la BD del usuario.
+- TomTom con la credencial del usuario.
+- Flujo de pago real.
+- Capturas responsive en navegador real.
+- Emuladores Android/iOS.
+
+Por ello este entregable se considera **implementación preparada para validación local**, no “producción verificada”.

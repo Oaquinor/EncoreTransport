@@ -722,9 +722,9 @@ function JourneyMap({ trip }: { trip: ApiTrip }) {
       <div className="trip-map-card__head">
         <div>
           <span className="eyebrow">ROUTE MAP</span>
-          <h2>Actual streets and route geometry</h2>
+          <h2>Route and streets</h2>
         </div>
-        <span className="trip-map-card__provider">TomTom</span>
+        <span className="trip-map-card__provider">Live route</span>
       </div>
 
       {mapError && (

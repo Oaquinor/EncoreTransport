@@ -21,7 +21,9 @@
     "test:server": "node tests/server-routing.test.mjs",
     "test:real-map": "node tests/real-map-contract.test.mjs",
     "test:seat-layout": "node tests/seat-layout-visual-contract.test.mjs",
-    "test": "npm run test:business && npm run test:hardcode && npm run test:server && npm run test:real-map && npm run test:seat-layout",
+    "test:premium-design": "node tests/premium-design-contract.test.mjs",
+    "test:premium-responsive": "node tests/premium-responsive-contract.test.mjs",
+    "test": "npm run test:business && npm run test:hardcode && npm run test:server && npm run test:real-map && npm run test:seat-layout && npm run test:premium-design && npm run test:premium-responsive",
     "check": "npm run test",
     "validate:frontend": "npm run test && npm run typecheck:api-client && npm run typecheck:passenger && npm run build:passenger"
   },
