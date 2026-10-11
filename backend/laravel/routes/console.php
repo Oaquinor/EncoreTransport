@@ -2,6 +2,7 @@
 
 use App\Contracts\Maps\MapServiceInterface;
 use App\Jobs\ReleaseExpiredBookings;
+use App\Models\Trip;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
@@ -42,7 +43,14 @@ Artisan::command('encore:maps:diagnose', function () {
     $failed = false;
 
     try {
-        $geocode = $maps->geocode('Santo Domingo, Dominican Republic', ['limit' => 1]);
+        $geocode = $maps->geocode(
+            'Santo Domingo, Dominican Republic',
+            [
+                'limit' => 1,
+                'allow_global_fallback' => false,
+            ]
+        );
+
         $position = $geocode['results'][0]['position'] ?? null;
 
         if (!$position || !isset($position['lat'], $position['lon'])) {
@@ -87,12 +95,52 @@ Artisan::command('encore:maps:diagnose', function () {
     }
 
     $this->line('');
+    $this->info('Current trip route resolution');
+
+    $trip = Trip::query()
+        ->with('route')
+        ->whereIn('status', ['scheduled', 'boarding', 'in_progress'])
+        ->orderBy('departure_date')
+        ->orderBy('departure_time')
+        ->first();
+
+    if (!$trip || !$trip->route) {
+        $this->warn('SKIP current trip: no current trip with route was found.');
+    } else {
+        $origin = (string) $trip->route->origin;
+        $destination = (string) $trip->route->destination;
+
+        $this->line('Trip ID: '.$trip->id);
+        $this->line('Origin: '.$origin);
+        $this->line('Destination: '.$destination);
+
+        try {
+            $originPayload = $maps->geocode($origin, ['limit' => 1]);
+            $destinationPayload = $maps->geocode($destination, ['limit' => 1]);
+
+            $originPosition = $originPayload['results'][0]['position'] ?? null;
+            $destinationPosition = $destinationPayload['results'][0]['position'] ?? null;
+
+            if (!$originPosition || !$destinationPosition) {
+                throw new RuntimeException('Current trip origin or destination returned no usable coordinate.');
+            }
+
+            $this->info('PASS current trip origin/destination');
+        } catch (\Throwable $e) {
+            $failed = true;
+            $this->error('FAIL current trip origin/destination: '.$e->getMessage());
+        }
+    }
+
+    $this->line('');
 
     if ($failed) {
-        $this->warn('At least one TomTom service failed. The API key may exist but lack permission for one product, the provider may be unreachable, or the Laravel runtime may still have stale configuration.');
+        $this->warn('At least one map diagnostic failed.');
         return self::FAILURE;
     }
 
-    $this->info('All configured TomTom map services responded successfully.');
+    $this->info('All configured TomTom services and the current trip route resolved successfully.');
     return self::SUCCESS;
-})->purpose('Checks Laravel map configuration, TomTom geocoding, routing, and raster tiles without printing the API key.');
+})->purpose(
+    'Checks TomTom services and verifies that the currently scheduled Encore trip can actually be geocoded, without printing the API key.'
+);

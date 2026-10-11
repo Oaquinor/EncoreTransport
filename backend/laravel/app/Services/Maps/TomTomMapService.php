@@ -32,19 +32,31 @@ class TomTomMapService implements MapServiceInterface
 
     public function geocode(string $address, array $options = []): array
     {
-        $response = $this->client()->get(
-            rtrim((string) config('maps.tomtom.search_base_url'), '/').'/geocode/'.rawurlencode($address).'.json',
-            array_filter([
-                'key' => $this->apiKey(),
-                'limit' => $options['limit'] ?? 5,
-                'countrySet' => $options['country_set'] ?? config('maps.tomtom.country_set'),
-                'language' => $options['language'] ?? config('maps.tomtom.language'),
-            ], fn ($value) => $value !== null && $value !== '')
+        $countrySet = array_key_exists('country_set', $options)
+            ? $options['country_set']
+            : config('maps.tomtom.country_set');
+
+        $payload = $this->performGeocode(
+            $address,
+            $options,
+            $countrySet
         );
 
-        $this->assertSuccessful($response, 'geocoding');
+        $allowGlobalFallback = $options['allow_global_fallback'] ?? true;
 
-        return $response->json();
+        if (
+            $allowGlobalFallback &&
+            !empty($countrySet) &&
+            empty($payload['results'])
+        ) {
+            $payload = $this->performGeocode(
+                $address,
+                $options,
+                null
+            );
+        }
+
+        return $payload;
     }
 
     public function reverseGeocode(float $latitude, float $longitude, array $options = []): array
@@ -150,6 +162,26 @@ class TomTomMapService implements MapServiceInterface
             'cache_control' => $response->header('Cache-Control') ?: 'public, max-age=300',
             'etag' => $response->header('ETag'),
         ];
+    }
+
+    private function performGeocode(
+        string $address,
+        array $options,
+        ?string $countrySet
+    ): array {
+        $response = $this->client()->get(
+            rtrim((string) config('maps.tomtom.search_base_url'), '/').'/geocode/'.rawurlencode($address).'.json',
+            array_filter([
+                'key' => $this->apiKey(),
+                'limit' => $options['limit'] ?? 5,
+                'countrySet' => $countrySet,
+                'language' => $options['language'] ?? config('maps.tomtom.language'),
+            ], fn ($value) => $value !== null && $value !== '')
+        );
+
+        $this->assertSuccessful($response, 'geocoding');
+
+        return $response->json();
     }
 
     private function client(): PendingRequest
