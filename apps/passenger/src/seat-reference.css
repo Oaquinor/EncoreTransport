@@ -1,0 +1,568 @@
+/*
+ * Seat layout based on the physical Encore bus reference:
+ * horizontal body, front cockpit, 2+2 seating, central aisle,
+ * compact realistic seats and rear-wall seating when configured.
+ */
+
+.reference-seat-stage {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.reference-seat-toolbar {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr) 170px;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  border: 1px solid #d7e4eb;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.reference-seat-orientation {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.reference-seat-orientation > span {
+  color: #278eb9;
+  font-size: 1.45rem;
+  font-weight: 900;
+}
+
+.reference-seat-orientation div {
+  display: grid;
+  gap: 1px;
+}
+
+.reference-seat-orientation strong {
+  color: #193a4f;
+  font-size: .74rem;
+}
+
+.reference-seat-orientation small {
+  color: #7a8e9b;
+  font-size: .58rem;
+}
+
+.reference-seat-orientation--rear {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.reference-seat-legend {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: #607786;
+  font-size: .62rem;
+}
+
+.reference-seat-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reference-seat-legend i {
+  width: 14px;
+  height: 18px;
+  display: inline-block;
+  border: 1px solid #b7c7cf;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: inset 0 -4px 0 #e3eaee;
+}
+
+.reference-seat-legend .legend-selected {
+  border-color: #1382af;
+  background: #29aae0;
+  box-shadow: inset 0 -4px 0 #0f83b4;
+}
+
+.reference-seat-legend .legend-occupied {
+  border-color: #6d7e88;
+  background: #8e9ba3;
+  box-shadow: inset 0 -4px 0 #6c7a82;
+}
+
+.reference-seat-legend .legend-blocked {
+  border-color: #ca929d;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      #f6dfe3 0 4px,
+      #edc6cd 4px 8px
+    );
+  box-shadow: none;
+}
+
+.reference-seat-legend .legend-accessible {
+  border-color: #168fc4;
+  background: #e7f7fd;
+  box-shadow: inset 0 -4px 0 #b9e4f4;
+}
+
+.reference-coach {
+  --coach-row-width: clamp(58px, 6vw, 72px);
+  position: relative;
+  display: grid;
+  grid-template-columns:
+    126px
+    minmax(
+      calc(
+        var(--seat-columns) *
+        var(--coach-row-width)
+      ),
+      1fr
+    )
+    74px;
+  min-height: 330px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 2px solid #7e9fb1;
+  border-radius: 90px 26px 26px 90px;
+  background:
+    linear-gradient(
+      90deg,
+      #5b8dad 0 124px,
+      #dfe9ee 124px calc(100% - 72px),
+      #cbdbe3 calc(100% - 72px)
+    );
+  box-shadow:
+    inset 0 0 0 7px rgba(255,255,255,.64),
+    0 18px 44px rgba(20,61,82,.10);
+}
+
+.reference-coach::after {
+  content: "";
+  position: absolute;
+  left: 113px;
+  right: 67px;
+  top: 15px;
+  bottom: 15px;
+  pointer-events: none;
+  border-top: 1px solid rgba(63,96,113,.16);
+  border-bottom: 1px solid rgba(63,96,113,.16);
+}
+
+.reference-coach__front {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  display: grid;
+  grid-template-rows: 112px 82px 1fr;
+  place-items: center;
+  align-content: center;
+  padding: 17px 13px;
+  border-radius: 86px 0 0 86px;
+  background:
+    linear-gradient(
+      180deg,
+      #4e86a7,
+      #648fa8 55%,
+      #497993
+    );
+}
+
+.reference-coach__windshield {
+  width: 89px;
+  height: 102px;
+  display: grid;
+  place-items: end center;
+  padding-bottom: 8px;
+  border: 2px solid rgba(255,255,255,.68);
+  border-radius: 58px 18px 18px 58px;
+  background:
+    linear-gradient(
+      135deg,
+      #b9dce9,
+      #1e4f6b 62%,
+      #123447
+    );
+  box-shadow:
+    inset 0 0 24px rgba(255,255,255,.18);
+}
+
+.reference-coach__windshield span {
+  color: rgba(255,255,255,.78);
+  font-size: .48rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.reference-coach__driver {
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  color: #fff;
+}
+
+.reference-coach__driver i {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 4px solid rgba(255,255,255,.85);
+  border-radius: 50%;
+  font-style: normal;
+}
+
+.reference-coach__driver small {
+  font-size: .5rem;
+  text-transform: uppercase;
+}
+
+.reference-coach__door {
+  align-self: end;
+  width: 72px;
+  min-height: 52px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.48);
+  border-radius: 9px;
+  background: rgba(255,255,255,.13);
+  color: #fff;
+}
+
+.reference-coach__door span {
+  font-size: .48rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.reference-coach__cabin {
+  min-width:
+    calc(
+      var(--seat-columns) *
+      var(--coach-row-width)
+    );
+  display: grid;
+  grid-template-rows: 1fr 52px 1fr;
+  padding: 20px 7px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.36),
+      transparent 28% 72%,
+      rgba(255,255,255,.32)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0
+        calc(
+          var(--coach-row-width) - 1px
+        ),
+      rgba(85,118,135,.07)
+        calc(
+          var(--coach-row-width) - 1px
+        )
+        var(--coach-row-width)
+    );
+}
+
+.reference-coach__upper,
+.reference-coach__lower {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      var(--seat-columns),
+      var(--coach-row-width)
+    );
+  align-items: center;
+}
+
+.reference-seat-column {
+  position: relative;
+  min-height: 115px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+}
+
+.reference-seat-column > em {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #77909d;
+  font-size: .48rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.reference-coach__upper
+.reference-seat-column > em {
+  top: -8px;
+}
+
+.reference-coach__lower
+.reference-seat-column > em {
+  bottom: -8px;
+}
+
+.reference-seat-pair {
+  display: grid;
+  grid-template-rows: repeat(2, 52px);
+  gap: 5px;
+}
+
+.reference-coach__aisle {
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.reference-coach__aisle::before {
+  content: "";
+  position: absolute;
+  left: 1%;
+  right: 1%;
+  top: 50%;
+  border-top: 2px dashed #afc3ce;
+}
+
+.reference-coach__aisle span {
+  position: relative;
+  width: 58px;
+  height: 13px;
+  border-radius: 999px;
+  background: #d6e3e9;
+}
+
+.reference-seat,
+.reference-seat-placeholder {
+  width: 34px;
+  height: 48px;
+}
+
+.reference-seat-placeholder {
+  visibility: hidden;
+}
+
+.reference-seat {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    transform .16s ease,
+    filter .16s ease;
+}
+
+.reference-seat:not(:disabled):hover {
+  transform:
+    translateY(-2px)
+    scale(1.04);
+}
+
+.reference-seat:focus-visible {
+  outline: 3px solid rgba(32,165,220,.25);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.reference-seat__back {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 3px;
+  height: 31px;
+  border: 1px solid #aabcc6;
+  border-radius: 7px 7px 5px 5px;
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff,
+      #e5ecef
+    );
+  box-shadow:
+    0 2px 5px rgba(24,62,82,.10);
+}
+
+.reference-seat__base {
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  bottom: 3px;
+  height: 14px;
+  border: 1px solid #b8c6cd;
+  border-radius: 4px 4px 7px 7px;
+  background:
+    linear-gradient(
+      180deg,
+      #edf2f4,
+      #d7e1e5
+    );
+}
+
+.reference-seat__arm {
+  position: absolute;
+  top: 23px;
+  width: 3px;
+  height: 15px;
+  border-radius: 3px;
+  background: #8198a4;
+}
+
+.reference-seat__arm--left {
+  left: 2px;
+}
+
+.reference-seat__arm--right {
+  right: 2px;
+}
+
+.reference-seat b {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  color: #294858;
+  font-size: .5rem;
+  font-weight: 950;
+}
+
+.reference-seat small {
+  position: absolute;
+  z-index: 5;
+  right: -5px;
+  bottom: 0;
+  color: #087faf;
+  font-size: .52rem;
+}
+
+.reference-seat--selected
+.reference-seat__back,
+.reference-seat--selected
+.reference-seat__base {
+  border-color: #067daa;
+  background:
+    linear-gradient(
+      180deg,
+      #32b7ec,
+      #0d91c8
+    );
+}
+
+.reference-seat--selected b {
+  color: #fff;
+}
+
+.reference-seat--occupied
+.reference-seat__back,
+.reference-seat--occupied
+.reference-seat__base {
+  border-color: #6a7d87;
+  background:
+    linear-gradient(
+      180deg,
+      #8999a2,
+      #64747d
+    );
+}
+
+.reference-seat--occupied b {
+  color: #fff;
+}
+
+.reference-seat--blocked
+.reference-seat__back,
+.reference-seat--blocked
+.reference-seat__base {
+  border-color: #ce929c;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      #f6dce1 0 4px,
+      #edc6cd 4px 8px
+    );
+}
+
+.reference-seat--blocked b {
+  color: #96505b;
+}
+
+.reference-seat--accessible
+.reference-seat__back {
+  border-color: #0d9fd8;
+  box-shadow:
+    0 0 0 2px
+      rgba(13,159,216,.12);
+}
+
+.reference-coach__rear {
+  display: grid;
+  place-items: center;
+  padding: 14px 10px;
+  border-left: 1px solid #9fb6c2;
+}
+
+.reference-coach__rear-seats {
+  display: grid;
+  gap: 3px;
+  place-items: center;
+}
+
+.reference-coach__rear-seats
+.reference-seat {
+  transform: rotate(90deg);
+  margin-block: -6px;
+}
+
+.reference-coach__rear-panel {
+  width: 42px;
+  height: 132px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #9fb3bd;
+  border-radius: 9px;
+  background:
+    linear-gradient(
+      180deg,
+      #e8eff2,
+      #cad9e0
+    );
+}
+
+.reference-coach__rear-panel span {
+  padding: 4px 5px;
+  border-radius: 5px;
+  background: #d85d67;
+  color: #fff;
+  font-size: .48rem;
+  font-weight: 900;
+}
+
+@media (max-width: 900px) {
+  .reference-seat-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .reference-seat-orientation--rear {
+    display: none;
+  }
+
+  .reference-seat-legend {
+    justify-content: flex-start;
+  }
+
+  .reference-coach {
+    --coach-row-width: 58px;
+    grid-template-columns:
+      108px
+      minmax(
+        calc(
+          var(--seat-columns) *
+          var(--coach-row-width)
+        ),
+        1fr
+      )
+      64px;
+  }
+}

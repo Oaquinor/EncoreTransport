@@ -14,17 +14,15 @@ export type SeatDto = {
   available: boolean;
 };
 
-type CoachRow = {
-  row: number;
-  byPosition: Map<number, SeatDto>;
+type SeatRow = {
+  number: number;
+  seats: SeatDto[];
 };
 
-function fallbackRow(seat: SeatDto) {
-  const match = String(seat.seat_number ?? '').match(/^(\d+)/);
-  return match ? Number(match[1]) : 0;
-}
-
-function seatState(seat: SeatDto, selected: number[]) {
+function seatState(
+  seat: SeatDto,
+  selected: number[],
+) {
   if (seat.blocked) return 'blocked';
   if (!seat.available) return 'occupied';
   if (selected.includes(seat.id)) return 'selected';
@@ -44,34 +42,51 @@ function SeatButton({
 }) {
   const state = seatState(seat, selected);
   const isSelected = state === 'selected';
+
   const disabled =
     seat.blocked ||
     state === 'occupied' ||
-    (!isSelected && selected.length >= maxSelection);
+    (!isSelected &&
+      selected.length >= maxSelection);
 
   return (
     <button
       type="button"
       disabled={disabled}
       className={[
-        'coach-seat',
-        `coach-seat--${state}`,
-        seat.accessible ? 'coach-seat--accessible' : '',
-        seat.window ? 'coach-seat--window' : '',
-        seat.aisle ? 'coach-seat--aisle' : '',
+        'reference-seat',
+        `reference-seat--${state}`,
+        seat.accessible
+          ? 'reference-seat--accessible'
+          : '',
       ].filter(Boolean).join(' ')}
       onClick={() => onToggle(seat.id)}
       aria-pressed={isSelected}
       aria-label={`Seat ${seat.seat_number}, ${state}${seat.accessible ? ', accessible' : ''}`}
       title={`${seat.seat_number} · ${state}${seat.accessible ? ' · accessible' : ''}`}
     >
-      <span className="coach-seat__headrest" aria-hidden="true" />
-      <span className="coach-seat__back" aria-hidden="true" />
-      <span className="coach-seat__cushion" aria-hidden="true" />
-      <span className="coach-seat__arm coach-seat__arm--left" aria-hidden="true" />
-      <span className="coach-seat__arm coach-seat__arm--right" aria-hidden="true" />
+      <span
+        className="reference-seat__back"
+        aria-hidden="true"
+      />
+      <span
+        className="reference-seat__base"
+        aria-hidden="true"
+      />
+      <span
+        className="reference-seat__arm reference-seat__arm--left"
+        aria-hidden="true"
+      />
+      <span
+        className="reference-seat__arm reference-seat__arm--right"
+        aria-hidden="true"
+      />
+
       <b>{seat.seat_number}</b>
-      {seat.accessible && <small aria-hidden="true">♿</small>}
+
+      {seat.accessible && (
+        <small aria-hidden="true">♿</small>
+      )}
     </button>
   );
 }
@@ -87,169 +102,289 @@ export function SeatMap({
   maxSelection: number;
   onToggle: (id: number) => void;
 }) {
-  const layout = useMemo(() => {
-    const grouped = new Map<number, SeatDto[]>();
+  const rows = useMemo<SeatRow[]>(() => {
+    const groups = new Map<number, SeatDto[]>();
 
     for (const seat of seats) {
-      const row = Number(seat.row_number ?? fallbackRow(seat));
-      if (!row) continue;
-      grouped.set(row, [...(grouped.get(row) ?? []), seat]);
+      const row = Number(
+        seat.row_number ?? 0,
+      );
+
+      if (row <= 0) continue;
+
+      groups.set(
+        row,
+        [
+          ...(groups.get(row) ?? []),
+          seat,
+        ].sort(
+          (left, right) =>
+            Number(
+              left.position_index ?? 0,
+            ) -
+            Number(
+              right.position_index ?? 0,
+            ),
+        ),
+      );
     }
 
-    const rows: CoachRow[] = [...grouped.entries()]
-      .sort((a, b) => a[0] - b[0])
-      .map(([row, rowSeats]) => ({
-        row,
-        byPosition: new Map(
-          rowSeats
-            .filter((seat) => Number(seat.position_index ?? 0) > 0)
-            .map((seat) => [
-              Number(seat.position_index),
-              seat,
-            ] as [number, SeatDto]),
-        ),
-      }));
-
-    const maxPosition = Math.max(
-      1,
-      ...seats.map((seat) => Number(seat.position_index ?? 0)),
-    );
-
-    const possiblePositions = Array.from(
-      new Set(
-        seats
-          .map((seat) => Number(seat.position_index ?? 0))
-          .filter((position) => position > 0),
-      ),
-    ).sort((a, b) => a - b);
-
-    const firstGap = possiblePositions.findIndex(
-      (position, index) =>
-        index > 0 &&
-        position - possiblePositions[index - 1] > 1,
-    );
-
-    const split =
-      firstGap > 0
-        ? possiblePositions[firstGap - 1]
-        : Math.max(1, Math.floor(maxPosition / 2));
-
-    return {
-      rows,
-      maxPosition,
-      split,
-    };
+    return [...groups.entries()]
+      .sort(
+        ([left], [right]) =>
+          left - right,
+      )
+      .map(
+        ([number, rowSeats]) => ({
+          number,
+          seats: rowSeats,
+        }),
+      );
   }, [seats]);
 
-  if (!layout.rows.length) {
+  if (!rows.length) {
     return (
       <div className="smart-banner">
         <b>No seat layout configured.</b>
         <span>
-          Operations must configure the vehicle seats before this trip can be booked.
+          Operations must configure row_number and position_index for this vehicle.
         </span>
       </div>
     );
   }
 
-  const shellStyle = {
-    '--coach-columns': layout.rows.length,
+  const normalRows =
+    rows.length > 1
+      ? rows.slice(0, -1)
+      : rows;
+
+  const candidateRear =
+    rows.length > 1
+      ? rows[rows.length - 1]
+      : null;
+
+  /*
+   * A last row with 3+ configured seats is rendered
+   * vertically against the rear wall, matching the
+   * physical reference supplied for Encore.
+   *
+   * If the persisted layout does not contain that
+   * configuration, all rows remain standard 2+2.
+   */
+  const rearSeats =
+    candidateRear &&
+    candidateRear.seats.length >= 3
+      ? candidateRear.seats
+      : [];
+
+  const cabinRows =
+    rearSeats.length
+      ? normalRows
+      : rows;
+
+  const coachStyle = {
+    '--seat-columns':
+      Math.max(
+        cabinRows.length,
+        1,
+      ),
   } as CSSProperties;
 
-  const renderSide = (
-    row: CoachRow,
-    positions: number[],
-  ) => (
-    <div className="coach-column" key={`${row.row}-${positions.join('-')}`}>
-      <span className="coach-column__number">{row.row}</span>
-
-      {positions.map((position) => {
-        const seat = row.byPosition.get(position);
-
-        return seat ? (
-          <SeatButton
-            key={seat.id}
-            seat={seat}
-            selected={selected}
-            maxSelection={maxSelection}
-            onToggle={onToggle}
-          />
-        ) : (
-          <span
-            className="coach-seat-placeholder"
-            key={`gap-${row.row}-${position}`}
-            aria-hidden="true"
-          />
-        );
-      })}
-    </div>
-  );
-
-  const topPositions = Array.from(
-    { length: layout.split },
-    (_, index) => index + 1,
-  );
-
-  const bottomPositions = Array.from(
-    { length: Math.max(0, layout.maxPosition - layout.split - 1) },
-    (_, index) => layout.split + index + 2,
-  );
-
   return (
-    <section className="coach-stage">
-      <div className="coach-orientation">
-        <div>
-          <span className="coach-orientation__arrow">←</span>
-          <strong>Front of bus</strong>
-          <small>Driver and boarding door</small>
+    <section className="reference-seat-stage">
+      <header className="reference-seat-toolbar">
+        <div className="reference-seat-orientation">
+          <span aria-hidden="true">←</span>
+          <div>
+            <strong>Front of bus</strong>
+            <small>
+              Driver and boarding door
+            </small>
+          </div>
         </div>
 
-        <div className="coach-legend" aria-label="Seat legend">
-          <span><i className="coach-legend__seat coach-legend__seat--available" />Available</span>
-          <span><i className="coach-legend__seat coach-legend__seat--selected" />Selected</span>
-          <span><i className="coach-legend__seat coach-legend__seat--occupied" />Occupied</span>
-          <span><i className="coach-legend__seat coach-legend__seat--blocked" />Blocked</span>
-          <span><i className="coach-legend__seat coach-legend__seat--accessible" />Accessible</span>
+        <div
+          className="reference-seat-legend"
+          aria-label="Seat legend"
+        >
+          <span>
+            <i className="legend-available" />
+            Available
+          </span>
+          <span>
+            <i className="legend-selected" />
+            Selected
+          </span>
+          <span>
+            <i className="legend-occupied" />
+            Occupied
+          </span>
+          <span>
+            <i className="legend-blocked" />
+            Blocked
+          </span>
+          <span>
+            <i className="legend-accessible" />
+            Accessible
+          </span>
         </div>
 
-        <div className="coach-orientation__rear">
-          <strong>Rear of bus</strong>
-          <small>Emergency exit</small>
-          <span className="coach-orientation__arrow">→</span>
+        <div className="reference-seat-orientation reference-seat-orientation--rear">
+          <div>
+            <strong>Rear</strong>
+            <small>Emergency exit</small>
+          </div>
+          <span aria-hidden="true">→</span>
         </div>
-      </div>
+      </header>
 
-      <div className="coach-realistic" style={shellStyle}>
-        <aside className="coach-cockpit" aria-hidden="true">
-          <div className="coach-windshield" />
-          <div className="coach-steering">◉</div>
-          <div className="coach-driver-seat" />
-          <div className="coach-door">
-            <span>Front</span>
-            <b>Door</b>
+      <div
+        className="reference-coach"
+        style={coachStyle}
+      >
+        <aside
+          className="reference-coach__front"
+          aria-hidden="true"
+        >
+          <div className="reference-coach__windshield">
+            <span>ENCORE</span>
+          </div>
+
+          <div className="reference-coach__driver">
+            <i>◉</i>
+            <small>Driver</small>
+          </div>
+
+          <div className="reference-coach__door">
+            <span>Front door</span>
           </div>
         </aside>
 
-        <div className="coach-cabin">
-          <div className="coach-side coach-side--top">
-            {layout.rows.map((row) => renderSide(row, topPositions))}
+        <div className="reference-coach__cabin">
+          <div className="reference-coach__upper">
+            {cabinRows.map(
+              (row) => (
+                <SeatColumn
+                  key={`upper-${row.number}`}
+                  row={row}
+                  side="upper"
+                  selected={selected}
+                  maxSelection={maxSelection}
+                  onToggle={onToggle}
+                />
+              ),
+            )}
           </div>
 
-          <div className="coach-aisle">
-            <span>aisle</span>
+          <div
+            className="reference-coach__aisle"
+            aria-hidden="true"
+          >
+            <span />
           </div>
 
-          <div className="coach-side coach-side--bottom">
-            {layout.rows.map((row) => renderSide(row, bottomPositions))}
+          <div className="reference-coach__lower">
+            {cabinRows.map(
+              (row) => (
+                <SeatColumn
+                  key={`lower-${row.number}`}
+                  row={row}
+                  side="lower"
+                  selected={selected}
+                  maxSelection={maxSelection}
+                  onToggle={onToggle}
+                />
+              ),
+            )}
           </div>
         </div>
 
-        <aside className="coach-rear-module" aria-hidden="true">
-          <span>EXIT</span>
-          <div className="coach-rear-panel" />
-          <small>Rear</small>
+        <aside className="reference-coach__rear">
+          {rearSeats.length > 0 ? (
+            <div className="reference-coach__rear-seats">
+              {rearSeats.map(
+                (seat) => (
+                  <SeatButton
+                    key={seat.id}
+                    seat={seat}
+                    selected={selected}
+                    maxSelection={maxSelection}
+                    onToggle={onToggle}
+                  />
+                ),
+              )}
+            </div>
+          ) : (
+            <div
+              className="reference-coach__rear-panel"
+              aria-hidden="true"
+            >
+              <span>EXIT</span>
+            </div>
+          )}
         </aside>
       </div>
     </section>
+  );
+}
+
+function SeatColumn({
+  row,
+  side,
+  selected,
+  maxSelection,
+  onToggle,
+}: {
+  row: SeatRow;
+  side: 'upper' | 'lower';
+  selected: number[];
+  maxSelection: number;
+  onToggle: (id: number) => void;
+}) {
+  const midpoint =
+    Math.ceil(
+      row.seats.length / 2,
+    );
+
+  const sideSeats =
+    side === 'upper'
+      ? row.seats.slice(0, midpoint)
+      : row.seats.slice(midpoint);
+
+  return (
+    <div className="reference-seat-column">
+      <em>{row.number}</em>
+
+      <div className="reference-seat-pair">
+        {sideSeats.map(
+          (seat) => (
+            <SeatButton
+              key={seat.id}
+              seat={seat}
+              selected={selected}
+              maxSelection={maxSelection}
+              onToggle={onToggle}
+            />
+          ),
+        )}
+
+        {Array.from(
+          {
+            length:
+              Math.max(
+                0,
+                2 - sideSeats.length,
+              ),
+          },
+          (_, index) => (
+            <span
+              className="reference-seat-placeholder"
+              key={`${row.number}-${side}-${index}`}
+              aria-hidden="true"
+            />
+          ),
+        )}
+      </div>
+    </div>
   );
 }
