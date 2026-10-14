@@ -190,4 +190,5 @@ createServer(async (request, response) => {
   console.log(`Driver:    http://${host}:${port}/driver/`);
   console.log(`Admin:     http://${host}:${port}/admin/`);
   console.log(`API proxy: ${apiTarget.origin}/api/*`);
+  console.log(      `Tracking:  http://${host}:${port}/track-package/`    );
 });
