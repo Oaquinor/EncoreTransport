@@ -274,14 +274,26 @@
          The full technical seat map belongs in Passenger, not here. -->
     <section class="public-section public-seat-section" id="experience" aria-labelledby="seatTitle">
       <div class="shell public-seat-layout">
-        <div class="public-seat-visual" data-reveal>
-          <div class="public-seat-visual__sky"></div>
+        <div class="public-seat-visual public-seat-visual--vector" data-reveal>
+          <div class="public-seat-vector-card">
+            <div class="public-seat-vector-card__head">
+              <div>
+                <span>Seat preview</span>
+                <strong>Coach seating layout</strong>
+              </div>
 
-          <img
-            src="/assets/media/Autobus.png"
-            alt="Encore Transport bus used for passenger trips"
-            loading="lazy"
-            decoding="async" />
+              <small>2 + 2 seating · central aisle</small>
+            </div>
+
+            <div class="public-seat-vector-card__canvas">
+              <img
+                class="public-seat-vector"
+                src="./seat-layout-preview.svg"
+                alt="Encore Transport coach seat layout with a central aisle and numbered seats"
+                loading="lazy"
+                decoding="async" />
+            </div>
+          </div>
 
           <div class="public-seat-availability">
             <span>Seat availability</span>

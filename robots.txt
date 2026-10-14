@@ -1,9 +1,9 @@
 User-agent: *
 Allow: /website/
 Allow: /track-package/
-Disallow: /admin/
-Disallow: /driver/
-Disallow: /login/
 Disallow: /passenger/
+Disallow: /driver/
+Disallow: /admin/
+Disallow: /login/
 Disallow: /move/
 Disallow: /api/

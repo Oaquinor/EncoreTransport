@@ -1,0 +1,401 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 330" role="img" aria-labelledby="title desc">
+  <title id="title">Encore Transport coach seat layout</title>
+  <desc id="desc">Horizontal coach layout with driver area, front door, two seats on each side of a central aisle, and rear seats.</desc>
+  <defs>
+    <linearGradient id="body" x1="0" x2="1">
+      <stop offset="0" stop-color="#5e8ead"/>
+      <stop offset=".14" stop-color="#d8e6ed"/>
+      <stop offset=".86" stop-color="#eef4f7"/>
+      <stop offset="1" stop-color="#c7dae4"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9bcadf"/>
+      <stop offset=".55" stop-color="#2f6078"/>
+      <stop offset="1" stop-color="#183c50"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#163d52" flood-opacity=".15"/>
+    </filter>
+    <style>
+      .bus-outline { fill:url(#body); stroke:#6f9ab2; stroke-width:3; }
+      .inner-line { fill:none; stroke:#bdd0da; stroke-width:2; }
+      .seat-shell { fill:#fff; stroke:#aebfc9; stroke-width:1.4; filter:url(#shadow); }
+      .seat-back { fill:#fbfdfe; stroke:#c5d1d8; stroke-width:1; }
+      .seat-base { fill:#e4ecef; stroke:#bdcbd2; stroke-width:1; }
+      .seat text { font:700 9px Arial, sans-serif; fill:#28495a; dominant-baseline:middle; }
+      .aisle { fill:#dce8ee; }
+      .aisle-line { stroke:#adc2cd; stroke-width:2; stroke-dasharray:11 9; }
+      .label { font:700 10px Arial, sans-serif; fill:#466577; letter-spacing:.08em; }
+      .small { font:700 8px Arial, sans-serif; fill:#6d8491; }
+      .wheel { fill:#17384b; }
+      .door { fill:#e7f1f5; stroke:#93aebd; stroke-width:1.5; }
+    </style>
+  </defs>
+
+  <path class="bus-outline" d="M87 24 H918 Q951 24 951 57 V273 Q951 306 918 306 H92 Q40 306 25 260 V70 Q40 24 87 24 Z"/>
+  <path class="inner-line" d="M104 38 H912 Q936 38 936 62 V268 Q936 292 912 292 H107 Q60 292 43 253 V77 Q59 38 104 38 Z"/>
+
+  <!-- windshield/cockpit -->
+  <path d="M58 65 Q71 44 105 44 H149 V148 H66 Q47 140 47 111 V90 Q49 76 58 65 Z" fill="url(#glass)"/>
+  <path d="M59 205 H150 V282 H102 Q68 282 52 250 Z" fill="#5a8aa6" opacity=".85"/>
+  <circle class="wheel" cx="118" cy="171" r="22"/>
+  <circle cx="118" cy="171" r="12" fill="none" stroke="#fff" stroke-width="4"/>
+  <circle cx="118" cy="171" r="3" fill="#fff"/>
+  <text class="small" x="102" y="203">DRIVER</text>
+
+  <!-- front door -->
+  <rect class="door" x="153" y="138" width="42" height="74" rx="7"/>
+  <line x1="174" y1="140" x2="174" y2="210" stroke="#a9bec9" stroke-width="1.2"/>
+  <text class="small" x="158" y="225">FRONT DOOR</text>
+
+  <!-- aisle -->
+  <rect class="aisle" x="206" y="157" width="676" height="44" rx="22"/>
+  <line class="aisle-line" x1="221" y1="179" x2="867" y2="179"/>
+  <text class="small" x="519" y="183" text-anchor="middle">AISLE</text>
+
+  <!-- seat rows -->
+
+        <g class="seat seat-available" transform="translate(220 72)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">01</text>
+        </g>
+        <g class="seat seat-available" transform="translate(220 116)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">02</text>
+        </g>
+        <g class="seat seat-available" transform="translate(220 188)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">03</text>
+        </g>
+        <g class="seat seat-available" transform="translate(220 232)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">04</text>
+        </g>
+        <g class="seat seat-available" transform="translate(272 72)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">05</text>
+        </g>
+        <g class="seat seat-available" transform="translate(272 116)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">06</text>
+        </g>
+        <g class="seat seat-available" transform="translate(272 188)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">07</text>
+        </g>
+        <g class="seat seat-available" transform="translate(272 232)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">08</text>
+        </g>
+        <g class="seat seat-available" transform="translate(324 72)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">09</text>
+        </g>
+        <g class="seat seat-available" transform="translate(324 116)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">10</text>
+        </g>
+        <g class="seat seat-available" transform="translate(324 188)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">11</text>
+        </g>
+        <g class="seat seat-available" transform="translate(324 232)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">12</text>
+        </g>
+        <g class="seat seat-available" transform="translate(376 72)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">13</text>
+        </g>
+        <g class="seat seat-available" transform="translate(376 116)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">14</text>
+        </g>
+        <g class="seat seat-available" transform="translate(376 188)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">15</text>
+        </g>
+        <g class="seat seat-available" transform="translate(376 232)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">16</text>
+        </g>
+        <g class="seat seat-available" transform="translate(428 72)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">17</text>
+        </g>
+        <g class="seat seat-available" transform="translate(428 116)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">18</text>
+        </g>
+        <g class="seat seat-available" transform="translate(428 188)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">19</text>
+        </g>
+        <g class="seat seat-available" transform="translate(428 232)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">20</text>
+        </g>
+        <g class="seat seat-available" transform="translate(480 72)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">21</text>
+        </g>
+        <g class="seat seat-available" transform="translate(480 116)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">22</text>
+        </g>
+        <g class="seat seat-available" transform="translate(480 188)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">23</text>
+        </g>
+        <g class="seat seat-available" transform="translate(480 232)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">24</text>
+        </g>
+        <g class="seat seat-available" transform="translate(532 72)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">25</text>
+        </g>
+        <g class="seat seat-available" transform="translate(532 116)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">26</text>
+        </g>
+        <g class="seat seat-available" transform="translate(532 188)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">27</text>
+        </g>
+        <g class="seat seat-available" transform="translate(532 232)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">28</text>
+        </g>
+        <g class="seat seat-available" transform="translate(584 72)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">29</text>
+        </g>
+        <g class="seat seat-available" transform="translate(584 116)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">30</text>
+        </g>
+        <g class="seat seat-available" transform="translate(584 188)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">31</text>
+        </g>
+        <g class="seat seat-available" transform="translate(584 232)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">32</text>
+        </g>
+        <g class="seat seat-available" transform="translate(636 72)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">33</text>
+        </g>
+        <g class="seat seat-available" transform="translate(636 116)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">34</text>
+        </g>
+        <g class="seat seat-available" transform="translate(636 188)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">35</text>
+        </g>
+        <g class="seat seat-available" transform="translate(636 232)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">36</text>
+        </g>
+        <g class="seat seat-available" transform="translate(688 72)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">37</text>
+        </g>
+        <g class="seat seat-available" transform="translate(688 116)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">38</text>
+        </g>
+        <g class="seat seat-available" transform="translate(688 188)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">39</text>
+        </g>
+        <g class="seat seat-available" transform="translate(688 232)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">40</text>
+        </g>
+        <g class="seat seat-available" transform="translate(740 72)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">41</text>
+        </g>
+        <g class="seat seat-available" transform="translate(740 116)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">42</text>
+        </g>
+        <g class="seat seat-available" transform="translate(740 188)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">43</text>
+        </g>
+        <g class="seat seat-available" transform="translate(740 232)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">44</text>
+        </g>
+        <g class="seat seat-available" transform="translate(792 72)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">45</text>
+        </g>
+        <g class="seat seat-available" transform="translate(792 116)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">46</text>
+        </g>
+        <g class="seat seat-available" transform="translate(792 188)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">47</text>
+        </g>
+        <g class="seat seat-available" transform="translate(792 232)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">48</text>
+        </g>
+        <g class="seat seat-available" transform="translate(844 72)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">49</text>
+        </g>
+        <g class="seat seat-available" transform="translate(844 116)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">50</text>
+        </g>
+        <g class="seat seat-available" transform="translate(844 188)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">51</text>
+        </g>
+        <g class="seat seat-available" transform="translate(844 232)">
+          <rect class="seat-shell" width="30" height="38" rx="6"/>
+          <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+          <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+          <text x="15" y="22" text-anchor="middle">52</text>
+        </g>
+
+  <!-- rear wall and seats -->
+  <rect x="888" y="51" width="45" height="230" rx="10" fill="#c4d8e2" opacity=".9"/>
+
+    <g class="seat seat-available" transform="translate(902 92) rotate(90)">
+      <rect class="seat-shell" width="30" height="38" rx="6"/>
+      <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+      <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+      <text x="15" y="22" text-anchor="middle">53</text>
+    </g>
+    <g class="seat seat-available" transform="translate(902 150) rotate(90)">
+      <rect class="seat-shell" width="30" height="38" rx="6"/>
+      <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+      <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+      <text x="15" y="22" text-anchor="middle">54</text>
+    </g>
+    <g class="seat seat-available" transform="translate(902 208) rotate(90)">
+      <rect class="seat-shell" width="30" height="38" rx="6"/>
+      <rect class="seat-back" x="4" y="4" width="22" height="22" rx="5"/>
+      <rect class="seat-base" x="5" y="27" width="20" height="8" rx="3"/>
+      <text x="15" y="22" text-anchor="middle">55</text>
+    </g>
+  <rect x="908" y="246" width="25" height="22" rx="4" fill="#d75c69"/>
+  <text x="920" y="260" text-anchor="middle" fill="#fff" style="font:700 7px Arial">EXIT</text>
+
+  <!-- vehicle cues -->
+  <circle class="wheel" cx="255" cy="300" r="16"/>
+  <circle class="wheel" cx="762" cy="300" r="16"/>
+  <circle class="wheel" cx="826" cy="300" r="16"/>
+  <text class="label" x="64" y="318">FRONT</text>
+  <text class="label" x="892" y="318">REAR</text>
+</svg>

@@ -13,18 +13,14 @@
     "dev:website": "node --env-file-if-exists=.env server.mjs",
     "dev:passenger": "npm --workspace @encore/passenger run dev",
     "dev:operations": "node --env-file-if-exists=.env server.mjs",
-
     "mobile:passenger": "npm --workspace @encore/passenger-mobile run dev",
     "mobile:driver": "npm --workspace @encore/driver-mobile run dev",
-
     "build:passenger": "npm --workspace @encore/passenger run build",
     "preview:passenger": "npm --workspace @encore/passenger run preview",
-
     "typecheck:api-client": "npm --workspace @encore/api-client run typecheck",
     "typecheck:passenger": "npm --workspace @encore/passenger run typecheck",
     "typecheck:passenger-mobile": "npm --workspace @encore/passenger-mobile run typecheck",
     "typecheck:driver-mobile": "npm --workspace @encore/driver-mobile run typecheck",
-
     "test:business": "node tests/business-rules.test.mjs",
     "test:hardcode": "node tests/production-hardcode.test.mjs",
     "test:server": "node tests/server-routing.test.mjs",
@@ -35,10 +31,9 @@
     "test:native-gps": "node tests/native-gps-contract.test.mjs",
     "test:premium-design": "node tests/premium-design-contract.test.mjs",
     "test:premium-responsive": "node tests/premium-responsive-contract.test.mjs",
-
-    "test": "npm run test:business && npm run test:hardcode && npm run test:server && npm run test:real-map && npm run test:map-runtime && npm run test:seat-layout && npm run test:ux-regression && npm run test:native-gps && npm run test:premium-design && npm run test:premium-responsive",
+    "test:seo": "node tests/seo-contract.test.mjs",
+    "test": "npm run test:business && npm run test:hardcode && npm run test:server && npm run test:real-map && npm run test:map-runtime && npm run test:seat-layout && npm run test:ux-regression && npm run test:native-gps && npm run test:premium-design && npm run test:premium-responsive && npm run test:seo",
     "check": "npm run test",
-
     "validate:frontend": "npm run test && npm run typecheck:api-client && npm run typecheck:passenger && npm run build:passenger",
     "validate:mobile": "npm run test:native-gps && npm run typecheck:passenger-mobile && npm run typecheck:driver-mobile",
     "validate:backend": "cd backend/laravel && php artisan optimize:clear && php artisan route:list && php artisan migrate:status && php artisan l5-swagger:generate && php artisan test",

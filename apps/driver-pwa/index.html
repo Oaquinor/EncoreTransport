@@ -1,25 +1,32 @@
 <!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f5f7fa" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <title>Encore Drive | Driver</title>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f5f7fa" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="Encore Drive" />
+  <meta
+    name="description"
+    content="Encore Transport driver workspace for assigned trips and operational tasks." />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <title>Driver Workspace | Encore Transport</title>
 
-    <link rel="stylesheet" href="../../packages/shared/styles.css" />
-    <link rel="stylesheet" href="./styles.css" />
-    <link rel="stylesheet" href="./enhancements.css" />
-    <link rel="stylesheet" href="./gap-close.css" />
-    <link rel="stylesheet" href="./mandate-motion.css" />
-  </head>
+  <link rel="stylesheet" href="../../packages/shared/styles.css" />
+  <link rel="stylesheet" href="../../packages/shared/premium.css" />
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./premium.css" />
+  <link rel="stylesheet" href="./enhancements.css" />
+  <link rel="stylesheet" href="./gap-close.css" />
+  <link rel="stylesheet" href="./mandate-motion.css" />
+</head>
+<body>
+  <main class="screen driver-screen">
+    <div id="app"></div>
+  </main>
 
-  <body>
-    <main class="screen driver-screen">
-      <div id="app"></div>
-    </main>
-
-    <script type="module" src="./app.mjs"></script>
-  </body>
+  <script type="module" src="./app.mjs"></script>
+</body>
 </html>
