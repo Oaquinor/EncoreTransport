@@ -1,66 +1,91 @@
 # Encore Transport
 
-EncoreTransport is a multi-application transport platform with a central Laravel API and separate public, passenger, driver, administrative and native-mobile experiences.
+EncoreTransport is a multi-application transport platform backed by a central Laravel API and MySQL database.
 
-## Current architecture
+## Applications
+
+- `apps/website` — public passenger-facing website.
+- `apps/passenger` — Passenger PWA (React + Vite).
+- `apps/passenger-mobile` — Passenger Expo / React Native app.
+- `apps/driver-pwa` — Driver operational PWA.
+- `apps/driver-mobile` — Driver Expo / React Native app.
+- `apps/auth` — centralized role-based login.
+- `apps/admin-dashboard` — administrative Operations application.
+- `apps/package-tracking` — public package tracking.
+- `backend/laravel` — central Laravel REST API.
+- `packages/*` — shared API, design, domain and utility packages.
 
 ```text
 Website / Passenger / Driver / Admin / Mobile
+                  ↓
+          Root HTTP server / proxy
                   ↓
              Laravel API
                   ↓
                  MySQL
 ```
 
-Applications:
-
-- `apps/website` — public passenger-facing website.
-- `apps/passenger` — Passenger PWA (React + Vite).
-- `apps/driver-pwa` — Driver operational PWA.
-- `apps/admin-dashboard` — administrative Operations application.
-- `apps/passenger-mobile` — Expo / React Native passenger app.
-- `apps/driver-mobile` — Expo / React Native driver app.
-- `apps/auth` — centralized role-based login.
-- `apps/package-tracking` — public package tracking.
-- `backend/laravel` — central Laravel API.
-- `packages/*` — shared API, domain, configuration, UI and utilities.
-
-The root Node server serves the web applications and proxies `/api/*` requests to Laravel.
-
 ## Requirements
 
 - Node.js 24 or newer.
-- PHP compatible with the Laravel application.
+- npm using the committed `package-lock.json`.
+- PHP 8.2+.
 - Composer.
 - MySQL.
-- A configured Laravel `.env`.
-- TomTom credentials for real maps.
+- Laravel `.env` configured locally.
+- TomTom credentials for real map services.
 
-## Run locally
+Never commit `.env`, provider secrets, tokens or API keys.
 
-### Laravel
+## Important: command locations
 
-```bash
-cd backend/laravel
-composer install
-php artisan optimize:clear
-php artisan migrate
-php artisan l5-swagger:generate
-php artisan test
-php artisan serve
+Root npm commands must be executed from the repository root:
+
+```text
+C:\...\EncoreTransport
 ```
 
-### Frontend
+Do **not** run commands such as `npm run build:passenger` from `backend\laravel`; that package does not own the root monorepo scripts.
+
+Laravel commands are executed from:
+
+```text
+C:\...\EncoreTransport\backend\laravel
+```
+
+## Install
 
 From the repository root:
 
 ```bash
 npm install
+```
+
+Laravel:
+
+```bash
+cd backend/laravel
+composer install
+php artisan optimize:clear
+```
+
+## Run locally
+
+Console 1 — Laravel:
+
+```bash
+cd backend/laravel
+php artisan serve
+```
+
+Console 2 — frontend server:
+
+```bash
 npm run build:passenger
 npm run dev
 ```
 
-Default URLs:
+Default routes:
 
 - Website: `http://127.0.0.1:4173/website/`
 - Login: `http://127.0.0.1:4173/login/`
@@ -71,62 +96,107 @@ Default URLs:
 - Laravel API: `http://127.0.0.1:8000/api/v1`
 - Swagger: `http://127.0.0.1:8000/api/documentation`
 
+`/move/` is a legacy URL and redirects to `/passenger/`.
+
 ## Validation
+
+Frontend and browser-facing contracts:
 
 ```bash
 npm run validate:frontend
 ```
 
-Laravel:
+Native mobile static/type validation:
 
 ```bash
-cd backend/laravel
-php artisan test
-php artisan l5-swagger:generate
+npm run validate:mobile
 ```
+
+Laravel validation:
+
+```bash
+npm run validate:backend
+```
+
+Complete local validation:
+
+```bash
+npm run validate:local
+```
+
+`validate:mobile` validates TypeScript/configuration and GPS contracts. It is **not** a substitute for testing Android/iOS on a real device or emulator.
 
 ## Authentication
 
-Authentication is centralized. The login response determines the user's role.
+Authentication is centralized through `/login/`.
 
 - Passenger → Passenger application.
 - Driver → Driver application.
 - Admin → Operations.
 
-The public website exposes a discreet **Staff access** link instead of presenting administrative access as a commercial passenger action.
+The server exposes only explicitly public frontend paths. Repository files such as `package.json`, Laravel source files and local `.env` files must never be served as static frontend content.
+
+## Booking and seats
+
+Seat availability and pricing are validated by Laravel. Booking creation uses transactions, row locks and database constraints to prevent simultaneous sale of the same seat.
+
+The frontend layout is derived from persisted vehicle seat metadata. A visual seat map does not override server availability.
 
 ## Maps
 
-Web maps use the shared mapping component and Laravel map endpoints. The TomTom API key remains server-side.
+TomTom credentials stay in Laravel.
 
-A vehicle marker must only be shown when the backend has a valid authorized driver location.
+Web clients consume Laravel map endpoints and a Laravel tile proxy. A vehicle marker is displayed only when the backend has a valid authorized driver location.
 
-## Seats and booking
+Useful diagnostics:
 
-Seat presentation is based on the persisted bus configuration, including row and position data. Booking availability is revalidated by Laravel. The booking service uses database transactions, row locks and the booking-seat constraint to prevent simultaneous sale of the same seat.
+```bash
+cd backend/laravel
+php artisan optimize:clear
+php artisan encore:maps:diagnose
+```
 
-## Demo data
+## Driver Mobile GPS
 
-Demo seed data is limited to local/testing environments and must not be presented as production information.
+Driver Mobile uses `expo-location` for foreground location.
 
-## Native GPS
+Implemented behavior includes:
 
-Driver Mobile does not yet send native GPS because `expo-location` and its Android/iOS permission lifecycle are not currently installed/configured. The existing browser Driver PWA can submit authorized geolocation.
+- runtime foreground permission;
+- real device coordinates;
+- current-position submission;
+- foreground watch updates;
+- server authorization against the assigned trip;
+- stopping tracking when the operational trip ends or the app flow signs out/unmounts.
 
-This remains explicitly pending; no location is simulated.
+This does **not** claim background GPS. Background tracking requires separate Android/iOS permissions, store policy review and an explicit operational requirement.
 
-## Payments
+On a physical device, `EXPO_PUBLIC_API_URL` must point to a backend URL reachable from that device. `127.0.0.1` on a phone refers to the phone itself.
 
-Payment integrations must be validated independently with provider sandbox credentials and server-side confirmation/webhooks. A booking must not be considered paid from a client-only response.
+## Passenger Mobile
 
-## Known external dependencies
+Passenger Mobile has its own Expo app and typecheck. A successful Passenger PWA build does not validate the native Passenger app.
 
-Production verification can require:
+Run:
 
-- TomTom API key/access.
-- Payment provider credentials and webhooks.
-- Notification provider credentials.
-- Android/iOS device or emulator.
-- Native GPS permission configuration.
+```bash
+npm run mobile:passenger
+```
 
-See `docs/AUDITORIA_CORRECCION_20261009.md` after applying the mandate correction pack for the verified/pending matrix.
+and test on a supported emulator/device when available.
+
+## Payments and notifications
+
+Commercial payment providers and external notification providers remain blocked until authorized sandbox/production credentials and provider callback/webhook flows are available.
+
+The application must not mark a payment as successful from a client-only response and must not emit a paid ticket before backend confirmation.
+
+## SEO
+
+The public Website contains basic metadata, but the final production canonical URL and sitemap require the confirmed public production domain.
+
+The repository includes a conservative `robots.txt`. Do not invent a production hostname merely to create absolute canonical or sitemap URLs.
+
+## Production note
+
+Do not declare production readiness only because unit tests pass. Production readiness additionally requires browser E2E verification, mobile device/emulator verification, configured HTTPS, provider credentials where applicable, deployment/rollback procedures and a separate test database for migration validation.

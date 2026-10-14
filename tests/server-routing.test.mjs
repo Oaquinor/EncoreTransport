@@ -1,71 +1,249 @@
 import assert from 'node:assert/strict';
-import { startEncoreServer } from '../server.mjs';
+import {
+  startEncoreServer,
+} from '../server.mjs';
 
-const { server, host, port } = await startEncoreServer({
+const {
+  server,
+  host,
+  port,
+} = await startEncoreServer({
   port: 0,
   host: '127.0.0.1',
-  apiTargetUrl: 'http://127.0.0.1:65534',
+  apiTargetUrl:
+    'http://127.0.0.1:65534',
   quiet: true,
 });
 
-const base = `http://${host}:${port}`;
+const base =
+  `http://${host}:${port}`;
+
+async function expectOk(
+  pathname,
+  contentType,
+) {
+  const response =
+    await fetch(
+      `${base}${pathname}`,
+    );
+
+  assert.equal(
+    response.status,
+    200,
+    `${pathname} must return 200`,
+  );
+
+  assert.match(
+    response.headers.get(
+      'content-type',
+    ) ?? '',
+    contentType,
+    `${pathname} must use the expected MIME type`,
+  );
+
+  return response;
+}
 
 try {
-  const root = await fetch(`${base}/`, {
-    redirect: 'manual',
-  });
+  const root = await fetch(
+    `${base}/`,
+    {
+      redirect: 'manual',
+    },
+  );
 
-  assert.equal(root.status, 302);
-  assert.equal(root.headers.get('location'), '/website/');
+  assert.equal(
+    root.status,
+    302,
+  );
 
-  const website = await fetch(`${base}/website/`);
+  assert.equal(
+    root.headers.get('location'),
+    '/website/',
+  );
 
-  assert.equal(website.status, 200);
+  for (
+    const alias
+    of [
+      '/website',
+      '/login',
+      '/track-package',
+      '/driver',
+      '/admin',
+    ]
+  ) {
+    const response =
+      await fetch(
+        `${base}${alias}`,
+        {
+          redirect: 'manual',
+        },
+      );
+
+    assert.equal(
+      response.status,
+      302,
+      `${alias} must normalize to a trailing slash`,
+    );
+
+    assert.equal(
+      response.headers.get(
+        'location',
+      ),
+      `${alias}/`,
+    );
+  }
+
+  const website =
+    await expectOk(
+      '/website/',
+      /text\/html/,
+    );
+
   assert.match(
     await website.text(),
     /Encore Transport/i,
   );
 
-  const css = await fetch(`${base}/website/styles.css`);
-
-  assert.equal(css.status, 200);
-  assert.match(
-    css.headers.get('content-type') ?? '',
+  await expectOk(
+    '/website/styles.css',
     /text\/css/,
   );
 
-  const legacy = await fetch(`${base}/move/`, {
-    redirect: 'manual',
-  });
+  await expectOk(
+    '/website/app.mjs',
+    /text\/javascript/,
+  );
 
-  assert.equal(legacy.status, 302);
+  const login =
+    await expectOk(
+      '/login/',
+      /text\/html/,
+    );
+
+  assert.match(
+    await login.text(),
+    /Welcome back/i,
+  );
+
+  await expectOk(
+    '/login/styles.css',
+    /text\/css/,
+  );
+
+  await expectOk(
+    '/login/app.mjs',
+    /text\/javascript/,
+  );
+
+  const tracking =
+    await expectOk(
+      '/track-package/',
+      /text\/html/,
+    );
+
+  assert.match(
+    await tracking.text(),
+    /Package tracking/i,
+  );
+
+  await expectOk(
+    '/track-package/styles.css',
+    /text\/css/,
+  );
+
+  await expectOk(
+    '/track-package/app.mjs',
+    /text\/javascript/,
+  );
+
+  await expectOk(
+    '/logo.svg',
+    /image\/svg\+xml/,
+  );
+
+  await expectOk(
+    '/assets/media/Autobus.png',
+    /image\/png/,
+  );
+
+  await expectOk(
+    '/packages/shared/api.mjs',
+    /text\/javascript/,
+  );
+
+  const legacy =
+    await fetch(
+      `${base}/move/`,
+      {
+        redirect: 'manual',
+      },
+    );
+
   assert.equal(
-    legacy.headers.get('location'),
+    legacy.status,
+    302,
+  );
+
+  assert.equal(
+    legacy.headers.get(
+      'location',
+    ),
     '/passenger/',
   );
 
-  const login = await fetch(`${base}/login/`);
-  assert.equal(login.status, 200);
+  for (
+    const privatePath
+    of [
+      '/package.json',
+      '/backend/laravel/.env',
+      '/backend/laravel/composer.json',
+    ]
+  ) {
+    const response =
+      await fetch(
+        `${base}${privatePath}`,
+        {
+          redirect: 'manual',
+        },
+      );
 
-  const tracking = await fetch(`${base}/track-package/`);
-  assert.equal(tracking.status, 200);
+    assert.equal(
+      response.status,
+      404,
+      `${privatePath} must never be exposed by the frontend server`,
+    );
+  }
 
-  const traversal = await fetch(`${base}/website/../../package.json`, {
-    redirect: 'manual',
-  });
+  const missing =
+    await fetch(
+      `${base}/does-not-exist`,
+      {
+        redirect: 'manual',
+      },
+    );
 
-  assert.notEqual(traversal.status, 500);
+  assert.equal(
+    missing.status,
+    404,
+  );
 
-  console.log('Server routing tests passed');
+  console.log(
+    'Server routing tests passed',
+  );
 } finally {
-  await new Promise((resolve, reject) => {
-    server.close((error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
+  await new Promise(
+    (resolve, reject) => {
+      server.close(
+        (error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
 
-      resolve();
-    });
-  });
+          resolve();
+        },
+      );
+    },
+  );
 }

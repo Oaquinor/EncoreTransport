@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /website/
+Allow: /track-package/
+Disallow: /admin/
+Disallow: /driver/
+Disallow: /login/
+Disallow: /passenger/
+Disallow: /api/
