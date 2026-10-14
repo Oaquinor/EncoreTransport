@@ -4,8 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#071722">
-  <meta name="description" content="Track an Encore Transport package with its secure tracking token.">
-  <title>Encore Transport | Package tracking</title>
+  <meta
+    name="description"
+    content="Track an Encore Transport package online with the tracking number provided for your shipment.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="/track-package/">
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
+  <meta property="og:title" content="Track a Package | Encore Transport">
+  <meta
+    property="og:description"
+    content="Enter your Encore Transport tracking number to see the latest recorded update for your package.">
+  <meta property="og:type" content="website">
+  <title>Track a Package | Encore Transport</title>
+
   <link rel="stylesheet" href="../../packages/shared/styles.css">
   <link rel="stylesheet" href="../../packages/shared/premium.css">
   <link rel="stylesheet" href="./styles.css">
@@ -24,17 +35,25 @@
 
       <div>
         <span class="premium-tracking-kicker">Package tracking</span>
-        <h1>Know where the shipment stands.</h1>
-        <p>Enter the secure tracking token supplied with the shipment. Encore returns only the package information that token is allowed to reveal.</p>
+        <h1>Track your package.</h1>
+        <p>Enter the tracking number provided for your shipment to see its latest recorded status.</p>
       </div>
     </section>
 
-    <section class="premium-tracking-panel">
+    <section class="premium-tracking-panel" aria-label="Track a package">
       <form id="trackForm" class="premium-tracking-form">
         <label>
-          <span>Tracking token</span>
-          <input name="token" autocomplete="off" required placeholder="Enter secure token">
+          <span>Tracking number</span>
+          <input
+            name="token"
+            autocomplete="off"
+            required
+            inputmode="text"
+            aria-describedby="trackingHelp"
+            placeholder="Enter your tracking number">
         </label>
+
+        <small id="trackingHelp">Use the number shown on your package receipt or confirmation.</small>
 
         <button type="submit">Track package <span>→</span></button>
       </form>

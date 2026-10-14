@@ -5,4 +5,5 @@ Disallow: /admin/
 Disallow: /driver/
 Disallow: /login/
 Disallow: /passenger/
+Disallow: /move/
 Disallow: /api/
