@@ -2,11 +2,11 @@ import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 
 const require = createRequire(import.meta.url);
-const repositoryRoot = join(new URL('..', import.meta.url).pathname);
-const normalizedRoot = decodeURIComponent(repositoryRoot.replace(/^\/+([A-Za-z]):/, '$1:'));
+const normalizedRoot = fileURLToPath(new URL('..', import.meta.url));
 const nativePackages = {
   win32: {
     x64: '@rollup/rollup-win32-x64-msvc',
@@ -68,7 +68,34 @@ try {
   try {
     require.resolve(packageName, { paths: [normalizedRoot] });
   } catch {
-    console.error(`npm completed but ${packageName} is still unavailable. Remove only node_modules and run npm install again on this platform.`);
-    process.exit(1);
+    console.warn(`The optional dependency was not materialized. Installing ${packageName}@${rollupVersion} explicitly…`);
+    const explicitInstall = spawnSync(
+      process.platform === 'win32' ? 'npm.cmd' : 'npm',
+      [
+        'install',
+        '--include=optional',
+        '--no-save',
+        '--ignore-scripts',
+        '--no-audit',
+        '--no-fund',
+        `${packageName}@${rollupVersion}`,
+      ],
+      {
+        cwd: normalizedRoot,
+        stdio: 'inherit',
+        shell: false,
+      },
+    );
+
+    if (explicitInstall.status !== 0) {
+      process.exit(explicitInstall.status ?? 1);
+    }
+
+    try {
+      require.resolve(packageName, { paths: [normalizedRoot] });
+    } catch {
+      console.error(`The Rollup binary ${packageName} is still unavailable after explicit installation.`);
+      process.exit(1);
+    }
   }
 }
