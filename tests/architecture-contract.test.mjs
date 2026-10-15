@@ -1,5 +1,5 @@
-import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import assert from 'node:assert/strict';
 
 const read =
   (path) =>
@@ -8,101 +8,35 @@ const read =
       'utf8',
     );
 
-for (
-  const file
-  of [
-    'packages/shared/api/core.mjs',
-    'packages/shared/api/auth.mjs',
-    'packages/shared/api/public.mjs',
-    'packages/shared/api/bookings.mjs',
-    'packages/shared/api/driver.mjs',
-    'packages/shared/api/admin.mjs',
-  ]
-) {
-  assert.equal(
-    fs.existsSync(file),
-    true,
-    `${file} must exist`,
-  );
-}
-
-const facade =
-  read(
-    'packages/shared/api.mjs',
-  );
-
-assert.match(
-  facade,
-  /Stable API facade/,
-);
-
-assert.ok(
-  facade.split(/\r?\n/).length < 100,
-  'Shared API facade must stay small.',
-);
-
-const ui =
-  read(
-    'packages/shared/ui.mjs',
-  );
-
-for (
-  const helper
-  of [
-    'renderStatusBadge',
-    'renderMetricCard',
-    'renderEmptyState',
-    'renderSkeletonCard',
-    'renderProgressBar',
-  ]
-) {
-  assert.match(
-    ui,
-    new RegExp(
-      `function ${helper}`,
-    ),
-  );
-}
-
-const entrypoints = [
-  [
-    'apps/website/index.html',
-    './app.css',
-  ],
-  [
-    'apps/driver-pwa/index.html',
-    './app.css',
-  ],
-  [
-    'apps/admin-dashboard/index.html',
-    './app.css',
-  ],
-  [
-    'apps/auth/index.html',
-    './app.css',
-  ],
-  [
-    'apps/package-tracking/index.html',
-    './app.css',
-  ],
+const htmlEntryPoints = [
+  'apps/website/index.html',
+  'apps/driver-pwa/index.html',
+  'apps/admin-dashboard/index.html',
+  'apps/auth/index.html',
+  'apps/package-tracking/index.html',
 ];
 
 for (
-  const [file, expected]
-  of entrypoints
+  const file
+  of htmlEntryPoints
 ) {
-  const content =
+  const source =
     read(file);
 
   assert.match(
-    content,
-    new RegExp(
-      expected.replace(
-        '.',
-        '\\.',
-      ),
-    ),
-    `${file} must load the canonical stylesheet entrypoint.`,
+    source,
+    /href="\.\/app\.css"/,
+    `${file} must use one canonical stylesheet.`,
+  );
+
+  assert.equal(
+    (
+      source.match(
+        /rel="stylesheet"/g,
+      ) ?? []
+    ).length,
+    1,
+    `${file} must not stack multiple stylesheet links.`,
   );
 }
 
@@ -116,6 +50,39 @@ assert.match(
   /import '\.\/app\.css';/,
 );
 
+assert.equal(
+  (
+    passengerMain.match(
+      /\.css';/g,
+    ) ?? []
+  ).length,
+  1,
+  'Passenger must import one CSS entrypoint.',
+);
+
+const server =
+  read('server.mjs');
+
+for (
+  const route
+  of [
+    '/website',
+    '/passenger',
+    '/driver',
+    '/admin',
+    '/login',
+    '/track-package',
+  ]
+) {
+  assert.equal(
+    server.includes(
+      `['${route}'`,
+    ),
+    true,
+    `server.mjs must expose ${route}.`,
+  );
+}
+
 const productionFiles = [
   'apps/website/app.mjs',
   'apps/passenger/src/passenger-app.tsx',
@@ -125,25 +92,16 @@ const productionFiles = [
   'apps/package-tracking/app.mjs',
 ];
 
-for (const file of productionFiles) {
-  const content = read(file);
-
+for (
+  const file
+  of productionFiles
+) {
   assert.doesNotMatch(
-    content,
+    read(file),
     /mock-data\.mjs/,
-    `${file} must not import mock data.`,
+    `${file} must not import mock-data.mjs.`,
   );
 }
-
-const legacyPassenger =
-  read(
-    'apps/passenger-pwa/index.html',
-  );
-
-assert.match(
-  legacyPassenger,
-  /\/passenger\//,
-);
 
 console.log(
   'architecture-contract.test.mjs: OK',

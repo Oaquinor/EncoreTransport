@@ -1,14 +1,11 @@
 import React from 'react';
-import { createRoot } from 'react-dom/client';
-import '../../../packages/shared/premium.css';
-import './styles.css';
-import './premium.css';
-import './enhancements.css';
-import './visual-gap.css';
-import './mandate-motion.css';
-import './flow-refresh.css';
-import './seat-reference.css';
-import { PassengerApp } from './passenger-app';
+import {
+  createRoot,
+} from 'react-dom/client';
+import './app.css';
+import {
+  PassengerApp,
+} from './passenger-app';
 
 createRoot(
   document.getElementById('root')!,
@@ -18,15 +15,21 @@ createRoot(
   </React.StrictMode>,
 );
 
-if ('serviceWorker' in navigator) {
+if (
+  'serviceWorker'
+  in navigator
+) {
   window.addEventListener(
     'load',
     () => {
-      navigator.serviceWorker
+      navigator
+        .serviceWorker
         .register(
           '/passenger/service-worker.mjs',
         )
-        .catch(() => undefined);
+        .catch(
+          () => undefined,
+        );
     },
   );
 }

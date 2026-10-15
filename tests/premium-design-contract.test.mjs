@@ -1,77 +1,124 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
-const read = (path) => fs.readFileSync(path, 'utf8');
+const read =
+  (path) =>
+    fs.readFileSync(
+      path,
+      'utf8',
+    );
 
-const website = read('apps/website/index.html');
-const passengerMain = read('apps/passenger/src/main.tsx');
-const passengerApp = read('apps/passenger/src/passenger-app.tsx');
-const driver = read('apps/driver-pwa/index.html');
-const admin = read('apps/admin-dashboard/index.html');
-const auth = read('apps/auth/index.html');
-const tracking = read('apps/package-tracking/index.html');
-const adminViews = read('apps/admin-dashboard/src/views.mjs');
+const entrypoints = [
+  ['website', 'apps/website/index.html', 'apps/website/app.css'],
+  ['driver', 'apps/driver-pwa/index.html', 'apps/driver-pwa/app.css'],
+  ['admin', 'apps/admin-dashboard/index.html', 'apps/admin-dashboard/app.css'],
+  ['auth', 'apps/auth/index.html', 'apps/auth/app.css'],
+  ['tracking', 'apps/package-tracking/index.html', 'apps/package-tracking/app.css'],
+];
 
-for (const [name, source] of [
-  ['website', website],
-  ['driver', driver],
-  ['admin', admin],
-  ['auth', auth],
-  ['tracking', tracking],
-]) {
-  assert.equal(
-    source.includes('packages/shared/premium.css'),
-    true,
-    `${name} must load the shared premium design system`,
+for (
+  const [name, htmlPath, cssPath]
+  of entrypoints
+) {
+  const html =
+    read(htmlPath);
+
+  const css =
+    read(cssPath);
+
+  assert.match(
+    html,
+    /href="\.\/app\.css"/,
+    `${name} must load one canonical stylesheet entrypoint.`,
+  );
+
+  assert.match(
+    css,
+    /packages\/shared\/premium\.css/,
+    `${name} app.css must include the shared premium design system.`,
   );
 }
 
+const passengerMain =
+  read(
+    'apps/passenger/src/main.tsx',
+  );
+
+const passengerCss =
+  read(
+    'apps/passenger/src/app.css',
+  );
+
+assert.match(
+  passengerMain,
+  /import '\.\/app\.css';/,
+);
+
+assert.match(
+  passengerCss,
+  /packages\/shared\/premium\.css/,
+);
+
+assert.match(
+  passengerCss,
+  /premium\.css/,
+);
+
+const website =
+  read(
+    'apps/website/index.html',
+  );
+
+const passengerApp =
+  read(
+    'apps/passenger/src/passenger-app.tsx',
+  );
+
+const adminViews =
+  read(
+    'apps/admin-dashboard/src/views.mjs',
+  );
+
 assert.equal(
-  passengerMain.includes("import '../../../packages/shared/premium.css';"),
+  website.includes('encore') &&
+  website.includes('transport'),
   true,
-  'Passenger must load the shared premium design system',
 );
 
 assert.equal(
-  passengerMain.includes("import './premium.css';"),
-  true,
-  'Passenger must load its premium application styles',
-);
-
-assert.equal(
-  website.includes('encore') && website.includes('transport'),
-  true,
-  'Website must display the Encore Transport lockup',
-);
-
-assert.equal(
-  /Laravel|framework/i.test(website),
+  /Laravel|framework/i.test(
+    website,
+  ),
   false,
-  'Website customer copy must not expose technical framework/API details',
 );
 
 assert.equal(
-  /Laravel|framework/i.test(passengerApp),
+  /Laravel|framework/i.test(
+    passengerApp,
+  ),
   false,
-  'Passenger customer copy must not expose technical framework/API details',
 );
 
-assert.equal(
-  adminViews.includes('data-table-search'),
-  true,
-  'Admin tables must expose a real search control',
+assert.match(
+  adminViews,
+  /data-table-search/,
 );
 
-assert.equal(
-  adminViews.includes('data-sort-column'),
-  true,
-  'Admin tables must expose sortable headers',
+assert.match(
+  adminViews,
+  /data-sort-column/,
 );
 
-assert.equal(
-  adminViews.includes('data-table-prev') && adminViews.includes('data-table-next'),
-  true,
-  'Admin tables must expose pagination controls',
+assert.match(
+  adminViews,
+  /data-table-prev/,
 );
 
-console.log('premium-design-contract.test.mjs: OK');
+assert.match(
+  adminViews,
+  /data-table-next/,
+);
+
+console.log(
+  'premium-design-contract.test.mjs: OK',
+);

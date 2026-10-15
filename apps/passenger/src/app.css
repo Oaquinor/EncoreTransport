@@ -1,8 +1,9 @@
 /*
- * Canonical stylesheet entrypoint.
+ * Encore Passenger canonical stylesheet.
  *
- * Keep HTML/TS entrypoints pointed only at this file. Legacy style
- * layers remain separate temporarily to preserve the tested cascade.
+ * This is the only stylesheet imported by main.tsx.
+ * Historical style layers are kept underneath for visual compatibility.
+ * Seat rendering is self-contained SVG and no longer depends on seat-specific CSS.
  */
 
 @import url("../../../packages/shared/premium.css");
@@ -12,4 +13,4 @@
 @import url("./visual-gap.css");
 @import url("./mandate-motion.css");
 @import url("./flow-refresh.css");
-@import url("./seat-reference.css");
+@import url("./layout-alignment.css");

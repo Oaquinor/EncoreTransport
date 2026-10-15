@@ -39,7 +39,48 @@ type SeatMapProps = {
   disabled?: boolean;
 };
 
-function seatState(
+const colors: Record<
+  SeatVisualState,
+  {
+    back: string;
+    base: string;
+    border: string;
+    text: string;
+  }
+> = {
+  available: {
+    back: '#ffffff',
+    base: '#e6eef2',
+    border: '#9fb4bf',
+    text: '#284a5d',
+  },
+  selected: {
+    back: '#27ac7e',
+    base: '#168c66',
+    border: '#117453',
+    text: '#ffffff',
+  },
+  occupied: {
+    back: '#a5b2ba',
+    base: '#7f8f98',
+    border: '#708089',
+    text: '#ffffff',
+  },
+  blocked: {
+    back: '#e4b8c0',
+    base: '#cb8c98',
+    border: '#b7727f',
+    text: '#672832',
+  },
+  accessible: {
+    back: '#cbeaf7',
+    base: '#9fd8ef',
+    border: '#2a98c8',
+    text: '#155f80',
+  },
+};
+
+function resolveState(
   seat: SeatDto,
   selected: Set<number>,
 ): SeatVisualState {
@@ -77,43 +118,47 @@ function seatState(
   return 'available';
 }
 
-function seatPosition(
+function resolveRow(
   seat: SeatDto,
   fallback: number,
 ) {
-  const position =
-    Number(seat.position_index ?? 0);
-
-  return position > 0
-    ? position
-    : fallback + 1;
-}
-
-function seatRowNumber(
-  seat: SeatDto,
-  fallback: number,
-) {
-  const row =
+  const value =
     Number(seat.row_number ?? 0);
 
-  return row > 0
-    ? row
+  return value > 0
+    ? value
     : Math.floor(fallback / 4) + 1;
 }
 
-function splitRow(
+function resolvePosition(
+  seat: SeatDto,
+  fallback: number,
+) {
+  const value =
+    Number(
+      seat.position_index ?? 0,
+    );
+
+  return value > 0
+    ? value
+    : fallback + 1;
+}
+
+function splitAroundAisle(
   rowSeats: SeatDto[],
 ) {
   const sorted =
     [...rowSeats].sort(
       (left, right) =>
-        seatPosition(left, 0) -
-        seatPosition(right, 0),
+        resolvePosition(left, 0) -
+        resolvePosition(right, 0),
     );
 
   if (sorted.length <= 2) {
     const middle =
-      Math.ceil(sorted.length / 2);
+      Math.ceil(
+        sorted.length / 2,
+      );
 
     return [
       sorted.slice(0, middle),
@@ -121,39 +166,43 @@ function splitRow(
     ] as const;
   }
 
-  let cutIndex =
-    Math.ceil(sorted.length / 2);
-  let largestGap = -1;
+  let split =
+    Math.ceil(
+      sorted.length / 2,
+    );
+
+  let largestGap =
+    Number.NEGATIVE_INFINITY;
 
   for (
     let index = 0;
     index < sorted.length - 1;
     index += 1
   ) {
-    const current =
-      seatPosition(
+    const left =
+      resolvePosition(
         sorted[index],
         index,
       );
 
-    const next =
-      seatPosition(
+    const right =
+      resolvePosition(
         sorted[index + 1],
         index + 1,
       );
 
     const gap =
-      next - current;
+      right - left;
 
     if (gap > largestGap) {
       largestGap = gap;
-      cutIndex = index + 1;
+      split = index + 1;
     }
   }
 
   return [
-    sorted.slice(0, cutIndex),
-    sorted.slice(cutIndex),
+    sorted.slice(0, split),
+    sorted.slice(split),
   ] as const;
 }
 
@@ -164,21 +213,28 @@ function buildRows(
   const grouped =
     new Map<number, SeatDto[]>();
 
-  seats.forEach((seat, index) => {
-    const row =
-      seatRowNumber(
-        seat,
-        index,
+  seats.forEach(
+    (seat, index) => {
+      const row =
+        resolveRow(
+          seat,
+          index,
+        );
+
+      const current =
+        grouped.get(row) ?? [];
+
+      current.push(seat);
+      grouped.set(
+        row,
+        current,
       );
+    },
+  );
 
-    const list =
-      grouped.get(row) ?? [];
-
-    list.push(seat);
-    grouped.set(row, list);
-  });
-
-  return [...grouped.entries()]
+  return [
+    ...grouped.entries(),
+  ]
     .sort(
       ([left], [right]) =>
         left - right,
@@ -189,93 +245,40 @@ function buildRows(
           firstSide,
           secondSide,
         ] =
-          splitRow(rowSeats);
+          splitAroundAisle(
+            rowSeats,
+          );
+
+        const mapSeat =
+          (seat: SeatDto): SeatSlot => ({
+            seat,
+            state:
+              resolveState(
+                seat,
+                selected,
+              ),
+          });
 
         return {
           rowNumber,
           firstSide:
-            firstSide.map(
-              (seat) => ({
-                seat,
-                state:
-                  seatState(
-                    seat,
-                    selected,
-                  ),
-              }),
-            ),
+            firstSide.map(mapSeat),
           secondSide:
-            secondSide.map(
-              (seat) => ({
-                seat,
-                state:
-                  seatState(
-                    seat,
-                    selected,
-                  ),
-              }),
-            ),
+            secondSide.map(mapSeat),
         };
       },
     );
 }
 
-const COLORS: Record<
-  SeatVisualState,
-  {
-    shell: string;
-    back: string;
-    base: string;
-    stroke: string;
-    text: string;
-  }
-> = {
-  available: {
-    shell: '#ffffff',
-    back: '#ffffff',
-    base: '#e8f0f4',
-    stroke: '#9fb4c0',
-    text: '#24475b',
-  },
-  selected: {
-    shell: '#1fa378',
-    back: '#2bb687',
-    base: '#188864',
-    stroke: '#13775a',
-    text: '#ffffff',
-  },
-  occupied: {
-    shell: '#aab7c0',
-    back: '#9eabb4',
-    base: '#83929c',
-    stroke: '#73838d',
-    text: '#ffffff',
-  },
-  blocked: {
-    shell: '#ebc9cf',
-    back: '#e0adb6',
-    base: '#cc8f9a',
-    stroke: '#b87783',
-    text: '#6b2631',
-  },
-  accessible: {
-    shell: '#dff3fb',
-    back: '#caebf8',
-    base: '#a8dbf0',
-    stroke: '#329dcc',
-    text: '#165f7f',
-  },
-};
-
-function LegendItem({
+function Legend({
   state,
   label,
 }: {
   state: SeatVisualState;
   label: string;
 }) {
-  const color =
-    COLORS[state];
+  const tone =
+    colors[state];
 
   return (
     <span
@@ -283,7 +286,7 @@ function LegendItem({
         display: 'inline-flex',
         alignItems: 'center',
         gap: 6,
-        color: '#5f7785',
+        color: '#607886',
         fontSize: 11,
         fontWeight: 700,
       }}
@@ -293,10 +296,11 @@ function LegendItem({
         style={{
           width: 10,
           height: 10,
-          borderRadius: 999,
-          background: color.back,
-          border: `1px solid ${color.stroke}`,
           display: 'inline-block',
+          borderRadius: 999,
+          background: tone.back,
+          border:
+            `1px solid ${tone.border}`,
         }}
       />
       {label}
@@ -304,7 +308,7 @@ function LegendItem({
   );
 }
 
-function VectorSeat({
+function SeatShape({
   slot,
   x,
   y,
@@ -317,8 +321,8 @@ function VectorSeat({
   disabled: boolean;
   onToggle: (id: number) => void;
 }) {
-  const color =
-    COLORS[slot.state];
+  const tone =
+    colors[slot.state];
 
   const unavailable =
     slot.state === 'occupied' ||
@@ -328,7 +332,7 @@ function VectorSeat({
     !disabled &&
     !unavailable;
 
-  const handleActivate = () => {
+  const activate = () => {
     if (interactive) {
       onToggle(
         slot.seat.id,
@@ -336,7 +340,7 @@ function VectorSeat({
     }
   };
 
-  const handleKeyDown = (
+  const onKeyDown = (
     event:
       React.KeyboardEvent<SVGGElement>,
   ) => {
@@ -345,7 +349,7 @@ function VectorSeat({
       event.key === ' '
     ) {
       event.preventDefault();
-      handleActivate();
+      activate();
     }
   };
 
@@ -362,25 +366,26 @@ function VectorSeat({
       aria-pressed={
         slot.state === 'selected'
       }
-      aria-label={`Seat ${slot.seat.seat_number} ${slot.state}`}
-      onClick={handleActivate}
-      onKeyDown={handleKeyDown}
+      aria-label={
+        `Seat ${slot.seat.seat_number} ${slot.state}`
+      }
+      onClick={activate}
+      onKeyDown={onKeyDown}
       style={{
         cursor:
           interactive
             ? 'pointer'
             : 'not-allowed',
-        outline: 'none',
       }}
     >
       <rect
         x="0"
         y="0"
         width="34"
-        height="46"
+        height="47"
         rx="7"
-        fill={color.shell}
-        stroke={color.stroke}
+        fill="#f9fcfd"
+        stroke={tone.border}
         strokeWidth="1.5"
       />
 
@@ -388,40 +393,40 @@ function VectorSeat({
         x="5"
         y="4"
         width="24"
-        height="27"
+        height="28"
         rx="6"
-        fill={color.back}
-        stroke={color.stroke}
+        fill={tone.back}
+        stroke={tone.border}
         strokeWidth="1"
       />
 
       <rect
         x="7"
-        y="32"
+        y="33"
         width="20"
         height="10"
         rx="4"
-        fill={color.base}
-        stroke={color.stroke}
+        fill={tone.base}
+        stroke={tone.border}
         strokeWidth="1"
       />
 
       <rect
         x="-2"
-        y="17"
+        y="18"
         width="4"
         height="17"
         rx="2"
-        fill={color.stroke}
+        fill={tone.border}
       />
 
       <rect
         x="32"
-        y="17"
+        y="18"
         width="4"
         height="17"
         rx="2"
-        fill={color.stroke}
+        fill={tone.border}
       />
 
       <text
@@ -429,8 +434,8 @@ function VectorSeat({
         y="24"
         textAnchor="middle"
         dominantBaseline="middle"
-        fill={color.text}
-        fontSize="9"
+        fill={tone.text}
+        fontSize="8.5"
         fontWeight="800"
         fontFamily="Inter, Arial, sans-serif"
       >
@@ -439,12 +444,12 @@ function VectorSeat({
 
       {slot.state ===
         'accessible' && (
-        <g>
+        <>
           <circle
             cx="31"
             cy="-1"
             r="7"
-            fill="#159ed7"
+            fill="#168fc5"
           />
           <text
             x="31"
@@ -457,7 +462,7 @@ function VectorSeat({
           >
             ♿
           </text>
-        </g>
+        </>
       )}
     </g>
   );
@@ -483,9 +488,14 @@ export function SeatMap({
     selected.length >=
     maxSelection;
 
-  const columnWidth = 82;
-  const frontWidth = 180;
-  const rearWidth = 88;
+  const frontWidth =
+    182;
+
+  const columnWidth =
+    82;
+
+  const rearWidth =
+    82;
 
   const contentWidth =
     frontWidth +
@@ -496,7 +506,18 @@ export function SeatMap({
       columnWidth +
     rearWidth;
 
-  const viewHeight = 360;
+  const viewHeight =
+    360;
+
+  const seatDisabled = (
+    slot: SeatSlot,
+  ) =>
+    disabled ||
+    (
+      selectionLocked &&
+      slot.state !==
+        'selected'
+    );
 
   return (
     <section
@@ -512,34 +533,34 @@ export function SeatMap({
         style={{
           display: 'flex',
           flexWrap: 'wrap',
-          gap: 14,
           alignItems: 'center',
+          gap: 14,
           padding:
             '10px 14px',
           border:
             '1px solid #d8e5eb',
           borderRadius: 14,
           background:
-            'rgba(255,255,255,.95)',
+            'rgba(255,255,255,.96)',
         }}
       >
-        <LegendItem
+        <Legend
           state="available"
           label="Available"
         />
-        <LegendItem
+        <Legend
           state="selected"
           label="Selected"
         />
-        <LegendItem
+        <Legend
           state="occupied"
           label="Occupied"
         />
-        <LegendItem
+        <Legend
           state="blocked"
           label="Blocked"
         />
-        <LegendItem
+        <Legend
           state="accessible"
           label="Accessible"
         />
@@ -548,19 +569,21 @@ export function SeatMap({
       <div
         style={{
           width: '100%',
+          minWidth: 0,
           overflowX: 'auto',
           overflowY: 'hidden',
-          borderRadius: 28,
-          background:
-            '#f7fbfd',
           border:
-            '1px solid #d4e2e9',
+            '1px solid #d5e3ea',
+          borderRadius: 28,
+          background: '#f7fbfd',
           boxShadow:
             '0 18px 44px rgba(18,63,85,.08)',
         }}
       >
         <svg
-          viewBox={`0 0 ${contentWidth} ${viewHeight}`}
+          viewBox={
+            `0 0 ${contentWidth} ${viewHeight}`
+          }
           width="100%"
           height="auto"
           role="group"
@@ -576,17 +599,17 @@ export function SeatMap({
         >
           <defs>
             <linearGradient
-              id="busBody"
+              id="encoreBusBody"
               x1="0"
               x2="1"
             >
               <stop
                 offset="0"
-                stopColor="#5d8ca9"
+                stopColor="#5c8eac"
               />
               <stop
                 offset=".15"
-                stopColor="#d8e7ee"
+                stopColor="#d9e7ee"
               />
               <stop
                 offset=".86"
@@ -594,12 +617,12 @@ export function SeatMap({
               />
               <stop
                 offset="1"
-                stopColor="#c7dce6"
+                stopColor="#c9dde6"
               />
             </linearGradient>
 
             <linearGradient
-              id="windshield"
+              id="encoreWindshield"
               x1="0"
               y1="0"
               x2="1"
@@ -607,102 +630,64 @@ export function SeatMap({
             >
               <stop
                 offset="0"
-                stopColor="#b8ddea"
+                stopColor="#bce0ed"
               />
               <stop
                 offset=".6"
-                stopColor="#2b5a72"
+                stopColor="#2c5b73"
               />
               <stop
                 offset="1"
-                stopColor="#17384b"
+                stopColor="#17394d"
               />
             </linearGradient>
-
-            <filter
-              id="seatShadow"
-              x="-20%"
-              y="-20%"
-              width="140%"
-              height="150%"
-            >
-              <feDropShadow
-                dx="0"
-                dy="2"
-                stdDeviation="2"
-                floodColor="#173f54"
-                floodOpacity=".12"
-              />
-            </filter>
           </defs>
 
           <path
             d={`
-              M 94 20
+              M 96 20
               H ${contentWidth - 38}
               Q ${contentWidth - 18} 20
                 ${contentWidth - 18} 40
               V ${viewHeight - 40}
               Q ${contentWidth - 18} ${viewHeight - 20}
                 ${contentWidth - 38} ${viewHeight - 20}
-              H 98
-              Q 40 ${viewHeight - 20}
-                22 ${viewHeight - 78}
+              H 100
+              Q 42 ${viewHeight - 20}
+                23 ${viewHeight - 78}
               V 78
-              Q 40 20
-                94 20
+              Q 42 20
+                96 20
               Z
             `}
-            fill="url(#busBody)"
+            fill="url(#encoreBusBody)"
             stroke="#6e9bb4"
             strokeWidth="3"
           />
 
           <path
-            d={`
-              M 108 34
-              H ${contentWidth - 50}
-              Q ${contentWidth - 34} 34
-                ${contentWidth - 34} 50
-              V ${viewHeight - 50}
-              Q ${contentWidth - 34} ${viewHeight - 34}
-                ${contentWidth - 50} ${viewHeight - 34}
-              H 112
-              Q 58 ${viewHeight - 34}
-                40 ${viewHeight - 84}
-              V 84
-              Q 58 34
-                108 34
-              Z
-            `}
-            fill="none"
-            stroke="#c4d4dc"
-            strokeWidth="2"
-          />
-
-          <path
             d="
-              M 54 72
-              Q 68 46 104 46
-              H 146
-              V 152
-              H 63
-              Q 44 142 44 113
+              M 55 72
+              Q 70 46 105 46
+              H 147
+              V 151
+              H 64
+              Q 45 141 45 113
               V 90
-              Q 46 78 54 72
+              Q 47 78 55 72
               Z
             "
-            fill="url(#windshield)"
+            fill="url(#encoreWindshield)"
           />
 
           <rect
-            x="52"
+            x="53"
             y="205"
             width="94"
             height="92"
             rx="38"
             fill="#5c8aa5"
-            opacity=".9"
+            opacity=".92"
           />
 
           <circle
@@ -711,6 +696,7 @@ export function SeatMap({
             r="22"
             fill="#17384b"
           />
+
           <circle
             cx="112"
             cy="178"
@@ -719,6 +705,7 @@ export function SeatMap({
             stroke="#ffffff"
             strokeWidth="4"
           />
+
           <circle
             cx="112"
             cy="178"
@@ -727,7 +714,7 @@ export function SeatMap({
           />
 
           <rect
-            x="150"
+            x="151"
             y="139"
             width="42"
             height="76"
@@ -738,9 +725,9 @@ export function SeatMap({
           />
 
           <line
-            x1="171"
+            x1="172"
             y1="140"
-            x2="171"
+            x2="172"
             y2="214"
             stroke="#aec2cc"
             strokeWidth="1"
@@ -759,13 +746,13 @@ export function SeatMap({
           />
 
           <line
-            x1={frontWidth + 10}
+            x1={frontWidth + 12}
             y1="180"
             x2={
               frontWidth +
               rows.length *
                 columnWidth -
-              12
+              14
             }
             y2="180"
             stroke="#aec4cf"
@@ -774,19 +761,7 @@ export function SeatMap({
           />
 
           <text
-            x="83"
-            y="325"
-            fill="#496779"
-            fontSize="9"
-            fontWeight="800"
-            letterSpacing="1"
-            fontFamily="Inter, Arial, sans-serif"
-          >
-            FRONT
-          </text>
-
-          <text
-            x="79"
+            x="77"
             y="198"
             fill="#ffffff"
             fontSize="9"
@@ -798,7 +773,7 @@ export function SeatMap({
 
           <text
             x="151"
-            y="229"
+            y="228"
             fill="#667f8d"
             fontSize="8"
             fontWeight="800"
@@ -810,8 +785,10 @@ export function SeatMap({
           <text
             x={
               frontWidth +
-              (rows.length *
-                columnWidth) /
+              (
+                rows.length *
+                columnWidth
+              ) /
                 2
             }
             y="184"
@@ -849,7 +826,7 @@ export function SeatMap({
                 >
                   <text
                     x={x + 17}
-                    y="52"
+                    y="53"
                     textAnchor="middle"
                     fill="#748b98"
                     fontSize="8"
@@ -864,38 +841,29 @@ export function SeatMap({
                       slot,
                       index,
                     ) => (
-                      <g
+                      <SeatShape
                         key={
                           slot.seat.id
                         }
-                        filter="url(#seatShadow)"
-                      >
-                        <VectorSeat
-                          slot={
-                            slot
-                          }
-                          x={x}
-                          y={
-                            topY[
-                              Math.min(
-                                index,
-                                1,
-                              )
-                            ]
-                          }
-                          onToggle={
-                            onToggle
-                          }
-                          disabled={
-                            disabled ||
-                            (
-                              selectionLocked &&
-                              slot.state !==
-                                'selected'
+                        slot={slot}
+                        x={x}
+                        y={
+                          topY[
+                            Math.min(
+                              index,
+                              1,
                             )
-                          }
-                        />
-                      </g>
+                          ]
+                        }
+                        disabled={
+                          seatDisabled(
+                            slot,
+                          )
+                        }
+                        onToggle={
+                          onToggle
+                        }
+                      />
                     ),
                   )}
 
@@ -904,38 +872,29 @@ export function SeatMap({
                       slot,
                       index,
                     ) => (
-                      <g
+                      <SeatShape
                         key={
                           slot.seat.id
                         }
-                        filter="url(#seatShadow)"
-                      >
-                        <VectorSeat
-                          slot={
-                            slot
-                          }
-                          x={x}
-                          y={
-                            bottomY[
-                              Math.min(
-                                index,
-                                1,
-                              )
-                            ]
-                          }
-                          onToggle={
-                            onToggle
-                          }
-                          disabled={
-                            disabled ||
-                            (
-                              selectionLocked &&
-                              slot.state !==
-                                'selected'
+                        slot={slot}
+                        x={x}
+                        y={
+                          bottomY[
+                            Math.min(
+                              index,
+                              1,
                             )
-                          }
-                        />
-                      </g>
+                          ]
+                        }
+                        disabled={
+                          seatDisabled(
+                            slot,
+                          )
+                        }
+                        onToggle={
+                          onToggle
+                        }
+                      />
                     ),
                   )}
                 </g>
@@ -958,7 +917,7 @@ export function SeatMap({
             x={
               contentWidth - 62
             }
-            y="256"
+            y="255"
             width="24"
             height="24"
             rx="4"
@@ -969,7 +928,7 @@ export function SeatMap({
             x={
               contentWidth - 50
             }
-            y="271"
+            y="270"
             textAnchor="middle"
             fill="#ffffff"
             fontSize="7"
@@ -980,8 +939,20 @@ export function SeatMap({
           </text>
 
           <text
+            x="76"
+            y="325"
+            fill="#496779"
+            fontSize="9"
+            fontWeight="800"
+            letterSpacing="1"
+            fontFamily="Inter, Arial, sans-serif"
+          >
+            FRONT
+          </text>
+
+          <text
             x={
-              contentWidth - 71
+              contentWidth - 74
             }
             y="325"
             textAnchor="middle"
