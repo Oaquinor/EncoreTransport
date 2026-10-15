@@ -1,0 +1,400 @@
+.et-seat-layout {
+  display: grid;
+  gap: 12px;
+}
+
+.et-seat-layout__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  color: #5e7685;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.et-seat-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.et-seat-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  border: 1px solid #a4b6c0;
+  background: #ffffff;
+}
+
+.et-seat-dot--selected { background: #25a46e; border-color: #25a46e; }
+.et-seat-dot--occupied { background: #aab7c2; border-color: #aab7c2; }
+.et-seat-dot--blocked { background: #d99aa1; border-color: #d99aa1; }
+.et-seat-dot--accessible { background: #47a9e0; border-color: #47a9e0; }
+
+.et-seat-bus {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  min-height: 520px;
+  padding: 56px 24px 28px 84px;
+  border: 1px solid #cfe0e9;
+  border-radius: 34px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.95) 0%, rgba(244,249,252,.95) 100%),
+    linear-gradient(90deg, rgba(102,151,181,.16) 0 14%, transparent 14% 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.72);
+  overflow: hidden;
+}
+
+.et-seat-bus::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 3px solid #90b2c7;
+  border-radius: 28px;
+  pointer-events: none;
+}
+
+.et-seat-bus::after {
+  content: '';
+  position: absolute;
+  inset: 12px auto 12px 18px;
+  width: 146px;
+  border-radius: 100px 28px 28px 100px;
+  background: linear-gradient(180deg, rgba(86,137,172,.70), rgba(79,130,165,.86));
+  pointer-events: none;
+}
+
+.et-seat-bus__front-marker,
+.et-seat-bus__driver-marker,
+.et-seat-bus__front-door,
+.et-seat-bus__rear-exit {
+  position: absolute;
+  z-index: 2;
+  color: #6e8795;
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.et-seat-bus__front-marker { top: 16px; left: 162px; }
+.et-seat-bus__driver-marker { top: 18px; left: 318px; color: #12253a; }
+.et-seat-bus__front-door { top: 54px; left: 280px; }
+.et-seat-bus__rear-exit {
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%) rotate(90deg);
+  background: rgba(204,223,232,.74);
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+
+.et-seat-bus__cockpit {
+  position: absolute;
+  z-index: 2;
+  left: 26px;
+  top: 40px;
+  width: 110px;
+  height: 122px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, rgba(40,89,118,.92), rgba(20,60,80,.94));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+}
+
+.et-seat-bus__cockpit::before,
+.et-seat-bus__cockpit::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  width: 36px;
+  height: 94px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(196,225,239,.92), rgba(83,129,158,.46));
+}
+
+.et-seat-bus__cockpit::before { left: 10px; }
+.et-seat-bus__cockpit::after { right: 10px; }
+
+.et-seat-bus__wheel {
+  position: absolute;
+  left: 14px;
+  bottom: 16px;
+  width: 22px;
+  height: 22px;
+  border: 5px solid rgba(255,255,255,.92);
+  border-radius: 999px;
+  box-sizing: border-box;
+}
+
+.et-seat-bus__driver-seat {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  width: 20px;
+  height: 28px;
+  border-radius: 7px;
+  background: rgba(247,252,255,.92);
+}
+
+.et-seat-bus__grid {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  min-height: 360px;
+  padding: 88px 38px 38px 88px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.et-seat-column {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 56px 28px 56px;
+  justify-items: center;
+  gap: 10px;
+  min-width: 66px;
+}
+
+.et-seat-column__number {
+  position: absolute;
+  left: -22px;
+  top: 64px;
+  color: #7d94a2;
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.et-seat-column__top,
+.et-seat-column__bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.et-seat-column__aisle {
+  width: 100%;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(211,226,234,.64);
+}
+
+.et-seat {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.et-seat[disabled] {
+  cursor: not-allowed;
+}
+
+.et-seat__shell {
+  position: relative;
+  display: block;
+  width: 30px;
+  height: 44px;
+}
+
+.et-seat--wide .et-seat__shell {
+  width: 86px;
+}
+
+.et-seat__headrest,
+.et-seat__back,
+.et-seat__base,
+.et-seat__arm {
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
+}
+
+.et-seat__back {
+  inset: 2px 3px 14px;
+  border: 1px solid #b6c8d1;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f9fb 100%);
+  box-shadow: 0 2px 3px rgba(25, 71, 95, .08);
+}
+
+.et-seat__headrest {
+  left: 8px;
+  right: 8px;
+  top: -1px;
+  height: 8px;
+  border-radius: 999px 999px 6px 6px;
+  background: linear-gradient(180deg, #dce7ec, #eef5f8);
+  border: 1px solid #c7d7df;
+}
+
+.et-seat__base {
+  left: 5px;
+  right: 5px;
+  bottom: 4px;
+  height: 10px;
+  border-radius: 4px 4px 8px 8px;
+  background: linear-gradient(180deg, #ecf3f6, #dde9ee);
+  border: 1px solid #c2d2da;
+}
+
+.et-seat__arm {
+  top: 11px;
+  width: 4px;
+  height: 20px;
+  border-radius: 999px;
+  background: #c2d4dc;
+}
+
+.et-seat__arm--left { left: 0; }
+.et-seat__arm--right { right: 0; }
+
+.et-seat__label {
+  position: absolute;
+  left: 50%;
+  top: 17px;
+  transform: translateX(-50%);
+  color: #294e64;
+  font-size: .58rem;
+  font-weight: 900;
+  letter-spacing: .02em;
+}
+
+.et-seat__badge {
+  position: absolute;
+  right: -4px;
+  top: -6px;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #47a9e0;
+  color: #fff;
+  font-size: .52rem;
+  font-weight: 900;
+}
+
+.et-seat--available .et-seat__back,
+.et-seat--available .et-seat__base,
+.et-seat--available .et-seat__headrest {
+  border-color: #bacbd4;
+  background-image: linear-gradient(180deg, #ffffff 0%, #f6fafd 100%);
+}
+
+.et-seat--selected .et-seat__back,
+.et-seat--selected .et-seat__base,
+.et-seat--selected .et-seat__headrest {
+  background-image: linear-gradient(180deg, #30b278 0%, #219966 100%);
+  border-color: #219966;
+}
+
+.et-seat--selected .et-seat__label { color: #fff; }
+.et-seat--selected .et-seat__arm { background: #1f8b5e; }
+
+.et-seat--occupied .et-seat__back,
+.et-seat--occupied .et-seat__base,
+.et-seat--occupied .et-seat__headrest {
+  background-image: linear-gradient(180deg, #d6dee4 0%, #bcc7cf 100%);
+  border-color: #a7b4bc;
+}
+
+.et-seat--blocked .et-seat__back,
+.et-seat--blocked .et-seat__base,
+.et-seat--blocked .et-seat__headrest {
+  background-image: linear-gradient(180deg, #e9d1d5 0%, #ddb6bd 100%);
+  border-color: #d09ba4;
+}
+
+.et-seat--accessible .et-seat__back,
+.et-seat--accessible .et-seat__base,
+.et-seat--accessible .et-seat__headrest {
+  background-image: linear-gradient(180deg, #d8eef8 0%, #b9e0f3 100%);
+  border-color: #82c2e4;
+}
+
+.et-seat:not([disabled]):hover .et-seat__shell,
+.et-seat[aria-pressed='true'] .et-seat__shell {
+  transform: translateY(-1px);
+}
+
+.et-seat:not([disabled]):focus-visible {
+  outline: 2px solid #2096d3;
+  outline-offset: 4px;
+  border-radius: 10px;
+}
+
+@media (max-width: 1024px) {
+  .et-seat-bus {
+    padding-left: 68px;
+  }
+
+  .et-seat-bus__grid {
+    padding-left: 74px;
+  }
+}
+
+@media (max-width: 760px) {
+  .et-seat-layout__legend {
+    gap: 10px;
+    font-size: .72rem;
+  }
+
+  .et-seat-bus {
+    min-height: 450px;
+    padding: 42px 14px 16px 44px;
+    border-radius: 26px;
+  }
+
+  .et-seat-bus::after {
+    inset: 12px auto 12px 12px;
+    width: 88px;
+  }
+
+  .et-seat-bus__cockpit {
+    left: 16px;
+    top: 34px;
+    width: 66px;
+    height: 84px;
+  }
+
+  .et-seat-bus__cockpit::before,
+  .et-seat-bus__cockpit::after {
+    width: 18px;
+    height: 58px;
+  }
+
+  .et-seat-bus__front-marker,
+  .et-seat-bus__driver-marker,
+  .et-seat-bus__front-door {
+    font-size: .5rem;
+  }
+
+  .et-seat-bus__front-marker { left: 110px; }
+  .et-seat-bus__driver-marker { left: 198px; }
+  .et-seat-bus__front-door { left: 176px; top: 48px; }
+
+  .et-seat-bus__grid {
+    padding: 72px 14px 26px 56px;
+    gap: 8px;
+  }
+
+  .et-seat-column {
+    min-width: 60px;
+    gap: 8px;
+  }
+
+  .et-seat__shell {
+    width: 26px;
+    height: 40px;
+  }
+
+  .et-seat--wide .et-seat__shell {
+    width: 72px;
+  }
+}

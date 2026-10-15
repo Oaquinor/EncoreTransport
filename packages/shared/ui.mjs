@@ -1,44 +1,119 @@
-export function badge(label, tone = 'neutral') {
-  return `<span class="badge badge--${tone}">${label}</span>`;
+import {
+  escapeHtml,
+} from './html.mjs';
+
+/**
+ * Shared HTML render helpers.
+ *
+ * New code should use the descriptive render* names. The short legacy
+ * aliases are kept temporarily so existing applications continue to work.
+ */
+
+export function renderStatusBadge(
+  label,
+  tone = 'neutral',
+) {
+  return `
+    <span class="et-ui-badge badge badge--${escapeHtml(tone)}">
+      ${escapeHtml(label)}
+    </span>`;
 }
 
-export function statCard(title, value, detail = '') {
+export function renderMetricCard(
+  title,
+  value,
+  detail = '',
+) {
   return `
-    <article class="card card--tight">
-      <div class="kpi">
-        <span>${title}</span>
-        <strong>${value}</strong>
-        ${detail ? `<small>${detail}</small>` : ''}
+    <article class="et-ui-card card card--tight">
+      <div class="et-ui-metric kpi">
+        <span>${escapeHtml(title)}</span>
+        <strong>${escapeHtml(value)}</strong>
+        ${
+          detail
+            ? `<small>${escapeHtml(detail)}</small>`
+            : ''
+        }
       </div>
-    </article>
-  `;
+    </article>`;
 }
 
-export function emptyState(title, detail, actionLabel = '') {
+export function renderEmptyState(
+  title,
+  detail,
+  actionLabel = '',
+) {
   return `
-    <div class="empty-state card card--pad">
-      <strong>${title}</strong>
-      <p>${detail}</p>
-      ${actionLabel ? `<button class="button button--primary">${actionLabel}</button>` : ''}
-    </div>
-  `;
+    <div class="et-ui-empty empty-state card card--pad">
+      <strong>${escapeHtml(title)}</strong>
+      <p>${escapeHtml(detail)}</p>
+      ${
+        actionLabel
+          ? `<button class="et-ui-button button button--primary">${escapeHtml(actionLabel)}</button>`
+          : ''
+      }
+    </div>`;
 }
 
-export function skeletonCard(lines = 3) {
+export function renderSkeletonCard(
+  lines = 3,
+) {
+  const safeLines =
+    Math.max(
+      1,
+      Math.min(
+        8,
+        Number(lines) || 1,
+      ),
+    );
+
   return `
-    <div class="card card--pad motion-enter">
-      <div class="grid" style="gap: 12px;">
-        ${Array.from({ length: lines }, (_, index) => `<div class="skeleton" style="height: ${index === 0 ? 20 : 14}px; border-radius: 999px;"></div>`).join('')}
+    <div class="et-ui-card card card--pad motion-enter">
+      <div class="et-ui-stack grid" style="gap: 12px;">
+        ${
+          Array.from(
+            { length: safeLines },
+            (_, index) =>
+              `<div class="skeleton" style="height:${index === 0 ? 20 : 14}px;border-radius:999px;"></div>`,
+          ).join('')
+        }
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
-export function progressBar(value) {
+export function renderProgressBar(
+  value,
+) {
+  const safeValue =
+    Math.max(
+      0,
+      Math.min(
+        100,
+        Number(value) || 0,
+      ),
+    );
+
   return `
-    <div class="progress">
-      <div class="progress__bar"><div class="progress__fill" style="width:${Math.max(0, Math.min(100, value))}%"></div></div>
-      <small>${value}% completado</small>
-    </div>
-  `;
+    <div class="et-ui-progress progress">
+      <div class="progress__bar">
+        <div class="progress__fill" style="width:${safeValue}%"></div>
+      </div>
+      <small>${safeValue}% complete</small>
+    </div>`;
 }
+
+/* Backward-compatible aliases. Do not use in new modules. */
+export const badge =
+  renderStatusBadge;
+
+export const statCard =
+  renderMetricCard;
+
+export const emptyState =
+  renderEmptyState;
+
+export const skeletonCard =
+  renderSkeletonCard;
+
+export const progressBar =
+  renderProgressBar;

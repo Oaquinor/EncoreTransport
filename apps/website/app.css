@@ -1,0 +1,13 @@
+/*
+ * Canonical stylesheet entrypoint.
+ *
+ * Keep HTML/TS entrypoints pointed only at this file. Legacy style
+ * layers remain separate temporarily to preserve the tested cascade.
+ */
+
+@import url("../../packages/shared/styles.css");
+@import url("../../packages/shared/premium.css");
+@import url("./styles.css");
+@import url("./premium.css");
+@import url("./mandate-fixes.css");
+@import url("./public-rework.css");

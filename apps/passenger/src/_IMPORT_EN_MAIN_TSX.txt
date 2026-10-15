@@ -1,0 +1,5 @@
+/*
+  Add this import to apps/passenger/src/main.tsx if it is not already present.
+  The apply script injects it automatically.
+*/
+import './vector-seat-map.css';

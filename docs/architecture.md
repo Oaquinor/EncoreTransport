@@ -1,24 +1,180 @@
-# Architecture
+# EncoreTransport Architecture
 
-## Objetivo
+## Purpose
 
-El sistema se diseña como una plataforma de transporte con experiencias separadas para público, pasajeros, conductores y administración, consumiendo una API central que concentra la lógica crítica.
+EncoreTransport is a multi-application platform with one central Laravel API and MySQL as the source of truth.
 
-## Decisión arquitectónica principal
+```text
+Public Website
+Passenger Web
+Passenger Mobile
+Driver Web
+Driver Mobile
+Admin
+Tracking
+Login
+       │
+       ▼
+Root frontend server / API proxy
+       │
+       ▼
+Laravel REST API
+       │
+       ▼
+MySQL
+```
 
-Se adopta un monorepo con apps independientes y paquetes compartidos. Esta decisión reduce duplicación, facilita reutilización y prepara el camino para una API Laravel real y futuras apps móviles.
+## Application boundaries
 
-## Capas
+### Website
 
-1. Presentación: website, passenger PWA, driver PWA y admin dashboard.
-2. Contratos y reglas compartidas: shapes de datos, validaciones de preview y utilidades comunes.
-3. API central futura: Laravel 11 como única autoridad para reglas de negocio.
-4. Persistencia: MySQL normalizado y preparado para producción.
+`apps/website`
 
-## Regla de oro
+Purpose: discovery and public marketing.
 
-Las apps cliente no deben decidir reglas críticas por su cuenta. Solo presentan, solicitan y reflejan estados derivados de la API.
+May:
+- show public routes and departures;
+- preview a route;
+- explain seat selection;
+- link to package tracking.
 
-## Preparación móvil
+Must not:
+- contain operational language;
+- expose backend implementation details;
+- invent route, seat or price data.
 
-La separación de contratos, vistas y reglas permite añadir Android e iOS sin reescribir dominio ni duplicar criterios de negocio.
+### Passenger
+
+`apps/passenger`
+
+Purpose: transactional booking flow.
+
+Owns:
+- trip search;
+- trip choice;
+- seat selection;
+- passenger data;
+- review;
+- booking;
+- payment initiation;
+- ticket/status.
+
+Laravel remains authoritative for availability and price.
+
+### Driver
+
+`apps/driver-pwa`
+`apps/driver-mobile`
+
+Purpose: assigned operational work.
+
+Owns:
+- assigned trip;
+- passenger boarding;
+- schedule;
+- incidents;
+- vehicle status;
+- packages;
+- authorized GPS.
+
+### Admin
+
+`apps/admin-dashboard`
+
+Purpose: centralized operations.
+
+Only modules backed by real API/database data should be exposed.
+
+### Authentication
+
+`apps/auth`
+
+Purpose: centralized staff/account sign in and role routing.
+
+### Package Tracking
+
+`apps/package-tracking`
+
+Purpose: public shipment-status lookup.
+
+## Shared packages
+
+### `packages/shared/api/`
+
+API access is split by responsibility:
+
+- `core.mjs`
+- `auth.mjs`
+- `public.mjs`
+- `bookings.mjs`
+- `driver.mjs`
+- `admin.mjs`
+
+`packages/shared/api.mjs` is only a stable compatibility facade.
+
+### `packages/shared/ui.mjs`
+
+Shared HTML render helpers.
+
+New helpers use descriptive `render*` names. Legacy short aliases remain only for compatibility.
+
+### `packages/shared/html.mjs`
+
+Shared escaping/status text utilities.
+
+### `packages/shared/app-config.mjs`
+
+Runtime-safe configuration.
+
+Deployments may inject:
+
+```js
+globalThis.__ENCORE_CONFIG__ = {
+  apiBaseUrl: '/api/v1',
+  country: '...',
+  currency: '...',
+  locale: '...',
+  timezone: '...',
+};
+```
+
+## Styling
+
+Each web application has exactly one canonical stylesheet entrypoint:
+
+```text
+apps/website/app.css
+apps/passenger/src/app.css
+apps/driver-pwa/app.css
+apps/admin-dashboard/app.css
+apps/auth/app.css
+apps/package-tracking/app.css
+```
+
+The older style layers remain imported underneath only to preserve current behavior while they are gradually consolidated.
+
+Do not add another `<link>` or CSS import directly to an application entrypoint. Add the layer through that application's `app.css`.
+
+## Data authority
+
+Frontend visual state never overrides server truth.
+
+Laravel owns:
+- availability;
+- booking concurrency;
+- pricing;
+- trip status;
+- payments;
+- tickets;
+- role authorization;
+- driver location authorization.
+
+## External dependencies not solved by code alone
+
+The repository cannot truthfully be called fully production-ready until these external items are resolved:
+
+- authorized payment provider + sandbox/production credentials;
+- external notification provider if notifications are required;
+- final production hostname for absolute SEO canonicals and sitemap;
+- mobile device/emulator acceptance;
+- browser E2E/deployment acceptance.
