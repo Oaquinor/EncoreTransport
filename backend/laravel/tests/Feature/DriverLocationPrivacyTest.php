@@ -92,6 +92,46 @@ class DriverLocationPrivacyTest extends TestCase
             ->assertOk();
     }
 
+    public function test_passenger_can_read_location_for_their_booked_trip_only(): void
+    {
+        $trip = Trip::query()->firstOrFail();
+        $passenger = User::query()
+            ->where('role', 'passenger')
+            ->where('email', 'passenger@example.test')
+            ->firstOrFail();
+
+        DriverLocation::query()->create([
+            'driver_id' => $trip->driver_id,
+            'trip_id' => $trip->id,
+            'latitude' => 18.486058,
+            'longitude' => -69.931212,
+            'recorded_at' => now(),
+        ]);
+
+        $seat = $trip->bus->seats()->firstOrFail();
+        $this->withToken($this->tokenFor($passenger))
+            ->postJson('/api/v1/bookings', [
+                'trip_id' => $trip->id,
+                'seat_ids' => [$seat->id],
+                'passengers' => [['full_name' => 'Passenger Location Test']],
+            ])
+            ->assertCreated();
+
+        $this->withToken($this->tokenFor($passenger))
+            ->getJson('/api/v1/trips/'.$trip->id.'/location')
+            ->assertOk()
+            ->assertJsonPath('data.trip_id', $trip->id);
+
+        $otherTrip = Trip::query()->whereKeyNot($trip->id)->first();
+        if (!$otherTrip) {
+            return;
+        }
+
+        $this->withToken($this->tokenFor($passenger))
+            ->getJson('/api/v1/trips/'.$otherTrip->id.'/location')
+            ->assertForbidden();
+    }
+
     public function test_unassigned_driver_cannot_read_other_trip_location(): void
     {
         $trip = Trip::query()->firstOrFail();

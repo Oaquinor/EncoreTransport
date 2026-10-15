@@ -383,7 +383,7 @@ async function hydrateAdminMap() {
   try {
     const [journey, locationPayload] = await Promise.all([
       mapJourney(origin, destination),
-      requestJson(`/trips/${tripId}/location`, { token: false })
+      requestJson(`/trips/${tripId}/location`)
         .catch(() => ({ data: null })),
     ]);
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\DriverLocation;
 use App\Models\Trip;
 use Illuminate\Http\Request;
@@ -80,6 +81,18 @@ class DriverLocationController extends Controller
                 return response()->json([
                     'message' =>
                         'This trip is not assigned to the authenticated driver.',
+                ], 403);
+            }
+        } elseif ($user?->role === 'passenger') {
+            $hasTripBooking = Booking::query()
+                ->where('user_id', $user->id)
+                ->where('trip_id', $trip->id)
+                ->whereIn('status', ['pending_payment', 'confirmed'])
+                ->exists();
+
+            if (!$hasTripBooking) {
+                return response()->json([
+                    'message' => 'You do not have a booking for this trip.',
                 ], 403);
             }
         } elseif ($user?->role !== 'admin') {

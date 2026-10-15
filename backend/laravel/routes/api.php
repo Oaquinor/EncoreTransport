@@ -33,7 +33,6 @@ Route::prefix('v1')->group(function () {
     Route::get('trips/{trip}', [TripController::class, 'show']);
     Route::get('trips/{trip}/seats', [SeatController::class, 'index']);
     Route::get('trips/{trip}/quote', [PricingController::class, 'show']);
-    Route::get('trips/{trip}/location', [DriverLocationController::class, 'latest']);
 
     Route::prefix('maps')->group(function () {
         Route::get('search', [MapController::class, 'search'])->middleware('throttle:60,1');
@@ -66,6 +65,8 @@ Route::prefix('v1')->group(function () {
             ->middleware('throttle:20,1');
 
         Route::get('bookings/{booking}/ticket', [TicketController::class, 'show']);
+
+        Route::get('trips/{trip}/location', [DriverLocationController::class, 'latest']);
     });
 
     Route::middleware('api.token:driver,admin')->group(function () {

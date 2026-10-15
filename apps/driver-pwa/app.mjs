@@ -243,7 +243,7 @@ async function hydrateRouteMap() {
   try {
     const [journey, locationPayload] = await Promise.all([
       mapJourney(trip.origin, trip.destination),
-      requestJson(`/trips/${trip.id}/location`, { token: false }).catch(() => ({ data: null })),
+      requestJson(`/trips/${trip.id}/location`).catch(() => ({ data: null })),
     ]);
 
     await renderJourneyMap(container, journey, {
