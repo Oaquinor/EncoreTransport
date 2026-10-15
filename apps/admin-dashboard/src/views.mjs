@@ -68,7 +68,7 @@ export function table(title, headers, rows, options = {}) {
             ${rows.length
               ? rows.map((row) => `
                   <tr data-table-row>
-                    ${row.map((cell) => `<td>${esc(cellValue(cell))}</td>`).join('')}
+                    ${row.map((cell) => `<td>${cell && typeof cell === 'object' && cell.html ? cell.html : esc(cellValue(cell))}</td>`).join('')}
                   </tr>`).join('')
               : `<tr><td colspan="${headers.length}">No records found.</td></tr>`}
           </tbody>

@@ -92,3 +92,17 @@ Pendiente de ejecutar en entorno habilitado:
 **Estado: listo para continuar desarrollo y pruebas de aceptación controladas; no listo para producción.**
 
 La razón es verificable: pagos/notificaciones carecen de integración externa aprobada; falta validación real de navegador y dispositivos; el módulo attendant/caja y cargo no cubren todavía todo el alcance; y la suite Laravel no se ejecutó porque este entorno no tiene PHP.
+
+## Complemento operativo 2026-10-15
+
+| Recurso | Panel | API/persistencia | Permisos/estado | Prueba | Estado |
+|---|---|---|---|---|---|
+| Rutas | Crear, editar, activar/desactivar y listar | `admin/routes`, transacción y paradas ordenadas | Solo `api.token:admin`; no elimina históricas | `ClientPrioritiesTest` añadido | Implementado, pendiente Laravel |
+| Conductores | Crear perfil y listar | `admin/drivers`; licencia única y estado | Perfil separado de cuenta; activación de acceso no automática | Prueba de admin/pasajero añadida | Implementado parcialmente |
+| Vehículos | Crear y listar | `admin/vehicles`; genera asientos persistidos | Estados operativos; bloquea sacar de servicio con viajes activos | Prueba de capacidad añadida | Implementado parcialmente |
+| Asientos | Generación desde capacidad | `bus_seats` persistido | Cambios bloqueados con reservas activas | Cubierto por restricciones existentes | Parcial |
+| Viajes | Listado existente; creación administrativa aún pendiente | Lectura y estados operativos existentes | Asignación/conflictos necesitan CRUD central | No cerrado | Pendiente |
+| Usuarios/roles | Login y middleware por rol | Tokens persistidos | No existe matriz granular de permisos | No cerrado | Pendiente |
+| Caja/Attendant | No existe app separada verificable | Pagos y reservas base | Falta turno, conciliación y check-in completo | No cerrado | Pendiente |
+
+Las nuevas rutas administrativas no crean contraseñas para conductores. La cuenta de acceso requiere un flujo posterior de invitación/activación con token de un solo uso y caducidad; no se implementa una contraseña temporal expuesta o almacenada en logs.

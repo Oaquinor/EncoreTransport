@@ -46,6 +46,48 @@ export const vehicleStatus = async () => {
   return payload.data ?? [];
 };
 
+export const routes = async () => {
+  const payload = await requestJson('/admin/routes');
+  return payload.data ?? [];
+};
+
+export const saveRoute = async (data, id = null) => {
+  const path = id
+    ? `/admin/routes/${encodeURIComponent(id)}`
+    : '/admin/routes';
+  const payload = await requestJson(path, {
+    method: id ? 'PUT' : 'POST',
+    body: JSON.stringify(data),
+  });
+  return payload.data ?? payload;
+};
+
+export const drivers = async () => {
+  const payload = await requestJson('/admin/drivers');
+  return payload.data ?? [];
+};
+
+export const saveDriver = async (data, id = null) => {
+  const payload = await requestJson(id ? `/admin/drivers/${encodeURIComponent(id)}` : '/admin/drivers', {
+    method: id ? 'PUT' : 'POST',
+    body: JSON.stringify(data),
+  });
+  return payload.data ?? payload;
+};
+
+export const vehicles = async () => {
+  const payload = await requestJson('/admin/vehicles');
+  return payload.data ?? [];
+};
+
+export const saveVehicle = async (data, id = null) => {
+  const payload = await requestJson(id ? `/admin/vehicles/${encodeURIComponent(id)}` : '/admin/vehicles', {
+    method: id ? 'PUT' : 'POST',
+    body: JSON.stringify(data),
+  });
+  return payload.data ?? payload;
+};
+
 export const report = async (type, params = {}) => {
   const suffix = {
     executive: '',

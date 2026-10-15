@@ -66,6 +66,82 @@ class ClientPrioritiesTest extends TestCase
         $this->withToken($token)->postJson('/api/v1/admin/driver-schedules', $payload)->assertStatus(422);
     }
 
+    public function test_admin_can_create_edit_and_deactivate_route(): void
+    {
+        $admin = User::query()->where('role', 'admin')->firstOrFail();
+        $passenger = User::query()->where('role', 'passenger')->firstOrFail();
+        $adminToken = $this->tokenFor($admin);
+        $payload = [
+            'origin' => 'Georgetown',
+            'destination' => 'Linden',
+            'distance_km' => 105,
+            'active' => true,
+            'stops' => [
+                ['name' => 'Soesdyke Junction'],
+                ['name' => 'Timehri'],
+            ],
+        ];
+
+        $created = $this->withToken($adminToken)
+            ->postJson('/api/v1/admin/routes', $payload)
+            ->assertCreated()
+            ->assertJsonPath('data.origin', 'Georgetown')
+            ->assertJsonCount(2, 'data.stops');
+
+        $routeId = $created->json('data.id');
+
+        $this->withToken($this->tokenFor($passenger))
+            ->postJson('/api/v1/admin/routes', $payload)
+            ->assertForbidden();
+
+        $this->withToken($adminToken)
+            ->putJson('/api/v1/admin/routes/'.$routeId, [
+                ...$payload,
+                'destination' => 'Mackenzie',
+                'active' => false,
+                'stops' => [['name' => 'Timehri']],
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.destination', 'Mackenzie')
+            ->assertJsonPath('data.active', false)
+            ->assertJsonCount(1, 'data.stops');
+
+        $this->getJson('/api/v1/routes/'.$routeId)->assertNotFound();
+    }
+
+    public function test_admin_can_create_driver_and_vehicle_but_passenger_cannot(): void
+    {
+        $adminToken = $this->tokenFor(User::query()->where('role', 'admin')->firstOrFail());
+        $passengerToken = $this->tokenFor(User::query()->where('role', 'passenger')->firstOrFail());
+
+        $this->withToken($passengerToken)
+            ->postJson('/api/v1/admin/drivers', [
+                'name' => 'Unauthorized Driver',
+                'license_number' => 'TEST-UNAUTHORIZED',
+                'status' => 'pending',
+            ])
+            ->assertForbidden();
+
+        $this->withToken($adminToken)
+            ->postJson('/api/v1/admin/drivers', [
+                'name' => 'Fleet Driver',
+                'license_number' => 'TEST-FLEET-001',
+                'status' => 'pending',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.status', 'pending');
+
+        $this->withToken($adminToken)
+            ->postJson('/api/v1/admin/vehicles', [
+                'code' => 'TEST-VEHICLE-001',
+                'plate' => 'TEST-PLATE-001',
+                'capacity' => 12,
+                'status' => 'operational',
+            ])
+            ->assertCreated()
+            ->assertJsonCount(12, 'data.seats');
+    }
+
     private function tokenFor(User $user): string
     {
         $plain = Str::random(80);

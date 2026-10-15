@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AdminDashboardController;
+use App\Http\Controllers\Api\V1\AdminFleetController;
 use App\Http\Controllers\Api\V1\AdminReportController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BookingController;
@@ -92,6 +93,17 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('api.token:admin')->group(function () {
         Route::get('admin/dashboard', [AdminDashboardController::class, 'show']);
+
+        Route::get('admin/drivers', [AdminFleetController::class, 'drivers']);
+        Route::post('admin/drivers', [AdminFleetController::class, 'storeDriver']);
+        Route::put('admin/drivers/{driver}', [AdminFleetController::class, 'updateDriver']);
+        Route::get('admin/vehicles', [AdminFleetController::class, 'vehicles']);
+        Route::post('admin/vehicles', [AdminFleetController::class, 'storeVehicle']);
+        Route::put('admin/vehicles/{bus}', [AdminFleetController::class, 'updateVehicle']);
+
+        Route::get('admin/routes', [RouteController::class, 'adminIndex']);
+        Route::post('admin/routes', [RouteController::class, 'store']);
+        Route::put('admin/routes/{transportRoute}', [RouteController::class, 'update']);
 
         Route::get('admin/reports', [AdminReportController::class, 'index']);
         Route::get('admin/reports/travel', [AdminReportController::class, 'travel']);

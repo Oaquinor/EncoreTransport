@@ -28,6 +28,9 @@ const state = {
   incidents: [],
   schedules: [],
   packages: [],
+  routes: [],
+  drivers: [],
+  vehicles: [],
   vehicleStatus: [],
   reportType: 'executive',
   reportData: null,
@@ -233,41 +236,52 @@ function content() {
   }
 
   if (state.module === 'vehicles') {
-    return table(
+    return `<section class="admin-panel admin-panel--pad"><div class="eyebrow">Fleet registry</div><h2>Add vehicle</h2><form id="vehicleForm" class="premium-form-grid"><label><span>Code</span><input name="code" required /></label><label><span>Plate</span><input name="plate" required /></label><label><span>Capacity</span><input name="capacity" type="number" min="1" max="500" required /></label><label><span>Status</span><select name="status"><option value="operational">Operational</option><option value="maintenance">Maintenance</option><option value="out_of_service">Out of service</option></select></label><button class="button button--primary" type="submit">Save vehicle</button><div id="vehicleMessage" aria-live="polite"></div></form></section>${table(
       'Vehicles',
       ['Code', 'Plate', 'Capacity', 'Status'],
-      (dashboard.buses ?? []).map((bus) => [
+      state.vehicles.map((bus) => [
         bus.code,
         bus.plate,
         bus.capacity,
         bus.status,
       ]),
-    );
+    )}`;
   }
 
   if (state.module === 'drivers') {
-    return table(
+    return `<section class="admin-panel admin-panel--pad"><div class="eyebrow">Fleet registry</div><h2>Add driver profile</h2><form id="driverForm" class="premium-form-grid"><label><span>Name</span><input name="name" required maxlength="150" /></label><label><span>License number</span><input name="license_number" required maxlength="80" /></label><label><span>Status</span><select name="status"><option value="pending">Pending</option><option value="active">Active</option><option value="suspended">Suspended</option><option value="inactive">Inactive</option></select></label><button class="button button--primary" type="submit">Save driver</button><div id="driverMessage" aria-live="polite"></div></form></section>${table(
       'Drivers',
       ['Name', 'License', 'Status'],
-      (dashboard.drivers ?? []).map((driver) => [
+      state.drivers.map((driver) => [
         driver.name,
         driver.license_number,
         driver.status,
       ]),
-    );
+    )}`;
   }
 
   if (state.module === 'routes') {
-    return table(
-      'Routes',
-      ['Origin', 'Destination', 'Distance', 'Active'],
-      (dashboard.routes ?? []).map((route) => [
-        route.origin,
-        route.destination,
-        route.distance_km ? `${route.distance_km} km` : '—',
-        route.active ? 'Yes' : 'No',
-      ]),
-    );
+    return `
+      <section class="admin-panel admin-panel--pad">
+        <div class="module-view__header">
+          <div><div class="eyebrow">Network configuration</div><h2>Routes</h2></div>
+          <span class="badge badge--neutral">${state.routes.length} records</span>
+        </div>
+        <form id="routeForm" class="premium-form-grid">
+          <input type="hidden" name="id" />
+          <label><span>Origin</span><input name="origin" required maxlength="150" /></label>
+          <label><span>Destination</span><input name="destination" required maxlength="150" /></label>
+          <label><span>Distance (km)</span><input name="distance_km" type="number" min="0" required /></label>
+          <label><span>Intermediate stops</span><input name="stops" placeholder="Stop 1, Stop 2" /></label>
+          <label><span>Published</span><select name="active"><option value="1">Active</option><option value="0">Inactive</option></select></label>
+          <div><button type="submit" class="button button--primary">Save route</button> <button type="button" class="button button--ghost" id="resetRoute">Clear</button></div>
+          <div id="routeMessage" aria-live="polite"></div>
+        </form>
+      </section>
+      ${table('Saved routes', ['Origin', 'Destination', 'Distance', 'Stops', 'Active', 'Action'], state.routes.map((route) => [
+        route.origin, route.destination, `${route.distance_km ?? 0} km`, route.stops?.length ?? 0,
+        route.active ? 'Yes' : 'No', { html: `<button type="button" class="button button--ghost" data-edit-route="${esc(route.id)}">Edit</button>` },
+      ]), { id: 'admin-routes' })}`;
   }
 
   if (state.module === 'incidents') {
@@ -423,6 +437,18 @@ async function loadModule() {
       state.packages = await api.packages();
     }
 
+    if (state.module === 'routes') {
+      state.routes = await api.routes();
+    }
+
+    if (state.module === 'drivers') {
+      state.drivers = await api.drivers();
+    }
+
+    if (state.module === 'vehicles') {
+      state.vehicles = await api.vehicles();
+    }
+
     if (state.module === 'vehicles') {
       state.vehicleStatus = await api.vehicleStatus();
     }
@@ -473,6 +499,83 @@ function wire() {
     state.reportType = event.target.value;
     state.reportData = null;
     void loadModule();
+  });
+
+  const routeForm = document.querySelector('#routeForm');
+  routeForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = new FormData(routeForm);
+    const id = String(form.get('id') ?? '').trim() || null;
+    const stops = String(form.get('stops') ?? '').split(',').map((name) => name.trim()).filter(Boolean).map((name) => ({ name }));
+    const message = document.querySelector('#routeMessage');
+    try {
+      await api.saveRoute({
+        origin: form.get('origin'),
+        destination: form.get('destination'),
+        distance_km: Number(form.get('distance_km')),
+        active: form.get('active') === '1',
+        stops,
+      }, id);
+      message.textContent = 'Route saved.';
+      state.routes = await api.routes();
+      render();
+    } catch (error) {
+      message.textContent = error.message;
+    }
+  });
+
+  document.querySelector('#resetRoute')?.addEventListener('click', () => {
+    document.querySelector('#routeForm')?.reset();
+  });
+
+  document.querySelectorAll('[data-edit-route]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const route = state.routes.find((item) => String(item.id) === button.dataset.editRoute);
+      if (!route) return;
+      const form = document.querySelector('#routeForm');
+      form.elements.id.value = route.id;
+      form.elements.origin.value = route.origin ?? '';
+      form.elements.destination.value = route.destination ?? '';
+      form.elements.distance_km.value = route.distance_km ?? 0;
+      form.elements.active.value = route.active ? '1' : '0';
+      form.elements.stops.value = (route.stops ?? []).map((stop) => stop.name).join(', ');
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  document.querySelector('#driverForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const message = document.querySelector('#driverMessage');
+    try {
+      await api.saveDriver({
+        name: form.get('name'),
+        license_number: form.get('license_number'),
+        status: form.get('status'),
+      });
+      state.drivers = await api.drivers();
+      render();
+    } catch (error) {
+      message.textContent = error.message;
+    }
+  });
+
+  document.querySelector('#vehicleForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const message = document.querySelector('#vehicleMessage');
+    try {
+      await api.saveVehicle({
+        code: form.get('code'),
+        plate: form.get('plate'),
+        capacity: Number(form.get('capacity')),
+        status: form.get('status'),
+      });
+      state.vehicles = await api.vehicles();
+      render();
+    } catch (error) {
+      message.textContent = error.message;
+    }
   });
 }
 
