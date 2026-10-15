@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Ticket;
 use App\Services\Tickets\TicketService;
+use App\Services\Auth\PermissionService;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 use RuntimeException;
 
 class TicketController extends Controller
 {
+    public function __construct(private readonly PermissionService $permissions) {}
+
     #[OA\Get(
         path: '/api/v1/bookings/{booking}/ticket',
         operationId: 'bookingTicket',
@@ -26,7 +29,9 @@ class TicketController extends Controller
     )]
     public function show(Request $request, Booking $booking)
     {
-        if ($booking->user_id !== $request->user()?->id && $request->user()?->role !== 'admin') {
+        $isOwner = $booking->user_id !== null && $booking->user_id === $request->user()?->id;
+        $canViewTickets = $this->permissions->allows($request->user(), 'tickets.view');
+        if (!$isOwner && !$canViewTickets) {
             abort(403);
         }
 

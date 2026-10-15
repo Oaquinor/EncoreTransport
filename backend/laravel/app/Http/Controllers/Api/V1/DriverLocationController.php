@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\DriverLocation;
 use App\Models\Trip;
+use App\Services\Auth\PermissionService;
 use Illuminate\Http\Request;
 
 class DriverLocationController extends Controller
 {
+    public function __construct(private readonly PermissionService $permissions) {}
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -31,10 +34,7 @@ class DriverLocationController extends Controller
 
         $trip = Trip::query()->findOrFail($data['trip_id']);
 
-        if (
-            $request->user()?->role !== 'admin' &&
-            $trip->driver_id !== $driver->id
-        ) {
+        if ($trip->driver_id !== $driver->id) {
             return response()->json([
                 'message' =>
                     'This trip is not assigned to the authenticated driver.',
@@ -71,7 +71,7 @@ class DriverLocationController extends Controller
     ) {
         $user = $request->user();
 
-        if ($user?->role === 'driver') {
+        if ($user?->driver) {
             $driver = $user->driver;
 
             if (
@@ -83,22 +83,20 @@ class DriverLocationController extends Controller
                         'This trip is not assigned to the authenticated driver.',
                 ], 403);
             }
-        } elseif ($user?->role === 'passenger') {
+        } elseif ($user && !$this->permissions->allows($user, 'trips.view')) {
             $hasTripBooking = Booking::query()
                 ->where('user_id', $user->id)
                 ->where('trip_id', $trip->id)
                 ->whereIn('status', ['pending_payment', 'confirmed'])
                 ->exists();
 
-            if (!$hasTripBooking) {
+            if (!$hasTripBooking && !$this->permissions->allows($user, 'trips.view')) {
                 return response()->json([
                     'message' => 'You do not have a booking for this trip.',
                 ], 403);
             }
-        } elseif ($user?->role !== 'admin') {
-            return response()->json([
-                'message' => 'Forbidden.',
-            ], 403);
+        } elseif (!$user || !$this->permissions->allows($user, 'trips.view')) {
+            return response()->json(['message' => 'Forbidden.'], 403);
         }
 
         $location = DriverLocation::query()

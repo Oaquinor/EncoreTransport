@@ -70,7 +70,7 @@ Route::prefix('v1')->group(function () {
         Route::get('trips/{trip}/location', [DriverLocationController::class, 'latest']);
     });
 
-    Route::middleware('api.token:driver,admin')->group(function () {
+    Route::middleware(['api.token', 'permission:driver.access'])->group(function () {
         Route::get('driver/me', [DriverController::class, 'profile']);
         Route::get('driver/trips/current', [DriverController::class, 'currentTrip']);
         Route::get('driver/trips/{trip}/passengers', [DriverTripController::class, 'passengers']);
@@ -87,9 +87,11 @@ Route::prefix('v1')->group(function () {
         Route::post('driver/packages', [PackageController::class, 'store']);
         Route::post('driver/packages/{package}/status', [PackageController::class, 'updateStatus']);
 
-        Route::post('tickets/validate', [TicketController::class, 'validateTicket'])
-            ->middleware('throttle:60,1');
     });
+
+    Route::middleware(['api.token', 'permission:tickets.validate'])
+        ->post('tickets/validate', [TicketController::class, 'validateTicket'])
+        ->middleware('throttle:60,1');
 
     Route::middleware('api.token')->group(function () {
         Route::middleware('permission:reports.view')->group(function () {
@@ -100,8 +102,8 @@ Route::prefix('v1')->group(function () {
             Route::get('admin/reports/trip-costs', [AdminReportController::class, 'tripCosts']);
         });
 
-        Route::middleware('permission:trips.view')->get('admin/incidents', [IncidentController::class, 'index']);
-        Route::middleware('permission:trips.update')->patch('admin/incidents/{incident}', [IncidentController::class, 'update']);
+        Route::middleware('permission:incidents.view')->get('admin/incidents', [IncidentController::class, 'index']);
+        Route::middleware('permission:incidents.update')->patch('admin/incidents/{incident}', [IncidentController::class, 'update']);
 
         Route::middleware('permission:schedules.view')->get('admin/driver-schedules', [DriverScheduleController::class, 'index']);
         Route::middleware('permission:schedules.manage')->post('admin/driver-schedules', [DriverScheduleController::class, 'store']);

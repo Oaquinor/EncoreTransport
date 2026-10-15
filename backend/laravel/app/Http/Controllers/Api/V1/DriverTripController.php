@@ -47,6 +47,6 @@ class DriverTripController extends Controller
     private function assertAssigned(Request $request, Trip $trip): void
     {
         $driver = $request->user()?->driver;
-        if (!$driver || ($trip->driver_id !== $driver->id && $request->user()?->role !== 'admin')) abort(403, 'Trip is not assigned to this driver.');
+        if (!$driver || $trip->driver_id !== $driver->id) abort(403, 'Trip is not assigned to this driver.');
     }
 }

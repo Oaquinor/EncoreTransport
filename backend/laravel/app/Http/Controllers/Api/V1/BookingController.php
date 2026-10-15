@@ -6,16 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreBookingRequest;
 use App\Models\Booking;
 use App\Services\Bookings\BookingService;
+use App\Services\Auth\PermissionService;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 class BookingController extends Controller
 {
+    public function __construct(private readonly PermissionService $permissions) {}
+
     #[OA\Get(path: '/api/v1/bookings', operationId: 'listMyBookings', summary: 'Listar reservas del usuario autenticado', tags: ['Bookings'], security: [['bearerAuth'=>[]]], responses: [new OA\Response(response: 200, description: 'Reservas del usuario')])]
     public function index(Request $request)
     {
         $query = Booking::query()->with(['trip.route','trip.bus','reservedSeats.seat','passengers'])->latest();
-        if ($request->user()?->role !== 'admin') $query->where('user_id', $request->user()?->id);
+        if (!$this->permissions->allows($request->user(), 'bookings.view')) {
+            $query->where('user_id', $request->user()?->id);
+        }
         return response()->json(['data' => $query->get()]);
     }
 
@@ -42,6 +47,10 @@ class BookingController extends Controller
 
     private function assertOwnership(Request $request, Booking $booking): void
     {
-        if ($booking->user_id && $request->user()?->id !== $booking->user_id && $request->user()?->role !== 'admin') abort(403, 'Forbidden.');
+        $user = $request->user();
+        $isOwner = $booking->user_id !== null && $user?->id === $booking->user_id;
+        $canViewAll = $this->permissions->allows($user, 'bookings.view');
+
+        if (!$isOwner && !$canViewAll) abort(403, 'Forbidden.');
     }
 }

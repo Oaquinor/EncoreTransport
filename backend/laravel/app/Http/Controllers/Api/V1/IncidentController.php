@@ -33,7 +33,7 @@ class IncidentController extends Controller
         $driver = $request->user()?->driver;
         $trip = Trip::query()->findOrFail($data['trip_id']);
 
-        if ($request->user()?->role !== 'admin' && (!$driver || $trip->driver_id !== $driver->id)) {
+        if (!$driver || $trip->driver_id !== $driver->id) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 

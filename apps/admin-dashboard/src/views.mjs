@@ -99,32 +99,18 @@ export function table(title, headers, rows, options = {}) {
 
 export function dashboardView(data) {
   const metrics = data.metrics ?? {};
+  const capabilities = data.capabilities ?? {};
+  const statCards = [
+    capabilities.trips ? `<article class="stat-card"><span>Today's trips</span><strong>${Number(metrics.tripsToday ?? 0)}</strong><small>Scheduled and active</small></article>` : '',
+    capabilities.bookings ? `<article class="stat-card"><span>Bookings</span><strong>${Number(metrics.bookings ?? 0)}</strong><small>Current records</small></article>` : '',
+    capabilities.payments ? `<article class="stat-card"><span>Paid revenue</span><strong>${money(metrics.revenue ?? 0)}</strong><small>Verified payments only</small></article>` : '',
+    capabilities.incidents ? `<article class="stat-card"><span>Open incidents</span><strong>${Number(metrics.incidents ?? 0)}</strong><small>Needs operational review</small></article>` : '',
+  ].filter(Boolean).join('');
 
   return `
-    <section class="admin-stats">
-      <article class="stat-card">
-        <span>Today's trips</span>
-        <strong>${Number(metrics.tripsToday ?? 0)}</strong>
-        <small>Scheduled and active</small>
-      </article>
-      <article class="stat-card">
-        <span>Bookings</span>
-        <strong>${Number(metrics.bookings ?? 0)}</strong>
-        <small>Current records</small>
-      </article>
-      <article class="stat-card">
-        <span>Paid revenue</span>
-        <strong>${money(metrics.revenue ?? 0)}</strong>
-        <small>Verified payments only</small>
-      </article>
-      <article class="stat-card">
-        <span>Open incidents</span>
-        <strong>${Number(metrics.incidents ?? 0)}</strong>
-        <small>Needs operational review</small>
-      </article>
-    </section>
+    ${statCards ? `<section class="admin-stats">${statCards}</section>` : '<section class="admin-panel admin-panel--pad et-empty">No dashboard metrics are available for your current permissions.</section>'}
 
-    ${table(
+    ${capabilities.trips ? table(
       'Recent trips',
       ['Route', 'Date', 'Bus', 'Driver', 'Status'],
       (data.trips ?? []).slice(0, 40).map((trip) => [
@@ -137,7 +123,7 @@ export function dashboardView(data) {
         trip.status,
       ]),
       { id: 'recent-trips', eyebrow: 'Network activity' },
-    )}`;
+    ) : ''}`;
 }
 
 export function incidentsView(items) {

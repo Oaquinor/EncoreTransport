@@ -24,6 +24,7 @@
     "test:business": "node tests/business-rules.test.mjs",
     "test:hardcode": "node tests/production-hardcode.test.mjs",
     "test:server": "node tests/server-routing.test.mjs",
+    "test:dashboard-permissions": "node tests/dashboard-permission-contract.test.mjs",
     "test:real-map": "node tests/real-map-contract.test.mjs",
     "test:map-runtime": "node tests/map-runtime-contract.test.mjs",
     "test:seat-layout": "node tests/seat-layout-visual-contract.test.mjs",
@@ -32,7 +33,7 @@
     "test:premium-design": "node tests/premium-design-contract.test.mjs",
     "test:premium-responsive": "node tests/premium-responsive-contract.test.mjs",
     "test:seo": "node tests/seo-contract.test.mjs",
-    "test": "npm run test:business && npm run test:hardcode && npm run test:server && npm run test:real-map && npm run test:map-runtime && npm run test:seat-layout && npm run test:ux-regression && npm run test:native-gps && npm run test:premium-design && npm run test:premium-responsive && npm run test:seo",
+    "test": "npm run test:business && npm run test:hardcode && npm run test:server && npm run test:dashboard-permissions && npm run test:real-map && npm run test:map-runtime && npm run test:seat-layout && npm run test:ux-regression && npm run test:native-gps && npm run test:premium-design && npm run test:premium-responsive && npm run test:seo",
     "check": "npm run test",
     "validate:frontend": "npm run test && npm run typecheck:api-client && npm run typecheck:passenger && npm run build:passenger",
     "validate:mobile": "npm run test:native-gps && npm run typecheck:passenger-mobile && npm run typecheck:driver-mobile",
@@ -40,7 +41,7 @@
     "validate:local": "npm run validate:frontend && npm run validate:mobile && npm run validate:backend"
   },
   "engines": {
-    "node": ">=24"
+    "node": ">=22.22.0"
   },
   "dependencies": {
     "leaflet": "1.9.4"

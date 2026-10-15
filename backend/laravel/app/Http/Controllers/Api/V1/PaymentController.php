@@ -6,16 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Services\Payments\PaymentService;
+use App\Services\Auth\PermissionService;
 use Illuminate\Http\Request;
 use RuntimeException;
 use OpenApi\Attributes as OA;
 
 class PaymentController extends Controller
 {
+    public function __construct(private readonly PermissionService $permissions) {}
+
     #[OA\Post(path:'/api/v1/bookings/{booking}/payments',operationId:'initiatePayment',summary:'Iniciar pago mediante gateway configurado',tags:['Payments'],security:[['bearerAuth'=>[]]],parameters:[new OA\Parameter(name:'booking',in:'path',required:true,schema:new OA\Schema(type:'integer'))],responses:[new OA\Response(response:201,description:'Pago iniciado'),new OA\Response(response:503,description:'Gateway no configurado')])]
     public function store(Request $request, Booking $booking, PaymentService $service)
     {
-        if ($booking->user_id !== $request->user()?->id && $request->user()?->role !== 'admin') abort(403);
+        $isOwner = $booking->user_id !== null && $booking->user_id === $request->user()?->id;
+        $canViewBooking = $this->permissions->allows($request->user(), 'bookings.view');
+        if (!$isOwner && !$canViewBooking) abort(403);
         $data = $request->validate(['idempotency_key'=>['required','string','max:80']]);
         try {
             $result = $service->initiate($booking, $data['idempotency_key'], $request->user());
@@ -28,7 +33,9 @@ class PaymentController extends Controller
     #[OA\Get(path:'/api/v1/bookings/{booking}/payments',operationId:'listBookingPayments',summary:'Consultar pagos de reserva',tags:['Payments'],security:[['bearerAuth'=>[]]],responses:[new OA\Response(response:200,description:'Pagos')])]
     public function index(Request $request, Booking $booking)
     {
-        if ($booking->user_id !== $request->user()?->id && $request->user()?->role !== 'admin') abort(403);
+        $isOwner = $booking->user_id !== null && $booking->user_id === $request->user()?->id;
+        $canViewPayments = $this->permissions->allows($request->user(), 'payments.view');
+        if (!$isOwner && !$canViewPayments) abort(403);
         return response()->json(['data'=>Payment::query()->where('booking_id',$booking->id)->latest()->get()]);
     }
 }
