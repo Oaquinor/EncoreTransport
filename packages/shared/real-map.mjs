@@ -232,9 +232,51 @@ function validCoordinate(point) {
 }
 
 function normalizePoints(points) {
-  return (Array.isArray(points) ? points : [])
-    .filter(validCoordinate)
-    .map((point) => [Number(point.latitude), Number(point.longitude)]);
+  if (!Array.isArray(points)) return [];
+
+  return points
+    .map((point) => {
+      if (validCoordinate(point)) {
+        return [Number(point.latitude), Number(point.longitude)];
+      }
+
+      // TomTom GeoJSON coordinates are [longitude, latitude].
+      if (Array.isArray(point) && point.length >= 2) {
+        const longitude = Number(point[0]);
+        const latitude = Number(point[1]);
+
+        if (
+          Number.isFinite(latitude) && Number.isFinite(longitude) &&
+          latitude >= -90 && latitude <= 90 &&
+          longitude >= -180 && longitude <= 180
+        ) {
+          return [latitude, longitude];
+        }
+      }
+
+      return null;
+    })
+    .filter(Boolean);
+}
+
+function routePoints(route) {
+  const candidates = [
+    route?.points,
+    route?.coordinates,
+    route?.geometry?.coordinates,
+    ...(Array.isArray(route?.legs) ? route.legs.flatMap((leg) => [
+      leg?.points,
+      leg?.coordinates,
+      leg?.geometry?.coordinates,
+    ]) : []),
+  ];
+
+  for (const candidate of candidates) {
+    const points = normalizePoints(candidate);
+    if (points.length >= 2) return points;
+  }
+
+  return [];
 }
 
 function runtimeStatus(container, title, detail) {
@@ -272,7 +314,7 @@ export async function renderJourneyMap(container, journey, options = {}) {
   destroyRealMap(container);
   container.classList.add('encore-real-map');
 
-  const points = normalizePoints(journey?.route?.points);
+  const points = routePoints(journey?.route);
   const origin = journey?.origin;
   const destination = journey?.destination;
 
@@ -286,20 +328,6 @@ export async function renderJourneyMap(container, journey, options = {}) {
       </div>`;
 
     return null;
-  }
-
-  try {
-    await probeTileProxy();
-  } catch (error) {
-    container.innerHTML = `
-      <div class="encore-map-fallback">
-        <div>
-          <strong>Map tiles unavailable</strong>
-          <span>${String(error?.message ?? error)}</span>
-        </div>
-      </div>`;
-
-    throw error;
   }
 
   let L;
@@ -463,4 +491,33 @@ export async function verifyMapRuntime({ force = true } = {}) {
     tileProxy: true,
     leaflet: true,
   };
+}
+
+export async function renderLocationMap(container, location, options = {}) {
+  if (!container || !validCoordinate(location)) return null;
+
+  destroyRealMap(container);
+  container.classList.add('encore-real-map');
+  const L = await loadLeaflet();
+  const center = [Number(location.latitude), Number(location.longitude)];
+  const map = L.map(container, {
+    zoomControl: options.zoomControl !== false,
+    attributionControl: true,
+  }).setView(center, options.zoom ?? 15);
+  mapRegistry.set(container, map);
+
+  L.tileLayer(`${appConfig.apiBaseUrl}/maps/tiles/{z}/{x}/{y}.png?style=street-light`, {
+    minZoom: 0,
+    maxZoom: 22,
+    tileSize: 256,
+    attribution: '&copy; TomTom',
+  }).addTo(map);
+
+  L.marker(center, {
+    icon: markerIcon(L, 'origin', 'E'),
+    title: location.name || 'Encore Transport office',
+  }).addTo(map).bindPopup(location.name || 'Encore Transport office').openPopup();
+
+  requestAnimationFrame(() => map.invalidateSize());
+  return map;
 }

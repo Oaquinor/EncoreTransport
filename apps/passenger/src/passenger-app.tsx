@@ -59,6 +59,7 @@ type Quote = {
 const API = '/api/v1';
 const TOKEN = 'encore_api_token';
 const DRAFT = 'encore_booking_draft';
+const OPERATIONAL_POINTS = ['Georgetown', 'Rosignol', 'New Amsterdam'] as const;
 
 const money = (value: number, currency = 'DOP') =>
   new Intl.NumberFormat('en-US', {
@@ -530,7 +531,7 @@ function Home({
       </section>
 
       <form className="search-console" onSubmit={submit}>
-        <Field
+        <PointField
           label="From"
           value={filters.origin}
           onChange={(value) => setFilters({ ...filters, origin: value })}
@@ -548,7 +549,7 @@ function Home({
           ⇄
         </button>
 
-        <Field
+        <PointField
           label="To"
           value={filters.destination}
           onChange={(value) => setFilters({ ...filters, destination: value })}
@@ -576,6 +577,26 @@ function Home({
         </button>
       </form>
     </>
+  );
+}
+
+function PointField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label>
+      <span>{label}</span>
+      <select value={value} onChange={(event) => onChange(event.target.value)} required>
+        <option value="">Select point</option>
+        {OPERATIONAL_POINTS.map((point) => <option key={point} value={point}>{point}</option>)}
+      </select>
+    </label>
   );
 }
 
@@ -692,8 +713,9 @@ function JourneyMap({ trip }: { trip: ApiTrip }) {
 
   useEffect(() => {
     let cancelled = false;
+    let observer: IntersectionObserver | null = null;
 
-    void (async () => {
+    const loadMap = async () => {
       if (!ref.current) return;
 
       try {
@@ -709,10 +731,22 @@ function JourneyMap({ trip }: { trip: ApiTrip }) {
       } catch (caught) {
         if (!cancelled) setMapError((caught as Error).message);
       }
-    })();
+    };
+
+    if ('IntersectionObserver' in window && ref.current) {
+      observer = new IntersectionObserver((entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer?.disconnect();
+        void loadMap();
+      }, { rootMargin: '240px 0px' });
+      observer.observe(ref.current);
+    } else {
+      void loadMap();
+    }
 
     return () => {
       cancelled = true;
+      observer?.disconnect();
       if (ref.current) destroyRealMap(ref.current);
     };
   }, [trip.id, trip.origin, trip.destination]);

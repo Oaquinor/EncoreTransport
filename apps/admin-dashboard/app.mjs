@@ -15,6 +15,7 @@ import {
   dashboardView,
   table,
   reportView,
+  icon,
 } from './src/views.mjs';
 
 const root = document.querySelector('#app');
@@ -31,10 +32,18 @@ const state = {
   routes: [],
   drivers: [],
   vehicles: [],
+  driverFormOpen: false,
+  driverEditingId: null,
+  routeFormOpen: false,
+  routeEditingId: null,
   vehicleStatus: [],
   reportType: 'executive',
   reportData: null,
+  reportFrom: '',
+  reportTo: '',
+  reportWidgetOrder: JSON.parse(localStorage.getItem('encore_report_widgets') || '[]'),
   user: null,
+  permissions: [],
 };
 
 function esc(value = '') {
@@ -67,7 +76,9 @@ async function ensureAdmin() {
     const payload = await me();
     state.user = payload.user ?? payload.data?.user ?? payload;
 
-    if (state.user?.role !== 'admin') {
+    state.permissions = payload.permissions ?? [];
+
+    if (!state.permissions.includes('dashboard.view')) {
       state.loading = false;
       state.accessDenied = true;
       state.error = 'Your account is signed in, but it does not have permission to access Operations.';
@@ -103,7 +114,7 @@ function sidebar() {
       </a>
 
       <nav class="admin-nav" aria-label="Operations modules">
-        ${modules.map((module) => {
+        ${modules.filter((module) => state.permissions.includes(module.permission)).map((module) => {
           const group = module.group !== lastGroup
             ? `<div class="eyebrow" style="margin:16px 12px 6px">${esc(module.group)}</div>`
             : '';
@@ -119,6 +130,15 @@ function sidebar() {
             </button>`;
         }).join('')}
       </nav>
+
+      <div class="admin-access-profile" aria-label="Current access profile">
+        <span class="admin-access-profile__icon" aria-hidden="true">✓</span>
+        <div>
+          <small>Access profile</small>
+          <strong>${esc(state.user?.role ?? 'Staff account')}</strong>
+          <span>${state.permissions.length} active permissions</span>
+        </div>
+      </div>
     </aside>`;
 }
 
@@ -236,7 +256,7 @@ function content() {
   }
 
   if (state.module === 'vehicles') {
-    return `<section class="admin-panel admin-panel--pad"><div class="eyebrow">Fleet registry</div><h2>Add vehicle</h2><form id="vehicleForm" class="premium-form-grid"><label><span>Code</span><input name="code" required /></label><label><span>Plate</span><input name="plate" required /></label><label><span>Capacity</span><input name="capacity" type="number" min="1" max="500" required /></label><label><span>Status</span><select name="status"><option value="operational">Operational</option><option value="maintenance">Maintenance</option><option value="out_of_service">Out of service</option></select></label><button class="button button--primary" type="submit">Save vehicle</button><div id="vehicleMessage" aria-live="polite"></div></form></section>${table(
+    return `<section class="admin-panel admin-panel--pad fleet-module"><div class="module-view__header"><div><div class="eyebrow">Fleet registry</div><h2>Vehicles</h2><p class="module-subtitle">Keep vehicle capacity and operational status accurate.</p></div><span class="badge badge--neutral">${state.vehicles.length} records</span></div><form id="vehicleForm" class="premium-form-grid fleet-form"><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>Add vehicle to fleet</strong><span>Vehicle capacity controls seat availability.</span></div></div><label><span>Vehicle code</span><input name="code" required placeholder="BUS-001" /></label><label><span>Plate</span><input name="plate" required placeholder="Registration plate" /></label><label><span>Capacity</span><input name="capacity" type="number" min="1" max="500" required placeholder="42" /></label><label><span>Status</span><select name="status"><option value="operational">Operational</option><option value="maintenance">Maintenance</option><option value="out_of_service">Out of service</option></select></label><div class="form-actions"><button class="button button--primary button--with-icon" type="submit">${icon('save')}Save vehicle</button></div><div id="vehicleMessage" aria-live="polite"></div></form></section>${table(
       'Vehicles',
       ['Code', 'Plate', 'Capacity', 'Status'],
       state.vehicles.map((bus) => [
@@ -249,38 +269,33 @@ function content() {
   }
 
   if (state.module === 'drivers') {
-    return `<section class="admin-panel admin-panel--pad"><div class="eyebrow">Fleet registry</div><h2>Add driver profile</h2><form id="driverForm" class="premium-form-grid"><label><span>Name</span><input name="name" required maxlength="150" /></label><label><span>License number</span><input name="license_number" required maxlength="80" /></label><label><span>Status</span><select name="status"><option value="pending">Pending</option><option value="active">Active</option><option value="suspended">Suspended</option><option value="inactive">Inactive</option></select></label><button class="button button--primary" type="submit">Save driver</button><div id="driverMessage" aria-live="polite"></div></form></section>${table(
+    const form = state.driverFormOpen ? `<form id="driverForm" class="premium-form-grid fleet-form"><input type="hidden" name="id" value="${esc(state.driverEditingId ?? '')}" /><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.driverEditingId ? 'Update driver profile' : 'Create a driver profile'}</strong><span>Keep identity and operational status up to date.</span></div></div><label><span>Name</span><input name="name" required maxlength="150" placeholder="Full name" /></label><label><span>License number</span><input name="license_number" required maxlength="80" placeholder="Driver license or internal ID" /></label><label><span>Status</span><select name="status"><option value="pending">Pending</option><option value="active">Active</option><option value="suspended">Suspended</option><option value="inactive">Inactive</option></select></label><label class="file-field"><span>Profile photo</span><input name="photo" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG or WebP · maximum 5 MB</small></label><div class="form-actions"><button class="button button--primary button--with-icon" type="submit">${icon('save')}${state.driverEditingId ? 'Update driver' : 'Save driver'}</button><button class="button button--ghost button--with-icon" id="cancelDriverForm" type="button">${icon('close')}Cancel</button></div><div id="driverMessage" aria-live="polite"></div></form>` : '';
+    return `<section class="admin-panel admin-panel--pad fleet-module"><div class="module-view__header"><div><div class="eyebrow">Fleet registry</div><h2>Drivers</h2><p class="module-subtitle">Manage profiles, status and identity documents from one place.</p></div><button class="button button--primary button--with-icon" id="addDriver" type="button">${icon('plus')}Add driver</button></div>${form}</section>${table(
       'Drivers',
-      ['Name', 'License', 'Status'],
+      ['Photo', 'Name', 'License', 'Status', 'Actions'],
       state.drivers.map((driver) => [
+        driver.photo_path ? { html: `<img class="admin-driver-photo" src="/storage/${esc(driver.photo_path)}" alt="${esc(driver.name)}" loading="lazy" />` } : '—',
         driver.name,
         driver.license_number,
         driver.status,
+        { html: `<div class="table-actions"><button class="button button--icon" title="Edit driver" aria-label="Edit driver" data-edit-driver="${esc(driver.id)}" type="button">${icon('edit')}</button><button class="button button--icon" title="Deactivate driver" aria-label="Deactivate driver" data-deactivate-driver="${esc(driver.id)}" type="button" ${driver.status === 'inactive' ? 'disabled' : ''}>${icon('archive')}</button></div>` },
       ]),
     )}`;
   }
 
   if (state.module === 'routes') {
+    const form = state.routeFormOpen ? `<form id="routeForm" class="premium-form-grid fleet-form"><input type="hidden" name="id" value="${esc(state.routeEditingId ?? '')}" /><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.routeEditingId ? 'Update route' : 'Create a route'}</strong><span>Define the service corridor and intermediate stops.</span></div></div><label><span>Origin</span><input name="origin" required maxlength="150" placeholder="Starting terminal" /></label><label><span>Destination</span><input name="destination" required maxlength="150" placeholder="Destination terminal" /></label><label><span>Distance (km)</span><input name="distance_km" type="number" min="0" required placeholder="0" /></label><label><span>Intermediate stops</span><input name="stops" placeholder="Stop 1, Stop 2" /></label><label><span>Published</span><select name="active"><option value="1">Active</option><option value="0">Inactive</option></select></label><div class="form-actions"><button type="submit" class="button button--primary button--with-icon">${icon('save')}${state.routeEditingId ? 'Update route' : 'Save route'}</button> <button type="button" class="button button--ghost button--with-icon" id="cancelRoute">${icon('close')}Cancel</button></div><div id="routeMessage" aria-live="polite"></div></form>` : '';
     return `
       <section class="admin-panel admin-panel--pad">
         <div class="module-view__header">
           <div><div class="eyebrow">Network configuration</div><h2>Routes</h2></div>
-          <span class="badge badge--neutral">${state.routes.length} records</span>
+          <button class="button button--primary button--with-icon" id="addRoute" type="button">${icon('plus')}Add route</button>
         </div>
-        <form id="routeForm" class="premium-form-grid">
-          <input type="hidden" name="id" />
-          <label><span>Origin</span><input name="origin" required maxlength="150" /></label>
-          <label><span>Destination</span><input name="destination" required maxlength="150" /></label>
-          <label><span>Distance (km)</span><input name="distance_km" type="number" min="0" required /></label>
-          <label><span>Intermediate stops</span><input name="stops" placeholder="Stop 1, Stop 2" /></label>
-          <label><span>Published</span><select name="active"><option value="1">Active</option><option value="0">Inactive</option></select></label>
-          <div><button type="submit" class="button button--primary">Save route</button> <button type="button" class="button button--ghost" id="resetRoute">Clear</button></div>
-          <div id="routeMessage" aria-live="polite"></div>
-        </form>
+        ${form}
       </section>
-      ${table('Saved routes', ['Origin', 'Destination', 'Distance', 'Stops', 'Active', 'Action'], state.routes.map((route) => [
+      ${table('Saved routes', ['Origin', 'Destination', 'Distance', 'Stops', 'Active', 'Actions'], state.routes.map((route) => [
         route.origin, route.destination, `${route.distance_km ?? 0} km`, route.stops?.length ?? 0,
-        route.active ? 'Yes' : 'No', { html: `<button type="button" class="button button--ghost" data-edit-route="${esc(route.id)}">Edit</button>` },
+        route.active ? 'Yes' : 'No', { html: `<div class="table-actions"><button type="button" class="button button--icon" title="Edit route" aria-label="Edit route" data-edit-route="${esc(route.id)}">${icon('edit')}</button><button type="button" class="button button--icon" title="Deactivate route" aria-label="Deactivate route" data-deactivate-route="${esc(route.id)}" ${route.active ? '' : 'disabled'}>${icon('archive')}</button></div>` },
       ]), { id: 'admin-routes' })}`;
   }
 
@@ -345,10 +360,11 @@ function content() {
             <option value="trips" ${state.reportType === 'trips' ? 'selected' : ''}>Trip Report</option>
             <option value="trip-costs" ${state.reportType === 'trip-costs' ? 'selected' : ''}>Trip Cost Summary</option>
           </select>
+          <div class="report-filters"><label><span>From</span><input id="reportFrom" type="date" value="${esc(state.reportFrom)}" /></label><label><span>To</span><input id="reportTo" type="date" value="${esc(state.reportTo)}" /></label><button class="button button--primary" id="applyReportFilters" type="button">Update report</button></div>
         </div>
       </section>
 
-      ${state.reportData ? reportView(state.reportType, state.reportData) : ''}`;
+      ${state.reportData ? reportView(state.reportType, state.reportData, { widgetOrder: state.reportWidgetOrder }) : ''}`;
   }
 
   return '';
@@ -454,7 +470,7 @@ async function loadModule() {
     }
 
     if (state.module === 'reports') {
-      state.reportData = await api.report(state.reportType);
+      state.reportData = await api.report(state.reportType, { from: state.reportFrom, to: state.reportTo });
     }
 
     state.loading = false;
@@ -501,6 +517,37 @@ function wire() {
     void loadModule();
   });
 
+  document.querySelector('#applyReportFilters')?.addEventListener('click', () => {
+    state.reportFrom = document.querySelector('#reportFrom')?.value ?? '';
+    state.reportTo = document.querySelector('#reportTo')?.value ?? '';
+    state.reportData = null;
+    void loadModule();
+  });
+
+  document.querySelectorAll('[data-report-widget]').forEach((widget) => {
+    widget.addEventListener('dragstart', (event) => {
+      event.dataTransfer?.setData('text/plain', widget.dataset.reportWidget ?? '');
+      widget.classList.add('is-dragging');
+    });
+    widget.addEventListener('dragend', () => widget.classList.remove('is-dragging'));
+    widget.addEventListener('dragover', (event) => event.preventDefault());
+    widget.addEventListener('drop', (event) => {
+      event.preventDefault();
+      const source = event.dataTransfer?.getData('text/plain');
+      const target = widget.dataset.reportWidget;
+      if (!source || !target || source === target) return;
+      const order = [...document.querySelectorAll('[data-report-widget]')].map((item) => item.dataset.reportWidget);
+      const from = order.indexOf(source);
+      const to = order.indexOf(target);
+      if (from < 0 || to < 0) return;
+      order.splice(from, 1);
+      order.splice(to, 0, source);
+      state.reportWidgetOrder = order;
+      localStorage.setItem('encore_report_widgets', JSON.stringify(order));
+      render();
+    });
+  });
+
   const routeForm = document.querySelector('#routeForm');
   routeForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -518,20 +565,33 @@ function wire() {
       }, id);
       message.textContent = 'Route saved.';
       state.routes = await api.routes();
+      state.routeFormOpen = false;
+      state.routeEditingId = null;
       render();
     } catch (error) {
       message.textContent = error.message;
     }
   });
 
-  document.querySelector('#resetRoute')?.addEventListener('click', () => {
-    document.querySelector('#routeForm')?.reset();
+  document.querySelector('#addRoute')?.addEventListener('click', () => {
+    state.routeFormOpen = true;
+    state.routeEditingId = null;
+    render();
+  });
+
+  document.querySelector('#cancelRoute')?.addEventListener('click', () => {
+    state.routeFormOpen = false;
+    state.routeEditingId = null;
+    render();
   });
 
   document.querySelectorAll('[data-edit-route]').forEach((button) => {
     button.addEventListener('click', () => {
       const route = state.routes.find((item) => String(item.id) === button.dataset.editRoute);
       if (!route) return;
+      state.routeFormOpen = true;
+      state.routeEditingId = route.id;
+      render();
       const form = document.querySelector('#routeForm');
       form.elements.id.value = route.id;
       form.elements.origin.value = route.origin ?? '';
@@ -543,21 +603,81 @@ function wire() {
     });
   });
 
+  document.querySelectorAll('[data-deactivate-route]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      if (!confirm('Deactivate this route? Historical trips will be preserved.')) return;
+      try {
+        await api.deactivateRoute(button.dataset.deactivateRoute);
+        state.routes = await api.routes();
+        render();
+      } catch (error) {
+        state.error = error.message;
+        render();
+      }
+    });
+  });
+
   document.querySelector('#driverForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const message = document.querySelector('#driverMessage');
     try {
-      await api.saveDriver({
+      const id = String(form.get('id') ?? '').trim() || null;
+      const driver = await api.saveDriver({
         name: form.get('name'),
         license_number: form.get('license_number'),
         status: form.get('status'),
-      });
+      }, id);
+      const photo = form.get('photo');
+      if (photo instanceof File && photo.size > 0) await api.uploadDriverPhoto(driver.id, photo);
       state.drivers = await api.drivers();
+      state.driverFormOpen = false;
+      state.driverEditingId = null;
       render();
     } catch (error) {
       message.textContent = error.message;
     }
+  });
+
+  document.querySelector('#addDriver')?.addEventListener('click', () => {
+    state.driverFormOpen = true;
+    state.driverEditingId = null;
+    render();
+  });
+
+  document.querySelector('#cancelDriverForm')?.addEventListener('click', () => {
+    state.driverFormOpen = false;
+    state.driverEditingId = null;
+    render();
+  });
+
+  document.querySelectorAll('[data-edit-driver]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const driver = state.drivers.find((item) => String(item.id) === button.dataset.editDriver);
+      if (!driver) return;
+      state.driverFormOpen = true;
+      state.driverEditingId = driver.id;
+      render();
+      const form = document.querySelector('#driverForm');
+      form.elements.name.value = driver.name ?? '';
+      form.elements.license_number.value = driver.license_number ?? '';
+      form.elements.status.value = driver.status ?? 'pending';
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  document.querySelectorAll('[data-deactivate-driver]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      if (!confirm('Deactivate this driver? Their history will be preserved.')) return;
+      try {
+        await api.deactivateDriver(button.dataset.deactivateDriver);
+        state.drivers = await api.drivers();
+        render();
+      } catch (error) {
+        state.error = error.message;
+        render();
+      }
+    });
   });
 
   document.querySelector('#vehicleForm')?.addEventListener('submit', async (event) => {

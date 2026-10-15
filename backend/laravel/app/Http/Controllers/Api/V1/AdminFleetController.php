@@ -8,6 +8,7 @@ use App\Models\Driver;
 use App\Services\Audit\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class AdminFleetController extends Controller
@@ -43,6 +44,34 @@ class AdminFleetController extends Controller
 
         $driver->fill($data)->save();
         $audit->record($request->user(), 'driver.updated', $driver);
+
+        return response()->json(['data' => $driver->fresh('user')]);
+    }
+
+    public function uploadDriverPhoto(Request $request, Driver $driver, AuditService $audit)
+    {
+        $data = $request->validate([
+            'photo' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+
+        if ($driver->photo_path) {
+            Storage::disk('public')->delete($driver->photo_path);
+        }
+
+        $driver->update(['photo_path' => $data['photo']->store('drivers', 'public')]);
+        $audit->record($request->user(), 'driver.photo_updated', $driver);
+
+        return response()->json(['data' => $driver->fresh('user')]);
+    }
+
+    public function deactivateDriver(Request $request, Driver $driver, AuditService $audit)
+    {
+        if ($driver->trips()->whereIn('status', ['scheduled', 'boarding', 'in_progress'])->exists()) {
+            return response()->json(['message' => 'This driver cannot be deactivated while assigned to an active trip.'], 409);
+        }
+
+        $driver->update(['status' => 'inactive']);
+        $audit->record($request->user(), 'driver.deactivated', $driver);
 
         return response()->json(['data' => $driver->fresh('user')]);
     }

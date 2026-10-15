@@ -2,6 +2,9 @@ import {
   requestJson,
 } from './core.mjs';
 
+const journeyCache = new Map();
+const journeyRequests = new Map();
+
 export function health() {
   return requestJson(
     '/health',
@@ -116,19 +119,28 @@ export async function mapJourney(
   origin,
   destination,
 ) {
+  const cacheKey = `${String(origin).trim().toLowerCase()}::${String(destination).trim().toLowerCase()}`;
+  if (journeyCache.has(cacheKey)) return journeyCache.get(cacheKey);
+  if (journeyRequests.has(cacheKey)) return journeyRequests.get(cacheKey);
+
   const query =
     new URLSearchParams({
       origin,
       destination,
     });
 
-  const payload =
-    await requestJson(
+  const request = requestJson(
       `/maps/journey?${query}`,
       { token: false },
-    );
+    ).then((payload) => {
+      const result = payload.data ?? payload;
+      journeyCache.set(cacheKey, result);
+      return result;
+    }).finally(() => journeyRequests.delete(cacheKey));
 
-  return payload.data ?? payload;
+  journeyRequests.set(cacheKey, request);
+
+  return request;
 }
 
 export async function publicTrackPackage(

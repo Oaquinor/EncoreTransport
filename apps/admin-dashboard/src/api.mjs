@@ -62,6 +62,11 @@ export const saveRoute = async (data, id = null) => {
   return payload.data ?? payload;
 };
 
+export const deactivateRoute = async (id) => {
+  const payload = await requestJson(`/admin/routes/${encodeURIComponent(id)}/deactivate`, { method: 'POST' });
+  return payload.data ?? payload;
+};
+
 export const drivers = async () => {
   const payload = await requestJson('/admin/drivers');
   return payload.data ?? [];
@@ -72,6 +77,21 @@ export const saveDriver = async (data, id = null) => {
     method: id ? 'PUT' : 'POST',
     body: JSON.stringify(data),
   });
+  return payload.data ?? payload;
+};
+
+export const uploadDriverPhoto = async (id, photo) => {
+  const form = new FormData();
+  form.append('photo', photo);
+  const payload = await requestJson(`/admin/drivers/${encodeURIComponent(id)}/photo`, {
+    method: 'POST',
+    body: form,
+  });
+  return payload.data ?? payload;
+};
+
+export const deactivateDriver = async (id) => {
+  const payload = await requestJson(`/admin/drivers/${encodeURIComponent(id)}/deactivate`, { method: 'POST' });
   return payload.data ?? payload;
 };
 

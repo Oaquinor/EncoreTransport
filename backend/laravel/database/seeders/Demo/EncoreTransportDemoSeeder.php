@@ -8,6 +8,7 @@ use App\Models\BusSeat;
 use App\Models\Driver;
 use App\Models\TransportRoute;
 use App\Models\Trip;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -28,9 +29,16 @@ class EncoreTransportDemoSeeder extends Seeder
         $driverUser=User::query()->updateOrCreate(['email'=>'driver@example.test'],[
             'name'=>'Driver Demo','role'=>'driver','phone'=>'+18095550002','active'=>true,'password'=>Hash::make('password'),
         ]);
-        User::query()->updateOrCreate(['email'=>'admin@example.test'],[
+        $admin=User::query()->updateOrCreate(['email'=>'admin@example.test'],[
             'name'=>'Admin Demo','role'=>'admin','phone'=>'+18095550003','active'=>true,'password'=>Hash::make('password'),
         ]);
+
+        $roles=Role::query()->whereIn('name',['superadmin','driver','passenger'])->pluck('id','name');
+        foreach ([[$admin,'superadmin'],[$driverUser,'driver'],[$passenger,'passenger']] as [$user,$roleName]) {
+            if ($roles->has($roleName)) {
+                $user->roles()->syncWithoutDetaching([$roles->get($roleName)]);
+            }
+        }
 
         $route=TransportRoute::query()->updateOrCreate(['origin'=>'Boston','destination'=>'New York'],['distance_km'=>346,'active'=>true]);
         $bus=Bus::query()->updateOrCreate(['code'=>'BUS-001'],['plate'=>'ET-314-AX','capacity'=>42,'status'=>'operational']);

@@ -64,6 +64,14 @@ class RouteController extends Controller
         return new RouteResource($route);
     }
 
+    public function deactivate(Request $request, TransportRoute $transportRoute, AuditService $audit)
+    {
+        $transportRoute->update(['active' => false]);
+        $audit->record($request->user(), 'route.deactivated', $transportRoute);
+
+        return new RouteResource($transportRoute->fresh('stops'));
+    }
+
     private function validated(Request $request): array
     {
         return $request->validate([

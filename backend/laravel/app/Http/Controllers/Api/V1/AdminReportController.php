@@ -8,6 +8,7 @@ use App\Models\Bus;
 use App\Models\Incident;
 use App\Models\Payment;
 use App\Models\Trip;
+use App\Models\TransportPackage;
 use App\Models\VehicleStatusReport;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -48,6 +49,36 @@ class AdminReportController extends Controller
         $payments = Payment::query()->whereBetween('created_at', [$from, $to])->where('status', 'paid');
         $paidCount = (clone $payments)->count();
         $revenueMinor = (int) (clone $payments)->sum('amount_minor');
+        $capacity = (int) (clone $trips)->with('bus:id,capacity')->get()->sum(fn ($trip) => (int) ($trip->bus?->capacity ?? 0));
+        $availableSeats = (int) (clone $trips)->sum('available_seats');
+        $occupiedSeats = max(0, $capacity - $availableSeats);
+        $confirmedBookings = (clone $bookings)->where('status', 'confirmed')->count();
+        $activeFleet = Bus::query()->where('status', 'operational')->count();
+
+        $daily = collect(range(0, $from->diffInDays($to)))->map(function (int $offset) use ($from) {
+            $day = $from->addDays($offset);
+            return [
+                'date' => $day->toDateString(),
+                'trips' => Trip::query()->whereDate('departure_date', $day)->count(),
+                'bookings' => Booking::query()->whereDate('created_at', $day)->whereIn('status', ['confirmed', 'pending_payment'])->count(),
+                'revenue_minor' => (int) Payment::query()->whereDate('created_at', $day)->where('status', 'paid')->sum('amount_minor'),
+            ];
+        })->values();
+
+        $upcoming = Trip::query()->with(['route', 'bus', 'driver'])
+            ->whereDate('departure_date', '>=', today())
+            ->whereNotIn('status', ['cancelled', 'completed'])
+            ->orderBy('departure_date')->orderBy('departure_time')->limit(8)->get()
+            ->map(fn ($trip) => [
+                'id' => $trip->id,
+                'date' => $trip->departure_date?->toDateString(),
+                'time' => $trip->departure_time,
+                'route' => trim(($trip->route?->origin ?? '') . ' → ' . ($trip->route?->destination ?? '')),
+                'vehicle' => $trip->bus?->code,
+                'driver' => $trip->driver?->name,
+                'available_seats' => (int) $trip->available_seats,
+                'status' => $trip->status,
+            ])->values();
 
         return response()->json(['data' => [
             'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
@@ -58,11 +89,26 @@ class AdminReportController extends Controller
             ],
             'bookings' => [
                 'total' => (clone $bookings)->count(),
-                'confirmed' => (clone $bookings)->where('status', 'confirmed')->count(),
+                'confirmed' => $confirmedBookings,
                 'pending' => (clone $bookings)->where('status', 'pending_payment')->count(),
+                'cancelled' => (clone $bookings)->whereIn('status', ['cancelled', 'canceled'])->count(),
             ],
             'payments' => ['paid' => $paidCount, 'revenue_minor' => $revenueMinor],
+            'occupancy' => [
+                'capacity' => $capacity,
+                'occupied' => $occupiedSeats,
+                'available' => $availableSeats,
+                'rate' => $capacity > 0 ? round(($occupiedSeats / $capacity) * 100, 1) : null,
+            ],
+            'fleet' => ['active' => $activeFleet, 'total' => Bus::query()->count()],
+            'cargo' => [
+                'received' => TransportPackage::query()->whereBetween('created_at', [$from, $to])->count(),
+                'in_transit' => TransportPackage::query()->where('status', 'in_transit')->count(),
+                'delivered' => TransportPackage::query()->whereBetween('delivered_at', [$from, $to])->count(),
+            ],
             'incidents' => Incident::query()->whereBetween('created_at', [$from, $to])->count(),
+            'daily' => $daily,
+            'upcoming' => $upcoming,
         ]]);
     }
 

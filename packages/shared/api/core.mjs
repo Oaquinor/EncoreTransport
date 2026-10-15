@@ -114,10 +114,13 @@ export async function requestJson(
     const validation =
       buildValidationMessage(payload);
 
+    const message = validation || payload?.message || '';
+    const safeMessage = response.status >= 500
+      ? 'Encore Transport is temporarily unavailable. Please try again shortly.'
+      : message || `Request failed (${response.status}).`;
+
     throw new ApiError(
-      validation ||
-      payload?.message ||
-      `Request failed (${response.status}).`,
+      safeMessage,
       response.status,
       payload,
     );

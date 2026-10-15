@@ -7,6 +7,7 @@ import {
 } from '../../packages/shared/api.mjs';
 import {
   renderJourneyMap,
+  renderLocationMap,
   destroyRealMap,
 } from '../../packages/shared/real-map.mjs';
 
@@ -22,6 +23,14 @@ const mobileNavigation = document.querySelector('#mobileNavigation');
 let featuredTrip = null;
 let featuredJourney = null;
 let revealObserver = null;
+const validSegments = new Set([
+  'Georgetown::Rosignol',
+  'Georgetown::New Amsterdam',
+  'Rosignol::Georgetown',
+  'Rosignol::New Amsterdam',
+  'New Amsterdam::Georgetown',
+  'New Amsterdam::Rosignol',
+]);
 
 function esc(value = '') {
   return String(value).replace(/[&<>'"]/g, (character) => ({
@@ -46,6 +55,38 @@ function routeCode(name = '') {
 function setText(selector, value) {
   const element = document.querySelector(selector);
   if (element) element.textContent = String(value ?? '');
+}
+
+function initializeBusinessFooter() {
+  setText('#copyrightYear', new Date().getFullYear());
+  const config = globalThis.__ENCORE_CONFIG__ ?? {};
+  const location = config.businessLocation ?? {
+    name: 'Georgetown, Guyana · provisional city view',
+    latitude: 6.8013,
+    longitude: -58.1551,
+  };
+  const map = document.querySelector('#businessMap');
+  const status = document.querySelector('#businessMapStatus');
+
+  if (location && Number.isFinite(Number(location.latitude)) && Number.isFinite(Number(location.longitude))) {
+    if (status) status.textContent = location.name || 'Encore Transport city view';
+    void renderLocationMap(map, location).catch(() => {
+      if (status) status.textContent = 'City location map unavailable.';
+    });
+  }
+
+  document.querySelectorAll('[data-social]').forEach((link) => {
+    const network = link.dataset.social;
+    const url = config.socialLinks?.[network];
+    if (typeof url === 'string' && /^https:\/\//.test(url)) {
+      link.href = url;
+      link.removeAttribute('aria-disabled');
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+    } else {
+      link.addEventListener('click', (event) => event.preventDefault());
+    }
+  });
 }
 
 function minutes(seconds) {
@@ -383,22 +424,22 @@ async function loadFeaturedTrip() {
     let selectedTrip = trips[0];
     let selectedSeats = [];
 
-    for (const trip of trips.slice(0, 12)) {
-      try {
-        const seats = await fetchTripSeats(trip.id);
-
-        if (!selectedSeats.length) {
-          selectedTrip = trip;
-          selectedSeats = Array.isArray(seats) ? seats : [];
-        }
-
-        if (Array.isArray(seats) && seats.length) {
-          selectedTrip = trip;
-          selectedSeats = seats;
-          break;
-        }
-      } catch {
-        // Continue evaluating current server results without fabricating availability.
+    const seatResults = await Promise.allSettled(
+      trips.slice(0, 6).map((trip) => fetchTripSeats(trip.id)),
+    );
+    for (let index = 0; index < seatResults.length; index += 1) {
+      const result = seatResults[index];
+      const seats = result.status === 'fulfilled' && Array.isArray(result.value)
+        ? result.value
+        : [];
+      if (!selectedSeats.length) {
+        selectedTrip = trips[index];
+        selectedSeats = seats;
+      }
+      if (seats.length) {
+        selectedTrip = trips[index];
+        selectedSeats = seats;
+        break;
       }
     }
 
@@ -492,6 +533,11 @@ bookingForm?.addEventListener('submit', (event) => {
     return;
   }
 
+  if (!validSegments.has(`${origin}::${destination}`)) {
+    setText('#searchMessage', 'Select a valid Encore route between Georgetown, Rosignol and New Amsterdam.');
+    return;
+  }
+
   if (origin.localeCompare(destination, undefined, { sensitivity: 'accent' }) === 0) {
     setText('#searchMessage', 'Origin and destination must be different.');
     return;
@@ -510,8 +556,8 @@ bookingForm?.addEventListener('submit', (event) => {
 
 document.querySelector('.swap')?.addEventListener('click', (event) => {
   const form = event.currentTarget.closest('form');
-  const origin = form?.querySelector('input[name="origin"]');
-  const destination = form?.querySelector('input[name="destination"]');
+  const origin = form?.querySelector('[name="origin"]');
+  const destination = form?.querySelector('[name="destination"]');
 
   if (!origin || !destination) return;
 
@@ -524,7 +570,8 @@ async function openModal() {
   document.body.style.overflow = 'hidden';
 
   if (featuredJourney && modalMapCanvas) {
-    await renderJourneyMap(modalMapCanvas, featuredJourney);
+    const map = await renderJourneyMap(modalMapCanvas, featuredJourney);
+    requestAnimationFrame(() => map?.invalidateSize());
   }
 }
 
@@ -553,6 +600,7 @@ document.addEventListener('keydown', (event) => {
 initializeMotion();
 initializeMobileNavigation();
 setMinimumDate();
+initializeBusinessFooter();
 
 try {
   await health();

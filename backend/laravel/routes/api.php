@@ -91,34 +91,37 @@ Route::prefix('v1')->group(function () {
             ->middleware('throttle:60,1');
     });
 
-    Route::middleware('api.token:admin')->group(function () {
-        Route::get('admin/dashboard', [AdminDashboardController::class, 'show']);
+    Route::middleware('api.token')->group(function () {
+        Route::middleware('permission:reports.view')->group(function () {
+            Route::get('admin/reports', [AdminReportController::class, 'index']);
+            Route::get('admin/reports/travel', [AdminReportController::class, 'travel']);
+            Route::get('admin/reports/vehicles', [AdminReportController::class, 'vehicles']);
+            Route::get('admin/reports/trips', [AdminReportController::class, 'trips']);
+            Route::get('admin/reports/trip-costs', [AdminReportController::class, 'tripCosts']);
+        });
 
-        Route::get('admin/drivers', [AdminFleetController::class, 'drivers']);
-        Route::post('admin/drivers', [AdminFleetController::class, 'storeDriver']);
-        Route::put('admin/drivers/{driver}', [AdminFleetController::class, 'updateDriver']);
-        Route::get('admin/vehicles', [AdminFleetController::class, 'vehicles']);
-        Route::post('admin/vehicles', [AdminFleetController::class, 'storeVehicle']);
-        Route::put('admin/vehicles/{bus}', [AdminFleetController::class, 'updateVehicle']);
+        Route::middleware('permission:trips.view')->get('admin/incidents', [IncidentController::class, 'index']);
+        Route::middleware('permission:trips.update')->patch('admin/incidents/{incident}', [IncidentController::class, 'update']);
 
-        Route::get('admin/routes', [RouteController::class, 'adminIndex']);
-        Route::post('admin/routes', [RouteController::class, 'store']);
-        Route::put('admin/routes/{transportRoute}', [RouteController::class, 'update']);
+        Route::middleware('permission:schedules.view')->get('admin/driver-schedules', [DriverScheduleController::class, 'index']);
+        Route::middleware('permission:schedules.manage')->post('admin/driver-schedules', [DriverScheduleController::class, 'store']);
+        Route::middleware('permission:schedules.manage')->put('admin/driver-schedules/{driverSchedule}', [DriverScheduleController::class, 'update']);
 
-        Route::get('admin/reports', [AdminReportController::class, 'index']);
-        Route::get('admin/reports/travel', [AdminReportController::class, 'travel']);
-        Route::get('admin/reports/vehicles', [AdminReportController::class, 'vehicles']);
-        Route::get('admin/reports/trips', [AdminReportController::class, 'trips']);
-        Route::get('admin/reports/trip-costs', [AdminReportController::class, 'tripCosts']);
-
-        Route::get('admin/incidents', [IncidentController::class, 'index']);
-        Route::patch('admin/incidents/{incident}', [IncidentController::class, 'update']);
-
-        Route::get('admin/driver-schedules', [DriverScheduleController::class, 'index']);
-        Route::post('admin/driver-schedules', [DriverScheduleController::class, 'store']);
-        Route::put('admin/driver-schedules/{driverSchedule}', [DriverScheduleController::class, 'update']);
-
-        Route::get('admin/packages', [PackageController::class, 'index']);
-        Route::get('admin/vehicle-status', [VehicleStatusController::class, 'index']);
+        Route::middleware('permission:cargo.view')->get('admin/packages', [PackageController::class, 'index']);
+        Route::middleware('permission:vehicles.view')->get('admin/vehicle-status', [VehicleStatusController::class, 'index']);
     });
+
+    Route::middleware(['api.token', 'permission:dashboard.view'])->get('admin/dashboard', [AdminDashboardController::class, 'show']);
+    Route::middleware(['api.token', 'permission:routes.view'])->get('admin/routes', [RouteController::class, 'adminIndex']);
+    Route::middleware(['api.token', 'permission:routes.create'])->post('admin/routes', [RouteController::class, 'store']);
+    Route::middleware(['api.token', 'permission:routes.update'])->put('admin/routes/{transportRoute}', [RouteController::class, 'update']);
+    Route::middleware(['api.token', 'permission:routes.update'])->post('admin/routes/{transportRoute}/deactivate', [RouteController::class, 'deactivate']);
+    Route::middleware(['api.token', 'permission:drivers.view'])->get('admin/drivers', [AdminFleetController::class, 'drivers']);
+    Route::middleware(['api.token', 'permission:drivers.create'])->post('admin/drivers', [AdminFleetController::class, 'storeDriver']);
+    Route::middleware(['api.token', 'permission:drivers.update'])->put('admin/drivers/{driver}', [AdminFleetController::class, 'updateDriver']);
+    Route::middleware(['api.token', 'permission:drivers.update'])->post('admin/drivers/{driver}/photo', [AdminFleetController::class, 'uploadDriverPhoto']);
+    Route::middleware(['api.token', 'permission:drivers.update'])->post('admin/drivers/{driver}/deactivate', [AdminFleetController::class, 'deactivateDriver']);
+    Route::middleware(['api.token', 'permission:vehicles.view'])->get('admin/vehicles', [AdminFleetController::class, 'vehicles']);
+    Route::middleware(['api.token', 'permission:vehicles.create'])->post('admin/vehicles', [AdminFleetController::class, 'storeVehicle']);
+    Route::middleware(['api.token', 'permission:vehicles.update'])->put('admin/vehicles/{bus}', [AdminFleetController::class, 'updateVehicle']);
 });

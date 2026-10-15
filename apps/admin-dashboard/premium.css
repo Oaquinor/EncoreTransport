@@ -82,6 +82,34 @@ body {
   display: none;
 }
 
+.admin-access-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 22px 4px 0;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 14px;
+  background: rgba(255,255,255,.045);
+}
+
+.admin-access-profile__icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: 50%;
+  background: rgba(105,208,245,.18);
+  color: #8ee0ff;
+  font-weight: 950;
+}
+
+.admin-access-profile div { display: grid; gap: 2px; min-width: 0; }
+.admin-access-profile small { color: #7896a6; font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 850; }
+.admin-access-profile strong { color: #fff; font-size: .76rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-access-profile div > span { color: #8fa8b6; font-size: .62rem; }
+
 .admin-main {
   max-width: 1680px;
   padding: 28px 32px 42px;

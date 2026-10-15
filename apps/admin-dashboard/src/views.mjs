@@ -8,6 +8,17 @@ function esc(value = '') {
   }[character]));
 }
 
+export function icon(name) {
+  const paths = {
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    edit: '<path d="m4 16-.8 4.8L8 20l10.8-10.8a2.1 2.1 0 0 0-3-3L5 17z"/><path d="m14.5 7.5 2 2"/>',
+    archive: '<path d="M4 7h16M6 7v12h12V7M9 11h6"/><path d="m5 4h14v3H5z"/>',
+    save: '<path d="M5 4h12l2 2v14H5z"/><path d="M8 4v6h8V4M8 20v-6h8v6"/>',
+    close: '<path d="m6 6 12 12M18 6 6 18"/>',
+  };
+  return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] ?? ''}</svg>`;
+}
+
 export const money = (value) =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -248,7 +259,23 @@ export function schedulesView(items, dashboard) {
     </section>`;
 }
 
-export function reportView(kind, data) {
+function reportWidget(id, title, body, className = '') {
+  return `<article class="report-widget ${className}" draggable="true" data-report-widget="${esc(id)}"><header><div><span class="eyebrow">${esc(title)}</span><span class="report-drag-hint" aria-label="Drag to reorder">⋮⋮</span></div></header>${body}</article>`;
+}
+
+function executiveReport(data, widgetOrder = []) {
+  const widgets = {
+    kpis: reportWidget('kpis', 'At a glance', `<div class="report-kpi-grid"><div><span>Trips</span><strong>${data.trips?.total ?? 0}</strong><small>${data.trips?.completed ?? 0} completed</small></div><div><span>Bookings</span><strong>${data.bookings?.confirmed ?? 0}</strong><small>${data.bookings?.pending ?? 0} pending</small></div><div><span>Revenue</span><strong>${money((data.payments?.revenue_minor ?? 0) / 100)}</strong><small>${data.payments?.paid ?? 0} paid transactions</small></div><div><span>Incidents</span><strong>${data.incidents ?? 0}</strong><small>${data.fleet?.active ?? 0} active vehicles</small></div></div>`, 'report-widget--wide'),
+    occupancy: reportWidget('occupancy', 'Seat performance', `<div class="report-occupancy"><div class="report-ring" style="--report-rate:${Number(data.occupancy?.rate ?? 0)}%"><strong>${data.occupancy?.rate == null ? '—' : `${data.occupancy.rate}%`}</strong><span>occupancy</span></div><div class="report-side-stats"><div><span>Occupied</span><strong>${data.occupancy?.occupied ?? 0}</strong></div><div><span>Available</span><strong>${data.occupancy?.available ?? 0}</strong></div><div><span>Capacity</span><strong>${data.occupancy?.capacity ?? 0}</strong></div></div></div>`),
+    trend: reportWidget('trend', 'Activity trend', `<div class="report-trend">${(data.daily ?? []).map((day) => `<div class="report-trend-row"><span>${esc(String(day.date).slice(5))}</span><i style="--bar:${Math.min(100, Number(day.bookings ?? 0) * 10)}%" title="${esc(day.bookings)} bookings"></i><b>${day.bookings ?? 0}</b></div>`).join('') || '<p class="report-empty">No activity in this period.</p>'}</div>`, 'report-widget--wide'),
+    upcoming: reportWidget('upcoming', 'Next departures', `<div class="report-departures">${(data.upcoming ?? []).map((trip) => `<div class="report-departure"><div><strong>${esc(trip.route || 'Route unavailable')}</strong><span>${esc(trip.date)} · ${esc(trip.time)} · ${esc(trip.vehicle || 'Vehicle pending')}</span></div><b>${trip.available_seats ?? 0} seats</b></div>`).join('') || '<p class="report-empty">No upcoming departures found.</p>'}</div>`, 'report-widget--wide'),
+    cargo: reportWidget('cargo', 'Cargo activity', `<div class="report-mini-grid"><div><span>Received</span><strong>${data.cargo?.received ?? 0}</strong></div><div><span>In transit</span><strong>${data.cargo?.in_transit ?? 0}</strong></div><div><span>Delivered</span><strong>${data.cargo?.delivered ?? 0}</strong></div><div><span>Cancelled trips</span><strong>${data.trips?.cancelled ?? 0}</strong></div></div>`),
+  };
+  const order = [...new Set([...(widgetOrder ?? []), 'kpis', 'occupancy', 'trend', 'upcoming', 'cargo'])];
+  return `<div class="report-dashboard"><div class="report-dashboard__hint">Drag the panels to arrange your workspace. Your layout is saved on this device.</div><div class="report-widget-grid">${order.map((id) => widgets[id]).filter(Boolean).join('')}</div></div>`;
+}
+
+export function reportView(kind, data, options = {}) {
   if (kind === 'trip-costs' && !data.available) {
     return `
       <section class="admin-panel admin-panel--pad">
@@ -266,13 +293,7 @@ export function reportView(kind, data) {
   }
 
   if (kind === 'executive') {
-    return `
-      <section class="admin-stats">
-        <article class="stat-card"><span>Trips</span><strong>${data.trips?.total ?? 0}</strong></article>
-        <article class="stat-card"><span>Confirmed bookings</span><strong>${data.bookings?.confirmed ?? 0}</strong></article>
-        <article class="stat-card"><span>Paid payments</span><strong>${data.payments?.paid ?? 0}</strong></article>
-        <article class="stat-card"><span>Revenue</span><strong>${money((data.payments?.revenue_minor ?? 0) / 100)}</strong></article>
-      </section>`;
+    return executiveReport(data, options.widgetOrder);
   }
 
   if (kind === 'travel') {

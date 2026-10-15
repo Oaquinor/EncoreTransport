@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\LoginRequest;
 use App\Models\ApiToken;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\Audit\AuditService;
+use App\Services\Auth\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -15,7 +17,7 @@ use OpenApi\Attributes as OA;
 
 class AuthController extends Controller
 {
-    public function __construct(private readonly AuditService $audit) {}
+    public function __construct(private readonly AuditService $audit, private readonly PermissionService $permissions) {}
 
     #[OA\Post(
         path: '/api/v1/auth/register',
@@ -44,6 +46,9 @@ class AuthController extends Controller
             'active' => true,
             'password' => Hash::make($data['password']),
         ]);
+
+        $passengerRole = Role::query()->where('name', 'passenger')->first();
+        $passengerRole?->users()->syncWithoutDetaching([$user->id]);
 
         [$plain, $token] = $this->createToken($user);
         $this->audit->record($user, 'auth.register', $user);
@@ -77,7 +82,7 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json(['user' => $request->user()]);
+        return response()->json(['user' => $request->user(), 'permissions' => $this->permissions->effective($request->user())]);
     }
 
     public function logout(Request $request)
@@ -109,6 +114,7 @@ class AuthController extends Controller
             'token_type' => 'Bearer',
             'expires_at' => $token->expires_at,
             'user' => $user,
+            'permissions' => $this->permissions->effective($user),
         ];
     }
 }
