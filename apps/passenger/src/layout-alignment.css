@@ -1,0 +1,340 @@
+/*
+ * Encore Passenger — layout alignment correction
+ *
+ * This layer fixes the conflicting container widths introduced by the
+ * historical premium/flow-refresh styles. Header, journey, screen content and
+ * hero now use one shared desktop container.
+ */
+
+:root {
+  --passenger-content-max: 1440px;
+  --passenger-gutter: 28px;
+  --passenger-content-width:
+    min(
+      var(--passenger-content-max),
+      calc(100vw - (var(--passenger-gutter) * 2))
+    );
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 0;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.app-shell {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 0 56px !important;
+  background:
+    radial-gradient(
+      circle at 91% 0,
+      rgba(45,169,223,.10),
+      transparent 31rem
+    ),
+    #f3f7f9;
+}
+
+.app-shell > .topbar {
+  width: var(--passenger-content-width) !important;
+  max-width: var(--passenger-content-max) !important;
+  min-height: 76px;
+  height: auto !important;
+  margin:
+    16px auto
+    26px !important;
+  padding:
+    10px 16px !important;
+  border-radius: 18px;
+}
+
+.passenger-wrap {
+  width: var(--passenger-content-width) !important;
+  max-width: var(--passenger-content-max) !important;
+  margin: 0 auto !important;
+  padding:
+    18px 0
+    100px !important;
+}
+
+.journey {
+  width: 100%;
+  margin:
+    0 0 26px;
+  padding:
+    14px 16px 0;
+}
+
+.journey-top,
+.journey-bar,
+.journey-steps {
+  width: 100%;
+}
+
+.screen-animate {
+  width: 100%;
+  min-width: 0;
+}
+
+.screen-animate > .hero {
+  width: 100%;
+  min-height: 470px;
+  margin:
+    0 0 22px;
+  padding:
+    clamp(36px, 4.5vw, 68px);
+  grid-template-columns:
+    minmax(0, 760px)
+    1fr;
+  gap: 38px;
+  align-items: center;
+}
+
+/*
+ * The orbit was purely decorative and visually competed with the vehicle.
+ * Passenger now lets the transport image remain the visual focus.
+ */
+.screen-animate > .hero .orbit {
+  display: none !important;
+}
+
+.screen-animate > .hero > div:first-child {
+  position: relative;
+  z-index: 2;
+  max-width: 760px;
+}
+
+.screen-animate > .hero h1 {
+  max-width: 740px;
+  font-size:
+    clamp(
+      3.4rem,
+      5.8vw,
+      6.25rem
+    );
+}
+
+.screen-animate > .hero p {
+  max-width: 680px;
+}
+
+.search-console {
+  width:
+    calc(100% - 52px);
+  max-width:
+    calc(
+      var(--passenger-content-max)
+      - 52px
+    );
+  margin:
+    -48px auto
+    34px !important;
+}
+
+.page-head,
+.departures,
+.facts,
+.trip-map-card,
+.action-band,
+.seat-layout,
+.passenger-form,
+.review-grid,
+.confirmation,
+.ticket,
+.smart-banner {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Seat and review sidebars align to the same visual rhythm. */
+.seat-layout {
+  grid-template-columns:
+    minmax(0, 1fr)
+    320px;
+  gap: 22px;
+}
+
+.review-grid {
+  grid-template-columns:
+    minmax(0, 1fr)
+    340px;
+  gap: 22px;
+}
+
+.seat-summary,
+.total-panel {
+  top: 112px;
+}
+
+/* The header uses three balanced zones instead of relying on arbitrary padding. */
+.app-shell > .topbar {
+  display: grid !important;
+  grid-template-columns:
+    minmax(260px, 1fr)
+    auto
+    minmax(260px, 1fr);
+  align-items: center;
+  column-gap: 24px;
+}
+
+.app-shell > .topbar nav {
+  justify-self: center;
+}
+
+.app-shell > .topbar .user {
+  justify-self: end;
+}
+
+.passenger-brand {
+  justify-self: start;
+}
+
+/* Keep controls from pushing the shell wider than the intended container. */
+.search-console > *,
+.facts > *,
+.departure > *,
+.seat-layout > *,
+.review-grid > * {
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  :root {
+    --passenger-gutter: 20px;
+  }
+
+  .app-shell > .topbar {
+    grid-template-columns:
+      1fr
+      auto
+      auto;
+    column-gap: 14px;
+  }
+
+  .screen-animate > .hero {
+    grid-template-columns: 1fr;
+    min-height: 440px;
+    background:
+      linear-gradient(
+        90deg,
+        rgba(7,23,34,.98),
+        rgba(7,23,34,.67)
+      ),
+      url("/assets/media/Autobus.png")
+        right bottom /
+        72% auto
+        no-repeat,
+      var(--et-navy-950);
+  }
+
+  .search-console {
+    width:
+      calc(100% - 32px);
+  }
+
+  .seat-layout,
+  .review-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .seat-summary,
+  .total-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --passenger-gutter: 10px;
+  }
+
+  .app-shell > .topbar {
+    margin:
+      8px auto
+      18px !important;
+    padding:
+      8px 10px !important;
+    border-radius: 14px;
+    grid-template-columns:
+      1fr
+      auto;
+  }
+
+  .app-shell > .topbar nav {
+    display: none !important;
+  }
+
+  .app-shell > .topbar .user span {
+    display: none;
+  }
+
+  .passenger-brand img {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .passenger-brand span {
+    font-size: .52rem;
+  }
+
+  .passenger-wrap {
+    padding-top: 8px !important;
+  }
+
+  .journey {
+    margin-bottom: 16px;
+    padding:
+      12px
+      10px
+      0;
+  }
+
+  .journey-steps {
+    display: none;
+  }
+
+  .screen-animate > .hero {
+    min-height: 500px;
+    padding: 28px;
+    border-radius: 20px;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(7,23,34,.98),
+        rgba(7,23,34,.63)
+      ),
+      url("/assets/media/Autobus.png")
+        72% 90% /
+        118% auto
+        no-repeat,
+      var(--et-navy-950);
+  }
+
+  .screen-animate > .hero h1 {
+    font-size:
+      clamp(
+        3rem,
+        14vw,
+        4.6rem
+      );
+  }
+
+  .search-console {
+    width:
+      calc(100% - 20px);
+    margin:
+      -18px auto
+      22px !important;
+    grid-template-columns: 1fr;
+  }
+
+  .search-console > button:not(.primary) {
+    display: none;
+  }
+}
