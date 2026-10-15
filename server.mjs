@@ -2,11 +2,9 @@ import { createServer, request as httpRequest } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const rootDirectory = process.cwd();
-const port = Number(process.env.PORT ?? 4173);
-const host = process.env.HOST ?? '127.0.0.1';
-const apiTarget = new URL(process.env.LARAVEL_API_URL ?? 'http://127.0.0.1:8000');
+const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
 
 const mimeTypes = new Map([
   ['.html', 'text/html; charset=utf-8'],
@@ -24,12 +22,16 @@ const mimeTypes = new Map([
 ]);
 
 const appAliases = new Map([
-  ['/website', '/apps/website'],
-  ['/move', '/apps/passenger-pwa'],
-  ['/passenger', '/apps/passenger/dist'],
-  ['/driver', '/apps/driver-pwa'],
-  ['/admin', '/apps/admin-dashboard'],
+  ['/website', 'apps/website'],
+  ['/passenger', 'apps/passenger/dist'],
+  ['/driver', 'apps/driver-pwa'],
+  ['/admin', 'apps/admin-dashboard'],
+  ['/login', 'apps/auth'],
+  ['/track-package', 'apps/package-tracking'],
 ]);
+
+const publicRoots = ['assets', 'packages/shared'];
+const publicFiles = new Set(['/logo.svg', '/robots.txt']);
 
 function redirect(response, location, statusCode = 302) {
   response.writeHead(statusCode, {
@@ -39,33 +41,62 @@ function redirect(response, location, statusCode = 302) {
   response.end();
 }
 
-function resolveRequestPath(requestUrl) {
-  const parsedUrl = new URL(requestUrl, `http://localhost:${port}`);
-  const normalizedPathname = parsedUrl.pathname.replace(/\/$/, '');
+function safeJoin(rootDirectory, relativePath) {
+  const absoluteRoot = path.resolve(rootDirectory);
+  const candidate = path.resolve(absoluteRoot, relativePath);
+  const relative = path.relative(absoluteRoot, candidate);
 
-  for (const [aliasPath, targetPath] of appAliases.entries()) {
-    if (normalizedPathname === aliasPath) {
-      return path.join(rootDirectory, targetPath, 'index.html');
-    }
-
-    if (normalizedPathname.startsWith(`${aliasPath}/`)) {
-      const remainingPath = normalizedPathname.slice(aliasPath.length + 1);
-      return path.normalize(path.join(rootDirectory, targetPath, remainingPath));
-    }
-  }
-
-  const candidatePath = path.normalize(path.join(rootDirectory, parsedUrl.pathname));
-  if (!candidatePath.startsWith(rootDirectory)) {
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
     return null;
   }
 
-  return candidatePath;
+  return candidate;
+}
+
+function resolveAliasedPath(rootDirectory, pathname) {
+  const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
+
+  for (const [alias, target] of appAliases) {
+    if (normalized === alias) {
+      return safeJoin(rootDirectory, `${target}/index.html`);
+    }
+
+    if (normalized.startsWith(`${alias}/`)) {
+      const remaining = normalized.slice(alias.length + 1);
+      return safeJoin(rootDirectory, `${target}/${remaining}`);
+    }
+  }
+
+  return null;
+}
+
+function resolvePublicPath(rootDirectory, pathname) {
+  if (publicFiles.has(pathname)) {
+    return safeJoin(rootDirectory, pathname.slice(1));
+  }
+
+  for (const publicRoot of publicRoots) {
+    const prefix = `/${publicRoot}/`;
+    if (pathname.startsWith(prefix)) {
+      return safeJoin(rootDirectory, pathname.slice(1));
+    }
+  }
+
+  return null;
 }
 
 async function serveFile(response, filePath) {
+  if (!filePath) {
+    response.writeHead(404, {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-store',
+    });
+    response.end('Not found.');
+    return;
+  }
+
   try {
     const fileStat = await stat(filePath);
-
     if (fileStat.isDirectory()) {
       return serveFile(response, path.join(filePath, 'index.html'));
     }
@@ -77,117 +108,139 @@ async function serveFile(response, filePath) {
       'Content-Type': mimeTypes.get(extension) ?? 'application/octet-stream',
       'Cache-Control': 'no-store',
     });
-
     response.end(fileContents);
   } catch {
     response.writeHead(404, {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'no-store',
     });
-    response.end('Not found. If this is /passenger/, run npm run build:passenger first.');
+    response.end('Not found.');
   }
 }
 
-function proxyApi(request, response) {
+function proxyApi(request, response, apiTarget) {
   const incomingUrl = new URL(
     request.url ?? '/',
-    `http://${request.headers.host ?? 'localhost'}`
+    `http://${request.headers.host ?? 'localhost'}`,
   );
-
-  const targetUrl = new URL(
-    incomingUrl.pathname + incomingUrl.search,
-    apiTarget
-  );
-
-  const transport =
-    targetUrl.protocol === 'https:' ? httpsRequest : httpRequest;
-
-  const headers = {
-    ...request.headers,
-    host: targetUrl.host,
-  };
-
+  const targetUrl = new URL(incomingUrl.pathname + incomingUrl.search, apiTarget);
+  const transport = targetUrl.protocol === 'https:' ? httpsRequest : httpRequest;
+  const headers = { ...request.headers, host: targetUrl.host };
   delete headers['content-length'];
 
   const proxy = transport(
     targetUrl,
-    {
-      method: request.method,
-      headers,
-    },
+    { method: request.method, headers },
     (upstream) => {
       const outHeaders = { ...upstream.headers };
       delete outHeaders['transfer-encoding'];
-
+      delete outHeaders.connection;
+      outHeaders['x-robots-tag'] = 'noindex, nofollow, noarchive';
       response.writeHead(upstream.statusCode ?? 502, outHeaders);
       upstream.pipe(response);
-    }
+    },
   );
 
-  proxy.on('error', (error) => {
+  proxy.on('error', () => {
     if (!response.headersSent) {
       response.writeHead(502, {
         'Content-Type': 'application/json; charset=utf-8',
         'Cache-Control': 'no-store',
+        'X-Robots-Tag': 'noindex, nofollow, noarchive',
       });
     }
-
-    response.end(
-      JSON.stringify({
-        message: 'Laravel API is unavailable.',
-        detail: error.message,
-      })
-    );
+    response.end(JSON.stringify({
+      message: 'Encore Transport is temporarily unable to reach the API.',
+    }));
   });
 
   request.pipe(proxy);
 }
 
-createServer(async (request, response) => {
-  const parsedUrl = new URL(
-    request.url ?? '/',
-    `http://${request.headers.host ?? 'localhost'}`
-  );
+export function createEncoreServer({
+  rootDirectory = moduleDirectory,
+  apiTargetUrl = process.env.LARAVEL_API_URL ?? 'http://127.0.0.1:8000',
+} = {}) {
+  const apiTarget = new URL(apiTargetUrl);
 
-  if (parsedUrl.pathname.startsWith('/api/')) {
-    return proxyApi(request, response);
-  }
+  return createServer(async (request, response) => {
+    const parsedUrl = new URL(
+      request.url ?? '/',
+      `http://${request.headers.host ?? 'localhost'}`,
+    );
 
-  // La Website usa rutas relativas como ./styles.css y ./app.mjs.
-  // Por eso la raíz NO debe servir físicamente apps/website/index.html:
-  // debe redirigir a /website/ para que todos los assets resuelvan bien.
-  if (parsedUrl.pathname === '/') {
-    return redirect(response, '/website/');
-  }
-
-  // Normaliza aliases sin slash final para que ./assets, ./styles.css,
-  // service workers y módulos se resuelvan dentro de cada aplicación.
-  for (const aliasPath of appAliases.keys()) {
-    if (parsedUrl.pathname === aliasPath) {
-      return redirect(
-        response,
-        `${aliasPath}/${parsedUrl.search}${parsedUrl.hash}`
-      );
+    if (parsedUrl.pathname.startsWith('/api/')) {
+      proxyApi(request, response, apiTarget);
+      return;
     }
-  }
 
-  const requestPath = resolveRequestPath(request.url ?? '/');
+    if (parsedUrl.pathname === '/') {
+      redirect(response, '/website/');
+      return;
+    }
 
-  if (!requestPath) {
-    response.writeHead(400, {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Cache-Control': 'no-store',
+    if (
+      parsedUrl.pathname === '/move' ||
+      parsedUrl.pathname === '/move/' ||
+      parsedUrl.pathname.startsWith('/move/')
+    ) {
+      redirect(response, `/passenger/${parsedUrl.search}`);
+      return;
+    }
+
+    for (const alias of appAliases.keys()) {
+      if (parsedUrl.pathname === alias) {
+        redirect(response, `${alias}/${parsedUrl.search}`);
+        return;
+      }
+    }
+
+    const requestPath =
+      resolveAliasedPath(rootDirectory, parsedUrl.pathname) ??
+      resolvePublicPath(rootDirectory, parsedUrl.pathname);
+
+    await serveFile(response, requestPath);
+  });
+}
+
+export async function startEncoreServer({
+  port = Number(process.env.PORT ?? 4173),
+  host = process.env.HOST ?? '127.0.0.1',
+  rootDirectory = moduleDirectory,
+  apiTargetUrl = process.env.LARAVEL_API_URL ?? 'http://127.0.0.1:8000',
+  quiet = false,
+} = {}) {
+  const server = createEncoreServer({ rootDirectory, apiTargetUrl });
+
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, host, () => {
+      server.off('error', reject);
+      resolve();
     });
-    response.end('Bad request');
-    return;
+  });
+
+  const address = server.address();
+  const actualPort = typeof address === 'object' && address ? address.port : port;
+
+  if (!quiet) {
+    console.log(`Encore Transport running on http://${host}:${actualPort}`);
+    console.log(`Website:   http://${host}:${actualPort}/website/`);
+    console.log(`Passenger: http://${host}:${actualPort}/passenger/`);
+    console.log(`Driver:    http://${host}:${actualPort}/driver/`);
+    console.log(`Admin:     http://${host}:${actualPort}/admin/`);
+    console.log(`Login:     http://${host}:${actualPort}/login/`);
+    console.log(`Tracking:  http://${host}:${actualPort}/track-package/`);
+    console.log(`API proxy: ${apiTargetUrl}/api/*`);
   }
 
-  await serveFile(response, requestPath);
-}).listen(port, host, () => {
-  console.log(`Encore Transport running on http://${host}:${port}`);
-  console.log(`Website:   http://${host}:${port}/website/`);
-  console.log(`Passenger: http://${host}:${port}/passenger/`);
-  console.log(`Driver:    http://${host}:${port}/driver/`);
-  console.log(`Admin:     http://${host}:${port}/admin/`);
-  console.log(`API proxy: ${apiTarget.origin}/api/*`);
-});
+  return { server, host, port: actualPort };
+}
+
+const directExecution =
+  process.argv[1] &&
+  pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
+
+if (directExecution) {
+  await startEncoreServer();
+}
