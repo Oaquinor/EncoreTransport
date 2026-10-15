@@ -1,0 +1,594 @@
+/*
+ * Encore Passenger — final alignment and seat-map layer.
+ * This file must load LAST.
+ */
+
+:root {
+  --passenger-max: 1480px;
+  --passenger-gutter: 28px;
+  --passenger-width: min(
+    var(--passenger-max),
+    calc(100vw - (var(--passenger-gutter) * 2))
+  );
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 0;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.app-shell {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 100vh;
+  margin: 0 !important;
+  padding: 14px 0 64px !important;
+}
+
+.app-shell > .topbar,
+.passenger-wrap {
+  width: var(--passenger-width) !important;
+  max-width: var(--passenger-max) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box;
+}
+
+.app-shell > .topbar {
+  min-height: 78px;
+  height: auto !important;
+  margin-top: 0 !important;
+  margin-bottom: 28px !important;
+  padding: 10px 16px !important;
+  display: grid !important;
+  grid-template-columns: minmax(300px, 1fr) auto minmax(240px, 1fr);
+  align-items: center;
+  gap: 20px;
+  border-radius: 18px;
+}
+
+.passenger-brand {
+  justify-self: start;
+}
+
+.app-shell > .topbar nav {
+  justify-self: center;
+}
+
+.app-shell > .topbar .user {
+  justify-self: end;
+}
+
+.passenger-wrap {
+  padding: 0 0 96px !important;
+}
+
+.journey {
+  width: 100%;
+  margin: 0 0 26px !important;
+  box-sizing: border-box;
+}
+
+.screen-animate {
+  width: 100%;
+  min-width: 0;
+}
+
+.screen-animate > .hero {
+  width: 100%;
+  min-height: 430px;
+  margin: 0 0 24px;
+  padding: clamp(40px, 4.5vw, 68px);
+  grid-template-columns: minmax(0, 760px) 1fr;
+  gap: 34px;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.screen-animate > .hero > div:first-child {
+  position: relative;
+  z-index: 2;
+  max-width: 760px;
+}
+
+.screen-animate > .hero h1 {
+  max-width: 720px;
+  font-size: clamp(3.5rem, 5.8vw, 6.25rem);
+}
+
+.screen-animate > .hero p {
+  max-width: 640px;
+}
+
+/* Decorative orbit added no passenger-facing value and fought with the bus image. */
+.screen-animate > .hero .orbit {
+  display: none !important;
+}
+
+.search-console {
+  width: calc(100% - 48px);
+  max-width: calc(var(--passenger-max) - 48px);
+  margin: -46px auto 30px !important;
+}
+
+.page-head,
+.departures,
+.facts,
+.trip-map-card,
+.action-band,
+.passenger-card,
+.review-card,
+.total-panel,
+.payment-form,
+.confirmation,
+.ticket,
+.smart-banner,
+.seat-layout {
+  min-width: 0;
+}
+
+.seat-layout {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px !important;
+  gap: 22px !important;
+  align-items: start;
+}
+
+/* ===== Current SeatMap TSX classes ===== */
+.et-seat-layout {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.et-seat-layout__legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border: 1px solid #dbe7ed;
+  border-radius: 14px;
+  background: rgba(255,255,255,.94);
+  color: #607886;
+  font-size: .66rem;
+  font-weight: 750;
+}
+
+.et-seat-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.et-seat-dot {
+  width: 10px;
+  height: 10px;
+  border: 1px solid #aebfc8;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.et-seat-dot--selected { background: #24a274; border-color: #24a274; }
+.et-seat-dot--occupied { background: #98a8b2; border-color: #98a8b2; }
+.et-seat-dot--blocked { background: #d8a0a8; border-color: #d8a0a8; }
+.et-seat-dot--accessible { background: #35a8df; border-color: #35a8df; }
+
+.et-seat-bus {
+  position: relative;
+  min-height: 440px;
+  overflow: hidden;
+  padding: 66px 72px 34px 158px;
+  border: 2px solid #81a7bc;
+  border-radius: 94px 28px 28px 94px;
+  background:
+    linear-gradient(
+      90deg,
+      #5d8ead 0 144px,
+      #e8f0f4 144px calc(100% - 68px),
+      #cbdde5 calc(100% - 68px) 100%
+    );
+  box-shadow:
+    inset 0 0 0 7px rgba(255,255,255,.62),
+    0 18px 44px rgba(16,60,82,.10);
+  box-sizing: border-box;
+}
+
+.et-seat-bus::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  left: 30px;
+  top: 28px;
+  width: 94px;
+  height: 118px;
+  border: 2px solid rgba(255,255,255,.64);
+  border-radius: 62px 20px 20px 62px;
+  background: linear-gradient(135deg, #badce9, #22546e 60%, #12384e);
+}
+
+.et-seat-bus::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  right: 17px;
+  top: 50%;
+  width: 34px;
+  height: 158px;
+  transform: translateY(-50%);
+  border: 1px solid rgba(88,126,145,.18);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #dbe8ee, #c0d5df);
+}
+
+.et-seat-bus__front-marker,
+.et-seat-bus__driver-marker,
+.et-seat-bus__front-door,
+.et-seat-bus__rear-exit {
+  position: absolute;
+  z-index: 5;
+  color: #6d8694;
+  font-size: .5rem;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.et-seat-bus__front-marker { top: 20px; left: 176px; }
+.et-seat-bus__driver-marker { top: 20px; left: 322px; color: #17384c; }
+.et-seat-bus__front-door { top: 47px; left: 292px; }
+.et-seat-bus__rear-exit {
+  right: -35px;
+  top: 50%;
+  transform: translateY(-50%) rotate(90deg);
+}
+
+.et-seat-bus__cockpit {
+  position: absolute;
+  z-index: 4;
+  left: 44px;
+  top: 168px;
+  width: 76px;
+  height: 112px;
+}
+
+.et-seat-bus__wheel {
+  position: absolute;
+  left: 1px;
+  top: 8px;
+  width: 39px;
+  height: 39px;
+  border: 5px solid rgba(255,255,255,.94);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.et-seat-bus__wheel::before,
+.et-seat-bus__wheel::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: rgba(255,255,255,.94);
+  transform: translate(-50%, -50%);
+}
+
+.et-seat-bus__wheel::before { width: 4px; height: 29px; }
+.et-seat-bus__wheel::after { width: 29px; height: 4px; }
+
+.et-seat-bus__driver-seat {
+  position: absolute;
+  right: 0;
+  bottom: 6px;
+  width: 30px;
+  height: 43px;
+  border: 1px solid #aec0c9;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f9fcfd, #dbe7ec);
+}
+
+.et-seat-bus__grid {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  min-width: max-content;
+  display: flex;
+  align-items: stretch;
+  gap: 7px;
+  padding: 68px 0 38px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.et-seat-column {
+  position: relative;
+  flex: 0 0 66px;
+  min-width: 66px;
+  display: grid;
+  grid-template-rows: 56px 42px 56px;
+  gap: 6px;
+  align-items: center;
+  justify-items: center;
+}
+
+.et-seat-column__number {
+  position: absolute;
+  left: 50%;
+  top: -28px;
+  transform: translateX(-50%);
+  color: #718a98;
+  font-size: .48rem;
+  font-weight: 900;
+}
+
+.et-seat-column__top,
+.et-seat-column__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.et-seat-column__aisle {
+  width: 100%;
+  height: 24px;
+  align-self: center;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(177,199,210,.55) 15% 85%,
+    transparent
+  );
+}
+
+.et-seat {
+  appearance: none;
+  position: relative;
+  width: 29px;
+  height: 48px;
+  min-width: 29px;
+  min-height: 48px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.et-seat__shell {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: transform .15s ease, filter .15s ease;
+}
+
+.et-seat__headrest,
+.et-seat__back,
+.et-seat__base,
+.et-seat__arm {
+  position: absolute;
+  box-sizing: border-box;
+}
+
+.et-seat__headrest {
+  left: 7px;
+  right: 7px;
+  top: 0;
+  height: 8px;
+  border: 1px solid #c5d3da;
+  border-radius: 999px 999px 5px 5px;
+  background: linear-gradient(180deg, #fafdfe, #dfe9ee);
+}
+
+.et-seat__back {
+  left: 4px;
+  right: 4px;
+  top: 5px;
+  height: 31px;
+  border: 1px solid #adbec7;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #fff, #edf3f6);
+  box-shadow: 0 2px 5px rgba(18,57,77,.09);
+}
+
+.et-seat__base {
+  left: 6px;
+  right: 6px;
+  bottom: 2px;
+  height: 13px;
+  border: 1px solid #b7c7cf;
+  border-radius: 4px 4px 7px 7px;
+  background: linear-gradient(180deg, #ebf2f5, #d8e4e9);
+}
+
+.et-seat__arm {
+  top: 23px;
+  width: 3px;
+  height: 15px;
+  border-radius: 999px;
+  background: #8298a4;
+}
+
+.et-seat__arm--left { left: 1px; }
+.et-seat__arm--right { right: 1px; }
+
+.et-seat__label {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #274858;
+  font-size: .44rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.et-seat__badge {
+  position: absolute;
+  z-index: 7;
+  right: -5px;
+  top: -5px;
+  width: 14px;
+  height: 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #169dd5;
+  color: #fff;
+  font-size: .48rem;
+}
+
+.et-seat:not(:disabled):hover .et-seat__shell {
+  transform: translateY(-2px) scale(1.05);
+}
+
+.et-seat:focus-visible {
+  outline: 3px solid rgba(24,158,215,.22);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.et-seat--selected .et-seat__back,
+.et-seat--selected .et-seat__base,
+.et-seat--selected .et-seat__headrest {
+  border-color: #178e68;
+  background: linear-gradient(180deg, #34b888, #1f9e72);
+}
+
+.et-seat--selected .et-seat__label { color: #fff; }
+
+.et-seat--occupied .et-seat__back,
+.et-seat--occupied .et-seat__base,
+.et-seat--occupied .et-seat__headrest {
+  border-color: #7c8c95;
+  background: linear-gradient(180deg, #a6b2b9, #7e8d96);
+}
+
+.et-seat--occupied .et-seat__label { color: #fff; }
+
+.et-seat--blocked .et-seat__back,
+.et-seat--blocked .et-seat__base,
+.et-seat--blocked .et-seat__headrest {
+  border-color: #c88f99;
+  background: repeating-linear-gradient(
+    -45deg,
+    #f1d4d9 0 4px,
+    #e6bfc6 4px 8px
+  );
+}
+
+.et-seat--accessible .et-seat__back {
+  border-color: #168fc4;
+  box-shadow: 0 0 0 2px rgba(22,143,196,.14);
+}
+
+.et-seat:disabled {
+  cursor: not-allowed;
+}
+
+.seat-summary {
+  position: sticky;
+  top: 104px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1180px) {
+  :root { --passenger-gutter: 18px; }
+
+  .app-shell > .topbar {
+    grid-template-columns: minmax(250px, 1fr) auto auto;
+    gap: 12px;
+  }
+
+  .seat-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .seat-summary {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  :root { --passenger-gutter: 10px; }
+
+  .app-shell { padding-top: 8px !important; }
+
+  .app-shell > .topbar {
+    min-height: 66px;
+    margin-bottom: 16px !important;
+    padding: 8px 10px !important;
+    grid-template-columns: 1fr auto;
+    border-radius: 14px;
+  }
+
+  .app-shell > .topbar nav { display: none !important; }
+  .app-shell > .topbar .user span { display: none; }
+
+  .passenger-wrap { padding-bottom: 56px !important; }
+
+  .journey {
+    margin-bottom: 16px !important;
+    padding: 11px 10px 0 !important;
+  }
+
+  .journey-steps { display: none !important; }
+
+  .screen-animate > .hero {
+    min-height: 450px;
+    padding: 28px;
+    grid-template-columns: 1fr;
+    border-radius: 20px;
+  }
+
+  .screen-animate > .hero h1 {
+    font-size: clamp(3rem, 14vw, 4.5rem);
+  }
+
+  .search-console {
+    width: calc(100% - 20px);
+    margin: -18px auto 22px !important;
+    grid-template-columns: 1fr;
+  }
+
+  .search-console > button:not(.primary) { display: none; }
+
+  .et-seat-bus {
+    min-height: 380px;
+    padding: 58px 48px 28px 106px;
+    border-radius: 72px 22px 22px 72px;
+  }
+
+  .et-seat-bus::before {
+    left: 20px;
+    width: 64px;
+    height: 84px;
+  }
+
+  .et-seat-bus__cockpit {
+    left: 29px;
+    top: 143px;
+    transform: scale(.82);
+    transform-origin: left top;
+  }
+
+  .et-seat-bus__grid { padding-top: 52px; }
+
+  .et-seat-column {
+    flex-basis: 58px;
+    min-width: 58px;
+  }
+}
