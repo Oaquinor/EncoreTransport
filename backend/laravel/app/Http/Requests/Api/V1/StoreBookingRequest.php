@@ -5,6 +5,7 @@ class StoreBookingRequest extends FormRequest {
  public function authorize(): bool { return true; }
  public function rules(): array { return [
   'trip_id'=>['required','integer','exists:trips,id'],
+  'origin'=>['nullable','string','max:150'],'destination'=>['nullable','string','max:150'],
   'seat_ids'=>['required','array','min:1','max:10'],'seat_ids.*'=>['integer','distinct','exists:bus_seats,id'],
   'passengers'=>['required','array','min:1','max:10'],'passengers.*.full_name'=>['required','string','max:150'],
   'passengers.*.document_number'=>['nullable','string','max:64'],'passengers.*.email'=>['nullable','email','max:150'],'passengers.*.phone'=>['nullable','string','max:40'],

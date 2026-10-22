@@ -29,7 +29,7 @@ export function normalizeText(value: unknown): string {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-export function formatCurrency(amount: number, currency = 'DOP'): string {
+export function formatCurrency(amount: number, currency = 'GYD'): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
@@ -91,7 +91,7 @@ export function createBookingQuote(trip: Trip, passengerCount = 1) {
   return {
     tripId: trip.id,
     passengerCount,
-    currency: 'DOP',
+    currency: 'GYD',
     total,
     totalLabel: formatCurrency(total),
     breakdown: {

@@ -10,6 +10,7 @@ import {
   renderLocationMap,
   destroyRealMap,
 } from '../../packages/shared/real-map.mjs';
+import { appConfig } from '../../packages/shared/app-config.mjs';
 
 const destinationGrid = document.querySelector('#destinationGrid');
 const bookingForm = document.querySelector('#bookingForm');
@@ -236,7 +237,7 @@ function renderFeatured(trip) {
     <div class="trip-card-meta">
       <span>${Number(trip.availableSeats ?? 0)} seats</span>
       <span>${Number(trip.durationMinutes ?? 0)} min</span>
-      <span>DOP ${Number(trip.baseFare ?? 0).toLocaleString('en-US')}</span>
+      <span>${new Intl.NumberFormat(appConfig.locale, { style: 'currency', currency: appConfig.currency, maximumFractionDigits: 0 }).format(Number(trip.baseFare ?? 0))}</span>
     </div>`;
 }
 

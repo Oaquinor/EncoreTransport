@@ -25,7 +25,7 @@ class OperationalCoreTest extends TestCase
     public function test_trip_search_and_seats_use_database_data(): void
     {
         $trip=Trip::query()->firstOrFail();
-        $this->getJson('/api/v1/trips/search?origin=Boston&destination=New%20York&passengers=1')
+        $this->getJson('/api/v1/trips/search?origin=Georgetown&destination=New%20Amsterdam&passengers=1')
             ->assertOk()->assertJsonPath('data.0.id',$trip->id);
         $this->getJson('/api/v1/trips/'.$trip->id.'/seats')
             ->assertOk()->assertJsonCount(42,'data');
@@ -42,6 +42,18 @@ class OperationalCoreTest extends TestCase
         $this->withToken($token)->postJson('/api/v1/bookings',$payload)->assertCreated();
         $this->assertDatabaseHas('booking_seats',['trip_id'=>$trip->id,'bus_seat_id'=>$seatIds[0],'status'=>'held']);
         $this->withToken($token)->postJson('/api/v1/bookings',$payload)->assertStatus(422);
+    }
+
+    public function test_same_seat_can_be_reused_only_on_non_overlapping_segments(): void
+    {
+        $trip=Trip::query()->firstOrFail();
+        $seat=$trip->bus->seats()->firstOrFail();
+        $user=User::query()->where('email','passenger@example.test')->firstOrFail();
+        $token=$this->tokenFor($user);
+        $base=['trip_id'=>$trip->id,'seat_ids'=>[$seat->id],'passengers'=>[['full_name'=>'Segment Passenger']]];
+        $this->withToken($token)->postJson('/api/v1/bookings',$base+['origin'=>'Georgetown','destination'=>'Rosignol'])->assertCreated();
+        $this->withToken($token)->postJson('/api/v1/bookings',$base+['origin'=>'Rosignol','destination'=>'New Amsterdam'])->assertCreated();
+        $this->withToken($token)->postJson('/api/v1/bookings',$base+['origin'=>'Georgetown','destination'=>'New Amsterdam'])->assertStatus(422);
     }
 
     public function test_unconfigured_payment_gateway_fails_explicitly_instead_of_simulating_success(): void

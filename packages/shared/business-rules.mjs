@@ -41,7 +41,7 @@ export function createBookingQuote(trip, passengerCount = 1) {
   return {
     tripId: trip.id,
     passengerCount,
-    currency: 'DOP',
+    currency: appConfig.currency,
     total: price,
     totalLabel: formatCurrency(price),
     breakdown: {

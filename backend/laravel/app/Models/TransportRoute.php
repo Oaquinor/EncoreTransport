@@ -23,4 +23,5 @@ class TransportRoute extends Model
 
     public function trips(): HasMany { return $this->hasMany(Trip::class); }
     public function stops(): HasMany { return $this->hasMany(RouteStop::class); }
+    public function segments(): HasMany { return $this->hasMany(RouteSegment::class, 'transport_route_id'); }
 }

@@ -92,10 +92,13 @@ export async function fetchTripDetails(id) {
   return payload.data ?? payload;
 }
 
-export async function fetchTripSeats(id) {
+export async function fetchTripSeats(id, filters = {}) {
+  const query = new URLSearchParams();
+  if (filters.origin) query.set('origin', filters.origin);
+  if (filters.destination) query.set('destination', filters.destination);
   const payload =
     await requestJson(
-      `/trips/${encodeURIComponent(id)}/seats`,
+      `/trips/${encodeURIComponent(id)}/seats?${query}`,
       { token: false },
     );
 
@@ -105,10 +108,14 @@ export async function fetchTripSeats(id) {
 export async function quoteTrip(
   id,
   passengers,
+  filters = {},
 ) {
+  const query = new URLSearchParams({ passengers: String(passengers) });
+  if (filters.origin) query.set('origin', filters.origin);
+  if (filters.destination) query.set('destination', filters.destination);
   const payload =
     await requestJson(
-      `/trips/${encodeURIComponent(id)}/quote?passengers=${encodeURIComponent(passengers)}`,
+      `/trips/${encodeURIComponent(id)}/quote?${query}`,
       { token: false },
     );
 

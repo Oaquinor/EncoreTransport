@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'UTC'),
+    'timezone' => env('APP_TIMEZONE', env('ENCORE_TIMEZONE', 'America/Guyana')),
 
     /*
     |--------------------------------------------------------------------------

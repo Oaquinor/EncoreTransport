@@ -61,7 +61,7 @@ const TOKEN = 'encore_api_token';
 const DRAFT = 'encore_booking_draft';
 const OPERATIONAL_POINTS = ['Georgetown', 'Rosignol', 'New Amsterdam'] as const;
 
-const money = (value: number, currency = 'DOP') =>
+const money = (value: number, currency = 'GYD') =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
@@ -206,8 +206,8 @@ export function PassengerApp() {
     try {
       const [detail, seatPayload, quotePayload] = await Promise.all([
         api(`/trips/${trip.id}`),
-        api(`/trips/${trip.id}/seats`),
-        api(`/trips/${trip.id}/quote?passengers=${filters.passengers}`),
+        api(`/trips/${trip.id}/seats?origin=${encodeURIComponent(filters.origin)}&destination=${encodeURIComponent(filters.destination)}`),
+        api(`/trips/${trip.id}/quote?passengers=${filters.passengers}&origin=${encodeURIComponent(filters.origin)}&destination=${encodeURIComponent(filters.destination)}`),
       ]);
 
       setSelectedTrip(detail.data ?? detail);
@@ -261,6 +261,8 @@ export function PassengerApp() {
         body: JSON.stringify({
           trip_id: Number(selectedTrip.id),
           seat_ids: selected,
+          origin: filters.origin,
+          destination: filters.destination,
           passengers,
         }),
       });
@@ -291,8 +293,8 @@ export function PassengerApp() {
 
             const [tripPayload, seatPayload, quotePayload] = await Promise.all([
               api(`/trips/${draft.tripId}`),
-              api(`/trips/${draft.tripId}/seats`),
-              api(`/trips/${draft.tripId}/quote?passengers=${draft.filters.passengers}`),
+              api(`/trips/${draft.tripId}/seats?origin=${encodeURIComponent(draft.filters.origin)}&destination=${encodeURIComponent(draft.filters.destination)}`),
+              api(`/trips/${draft.tripId}/quote?passengers=${draft.filters.passengers}&origin=${encodeURIComponent(draft.filters.origin)}&destination=${encodeURIComponent(draft.filters.destination)}`),
             ]);
 
             setSelectedTrip(tripPayload.data ?? tripPayload);
@@ -889,7 +891,7 @@ function SeatScreen({
             <strong>
               {money(
                 quote?.total ?? 0,
-                quote?.currency ?? 'DOP',
+                quote?.currency ?? 'GYD',
               )}
             </strong>
             <small>
@@ -1052,7 +1054,7 @@ function Review({
           <strong>
             {money(
               quote?.total ?? 0,
-              quote?.currency ?? 'DOP',
+              quote?.currency ?? 'GYD',
             )}
           </strong>
           <small>

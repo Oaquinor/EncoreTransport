@@ -9,6 +9,7 @@ use App\Models\Trip;
 use App\Models\User;
 use App\Services\Audit\AuditService;
 use App\Services\Pricing\PricingService;
+use App\Services\Routes\RouteSegmentService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -19,12 +20,14 @@ class BookingService
     public function __construct(
         private readonly PricingService $pricing,
         private readonly AuditService $audit,
+        private readonly RouteSegmentService $segments,
     ) {}
 
     public function create(array $data, ?int $userId): Booking
     {
         return DB::transaction(function () use ($data, $userId) {
             $trip = Trip::query()->with('bus')->lockForUpdate()->findOrFail($data['trip_id']);
+            $segment = $this->segments->resolve($trip->route()->with('stops')->firstOrFail(), $data['origin'] ?? null, $data['destination'] ?? null);
             $this->releaseExpiredHolds($trip);
 
             if (!in_array($trip->status, ['scheduled', 'boarding'], true)) {
@@ -49,6 +52,8 @@ class BookingService
             $alreadyReserved = BookingSeat::query()
                 ->where('trip_id', $trip->id)
                 ->whereIn('bus_seat_id', $seatIds)
+                ->where('origin_stop_sequence', '<', $segment['destination_sequence'])
+                ->where('destination_stop_sequence', '>', $segment['origin_sequence'])
                 ->where(function ($query) {
                     $query->where('status', 'confirmed')
                         ->orWhere(function ($held) {
@@ -65,7 +70,7 @@ class BookingService
                 throw ValidationException::withMessages(['seat_ids' => 'One or more selected seats are no longer available.']);
             }
 
-            $quote = $this->pricing->quote($trip, count($seatIds));
+            $quote = $this->pricing->quote($trip, count($seatIds), $segment['price']);
             $lead = $data['passengers'][0];
             $booking = Booking::query()->create([
                 'public_id' => (string) Str::uuid(),
@@ -90,6 +95,8 @@ class BookingService
                     $booking->reservedSeats()->create([
                         'trip_id' => $trip->id,
                         'bus_seat_id' => $seat->id,
+                        'origin_stop_sequence' => $segment['origin_sequence'],
+                        'destination_stop_sequence' => $segment['destination_sequence'],
                         'status' => 'held',
                         'held_until' => $booking->expires_at,
                     ]);

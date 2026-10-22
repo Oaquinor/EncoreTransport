@@ -54,7 +54,7 @@ const TILE_TEMPLATE =
   `${API_ORIGIN}/api/v1/maps/tiles/{z}/{x}/{y}.png?style=street-light`;
 
 const money = (value: number) =>
-  `DOP ${Number(value || 0).toLocaleString('en-US')}`;
+  `GYD ${Number(value || 0).toLocaleString('en-GY')}`;
 
 async function request(
   path: string,

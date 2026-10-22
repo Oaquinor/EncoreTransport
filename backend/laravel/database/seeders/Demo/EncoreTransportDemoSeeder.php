@@ -8,6 +8,8 @@ use App\Models\BusSeat;
 use App\Models\Driver;
 use App\Models\TransportRoute;
 use App\Models\Trip;
+use App\Models\RouteSegment;
+use App\Models\RouteStop;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -40,7 +42,12 @@ class EncoreTransportDemoSeeder extends Seeder
             }
         }
 
-        $route=TransportRoute::query()->updateOrCreate(['origin'=>'Boston','destination'=>'New York'],['distance_km'=>346,'active'=>true]);
+        $route=TransportRoute::query()->updateOrCreate(['origin'=>'Georgetown','destination'=>'New Amsterdam'],['distance_km'=>110,'distance_meters'=>110000,'duration_seconds'=>12600,'active'=>true]);
+        $stops = [['sequence'=>1,'name'=>'Georgetown','offset_minutes'=>0],['sequence'=>2,'name'=>'Rosignol','offset_minutes'=>75],['sequence'=>3,'name'=>'New Amsterdam','offset_minutes'=>210]];
+        foreach ($stops as $stop) RouteStop::query()->updateOrCreate(['transport_route_id'=>$route->id,'sequence'=>$stop['sequence']],$stop);
+        foreach ([['Georgetown','Rosignol',1,2,40,45000,4500],['Georgetown','New Amsterdam',1,3,85,110000,12600],['Rosignol','New Amsterdam',2,3,45,65000,8100]] as [$from,$to,$fromSequence,$toSequence,$price,$distance,$duration]) {
+            RouteSegment::query()->updateOrCreate(['transport_route_id'=>$route->id,'origin_stop_sequence'=>$fromSequence,'destination_stop_sequence'=>$toSequence],['origin_name'=>$from,'destination_name'=>$to,'price'=>$price,'distance_meters'=>$distance,'duration_seconds'=>$duration,'active'=>true]);
+        }
         $bus=Bus::query()->updateOrCreate(['code'=>'BUS-001'],['plate'=>'ET-314-AX','capacity'=>42,'status'=>'operational']);
         $driver=Driver::query()->updateOrCreate(['license_number'=>'D-AL-5520'],['user_id'=>$driverUser->id,'name'=>'Driver Demo','status'=>'upcoming']);
 

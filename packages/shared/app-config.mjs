@@ -2,8 +2,9 @@
  * Runtime application configuration.
  *
  * Production deployments can inject globalThis.__ENCORE_CONFIG__ before
- * loading the applications. Defaults intentionally preserve the current
- * repository behavior until the final operating country/currency is approved.
+ * loading the applications. Guyana is the current operating configuration.
+ * Deployments may override it
+ * through the runtime object without rebuilding the frontend.
  */
 
 const runtime =
@@ -27,22 +28,22 @@ export const appConfig =
     country:
       textSetting(
         'country',
-        'Dominican Republic',
+        'Guyana',
       ),
     currency:
       textSetting(
         'currency',
-        'DOP',
+        'GYD',
       ),
     locale:
       textSetting(
         'locale',
-        'en-US',
+        'en-GY',
       ),
     timezone:
       textSetting(
         'timezone',
-        'America/Santo_Domingo',
+        'America/Guyana',
       ),
     apiBaseUrl:
       textSetting(

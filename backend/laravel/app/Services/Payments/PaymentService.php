@@ -38,7 +38,7 @@ class PaymentService
                 'gateway' => (string) config('encore.payment_gateway', 'unconfigured'),
                 'status' => 'pending',
                 'amount_minor' => (int) $booking->total_amount * 100,
-                'currency' => (string) config('encore.currency', 'DOP'),
+                'currency' => (string) config('encore.currency', 'GYD'),
             ]
         );
 

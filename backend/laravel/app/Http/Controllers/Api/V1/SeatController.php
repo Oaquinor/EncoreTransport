@@ -6,16 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Models\BookingSeat;
 use App\Models\Trip;
 use App\Services\Bookings\BookingService;
+use App\Services\Routes\RouteSegmentService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 class SeatController extends Controller
 {
-    public function index(Trip $trip, BookingService $bookings)
+    public function index(Request $request, Trip $trip, BookingService $bookings, RouteSegmentService $segments)
     {
         DB::transaction(fn () => $bookings->releaseExpiredHolds($trip));
+        $filters = $request->validate(['origin'=>['nullable','string','max:150'],'destination'=>['nullable','string','max:150']]);
+        $segment = $segments->resolve($trip->route()->with('stops')->firstOrFail(), $filters['origin'] ?? null, $filters['destination'] ?? null);
 
         $reservedIds = BookingSeat::query()
             ->where('trip_id', $trip->id)
+            ->where('origin_stop_sequence', '<', $segment['destination_sequence'])
+            ->where('destination_stop_sequence', '>', $segment['origin_sequence'])
             ->where(function ($query) {
                 $query->where('status', 'confirmed')
                     ->orWhere(function ($held) {

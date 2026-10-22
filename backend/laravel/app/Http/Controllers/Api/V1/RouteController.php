@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\RouteResource;
 use App\Models\RouteStop;
 use App\Models\TransportRoute;
+use App\Models\RouteSegment;
 use App\Services\Audit\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,13 +17,13 @@ class RouteController extends Controller
     #[OA\Get(path:'/api/v1/routes',operationId:'listRoutes',summary:'Listar rutas activas',tags:['Routes'],responses:[new OA\Response(response:200,description:'Rutas')])]
     public function index()
     {
-        return RouteResource::collection(TransportRoute::query()->where('active',true)->with('stops')->orderBy('origin')->orderBy('destination')->get());
+        return RouteResource::collection(TransportRoute::query()->where('active',true)->with(['stops','segments'])->orderBy('origin')->orderBy('destination')->get());
     }
 
     public function show(TransportRoute $transportRoute)
     {
         if (!$transportRoute->active) abort(404);
-        return new RouteResource($transportRoute->load('stops'));
+        return new RouteResource($transportRoute->load(['stops','segments']));
     }
 
     public function adminIndex()
@@ -106,6 +107,19 @@ class RouteController extends Controller
                 'longitude' => $stop['longitude'] ?? null,
                 'offset_minutes' => $stop['offset_minutes'] ?? 0,
             ]);
+        }
+        $ordered = $route->stops()->orderBy('sequence')->get();
+        $route->segments()->delete();
+        foreach ($ordered as $fromIndex => $from) {
+            foreach ($ordered->slice($fromIndex + 1) as $to) {
+                RouteSegment::query()->create([
+                    'transport_route_id' => $route->id,
+                    'origin_stop_sequence' => $from->sequence,
+                    'destination_stop_sequence' => $to->sequence,
+                    'origin_name' => $from->name,
+                    'destination_name' => $to->name,
+                ]);
+            }
         }
     }
 }
