@@ -1,9 +1,11 @@
 import { createRequire } from 'node:module';
+import { cp, mkdtemp, rm } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
+import { tmpdir } from 'node:os';
 
 const require = createRequire(import.meta.url);
 const normalizedRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -25,6 +27,22 @@ const nativePackages = {
 
 const packageName = nativePackages[process.platform]?.[process.arch];
 
+function runNpm(args, cwd = normalizedRoot) {
+  const npmExecPath = process.env.npm_execpath;
+  const command = npmExecPath
+    ? process.execPath
+    : process.platform === 'win32' ? 'npm.cmd' : 'npm';
+  const commandArgs = npmExecPath
+    ? [npmExecPath, ...args]
+    : args;
+
+  return spawnSync(command, commandArgs, {
+    cwd,
+    stdio: 'inherit',
+    shell: false,
+  });
+}
+
 if (!packageName) {
   process.exit(0);
 }
@@ -44,58 +62,45 @@ try {
   }
 
   console.warn(`Installing missing optional Rollup binary ${packageName}@${rollupVersion} for ${process.platform}/${process.arch}…`);
-  const result = spawnSync(
-    process.platform === 'win32' ? 'npm.cmd' : 'npm',
-    [
+  const temporaryDirectory = await mkdtemp(join(tmpdir(), 'encore-rollup-'));
+  const temporaryPackagePath = join(
+    temporaryDirectory,
+    'node_modules',
+    ...packageName.split('/'),
+  );
+  const targetPackagePath = join(
+    normalizedRoot,
+    'node_modules',
+    ...packageName.split('/'),
+  );
+
+  try {
+    const result = runNpm([
       'install',
       '--include=optional',
+      '--workspaces=false',
       '--no-save',
+      '--package-lock=false',
       '--ignore-scripts',
       '--no-audit',
       '--no-fund',
-    ],
-    {
-      cwd: normalizedRoot,
-      stdio: 'inherit',
-      shell: false,
-    },
-  );
+      `${packageName}@${rollupVersion}`,
+    ], temporaryDirectory);
 
-  if (result.status !== 0) {
-    process.exit(result.status ?? 1);
+    if (result.error || result.status !== 0) {
+      console.error(`Unable to install ${packageName}. ${result.error?.message ?? ''}`.trim());
+      process.exit(result.status ?? 1);
+    }
+
+    await cp(temporaryPackagePath, targetPackagePath, { recursive: true });
+  } finally {
+    await rm(temporaryDirectory, { recursive: true, force: true });
   }
 
   try {
     require.resolve(packageName, { paths: [normalizedRoot] });
   } catch {
-    console.warn(`The optional dependency was not materialized. Installing ${packageName}@${rollupVersion} explicitly…`);
-    const explicitInstall = spawnSync(
-      process.platform === 'win32' ? 'npm.cmd' : 'npm',
-      [
-        'install',
-        '--include=optional',
-        '--no-save',
-        '--ignore-scripts',
-        '--no-audit',
-        '--no-fund',
-        `${packageName}@${rollupVersion}`,
-      ],
-      {
-        cwd: normalizedRoot,
-        stdio: 'inherit',
-        shell: false,
-      },
-    );
-
-    if (explicitInstall.status !== 0) {
-      process.exit(explicitInstall.status ?? 1);
-    }
-
-    try {
-      require.resolve(packageName, { paths: [normalizedRoot] });
-    } catch {
-      console.error(`The Rollup binary ${packageName} is still unavailable after explicit installation.`);
-      process.exit(1);
-    }
+    console.error(`The Rollup binary ${packageName} is still unavailable after installation.`);
+    process.exit(1);
   }
 }
