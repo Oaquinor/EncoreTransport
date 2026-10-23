@@ -26,7 +26,7 @@ class ApiCoreSmokeTest extends TestCase
 
         $this->getJson('/api/v1/trips/'.$trip->id.'/seats')
             ->assertOk()
-            ->assertJsonCount(42, 'data');
+            ->assertJsonCount(55, 'data');
     }
 
     public function test_seeded_passenger_can_login(): void

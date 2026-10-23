@@ -28,7 +28,7 @@ class OperationalCoreTest extends TestCase
         $this->getJson('/api/v1/trips/search?origin=Georgetown&destination=New%20Amsterdam&passengers=1')
             ->assertOk()->assertJsonPath('data.0.id',$trip->id);
         $this->getJson('/api/v1/trips/'.$trip->id.'/seats')
-            ->assertOk()->assertJsonCount(42,'data');
+            ->assertOk()->assertJsonCount(55,'data');
     }
 
     public function test_booking_holds_real_seats_and_prevents_duplicate(): void
@@ -42,6 +42,31 @@ class OperationalCoreTest extends TestCase
         $this->withToken($token)->postJson('/api/v1/bookings',$payload)->assertCreated();
         $this->assertDatabaseHas('booking_seats',['trip_id'=>$trip->id,'bus_seat_id'=>$seatIds[0],'status'=>'held']);
         $this->withToken($token)->postJson('/api/v1/bookings',$payload)->assertStatus(422);
+    }
+
+    public function test_guest_can_create_and_retrieve_booking_with_private_access_token(): void
+    {
+        $trip = Trip::query()->firstOrFail();
+        $seat = $trip->bus->seats()->firstOrFail();
+        $response = $this->postJson('/api/v1/bookings', [
+            'trip_id' => $trip->id,
+            'seat_ids' => [$seat->id],
+            'passengers' => [[
+                'full_name' => 'Guest Passenger',
+                'email' => 'guest@example.test',
+                'phone' => '+5926000000',
+            ]],
+        ])->assertCreated();
+
+        $guestToken = (string) $response->json('guest_access_token');
+        $bookingId = $response->json('data.id');
+
+        $this->assertNotSame('', $guestToken);
+        $this->getJson('/api/v1/bookings/'.$bookingId)->assertForbidden();
+        $this->withHeader('X-Guest-Booking-Token', $guestToken)
+            ->getJson('/api/v1/bookings/'.$bookingId)
+            ->assertOk()
+            ->assertJsonPath('data.id', $bookingId);
     }
 
     public function test_same_seat_can_be_reused_only_on_non_overlapping_segments(): void

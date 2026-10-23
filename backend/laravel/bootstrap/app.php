@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\ApiTokenAuth;
+use App\Http\Middleware\OptionalApiTokenAuth;
 use App\Http\Middleware\RequirePermission;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,7 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->alias(['api.token' => ApiTokenAuth::class, 'permission' => RequirePermission::class]);
+        $middleware->alias([
+            'api.token' => ApiTokenAuth::class,
+            'api.token.optional' => OptionalApiTokenAuth::class,
+            'permission' => RequirePermission::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->renderable(function (QueryException $exception, Request $request) {

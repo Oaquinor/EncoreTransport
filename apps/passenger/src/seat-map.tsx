@@ -155,6 +155,10 @@ function splitAroundAisle(
     );
 
   if (sorted.length <= 2) {
+    if (sorted.every((seat) => resolvePosition(seat, 0) >= 4)) {
+      return [[], sorted] as const;
+    }
+
     const middle =
       Math.ceil(
         sorted.length / 2,
@@ -489,13 +493,13 @@ export function SeatMap({
     maxSelection;
 
   const frontWidth =
-    182;
+    150;
 
   const columnWidth =
-    82;
+    58;
 
   const rearWidth =
-    82;
+    64;
 
   const contentWidth =
     frontWidth +
@@ -507,7 +511,7 @@ export function SeatMap({
     rearWidth;
 
   const viewHeight =
-    360;
+    400;
 
   const seatDisabled = (
     slot: SeatSlot,
@@ -816,7 +820,7 @@ export function SeatMap({
                 [72, 119];
 
               const bottomY =
-                [213, 260];
+                [213, 260, 307];
 
               return (
                 <g
@@ -940,7 +944,7 @@ export function SeatMap({
 
           <text
             x="76"
-            y="325"
+            y="365"
             fill="#496779"
             fontSize="9"
             fontWeight="800"
@@ -954,7 +958,7 @@ export function SeatMap({
             x={
               contentWidth - 74
             }
-            y="325"
+            y="365"
             textAnchor="middle"
             fill="#496779"
             fontSize="9"

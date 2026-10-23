@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Booking extends Model
 {
     protected $fillable = [
-        'public_id','user_id','reference','trip_id','passenger_name','passenger_email','passenger_phone','seat_numbers',
+        'public_id','user_id','guest_access_token_hash','reference','trip_id','passenger_name','passenger_email','passenger_phone','seat_numbers',
         'status','expires_at','confirmed_at','total_amount',
     ];
     protected $casts = ['seat_numbers'=>'array','expires_at'=>'datetime','confirmed_at'=>'datetime'];

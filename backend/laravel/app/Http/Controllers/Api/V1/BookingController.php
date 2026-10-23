@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreBookingRequest;
 use App\Models\Booking;
 use App\Services\Bookings\BookingService;
+use App\Services\Bookings\GuestBookingAccess;
 use App\Services\Auth\PermissionService;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
@@ -28,13 +29,19 @@ class BookingController extends Controller
     public function store(StoreBookingRequest $request, BookingService $service)
     {
         $booking = $service->create($request->validated(), $request->user()?->id);
-        return response()->json(['data' => $booking], 201);
+        $guestAccessToken = $booking->getAttribute('guest_access_token');
+        $booking->offsetUnset('guest_access_token');
+
+        return response()->json([
+            'data' => $booking,
+            'guest_access_token' => $guestAccessToken,
+        ], 201);
     }
 
     #[OA\Get(path: '/api/v1/bookings/{booking}', operationId: 'getBooking', summary: 'Consultar reserva', tags: ['Bookings'], security: [['bearerAuth'=>[]]], parameters: [new OA\Parameter(name:'booking',in:'path',required:true,schema:new OA\Schema(type:'integer'))], responses: [new OA\Response(response:200,description:'Reserva'),new OA\Response(response:403,description:'Sin permiso')])]
-    public function show(Request $request, Booking $booking)
+    public function show(Request $request, Booking $booking, GuestBookingAccess $guestAccess)
     {
-        $this->assertOwnership($request, $booking);
+        $this->assertOwnership($request, $booking, $guestAccess);
         return response()->json(['data' => $booking->load(['trip.route','trip.bus','trip.driver','reservedSeats.seat','passengers','payments','ticket'])]);
     }
 
@@ -45,12 +52,14 @@ class BookingController extends Controller
         return response()->json(['data' => $service->cancel($booking, $request->user())]);
     }
 
-    private function assertOwnership(Request $request, Booking $booking): void
+    public function assertOwnership(Request $request, Booking $booking, ?GuestBookingAccess $guestAccess = null): void
     {
         $user = $request->user();
         $isOwner = $booking->user_id !== null && $user?->id === $booking->user_id;
         $canViewAll = $this->permissions->allows($user, 'bookings.view');
 
-        if (!$isOwner && !$canViewAll) abort(403, 'Forbidden.');
+        $hasGuestAccess = $guestAccess?->matches($request, $booking) ?? false;
+
+        if (!$isOwner && !$canViewAll && !$hasGuestAccess) abort(403, 'Forbidden.');
     }
 }

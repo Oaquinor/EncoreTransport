@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Ticket;
 use App\Services\Tickets\TicketService;
+use App\Services\Bookings\GuestBookingAccess;
 use App\Services\Auth\PermissionService;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
@@ -27,11 +28,11 @@ class TicketController extends Controller
             new OA\Response(response: 404, description: 'Not issued'),
         ]
     )]
-    public function show(Request $request, Booking $booking)
+    public function show(Request $request, Booking $booking, GuestBookingAccess $guestAccess)
     {
         $isOwner = $booking->user_id !== null && $booking->user_id === $request->user()?->id;
         $canViewTickets = $this->permissions->allows($request->user(), 'tickets.view');
-        if (!$isOwner && !$canViewTickets) {
+        if (!$isOwner && !$canViewTickets && !$guestAccess->matches($request, $booking)) {
             abort(403);
         }
 

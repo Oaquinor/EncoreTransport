@@ -290,11 +290,11 @@ function renderSeats(seats) {
   if (!Array.isArray(seats) || seats.length === 0) {
     seatPreview.innerHTML = `
       <div class="seat-preview-empty">
-        <strong>No seat layout is configured for this vehicle.</strong>
-        <span>The selected trip has no active seats available for preview.</span>
+        <strong>55-seat coach layout preview</strong>
+        <span>Select a departure to check live availability for each seat.</span>
       </div>`;
 
-    setText('#seatState', 'No seat layout is configured for this vehicle.');
+    setText('#seatState', '55-seat coach layout · live availability appears after selecting a trip.');
     return;
   }
 

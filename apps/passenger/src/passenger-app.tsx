@@ -59,6 +59,7 @@ type Quote = {
 
 const API = '/api/v1';
 const TOKEN = 'encore_api_token';
+const GUEST_TOKEN = 'encore_guest_booking_token';
 const DRAFT = 'encore_booking_draft';
 const OPERATIONAL_POINTS = ['Georgetown', 'Rosignol', 'New Amsterdam'] as const;
 
@@ -78,6 +79,11 @@ async function api(path: string, options: RequestInit = {}) {
 
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  const guestToken = sessionStorage.getItem(GUEST_TOKEN);
+  if (guestToken) {
+    headers.set('X-Guest-Booking-Token', guestToken);
   }
 
   const response = await fetch(`${API}${path}`, {
@@ -231,23 +237,6 @@ export function PassengerApp() {
   const reserve = async () => {
     if (!selectedTrip) return;
 
-    if (!sessionStorage.getItem(TOKEN) && !localStorage.getItem(TOKEN)) {
-      sessionStorage.setItem(
-        DRAFT,
-        JSON.stringify({
-          filters,
-          tripId: selectedTrip.id,
-          selected,
-          passengers,
-        }),
-      );
-
-      location.href =
-        '/login/?return=' +
-        encodeURIComponent('/passenger/?resume=1');
-      return;
-    }
-
     setLoading(true);
     setError('');
 
@@ -264,6 +253,9 @@ export function PassengerApp() {
       });
 
       setBooking(payload.data ?? payload);
+      if (payload.guest_access_token) {
+        sessionStorage.setItem(GUEST_TOKEN, payload.guest_access_token);
+      }
       sessionStorage.removeItem(DRAFT);
       go('status');
     } catch (caught) {
@@ -1037,9 +1029,9 @@ function Review({
 
           {!signed && (
             <div className="smart-banner">
-              <b>Sign in required</b>
+              <b>Guest checkout available</b>
               <span>
-                Your booking selections will be preserved while you sign in.
+                You can continue without creating an account. We will keep your booking linked to this session.
               </span>
             </div>
           )}
@@ -1064,9 +1056,7 @@ function Review({
           >
             {loading
               ? 'RESERVING…'
-              : signed
-              ? 'CONFIRM BOOKING →'
-                : 'SIGN IN AND CONTINUE →'}
+              : 'HOLD SEATS & CONTINUE →'}
           </button>
         </aside>
       </div>

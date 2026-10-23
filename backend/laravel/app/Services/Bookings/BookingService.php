@@ -23,6 +23,7 @@ class BookingService
         private readonly AuditService $audit,
         private readonly RouteSegmentService $segments,
         private readonly NotificationService $notifications,
+        private readonly GuestBookingAccess $guestAccess,
     ) {}
 
     public function create(array $data, ?int $userId): Booking
@@ -74,9 +75,11 @@ class BookingService
 
             $quote = $this->pricing->quote($trip, count($seatIds), $segment['price']);
             $lead = $data['passengers'][0];
+            $guestAccess = $userId ? null : $this->guestAccess->issue();
             $booking = Booking::query()->create([
                 'public_id' => (string) Str::uuid(),
                 'user_id' => $userId,
+                'guest_access_token_hash' => $guestAccess['hash'] ?? null,
                 'reference' => 'ET-'.strtoupper(Str::random(10)),
                 'trip_id' => $trip->id,
                 'passenger_name' => $lead['full_name'],
@@ -117,7 +120,12 @@ class BookingService
                 DB::afterCommit(fn () => $this->notifications->sendEmail($recipient, 'booking_created', ['reference' => $booking->reference, 'status' => $booking->status]));
             }
 
-            return $booking->load(['trip.route','trip.bus','reservedSeats.seat','passengers']);
+            $booking = $booking->load(['trip.route','trip.bus','reservedSeats.seat','passengers']);
+            if ($guestAccess) {
+                $booking->setAttribute('guest_access_token', $guestAccess['plain']);
+            }
+
+            return $booking;
         }, 3);
     }
 

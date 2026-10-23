@@ -54,6 +54,15 @@ Route::prefix('v1')->group(function () {
     Route::get('packages/track/{token}', [PackageController::class, 'track'])
         ->middleware('throttle:30,1');
 
+    // Guest checkout uses the per-booking token returned at creation.
+    Route::middleware('api.token.optional')->group(function () {
+        Route::post('bookings', [BookingController::class, 'store'])->middleware('throttle:20,1');
+        Route::get('bookings/{booking}', [BookingController::class, 'show']);
+        Route::post('bookings/{booking}/payments', [PaymentController::class, 'store'])
+            ->middleware('throttle:20,1');
+        Route::get('bookings/{booking}/ticket', [TicketController::class, 'show']);
+    });
+
     Route::middleware('api.token')->group(function () {
         Route::get('assistant/tools', [AssistantController::class, 'tools']);
         Route::post('assistant/tools/{tool}', [AssistantController::class, 'execute'])->middleware('throttle:60,1');
@@ -64,15 +73,9 @@ Route::prefix('v1')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
 
         Route::get('bookings', [BookingController::class, 'index']);
-        Route::post('bookings', [BookingController::class, 'store'])->middleware('throttle:20,1');
-        Route::get('bookings/{booking}', [BookingController::class, 'show']);
         Route::post('bookings/{booking}/cancel', [BookingController::class, 'cancel']);
 
         Route::get('bookings/{booking}/payments', [PaymentController::class, 'index']);
-        Route::post('bookings/{booking}/payments', [PaymentController::class, 'store'])
-            ->middleware('throttle:20,1');
-
-        Route::get('bookings/{booking}/ticket', [TicketController::class, 'show']);
 
         Route::get('trips/{trip}/location', [DriverLocationController::class, 'latest']);
     });

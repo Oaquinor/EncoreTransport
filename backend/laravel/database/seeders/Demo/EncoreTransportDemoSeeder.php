@@ -48,21 +48,30 @@ class EncoreTransportDemoSeeder extends Seeder
         foreach ([['Georgetown','Rosignol',1,2,40,45000,4500],['Georgetown','New Amsterdam',1,3,85,110000,12600],['Rosignol','New Amsterdam',2,3,45,65000,8100]] as [$from,$to,$fromSequence,$toSequence,$price,$distance,$duration]) {
             RouteSegment::query()->updateOrCreate(['transport_route_id'=>$route->id,'origin_stop_sequence'=>$fromSequence,'destination_stop_sequence'=>$toSequence],['origin_name'=>$from,'destination_name'=>$to,'price'=>$price,'distance_meters'=>$distance,'duration_seconds'=>$duration,'active'=>true]);
         }
-        $bus=Bus::query()->updateOrCreate(['code'=>'BUS-001'],['plate'=>'ET-314-AX','capacity'=>42,'status'=>'operational']);
+        $referenceSeatColumns = [
+            [3, 4, 2, 1], [7, 8, 6, 5], [11, 12, 10, 9], [15, 16, 14, 13],
+            [19, 20, 18, 17], [23, 24, 22, 21], [27, 28, 26, 25], [30, 29],
+            [31, 32, 33, 34], [35, 36, 38, 37], [39, 40, 42, 41],
+            [43, 44, 46, 45], [47, 48, 50, 49], [51, 52, 53, 54, 55],
+        ];
+        $seatNumbers = collect($referenceSeatColumns)->flatten()->map(fn ($seat) => (string) $seat)->all();
+        $bus=Bus::query()->updateOrCreate(['code'=>'BUS-001'],['plate'=>'ET-314-AX','capacity'=>count($seatNumbers),'status'=>'operational']);
         $driver=Driver::query()->updateOrCreate(['license_number'=>'D-AL-5520'],['user_id'=>$driverUser->id,'name'=>'Driver Demo','status'=>'upcoming']);
 
-        $layout=[['A',1,true,false],['B',2,false,true],['C',4,false,true],['D',5,true,false]];
-        $created=0;$row=1;
-        while($created<$bus->capacity){
-            foreach($layout as [$letter,$position,$window,$aisle]){
-                if($created>=$bus->capacity)break;
-                BusSeat::query()->updateOrCreate(['bus_id'=>$bus->id,'seat_number'=>$row.$letter],[
-                    'row_number'=>$row,'position_index'=>$position,'seat_class'=>'standard','seat_type'=>'seat',
-                    'window'=>$window,'aisle'=>$aisle,'accessible'=>false,'blocked'=>false,'active'=>true,
+        BusSeat::query()->where('bus_id', $bus->id)->whereNotIn('seat_number', $seatNumbers)->delete();
+        foreach ($referenceSeatColumns as $column => $columnSeats) {
+            foreach ($columnSeats as $position => $seatNumber) {
+                BusSeat::query()->updateOrCreate(['bus_id'=>$bus->id,'seat_number'=>(string) $seatNumber],[
+                    'row_number'=>$column + 1,
+                    'position_index'=>count($columnSeats) === 2
+                        ? $position + 4
+                        : ($position < 2 ? $position + 1 : $position + 2),
+                    'seat_class'=>'standard','seat_type'=>'seat',
+                    'window'=>$position === 0 || $position === count($columnSeats) - 1,
+                    'aisle'=>$position === 1 || $position === 2,
+                    'accessible'=>false,'blocked'=>false,'active'=>true,
                 ]);
-                $created++;
             }
-            $row++;
         }
 
         $trip=Trip::query()->updateOrCreate([
