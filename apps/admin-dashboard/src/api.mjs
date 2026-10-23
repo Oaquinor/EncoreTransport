@@ -46,6 +46,10 @@ export const vehicleStatus = async () => {
   return payload.data ?? [];
 };
 
+export const users = async () => (await requestJson('/admin/users')).data ?? [];
+export const roles = async () => (await requestJson('/admin/roles')).data ?? [];
+export const permissions = async () => (await requestJson('/admin/permissions')).data ?? [];
+
 export const routes = async () => {
   const payload = await requestJson('/admin/routes');
   return payload.data ?? [];

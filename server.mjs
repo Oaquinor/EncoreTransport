@@ -12,6 +12,7 @@ const mimeTypes = new Map([
   ['.js', 'text/javascript; charset=utf-8'],
   ['.mjs', 'text/javascript; charset=utf-8'],
   ['.json', 'application/json; charset=utf-8'],
+  ['.txt', 'text/plain; charset=utf-8'],
   ['.webmanifest', 'application/manifest+json; charset=utf-8'],
   ['.svg', 'image/svg+xml'],
   ['.ico', 'image/x-icon'],
@@ -32,6 +33,10 @@ const appAliases = new Map([
 
 const publicRoots = ['assets', 'packages/shared'];
 const publicFiles = new Set(['/logo.svg', '/robots.txt']);
+const vendorFiles = new Map([
+  ['/vendor/leaflet/leaflet.css', 'node_modules/leaflet/dist/leaflet.css'],
+  ['/vendor/leaflet/leaflet.js', 'node_modules/leaflet/dist/leaflet.js'],
+]);
 
 function redirect(response, location, statusCode = 302) {
   response.writeHead(statusCode, {
@@ -85,6 +90,11 @@ function resolvePublicPath(rootDirectory, pathname) {
   return null;
 }
 
+function resolveVendorPath(rootDirectory, pathname) {
+  const relativePath = vendorFiles.get(pathname);
+  return relativePath ? safeJoin(rootDirectory, relativePath) : null;
+}
+
 async function serveFile(response, filePath) {
   if (!filePath) {
     response.writeHead(404, {
@@ -133,7 +143,6 @@ function proxyApi(request, response, apiTarget) {
     { method: request.method, headers },
     (upstream) => {
       const outHeaders = { ...upstream.headers };
-      delete outHeaders['transfer-encoding'];
       delete outHeaders.connection;
       outHeaders['x-robots-tag'] = 'noindex, nofollow, noarchive';
       response.writeHead(upstream.statusCode ?? 502, outHeaders);
@@ -197,6 +206,7 @@ export function createEncoreServer({
 
     const requestPath =
       resolveAliasedPath(rootDirectory, parsedUrl.pathname) ??
+      resolveVendorPath(rootDirectory, parsedUrl.pathname) ??
       resolvePublicPath(rootDirectory, parsedUrl.pathname);
 
     await serveFile(response, requestPath);

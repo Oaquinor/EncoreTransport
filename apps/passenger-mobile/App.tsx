@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import MapView, { Marker, Polyline, UrlTile } from 'react-native-maps';
+import { formatCurrency } from '@encore/domain';
 
 type Trip = {
   id: number | string;
@@ -53,8 +54,7 @@ const API_ORIGIN = API.replace(/\/api\/v1\/?$/, '');
 const TILE_TEMPLATE =
   `${API_ORIGIN}/api/v1/maps/tiles/{z}/{x}/{y}.png?style=street-light`;
 
-const money = (value: number) =>
-  `GYD ${Number(value || 0).toLocaleString('en-GY')}`;
+const money = (value: number) => formatCurrency(value);
 
 async function request(
   path: string,

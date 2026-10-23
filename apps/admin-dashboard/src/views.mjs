@@ -1,3 +1,5 @@
+import { formatMoney } from '../../../packages/shared/formatters.mjs';
+
 function esc(value = '') {
   return String(value).replace(/[&<>'"]/g, (character) => ({
     '&': '&amp;',
@@ -20,11 +22,7 @@ export function icon(name) {
 }
 
 export const money = (value) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'GYD',
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
+  formatMoney(value);
 
 function cellValue(value) {
   return value == null || value === '' ? '—' : String(value);

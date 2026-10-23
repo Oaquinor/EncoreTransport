@@ -11,6 +11,7 @@ import {
   destroyRealMap,
 } from '../../packages/shared/real-map.mjs';
 import { appConfig } from '../../packages/shared/app-config.mjs';
+import { formatMoney } from '../../packages/shared/formatters.mjs';
 
 const destinationGrid = document.querySelector('#destinationGrid');
 const bookingForm = document.querySelector('#bookingForm');
@@ -56,6 +57,17 @@ function routeCode(name = '') {
 function setText(selector, value) {
   const element = document.querySelector(selector);
   if (element) element.textContent = String(value ?? '');
+}
+
+function renderMapFallback(message = 'Route map is temporarily unavailable. Please try again.') {
+  if (!routeMapCanvas) return;
+  routeMapCanvas.innerHTML = `
+    <div class="encore-map-fallback">
+      <div>
+        <strong>Route preview unavailable</strong>
+        <span>${esc(message)}</span>
+      </div>
+    </div>`;
 }
 
 function initializeBusinessFooter() {
@@ -237,7 +249,7 @@ function renderFeatured(trip) {
     <div class="trip-card-meta">
       <span>${Number(trip.availableSeats ?? 0)} seats</span>
       <span>${Number(trip.durationMinutes ?? 0)} min</span>
-      <span>${new Intl.NumberFormat(appConfig.locale, { style: 'currency', currency: appConfig.currency, maximumFractionDigits: 0 }).format(Number(trip.baseFare ?? 0))}</span>
+      <span>${formatMoney(trip.baseFare)}</span>
     </div>`;
 }
 
@@ -396,7 +408,7 @@ async function loadRoutes() {
         <div class="destination-body">
           <small>Connection issue</small>
           <h3>Routes could not be loaded.</h3>
-          <p>${esc(error.message)}</p>
+          <p>We could not reach the live route service. Please try again in a moment.</p>
           <button class="btn btn-secondary" id="retryRoutes" type="button">Retry</button>
         </div>
       </article>`;
@@ -419,6 +431,7 @@ async function loadFeaturedTrip() {
       renderSeats([]);
       setText('#mapStatus', 'No trip available');
       setText('#mapEta', '—');
+      renderMapFallback('No scheduled trip is available to preview right now.');
       return;
     }
 
@@ -487,15 +500,7 @@ async function loadFeaturedTrip() {
       setText('#mapStatus', 'Route unavailable');
       setText('#mapEta', '—');
 
-      if (routeMapCanvas) {
-        routeMapCanvas.innerHTML = `
-          <div class="encore-map-fallback">
-            <div>
-              <strong>Route map unavailable</strong>
-              <span>${esc(error.message)}</span>
-            </div>
-          </div>`;
-      }
+      renderMapFallback('The route could not be loaded right now. Please try again.');
     }
   } catch (error) {
     featuredTrip = null;
@@ -505,6 +510,7 @@ async function loadFeaturedTrip() {
     setText('#mapEta', '—');
     renderFeatured(null);
     renderSeats([]);
+    renderMapFallback('Trip data is temporarily unavailable. Please try again.');
   }
 }
 

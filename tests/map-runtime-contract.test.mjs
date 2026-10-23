@@ -17,7 +17,7 @@ assert.equal(
 
 assert.match(
   realMap,
-  /\/node_modules\/leaflet\/dist\/leaflet\.js/,
+  /\/vendor\/leaflet\/leaflet\.js/,
   'Web maps must try the local Leaflet installation first.',
 );
 

@@ -7,8 +7,11 @@ export const modules=[
   {id:'routes',label:'Routes',group:'Fleet',permission:'routes.view'},
   {id:'schedules',label:'Driver schedules',group:'Fleet',permission:'schedules.view'},
   {id:'packages',label:'Packages',group:'Customer service',permission:'cargo.view'},
-  {id:'incidents',label:'Incidents',group:'Customer service',permission:'trips.view'},
+  {id:'incidents',label:'Incidents',group:'Customer service',permission:'incidents.view'},
   {id:'reports',label:'Reports',group:'Reports',permission:'reports.view'},
+  {id:'users',label:'Users',group:'Access control',permission:'users.view'},
+  {id:'roles',label:'Roles',group:'Access control',permission:'roles.view'},
+  {id:'permissions',label:'Permissions',group:'Access control',permission:'permissions.view'},
 ];
 export const requestedButBlocked=[
   'Credit Note','Invoice','Supplier Payments','Customer Payments','Accounts','Ride Requests','Expense','Salary','Event','Tours','Feedback','Campaign','Fuel','Enquiry','CRM','Masters','Admin Center','Configuration','Configurations','Admins','Transaction','Logs','Allocation','My Companies','Maintenance','Inspection','Zone','Stoppage','Toll','Garages','Employee','Leave','Clients','Suppliers','Offices','Support-Contact','Connect Support'

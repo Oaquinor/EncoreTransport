@@ -27,16 +27,18 @@ class TripController extends Controller
             // Segment matching is resolved against ordered route stops below.
             ->when($filters['date']??null,fn($q,$v)=>$q->whereDate('departure_date',$v))
             ->orderBy('departure_date')->orderBy('departure_time')->get()
-            ->filter(function (Trip $trip) use ($filters, $segments) {
+            ->filter(function (Trip $trip) use ($filters, $passengers, $segments) {
                 try {
                     $segment = $segments->resolve($trip->route, $filters['origin'] ?? null, $filters['destination'] ?? null);
                     $reserved = BookingSeat::query()->where('trip_id', $trip->id)
                         ->where('origin_stop_sequence', '<', $segment['destination_sequence'])
                         ->where('destination_stop_sequence', '>', $segment['origin_sequence'])
                         ->where(fn ($q) => $q->where('status', 'confirmed')->orWhere(fn ($held) => $held->where('status', 'held')->where(fn ($time) => $time->whereNull('held_until')->orWhere('held_until', '>', now()))))
-                        ->count();
+                        ->distinct('bus_seat_id')->count('bus_seat_id');
                     $capacity = $trip->bus?->seats()->where('active', true)->where('blocked', false)->count() ?? 0;
-                    return $capacity - $reserved >= $passengers;
+                    if ($capacity - $reserved < $passengers) return false;
+                    $trip->setAttribute('_requested_segment', $segment);
+                    return true;
                 }
                 catch (\Illuminate\Validation\ValidationException) { return false; }
             })->values();

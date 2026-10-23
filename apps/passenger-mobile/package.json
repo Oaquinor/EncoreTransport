@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@encore/domain": "0.1.0",
     "@expo/vector-icons": "~15.0.2",
     "expo": "^57.0.22",
     "expo-status-bar": "~57.0.1",

@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Audit\AuditService;
 use App\Services\Pricing\PricingService;
 use App\Services\Routes\RouteSegmentService;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -21,6 +22,7 @@ class BookingService
         private readonly PricingService $pricing,
         private readonly AuditService $audit,
         private readonly RouteSegmentService $segments,
+        private readonly NotificationService $notifications,
     ) {}
 
     public function create(array $data, ?int $userId): Booking
@@ -110,6 +112,10 @@ class BookingService
 
             $this->refreshAvailableSeats($trip);
             $this->audit->record($userId ? User::query()->find($userId) : null, 'booking.created', $booking);
+            if ($userId) {
+                $recipient = User::query()->find($userId);
+                DB::afterCommit(fn () => $this->notifications->sendEmail($recipient, 'booking_created', ['reference' => $booking->reference, 'status' => $booking->status]));
+            }
 
             return $booking->load(['trip.route','trip.bus','reservedSeats.seat','passengers']);
         }, 3);
@@ -163,7 +169,7 @@ class BookingService
                                 $time->whereNull('held_until')->orWhere('held_until', '>', now());
                             });
                     });
-            })->count();
+            })->distinct('bus_seat_id')->count('bus_seat_id');
         $trip->forceFill(['available_seats' => max(0, $totalSeats - $reservedSeats)])->save();
     }
 }

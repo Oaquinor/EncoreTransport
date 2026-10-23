@@ -44,6 +44,9 @@ const state = {
   reportWidgetOrder: JSON.parse(localStorage.getItem('encore_report_widgets') || '[]'),
   user: null,
   permissions: [],
+  users: [],
+  roles: [],
+  permissionCatalog: [],
 };
 
 function esc(value = '') {
@@ -60,9 +63,11 @@ function redirectLogin() {
   location.replace('/login/?return=' + encodeURIComponent('/admin/'));
 }
 
-function roleHome(role) {
-  if (role === 'driver') return '/driver/';
-  if (role === 'passenger') return '/passenger/';
+function roleHome(user) {
+  const permissions = new Set(user?.permissions ?? state.permissions);
+  if (permissions.has('dashboard.view')) return '/admin/';
+  if (permissions.has('driver.access')) return '/driver/';
+  if (user?.active) return '/passenger/';
   return '/website/';
 }
 
@@ -203,7 +208,7 @@ function content() {
         <p>${esc(state.error)}</p>
 
         <div class="admin-access-denied__actions">
-          <a class="button button--primary" href="${roleHome(state.user?.role)}">Go to my area</a>
+          <a class="button button--primary" href="${roleHome(state.user)}">Go to my area</a>
           <button class="button button--ghost" id="logout">Sign out</button>
         </div>
       </section>`;
@@ -284,7 +289,7 @@ function content() {
   }
 
   if (state.module === 'routes') {
-    const form = state.routeFormOpen ? `<form id="routeForm" class="premium-form-grid fleet-form"><input type="hidden" name="id" value="${esc(state.routeEditingId ?? '')}" /><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.routeEditingId ? 'Update route' : 'Create a route'}</strong><span>Define the service corridor and intermediate stops.</span></div></div><label><span>Origin</span><input name="origin" required maxlength="150" placeholder="Starting terminal" /></label><label><span>Destination</span><input name="destination" required maxlength="150" placeholder="Destination terminal" /></label><label><span>Distance (km)</span><input name="distance_km" type="number" min="0" required placeholder="0" /></label><label><span>Intermediate stops</span><input name="stops" placeholder="Stop 1, Stop 2" /></label><label><span>Published</span><select name="active"><option value="1">Active</option><option value="0">Inactive</option></select></label><div class="form-actions"><button type="submit" class="button button--primary button--with-icon">${icon('save')}${state.routeEditingId ? 'Update route' : 'Save route'}</button> <button type="button" class="button button--ghost button--with-icon" id="cancelRoute">${icon('close')}Cancel</button></div><div id="routeMessage" aria-live="polite"></div></form>` : '';
+    const form = state.routeFormOpen ? `<form id="routeForm" class="premium-form-grid fleet-form"><input type="hidden" name="id" value="${esc(state.routeEditingId ?? '')}" /><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.routeEditingId ? 'Update route' : 'Create a route'}</strong><span>Define the service corridor and intermediate stops.</span></div></div><label><span>Origin</span><input name="origin" required maxlength="150" placeholder="Starting terminal" /></label><label><span>Destination</span><input name="destination" required maxlength="150" placeholder="Destination terminal" /></label><label><span>Distance (km)</span><input name="distance_km" type="number" min="0" required placeholder="0" /></label><label><span>Intermediate stops</span><input name="stops" placeholder="Stop 1, Stop 2" /></label><label><span>Commercial segments JSON</span><textarea name="segments" rows="6" placeholder='[{"origin":"Georgetown","destination":"Rosignol","price":40,"duration_seconds":4500,"distance_meters":45000}]'></textarea></label><label><span>Published</span><select name="active"><option value="1">Active</option><option value="0">Inactive</option></select></label><div class="form-actions"><button type="submit" class="button button--primary button--with-icon">${icon('save')}${state.routeEditingId ? 'Update route' : 'Save route'}</button> <button type="button" class="button button--ghost button--with-icon" id="cancelRoute">${icon('close')}Cancel</button></div><div id="routeMessage" aria-live="polite"></div></form>` : '';
     return `
       <section class="admin-panel admin-panel--pad">
         <div class="module-view__header">
@@ -366,6 +371,10 @@ function content() {
 
       ${state.reportData ? reportView(state.reportType, state.reportData, { widgetOrder: state.reportWidgetOrder }) : ''}`;
   }
+
+  if (state.module === 'users') return table('Users', ['Name', 'Email', 'Legacy role', 'Roles', 'Effective permissions', 'Status'], state.users.map((user) => [user.name, user.email, user.role, (user.roles ?? []).map((role) => role.label ?? role.name).join(', '), (user.permissions ?? []).length, user.active ? 'Active' : 'Disabled']));
+  if (state.module === 'roles') return table('Roles', ['Name', 'Label', 'System', 'Permissions'], state.roles.map((role) => [role.name, role.label, role.system ? 'Yes' : 'No', (role.permissions ?? []).length]));
+  if (state.module === 'permissions') return table('Permissions', ['Key', 'Label', 'Resource'], state.permissionCatalog.map((permission) => [permission.key, permission.label, permission.resource]));
 
   return '';
 }
@@ -473,6 +482,10 @@ async function loadModule() {
       state.reportData = await api.report(state.reportType, { from: state.reportFrom, to: state.reportTo });
     }
 
+    if (state.module === 'users') state.users = await api.users();
+    if (state.module === 'roles') state.roles = await api.roles();
+    if (state.module === 'permissions') state.permissionCatalog = await api.permissions();
+
     state.loading = false;
   } catch (error) {
     state.loading = false;
@@ -554,14 +567,18 @@ function wire() {
     const form = new FormData(routeForm);
     const id = String(form.get('id') ?? '').trim() || null;
     const stops = String(form.get('stops') ?? '').split(',').map((name) => name.trim()).filter(Boolean).map((name) => ({ name }));
+    let segments = [];
     const message = document.querySelector('#routeMessage');
     try {
+      segments = JSON.parse(String(form.get('segments') ?? '[]'));
+      if (!Array.isArray(segments)) throw new Error('Segments must be a JSON array.');
       await api.saveRoute({
         origin: form.get('origin'),
         destination: form.get('destination'),
         distance_km: Number(form.get('distance_km')),
         active: form.get('active') === '1',
         stops,
+        segments,
       }, id);
       message.textContent = 'Route saved.';
       state.routes = await api.routes();
@@ -599,6 +616,10 @@ function wire() {
       form.elements.distance_km.value = route.distance_km ?? 0;
       form.elements.active.value = route.active ? '1' : '0';
       form.elements.stops.value = (route.stops ?? []).map((stop) => stop.name).join(', ');
+      form.elements.segments.value = JSON.stringify((route.segments ?? []).map((segment) => ({
+        origin: segment.origin, destination: segment.destination, price: segment.price,
+        distance_meters: segment.distance_meters, duration_seconds: segment.duration_seconds, active: segment.active,
+      })), null, 2);
       form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });

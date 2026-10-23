@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AdminDashboardController;
+use App\Http\Controllers\Api\V1\AdminAccessController;
+use App\Http\Controllers\Api\V1\AssistantController;
 use App\Http\Controllers\Api\V1\AdminFleetController;
 use App\Http\Controllers\Api\V1\AdminReportController;
 use App\Http\Controllers\Api\V1\AuthController;
@@ -51,6 +53,11 @@ Route::prefix('v1')->group(function () {
 
     Route::get('packages/track/{token}', [PackageController::class, 'track'])
         ->middleware('throttle:30,1');
+
+    Route::middleware('api.token')->group(function () {
+        Route::get('assistant/tools', [AssistantController::class, 'tools']);
+        Route::post('assistant/tools/{tool}', [AssistantController::class, 'execute'])->middleware('throttle:60,1');
+    });
 
     Route::middleware('api.token')->group(function () {
         Route::get('auth/me', [AuthController::class, 'me']);
@@ -126,4 +133,11 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['api.token', 'permission:vehicles.view'])->get('admin/vehicles', [AdminFleetController::class, 'vehicles']);
     Route::middleware(['api.token', 'permission:vehicles.create'])->post('admin/vehicles', [AdminFleetController::class, 'storeVehicle']);
     Route::middleware(['api.token', 'permission:vehicles.update'])->put('admin/vehicles/{bus}', [AdminFleetController::class, 'updateVehicle']);
+    Route::middleware(['api.token', 'permission:users.view'])->get('admin/users', [AdminAccessController::class, 'users']);
+    Route::middleware(['api.token', 'permission:users.create'])->post('admin/users', [AdminAccessController::class, 'storeUser']);
+    Route::middleware(['api.token', 'permission:users.update'])->put('admin/users/{user}', [AdminAccessController::class, 'updateUser']);
+    Route::middleware(['api.token', 'permission:users.disable'])->post('admin/users/{user}/disable', [AdminAccessController::class, 'disableUser']);
+    Route::middleware(['api.token', 'permission:roles.view'])->get('admin/roles', [AdminAccessController::class, 'roles']);
+    Route::middleware(['api.token', 'permission:roles.manage'])->put('admin/roles/{role}', [AdminAccessController::class, 'updateRole']);
+    Route::middleware(['api.token', 'permission:permissions.view'])->get('admin/permissions', [AdminAccessController::class, 'permissions']);
 });

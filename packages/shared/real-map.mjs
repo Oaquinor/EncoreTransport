@@ -4,8 +4,8 @@ const leafletVersion = '1.9.4';
 
 const leafletSources = [
   {
-    css: '/node_modules/leaflet/dist/leaflet.css',
-    js: '/node_modules/leaflet/dist/leaflet.js',
+    css: '/vendor/leaflet/leaflet.css',
+    js: '/vendor/leaflet/leaflet.js',
     label: 'local Leaflet package',
   },
   {

@@ -1,10 +1,10 @@
 import { bookingStatuses, driverStatuses, tripStatuses } from './domain.mjs';
 
 export const mockRoutes = [
-  { id: 'route-sdq-sti', origin: 'Santo Domingo', destination: 'Santiago', durationMinutes: 135 },
-  { id: 'route-sdq-puj', origin: 'Santo Domingo', destination: 'Punta Cana', durationMinutes: 165 },
-  { id: 'route-sti-pop', origin: 'Santiago', destination: 'Puerto Plata', durationMinutes: 95 },
-  { id: 'route-sdq-lrm', origin: 'Santo Domingo', destination: 'La Romana', durationMinutes: 90 }
+  { id: 'route-sdq-sti', origin: 'Georgetown', destination: 'Rosignol', durationMinutes: 135 },
+  { id: 'route-sdq-puj', origin: 'Georgetown', destination: 'New Amsterdam', durationMinutes: 165 },
+  { id: 'route-sti-pop', origin: 'Rosignol', destination: 'New Amsterdam', durationMinutes: 95 },
+  { id: 'route-sdq-lrm', origin: 'Georgetown', destination: 'Rosignol', durationMinutes: 90 }
 ];
 
 export const mockBuses = [
@@ -35,9 +35,9 @@ export const mockBuses = [
 ];
 
 export const mockDrivers = [
-  { id: 'driver-ricardo-luna', name: 'Ricardo Luna', license: 'DOP-D-5520', status: driverStatuses.active },
-  { id: 'driver-laura-medina', name: 'Laura Medina', license: 'DOP-D-8841', status: driverStatuses.next },
-  { id: 'driver-manuel-rojas', name: 'Manuel Rojas', license: 'DOP-D-9012', status: driverStatuses.finished }
+  { id: 'driver-ricardo-luna', name: 'Ricardo Luna', license: 'GYD-D-5520', status: driverStatuses.active },
+  { id: 'driver-laura-medina', name: 'Laura Medina', license: 'GYD-D-8841', status: driverStatuses.next },
+  { id: 'driver-manuel-rojas', name: 'Manuel Rojas', license: 'GYD-D-9012', status: driverStatuses.finished }
 ];
 
 function seatRow(row, letters) {
@@ -64,9 +64,9 @@ export const mockTrips = [
   {
     id: 'EN-001',
     routeId: 'route-sdq-sti',
-    routeName: 'Santo Domingo → Santiago',
-    origin: 'Santo Domingo',
-    destination: 'Santiago',
+    routeName: 'Georgetown → Rosignol',
+    origin: 'Georgetown',
+    destination: 'Rosignol',
     date: '2026-09-14',
     departureTime: '08:30',
     arrivalTime: '10:45',
@@ -89,9 +89,9 @@ export const mockTrips = [
   {
     id: 'EN-002',
     routeId: 'route-sdq-puj',
-    routeName: 'Santo Domingo → Punta Cana',
-    origin: 'Santo Domingo',
-    destination: 'Punta Cana',
+    routeName: 'Georgetown → New Amsterdam',
+    origin: 'Georgetown',
+    destination: 'New Amsterdam',
     date: '2026-09-14',
     departureTime: '11:15',
     arrivalTime: '14:00',
@@ -107,16 +107,16 @@ export const mockTrips = [
     featured: true,
     serviceClass: 'Coastal Express',
     boardingPoint: 'Blue Mall, valet lobby',
-    dropoffPoint: 'Downtown Punta Cana',
+    dropoffPoint: 'Downtown New Amsterdam',
     highlights: ['Express', 'USB', 'Reclining seats'],
     seatMap: createSeatMap(9)
   },
   {
     id: 'EN-003',
     routeId: 'route-sti-pop',
-    routeName: 'Santiago → Puerto Plata',
-    origin: 'Santiago',
-    destination: 'Puerto Plata',
+    routeName: 'Rosignol → New Amsterdam',
+    origin: 'Rosignol',
+    destination: 'New Amsterdam',
     date: '2026-09-14',
     departureTime: '16:20',
     arrivalTime: '17:55',
@@ -132,16 +132,16 @@ export const mockTrips = [
     featured: false,
     serviceClass: 'City Connector',
     boardingPoint: 'Plaza Internacional',
-    dropoffPoint: 'Puerto Plata Malecon',
+    dropoffPoint: 'New Amsterdam Malecon',
     highlights: ['Fast', 'A/C', 'Luggage included'],
     seatMap: createSeatMap(10)
   },
   {
     id: 'EN-004',
     routeId: 'route-sdq-lrm',
-    routeName: 'Santo Domingo → La Romana',
-    origin: 'Santo Domingo',
-    destination: 'La Romana',
+    routeName: 'Georgetown → Rosignol',
+    origin: 'Georgetown',
+    destination: 'Rosignol',
     date: '2026-09-14',
     departureTime: '18:10',
     arrivalTime: '19:40',
@@ -157,7 +157,7 @@ export const mockTrips = [
     featured: false,
     serviceClass: 'Evening Shuttle',
     boardingPoint: 'Sambil, main entrance',
-    dropoffPoint: 'Multiplaza La Romana',
+    dropoffPoint: 'Multiplaza Rosignol',
     highlights: ['Direct', 'Wi-Fi', 'Evening departure'],
     seatMap: createSeatMap(9)
   }
@@ -166,8 +166,8 @@ export const mockTrips = [
 export const mockPassengerJourney = {
   passengerName: 'Maria Torres',
   lastSearch: {
-    origin: 'Santo Domingo',
-    destination: 'Santiago',
+    origin: 'Georgetown',
+    destination: 'Rosignol',
     date: '2026-09-14',
     passengers: 2
   },

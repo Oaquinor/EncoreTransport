@@ -10,6 +10,7 @@ import {
   destroyRealMap,
   renderJourneyMap,
 } from '../../../packages/shared/real-map.mjs';
+import { formatMoney } from '../../../packages/shared/formatters.mjs';
 
 type Screen = 'home' | 'results' | 'trip' | 'seats' | 'passengers' | 'review' | 'status';
 
@@ -61,12 +62,7 @@ const TOKEN = 'encore_api_token';
 const DRAFT = 'encore_booking_draft';
 const OPERATIONAL_POINTS = ['Georgetown', 'Rosignol', 'New Amsterdam'] as const;
 
-const money = (value: number, currency = 'GYD') =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
+const money = (value: number, currency?: string) => formatMoney(value, currency);
 
 async function api(path: string, options: RequestInit = {}) {
   const token =
@@ -887,7 +883,7 @@ function SeatScreen({
           </div>
 
           <div className="seat-price-summary">
-            <span>Server quote</span>
+            <span>Trip total</span>
             <strong>
               {money(
                 quote?.total ?? 0,
@@ -1050,7 +1046,7 @@ function Review({
         </div>
 
         <aside className="total-panel">
-          <span>SERVER TOTAL</span>
+            <span>TRIP TOTAL</span>
           <strong>
             {money(
               quote?.total ?? 0,
@@ -1069,7 +1065,7 @@ function Review({
             {loading
               ? 'RESERVING…'
               : signed
-                ? 'HOLD SEATS / CREATE BOOKING →'
+              ? 'CONFIRM BOOKING →'
                 : 'SIGN IN AND CONTINUE →'}
           </button>
         </aside>
@@ -1119,7 +1115,7 @@ function Status({
 
       <div className="action-band">
         <div>
-          <span>SERVER TOTAL</span>
+          <span>TRIP TOTAL</span>
           <strong>{money(Number(booking?.total_amount ?? 0))}</strong>
         </div>
         <button className="primary" onClick={onNew}>

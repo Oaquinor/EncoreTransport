@@ -16,7 +16,11 @@ class RouteResource extends JsonResource
             'destination_coordinates'=>$this->destination_latitude!==null?['latitude'=>(float)$this->destination_latitude,'longitude'=>(float)$this->destination_longitude]:null,
             'route_geometry'=>$this->route_geometry,'active'=>(bool)$this->active,
             'stops'=>$this->whenLoaded('stops',fn()=> $this->stops->sortBy('sequence')->values()),
-            'segments'=>$this->whenLoaded('segments',fn()=> $this->segments->where('active',true)->values()),
+            'segments'=>$this->whenLoaded('segments',fn()=> $this->segments->where('active',true)->values()->map(fn($segment)=>[
+                'id'=>$segment->id,'origin'=>$segment->origin_name,'destination'=>$segment->destination_name,
+                'origin_stop_sequence'=>(int)$segment->origin_stop_sequence,'destination_stop_sequence'=>(int)$segment->destination_stop_sequence,
+                'price'=>$segment->price,'distance_meters'=>$segment->distance_meters,'duration_seconds'=>$segment->duration_seconds,'active'=>(bool)$segment->active,
+            ])),
         ];
     }
 }

@@ -6,7 +6,7 @@ import { mockTrips } from '../packages/shared/mock-data.mjs';
 const targetTrip = mockTrips[0];
 
 assert.equal(calculateTripPrice(targetTrip, 2), 1335);
-assert.equal(searchTrips(mockTrips, { origin: 'Santo Domingo', destination: 'Santiago', date: '2026-09-14', passengers: 2 }).length, 1);
+assert.equal(searchTrips(mockTrips, { origin: 'Georgetown', destination: 'Rosignol', date: '2026-09-14', passengers: 2 }).length, 2);
 assert.ok(getAvailableSeats(targetTrip).length > 0);
 assert.equal(canTransitionTrip(tripStatuses.boarding, tripStatuses.inProgress), true);
 assert.equal(canTransitionTrip(tripStatuses.completed, tripStatuses.boarding), false);

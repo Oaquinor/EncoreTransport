@@ -26,7 +26,7 @@ class ReleaseExpiredBookings implements ShouldQueue
                 $booking->forceFill(['status'=>'expired'])->save();
                 if($trip){
                     $total=BusSeat::query()->where('bus_id',$trip->bus_id)->where('active',true)->count();
-                    $reserved=BookingSeat::query()->where('trip_id',$trip->id)->where(function($q){$q->where('status','confirmed')->orWhere(fn($held)=>$held->where('status','held')->where(fn($time)=>$time->whereNull('held_until')->orWhere('held_until','>',now())));})->count();
+                    $reserved=BookingSeat::query()->where('trip_id',$trip->id)->where(function($q){$q->where('status','confirmed')->orWhere(fn($held)=>$held->where('status','held')->where(fn($time)=>$time->whereNull('held_until')->orWhere('held_until','>',now())));})->distinct('bus_seat_id')->count('bus_seat_id');
                     $trip->forceFill(['available_seats'=>max(0,$total-$reserved)])->save();
                 }
             },3);

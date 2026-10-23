@@ -30,7 +30,7 @@ export function normalizeText(value: unknown): string {
 }
 
 export function formatCurrency(amount: number, currency = 'GYD'): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-GY', {
     style: 'currency',
     currency,
     maximumFractionDigits: 0
@@ -38,7 +38,7 @@ export function formatCurrency(amount: number, currency = 'GYD'): string {
 }
 
 export function formatDateLabel(isoDate: string): string {
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('en-GY', {
     weekday: 'short',
     day: '2-digit',
     month: 'short'
@@ -46,7 +46,7 @@ export function formatDateLabel(isoDate: string): string {
 }
 
 export function formatTimeLabel(timeValue: string): string {
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('en-GY', {
     hour: '2-digit',
     minute: '2-digit'
   }).format(new Date(`2026-01-01T${timeValue}:00`));
@@ -112,7 +112,7 @@ export function reserveSeats(trip: Trip, seatIds: string[]) {
   return {
     updatedTrip: {
       ...trip,
-      seatMap: trip.seatMap.map((seat) => (selectedSeats.has(seat.id) && !unavailableSeatSet.has(seat.id) ? { ...seat, reserved: true } : seat)),
+      seatMap: trip.seatMap.map((seat) => (selectedSeats.has(String(seat.id)) && !unavailableSeatSet.has(String(seat.id)) ? { ...seat, reserved: true } : seat)),
       seatsAvailable: Math.max(0, trip.seatsAvailable - reservableSeatIds.length)
     },
     unavailableSeats

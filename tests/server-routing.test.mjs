@@ -162,6 +162,9 @@ try {
     /image\/svg\+xml/,
   );
 
+  const robots = await expectOk('/robots.txt', /text\/plain/);
+  assert.match(await robots.text(), /Allow: \/website\//);
+
   await expectOk(
     '/assets/media/Autobus.png',
     /image\/png/,
@@ -169,6 +172,16 @@ try {
 
   await expectOk(
     '/packages/shared/api.mjs',
+    /text\/javascript/,
+  );
+
+  await expectOk(
+    '/vendor/leaflet/leaflet.css',
+    /text\/css/,
+  );
+
+  await expectOk(
+    '/vendor/leaflet/leaflet.js',
     /text\/javascript/,
   );
 
@@ -198,6 +211,7 @@ try {
       '/package.json',
       '/backend/laravel/.env',
       '/backend/laravel/composer.json',
+      '/node_modules/leaflet/dist/leaflet.js',
     ]
   ) {
     const response =

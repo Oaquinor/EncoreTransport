@@ -34,6 +34,7 @@
     "test:premium-responsive": "node tests/premium-responsive-contract.test.mjs",
     "test:seo": "node tests/seo-contract.test.mjs",
     "test:visual-contract": "node tests/visual-contract.test.mjs",
+    "test:visual-browser": "node tests/visual-browser.test.mjs",
     "test": "npm run test:business && npm run test:hardcode && npm run test:server && npm run test:dashboard-permissions && npm run test:real-map && npm run test:map-runtime && npm run test:seat-layout && npm run test:ux-regression && npm run test:native-gps && npm run test:premium-design && npm run test:premium-responsive && npm run test:seo && npm run test:visual-contract",
     "check": "npm run test",
     "validate:frontend": "npm run test && npm run typecheck:api-client && npm run typecheck:passenger && npm run build:passenger",
@@ -46,5 +47,8 @@
   },
   "dependencies": {
     "leaflet": "1.9.4"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
   }
 }

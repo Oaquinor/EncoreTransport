@@ -29,7 +29,7 @@ class RouteController extends Controller
     public function adminIndex()
     {
         return RouteResource::collection(
-            TransportRoute::query()->with('stops')->orderBy('origin')->orderBy('destination')->get()
+            TransportRoute::query()->with(['stops','segments'])->orderBy('origin')->orderBy('destination')->get()
         );
     }
 
@@ -39,9 +39,11 @@ class RouteController extends Controller
 
         $route = DB::transaction(function () use ($data, $audit, $request) {
             $stops = $data['stops'] ?? [];
+            $segments = $data['segments'] ?? [];
             unset($data['stops']);
+            unset($data['segments']);
             $route = TransportRoute::query()->create($data);
-            $this->replaceStops($route, $stops);
+            $this->replaceStops($route, $stops, $segments);
             $audit->record($request->user(), 'route.created', $route);
             return $route->load('stops');
         });
@@ -55,9 +57,11 @@ class RouteController extends Controller
 
         $route = DB::transaction(function () use ($data, $audit, $request, $transportRoute) {
             $stops = $data['stops'] ?? [];
+            $segments = $data['segments'] ?? [];
             unset($data['stops']);
+            unset($data['segments']);
             $transportRoute->fill($data)->save();
-            $this->replaceStops($transportRoute, $stops);
+            $this->replaceStops($transportRoute, $stops, $segments);
             $audit->record($request->user(), 'route.updated', $transportRoute);
             return $transportRoute->fresh('stops');
         });
@@ -92,10 +96,17 @@ class RouteController extends Controller
             'stops.*.latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'stops.*.longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'stops.*.offset_minutes' => ['nullable', 'integer', 'min:0', 'max:100000'],
+            'segments' => ['sometimes', 'array', 'max:500'],
+            'segments.*.origin' => ['required_with:segments', 'string', 'max:150'],
+            'segments.*.destination' => ['required_with:segments', 'string', 'max:150'],
+            'segments.*.price' => ['nullable', 'integer', 'min:0'],
+            'segments.*.distance_meters' => ['nullable', 'integer', 'min:0'],
+            'segments.*.duration_seconds' => ['nullable', 'integer', 'min:0'],
+            'segments.*.active' => ['sometimes', 'boolean'],
         ]);
     }
 
-    private function replaceStops(TransportRoute $route, array $stops): void
+    private function replaceStops(TransportRoute $route, array $stops, array $segmentData = []): void
     {
         $route->stops()->delete();
         foreach (array_values($stops) as $index => $stop) {
@@ -120,6 +131,17 @@ class RouteController extends Controller
                     'destination_name' => $to->name,
                 ]);
             }
+        }
+        foreach ($segmentData as $segment) {
+            $route->segments()
+                ->where('origin_name', $segment['origin'])
+                ->where('destination_name', $segment['destination'])
+                ->update([
+                    'price' => $segment['price'] ?? null,
+                    'distance_meters' => $segment['distance_meters'] ?? null,
+                    'duration_seconds' => $segment['duration_seconds'] ?? null,
+                    'active' => $segment['active'] ?? true,
+                ]);
         }
     }
 }
