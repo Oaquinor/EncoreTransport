@@ -41,8 +41,18 @@ class BookingController extends Controller
     #[OA\Get(path: '/api/v1/bookings/{booking}', operationId: 'getBooking', summary: 'Consultar reserva', tags: ['Bookings'], security: [['bearerAuth'=>[]]], parameters: [new OA\Parameter(name:'booking',in:'path',required:true,schema:new OA\Schema(type:'integer'))], responses: [new OA\Response(response:200,description:'Reserva'),new OA\Response(response:403,description:'Sin permiso')])]
     public function show(Request $request, Booking $booking, GuestBookingAccess $guestAccess)
     {
+        $guestAccessGranted = $guestAccess->matches($request, $booking);
         $this->assertOwnership($request, $booking, $guestAccess);
-        return response()->json(['data' => $booking->load(['trip.route','trip.bus','trip.driver','reservedSeats.seat','passengers','payments','ticket'])]);
+        $booking = $booking->load(['trip.route','trip.bus','trip.driver','reservedSeats.seat','passengers','payments','ticket']);
+
+        if ($guestAccessGranted) {
+            $booking->makeHidden(['guest_access_token_hash', 'user_id']);
+            $booking->trip?->driver?->makeHidden(['user_id', 'license_number', 'photo_path']);
+            $booking->passengers->each(fn ($passenger) => $passenger->makeHidden(['document_number', 'phone', 'email']));
+            $booking->payments->each(fn ($payment) => $payment->makeHidden(['metadata']));
+        }
+
+        return response()->json(['data' => $booking]);
     }
 
     #[OA\Post(path: '/api/v1/bookings/{booking}/cancel', operationId: 'cancelBooking', summary: 'Cancelar reserva sin pagar', tags: ['Bookings'], security: [['bearerAuth'=>[]]], parameters: [new OA\Parameter(name:'booking',in:'path',required:true,schema:new OA\Schema(type:'integer'))], responses: [new OA\Response(response:200,description:'Reserva cancelada'),new OA\Response(response:422,description:'Estado invalido')])]

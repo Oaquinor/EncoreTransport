@@ -4,7 +4,6 @@ const TOKEN_KEY = 'encore_api_token';
 
 export const getApiToken = () =>
   sessionStorage.getItem(TOKEN_KEY) ??
-  localStorage.getItem(TOKEN_KEY) ??
   '';
 
 export function setApiToken(
@@ -16,11 +15,8 @@ export function setApiToken(
 
   if (!token) return;
 
-  const storage = persistent
-    ? localStorage
-    : sessionStorage;
-
-  storage.setItem(TOKEN_KEY, token);
+  // Bearer tokens stay session-scoped to limit the impact of token theft.
+  sessionStorage.setItem(TOKEN_KEY, token);
 }
 
 export class ApiError extends Error {

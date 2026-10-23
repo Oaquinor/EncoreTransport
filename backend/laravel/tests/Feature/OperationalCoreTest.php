@@ -62,6 +62,7 @@ class OperationalCoreTest extends TestCase
         $bookingId = $response->json('data.id');
 
         $this->assertNotSame('', $guestToken);
+        $this->assertArrayNotHasKey('guest_access_token_hash', $response->json('data'));
         $this->getJson('/api/v1/bookings/'.$bookingId)->assertForbidden();
         $this->withHeader('X-Guest-Booking-Token', $guestToken)
             ->getJson('/api/v1/bookings/'.$bookingId)

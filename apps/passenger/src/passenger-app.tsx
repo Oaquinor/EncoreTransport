@@ -66,9 +66,7 @@ const OPERATIONAL_POINTS = ['Georgetown', 'Rosignol', 'New Amsterdam'] as const;
 const money = (value: number, currency?: string) => formatMoney(value, currency);
 
 async function api(path: string, options: RequestInit = {}) {
-  const token =
-    sessionStorage.getItem(TOKEN) ??
-    localStorage.getItem(TOKEN);
+  const token = sessionStorage.getItem(TOKEN);
 
   const headers = new Headers(options.headers);
   headers.set('Accept', 'application/json');
@@ -1002,8 +1000,7 @@ function Review({
   onReserve: () => void;
 }) {
   const signed = Boolean(
-    sessionStorage.getItem(TOKEN) ??
-    localStorage.getItem(TOKEN),
+    sessionStorage.getItem(TOKEN),
   );
 
   return (

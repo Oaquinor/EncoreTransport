@@ -14,6 +14,7 @@ class Booking extends Model
         'status','expires_at','confirmed_at','total_amount',
     ];
     protected $casts = ['seat_numbers'=>'array','expires_at'=>'datetime','confirmed_at'=>'datetime'];
+    protected $hidden = ['guest_access_token_hash'];
 
     public function trip(): BelongsTo { return $this->belongsTo(Trip::class); }
     public function user(): BelongsTo { return $this->belongsTo(User::class); }

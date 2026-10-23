@@ -24,8 +24,8 @@ class TripResource extends JsonResource
             'origin'=>$this->route?->origin??'','destination'=>$this->route?->destination??'',
             'date'=>$this->departure_date?->toDateString()??'','departureTime'=>$this->departure_time??'','arrivalTime'=>$this->arrival_time??'',
             'durationMinutes'=>$durationMinutes,'baseFare'=>(int)($this->price_per_passenger??0),
-            'busId'=>(string)$this->bus_id,'busCode'=>$this->bus?->code,'busPlate'=>$this->bus?->plate,'busCapacity'=>$this->bus?->capacity,
-            'driverId'=>(string)$this->driver_id,'driverName'=>$this->driver?->name,
+            'busId'=>(string)$this->bus_id,'busCode'=>$this->bus?->code,'busCapacity'=>$this->bus?->capacity,
+            'driverName'=>$this->driver?->name,
             'status'=>$this->status,'availableSeats'=>(int)($this->available_seats??0),
             'requested_origin'=>$requestedSegment['origin'] ?? null,
             'requested_destination'=>$requestedSegment['destination'] ?? null,
@@ -33,7 +33,6 @@ class TripResource extends JsonResource
             'segment_price'=>$requestedSegment['price'] ?? null,
             'segment_duration'=>$requestedSegment['duration_seconds'] ?? null,
             'segment_distance'=>$requestedSegment['distance_meters'] ?? null,
-            'startedAt'=>$this->started_at?->toIso8601String(),'completedAt'=>$this->completed_at?->toIso8601String(),
             'route'=>$this->whenLoaded('route',fn()=>new RouteResource($this->route)),'highlights'=>[],
         ];
     }

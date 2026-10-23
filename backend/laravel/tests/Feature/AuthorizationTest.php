@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\ApiToken;
 use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\Demo\EncoreTransportDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,7 +26,11 @@ class AuthorizationTest extends TestCase
         $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
         $passenger = User::query()->where('email', 'passenger@example.test')->firstOrFail();
 
-        $adminResponse = $this->withToken($this->tokenFor($admin))->getJson('/api/v1/auth/me')->assertOk();
+        $adminResponse = $this->withToken($this->tokenFor($admin))
+            ->getJson('/api/v1/auth/me')
+            ->assertOk()
+            ->assertHeader('X-Content-Type-Options', 'nosniff')
+            ->assertHeader('X-Frame-Options', 'DENY');
         $this->assertContains('routes.create', $adminResponse->json('permissions'));
 
         $this->withToken($this->tokenFor($passenger))
@@ -48,6 +53,27 @@ class AuthorizationTest extends TestCase
                 'destination' => 'Linden',
                 'distance_km' => 105,
                 'active' => true,
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_user_management_cannot_escalate_role_without_roles_manage(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+        $passenger = User::query()->where('email', 'passenger@example.test')->firstOrFail();
+        $usersUpdate = Permission::query()->where('key', 'users.update')->firstOrFail();
+        $admin->permissions()->syncWithoutDetaching([
+            $usersUpdate->id => ['granted' => true, 'assigned_by_user_id' => $admin->id],
+        ]);
+        $admin->roles()->detach(Role::query()->where('name', 'superadmin')->value('id'));
+
+        $this->withToken($this->tokenFor($admin))
+            ->putJson('/api/v1/admin/users/'.$passenger->id, [
+                'name' => $passenger->name,
+                'email' => $passenger->email,
+                'role' => 'passenger',
+                'role_ids' => [Role::query()->where('name', 'superadmin')->value('id')],
+                'password' => null,
             ])
             ->assertForbidden();
     }

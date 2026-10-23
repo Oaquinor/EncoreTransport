@@ -117,6 +117,10 @@ async function serveFile(response, filePath) {
     response.writeHead(200, {
       'Content-Type': mimeTypes.get(extension) ?? 'application/octet-stream',
       'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Permissions-Policy': 'camera=(), microphone=(), payment=(), usb=()',
     });
     response.end(fileContents);
   } catch {
@@ -145,6 +149,10 @@ function proxyApi(request, response, apiTarget) {
       const outHeaders = { ...upstream.headers };
       delete outHeaders.connection;
       outHeaders['x-robots-tag'] = 'noindex, nofollow, noarchive';
+      outHeaders['x-content-type-options'] = 'nosniff';
+      outHeaders['x-frame-options'] = 'DENY';
+      outHeaders['referrer-policy'] = 'strict-origin-when-cross-origin';
+      outHeaders['permissions-policy'] = 'camera=(), microphone=(), payment=(), usb=()';
       response.writeHead(upstream.statusCode ?? 502, outHeaders);
       upstream.pipe(response);
     },
