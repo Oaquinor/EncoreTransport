@@ -66,6 +66,21 @@ assert.equal(
 );
 
 assert.equal(
+  sharedMap.includes('mapTileSize = 512') &&
+    sharedMap.includes('updateWhenIdle: true') &&
+    sharedMap.includes('keepBuffer: 1'),
+  true,
+  'Shared map must minimize initial tile requests and reuse the visible tile buffer.',
+);
+
+assert.equal(
+  websiteApp.includes('rootMargin: \'360px\'') &&
+    websiteApp.includes('renderBusinessMap'),
+  true,
+  'The footer location map must load lazily instead of competing with trip data.',
+);
+
+assert.equal(
   sharedMap.includes('TOMTOM_API_KEY'),
   false,
   'Shared map must not expose the TomTom API key in browser code.',

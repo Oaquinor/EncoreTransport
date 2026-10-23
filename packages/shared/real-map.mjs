@@ -1,6 +1,24 @@
 import { appConfig } from './app-config.mjs';
 
 const leafletVersion = '1.9.4';
+const mapTileSize = 512;
+
+const tileLayerOptions = {
+  minZoom: 0,
+  maxZoom: 20,
+  maxNativeZoom: 18,
+  tileSize: mapTileSize,
+  zoomOffset: -1,
+  updateWhenIdle: true,
+  updateWhenZooming: false,
+  keepBuffer: 1,
+  detectRetina: false,
+  attribution: '&copy; TomTom',
+};
+
+function tileLayerUrl() {
+  return `${appConfig.apiBaseUrl}/maps/tiles/{z}/{x}/{y}.png?style=street-light&tileSize=${mapTileSize}`;
+}
 
 const leafletSources = [
   {
@@ -354,13 +372,8 @@ export async function renderJourneyMap(container, journey, options = {}) {
   mapRegistry.set(container, map);
 
   const tileLayer = L.tileLayer(
-    `${appConfig.apiBaseUrl}/maps/tiles/{z}/{x}/{y}.png?style=street-light`,
-    {
-      minZoom: 0,
-      maxZoom: 22,
-      tileSize: 256,
-      attribution: '&copy; TomTom',
-    }
+    tileLayerUrl(),
+    tileLayerOptions,
   );
 
   let tileFailures = 0;
@@ -506,12 +519,7 @@ export async function renderLocationMap(container, location, options = {}) {
   }).setView(center, options.zoom ?? 15);
   mapRegistry.set(container, map);
 
-  L.tileLayer(`${appConfig.apiBaseUrl}/maps/tiles/{z}/{x}/{y}.png?style=street-light`, {
-    minZoom: 0,
-    maxZoom: 22,
-    tileSize: 256,
-    attribution: '&copy; TomTom',
-  }).addTo(map);
+  L.tileLayer(tileLayerUrl(), tileLayerOptions).addTo(map);
 
   L.marker(center, {
     icon: markerIcon(L, 'origin', 'E'),

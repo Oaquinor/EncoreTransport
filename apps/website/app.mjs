@@ -83,9 +83,22 @@ function initializeBusinessFooter() {
 
   if (location && Number.isFinite(Number(location.latitude)) && Number.isFinite(Number(location.longitude))) {
     if (status) status.textContent = location.name || 'Encore Transport city view';
-    void renderLocationMap(map, location).catch(() => {
-      if (status) status.textContent = 'City location map unavailable.';
-    });
+    const renderBusinessMap = () => {
+      void renderLocationMap(map, location).catch(() => {
+        if (status) status.textContent = 'City location map unavailable.';
+      });
+    };
+
+    if ('IntersectionObserver' in window && map) {
+      const observer = new IntersectionObserver((entries, instance) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        instance.disconnect();
+        renderBusinessMap();
+      }, { rootMargin: '360px' });
+      observer.observe(map);
+    } else {
+      window.setTimeout(renderBusinessMap, 1200);
+    }
   }
 
   document.querySelectorAll('[data-social]').forEach((link) => {
