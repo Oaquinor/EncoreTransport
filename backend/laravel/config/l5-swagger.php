@@ -2,6 +2,7 @@
 
 return [
     'default' => 'default',
+    'public' => env('L5_SWAGGER_PUBLIC', false),
     'documentations' => [
         'default' => [
             'api' => [
@@ -65,10 +66,10 @@ return [
              * Middleware allows to prevent unexpected access to API documentation
              */
             'middleware' => [
-                'api' => [],
-                'asset' => [],
-                'docs' => [],
-                'oauth2_callback' => [],
+                'api' => [\App\Http\Middleware\InternalDocumentationAccess::class],
+                'asset' => [\App\Http\Middleware\InternalDocumentationAccess::class],
+                'docs' => [\App\Http\Middleware\InternalDocumentationAccess::class],
+                'oauth2_callback' => [\App\Http\Middleware\InternalDocumentationAccess::class],
             ],
 
             /*

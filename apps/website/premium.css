@@ -1375,8 +1375,6 @@ input {
       rgba(7,23,34,.10),
       rgba(7,23,34,.88)
     ),
-    url("/assets/media/Autobus.png")
-      center 22% / 112% auto no-repeat,
     var(--et-navy-900);
 
   color: #fff;

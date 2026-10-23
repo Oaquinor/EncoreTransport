@@ -181,7 +181,6 @@ body {
   overflow: hidden;
   background:
     linear-gradient(90deg, rgba(7,23,34,.98), rgba(7,23,34,.78)),
-    url("/assets/media/Autobus.png") right 22% bottom 20% / 62% auto no-repeat,
     var(--et-navy-950);
   color: #fff;
   box-shadow: var(--et-shadow-lg);
@@ -595,7 +594,6 @@ body {
     min-height: 460px;
     background:
       linear-gradient(90deg, rgba(7,23,34,.98), rgba(7,23,34,.70)),
-      url("/assets/media/Autobus.png") right bottom / 76% auto no-repeat,
       var(--et-navy-950);
   }
 
@@ -644,7 +642,6 @@ body {
     border-radius: 20px;
     background:
       linear-gradient(180deg, rgba(7,23,34,.98), rgba(7,23,34,.66)),
-      url("/assets/media/Autobus.png") 72% 85% / 115% auto no-repeat,
       var(--et-navy-950);
   }
 

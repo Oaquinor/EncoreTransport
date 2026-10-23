@@ -226,10 +226,6 @@ body {
         rgba(7,23,34,.98),
         rgba(7,23,34,.67)
       ),
-      url("/assets/media/Autobus.png")
-        right bottom /
-        72% auto
-        no-repeat,
       var(--et-navy-950);
   }
 
@@ -309,10 +305,6 @@ body {
         rgba(7,23,34,.98),
         rgba(7,23,34,.63)
       ),
-      url("/assets/media/Autobus.png")
-        72% 90% /
-        118% auto
-        no-repeat,
       var(--et-navy-950);
   }
 

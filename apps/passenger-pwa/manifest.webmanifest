@@ -1,8 +1,8 @@
 {
   "name": "Encore Move",
   "short_name": "Encore Move",
-  "start_url": "/move/",
-  "scope": "/move/",
+  "start_url": "/passenger/",
+  "scope": "/passenger/",
   "display": "standalone",
   "background_color": "#08111f",
   "theme_color": "#08111f",
