@@ -1,0 +1,214 @@
+/* Encore product surface: shared visual language for public and operational apps. */
+:root {
+  --et-display: clamp(2.4rem, 5vw, 5.4rem);
+  --et-tight: -0.055em;
+  --et-panel-radius: 22px;
+  --et-panel-shadow: 0 18px 48px rgba(7, 23, 34, .07);
+}
+
+html {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  letter-spacing: -.006em;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* Website: editorial, spacious and product-led rather than dashboard-like. */
+.site-shell .topbar {
+  min-height: 76px;
+  border-bottom: 1px solid rgba(11, 34, 50, .08);
+}
+
+.site-shell .nav {
+  gap: 8px;
+  padding: 5px;
+  border: 1px solid rgba(11, 34, 50, .08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .62);
+  backdrop-filter: blur(16px);
+}
+
+.site-shell .nav a {
+  padding: 9px 13px;
+  border-radius: 999px;
+  color: #536978;
+}
+
+.site-shell .nav a:hover {
+  background: #eaf7fb;
+  color: var(--blue2);
+}
+
+.site-shell .nav a:after {
+  display: none;
+}
+
+.site-shell .nav-cta {
+  border-radius: 999px;
+  padding-inline: 20px;
+  box-shadow: 0 12px 26px rgba(16, 31, 45, .13);
+}
+
+.site-shell .hero-copy h1 {
+  max-width: 760px;
+  font-weight: 850;
+  text-wrap: balance;
+}
+
+.site-shell .booking-card,
+.site-shell .destination-card,
+.site-shell .floating-trip-card,
+.site-shell .map-card {
+  border: 1px solid rgba(11, 34, 50, .09);
+  box-shadow: var(--et-panel-shadow);
+}
+
+.site-shell .booking-card {
+  border-radius: var(--et-panel-radius);
+}
+
+.site-shell .destination-card {
+  border-radius: 20px;
+}
+
+/* Passenger: one calm canvas, with clear step hierarchy and decisive actions. */
+.app-shell .topbar,
+.app-shell .journey,
+.app-shell .search-console,
+.app-shell .trip-map-card,
+.app-shell .departure,
+.app-shell .passenger-card,
+.app-shell .review-card,
+.app-shell .payment-form,
+.app-shell .confirmation,
+.app-shell .ticket,
+.app-shell .seat-summary {
+  border-color: rgba(11, 34, 50, .10);
+  box-shadow: var(--et-panel-shadow);
+}
+
+.app-shell .journey-steps button.active,
+.app-shell .search-console,
+.app-shell .action-band,
+.app-shell .smart-banner {
+  background: linear-gradient(135deg, #fff, #f1faff);
+}
+
+.app-shell .hero h1,
+.app-shell .page-head h1 {
+  font-weight: 850;
+  text-wrap: balance;
+}
+
+.app-shell .primary,
+.app-shell .booking-submit {
+  border-radius: 999px;
+  box-shadow: 0 12px 26px rgba(20, 158, 215, .19);
+}
+
+.app-shell .departure:hover,
+.app-shell .trip-map-card:hover,
+.app-shell .seat-summary:hover {
+  border-color: rgba(20, 158, 215, .34);
+  box-shadow: 0 22px 58px rgba(7, 23, 34, .10);
+}
+
+/* Auth and tracking: focused entry surfaces, not generic empty cards. */
+.auth-shell,
+.tracking-shell {
+  background:
+    radial-gradient(circle at 8% 4%, rgba(42, 169, 223, .18), transparent 28rem),
+    radial-gradient(circle at 96% 94%, rgba(31, 157, 116, .12), transparent 26rem),
+    #f5f8fa;
+}
+
+.auth-card,
+.tracking-card {
+  border-color: rgba(11, 34, 50, .10);
+  border-radius: 28px;
+  box-shadow: 0 30px 90px rgba(7, 23, 34, .12);
+}
+
+.auth-form input,
+.tracking-card input {
+  min-height: 50px;
+  border-radius: 14px;
+  background: #fbfdfe;
+}
+
+.auth-form button,
+.tracking-card button {
+  border-radius: 999px;
+}
+
+/* Operations: denser information, stronger navigation and quieter panels. */
+.admin-sidebar {
+  background: linear-gradient(180deg, #081b29, #102d40);
+}
+
+.admin-main {
+  background:
+    radial-gradient(circle at 94% 0, rgba(42, 169, 223, .10), transparent 28rem),
+    var(--bg);
+}
+
+.admin-panel,
+.stat-card,
+.kpi-card,
+.report-widget {
+  border-color: rgba(11, 34, 50, .10);
+  box-shadow: var(--et-panel-shadow);
+}
+
+.button,
+.admin-controls .field {
+  border-radius: 999px;
+}
+
+.admin-table th {
+  background: #f2f7f9;
+}
+
+/* Driver: glanceable cards for a moving operator. */
+.driver-card {
+  border-color: rgba(11, 34, 50, .10);
+  box-shadow: var(--et-panel-shadow);
+}
+
+.driver-action,
+.driver-button,
+.driver-login button {
+  border-radius: 999px;
+}
+
+@media (max-width: 720px) {
+  .site-shell .nav {
+    border: 0;
+    padding: 0;
+    background: transparent;
+  }
+
+  .site-shell .nav a {
+    padding: 7px 8px;
+  }
+
+  .site-shell .nav a:not(:first-child) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

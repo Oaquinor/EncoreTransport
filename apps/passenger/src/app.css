@@ -14,6 +14,7 @@
 @import url("./mandate-motion.css");
 @import url("./flow-refresh.css");
 @import url("./layout-alignment.css");
+@import url("../../../packages/shared/design-system.css");
 
 /* Keep route and passenger selectors consistent across every flow. */
 .search-console select,
