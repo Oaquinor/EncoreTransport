@@ -78,6 +78,44 @@ class AuthorizationTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_user_profile_update_does_not_require_access_assignment_permissions(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+        $passenger = User::query()->where('email', 'passenger@example.test')->firstOrFail();
+        $usersUpdate = Permission::query()->where('key', 'users.update')->firstOrFail();
+        $admin->roles()->detach();
+        $admin->permissions()->sync([$usersUpdate->id => ['granted' => true, 'assigned_by_user_id' => $admin->id]]);
+
+        $this->withToken($this->tokenFor($admin))
+            ->putJson('/api/v1/admin/users/'.$passenger->id, [
+                'name' => 'Updated passenger',
+                'email' => $passenger->email,
+                'phone' => '+5920000000',
+                'active' => true,
+                'password' => null,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.name', 'Updated passenger');
+    }
+
+    public function test_effective_system_administrator_can_assign_direct_permission_with_legacy_admin_role(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+        $passenger = User::query()->where('email', 'passenger@example.test')->firstOrFail();
+        $this->assertTrue($admin->roles()->where('name', 'superadmin')->exists());
+
+        $this->withToken($this->tokenFor($admin))
+            ->putJson('/api/v1/admin/users/'.$passenger->id, [
+                'name' => $passenger->name,
+                'email' => $passenger->email,
+                'role' => 'passenger',
+                'permission_grants' => ['routes.view' => true],
+                'password' => null,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.direct_permissions.0.key', 'routes.view');
+    }
+
     private function tokenFor(User $user): string
     {
         $plain = Str::random(80);

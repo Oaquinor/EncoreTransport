@@ -225,11 +225,8 @@
           <div class="public-booking-card__route">
             <label class="booking-field public-field">
               <span class="booking-label">Leaving from</span>
-              <select name="origin" required aria-label="Departure point">
-                <option value="">Select departure point</option>
-                <option value="Georgetown">Georgetown</option>
-                <option value="Rosignol">Rosignol</option>
-                <option value="New Amsterdam">New Amsterdam</option>
+              <select name="origin" required disabled aria-label="Departure point">
+                <option value="">Loading departure points…</option>
               </select>
             </label>
 
@@ -237,11 +234,8 @@
 
             <label class="booking-field public-field">
               <span class="booking-label">Going to</span>
-              <select name="destination" required aria-label="Destination point">
-                <option value="">Select destination point</option>
-                <option value="Georgetown">Georgetown</option>
-                <option value="Rosignol">Rosignol</option>
-                <option value="New Amsterdam">New Amsterdam</option>
+              <select name="destination" required disabled aria-label="Destination point">
+                <option value="">Loading destination points…</option>
               </select>
             </label>
           </div>

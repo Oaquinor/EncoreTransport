@@ -36,6 +36,7 @@ const state = {
   driverEditingId: null,
   routeFormOpen: false,
   routeEditingId: null,
+  routeEditor: null,
   vehicleStatus: [],
   reportType: 'executive',
   reportData: null,
@@ -47,6 +48,10 @@ const state = {
   users: [],
   roles: [],
   permissionCatalog: [],
+  userFormOpen: false,
+  userEditingId: null,
+  userForm: null,
+  roleEditingId: null,
 };
 
 function esc(value = '') {
@@ -57,6 +62,144 @@ function esc(value = '') {
     "'": '&#039;',
     '"': '&quot;',
   }[character]));
+}
+
+function routeEditorFrom(route = null) {
+  const stops = (route?.stops ?? []).slice().sort((a, b) => Number(a.sequence ?? 0) - Number(b.sequence ?? 0)).map((stop) => ({
+    name: stop.name ?? '',
+    latitude: stop.latitude ?? '',
+    longitude: stop.longitude ?? '',
+    offset_minutes: stop.offset_minutes ?? 0,
+  }));
+
+  return {
+    stops: stops.length >= 2 ? stops : [{ name: '', latitude: '', longitude: '', offset_minutes: 0 }, { name: '', latitude: '', longitude: '', offset_minutes: 0 }],
+    segments: (route?.segments ?? []).map((segment) => ({
+      origin: segment.origin ?? segment.origin_name ?? '',
+      destination: segment.destination ?? segment.destination_name ?? '',
+      price: segment.price ?? '',
+      distance_meters: segment.distance_meters ?? '',
+      duration_seconds: segment.duration_seconds ?? '',
+      active: segment.active !== false,
+    })),
+  };
+}
+
+function segmentKey(origin, destination) {
+  return `${origin}::${destination}`;
+}
+
+function routeSegmentRows(editor) {
+  const existing = new Map(editor.segments.map((segment) => [segmentKey(segment.origin, segment.destination), segment]));
+  const rows = [];
+  for (let from = 0; from < editor.stops.length; from += 1) {
+    for (let to = from + 1; to < editor.stops.length; to += 1) {
+      const origin = String(editor.stops[from].name ?? '').trim();
+      const destination = String(editor.stops[to].name ?? '').trim();
+      if (!origin || !destination) continue;
+      rows.push(existing.get(segmentKey(origin, destination)) ?? {
+        origin, destination, price: '', distance_meters: '', duration_seconds: '', active: true,
+      });
+    }
+  }
+  editor.segments = rows;
+  return rows;
+}
+
+function routeEditorFields() {
+  const editor = state.routeEditor ?? routeEditorFrom();
+  const segments = routeSegmentRows(editor);
+  return `
+    <div class="route-editor" id="routeEditor">
+      <div class="route-editor__heading"><strong>Stops</strong><span>First stop is the origin and last stop is the destination.</span></div>
+      <div class="route-editor__stops">
+        ${editor.stops.map((stop, index) => `<div class="route-stop-row" data-stop-row="${index}">
+          <span class="route-stop-index">${index + 1}</span>
+          <input data-stop-field="name" aria-label="Stop ${index + 1} name" value="${esc(stop.name)}" placeholder="Stop name" required />
+          <input data-stop-field="latitude" aria-label="Stop ${index + 1} latitude" type="number" step="any" value="${esc(stop.latitude)}" placeholder="Latitude" />
+          <input data-stop-field="longitude" aria-label="Stop ${index + 1} longitude" type="number" step="any" value="${esc(stop.longitude)}" placeholder="Longitude" />
+          <input data-stop-field="offset_minutes" aria-label="Stop ${index + 1} offset" type="number" min="0" value="${esc(stop.offset_minutes)}" placeholder="Minutes" />
+          <button type="button" class="button button--icon" data-stop-up="${index}" ${index === 0 ? 'disabled' : ''} aria-label="Move stop up">↑</button>
+          <button type="button" class="button button--icon" data-stop-down="${index}" ${index === editor.stops.length - 1 ? 'disabled' : ''} aria-label="Move stop down">↓</button>
+          <button type="button" class="button button--icon" data-stop-remove="${index}" ${editor.stops.length <= 2 ? 'disabled' : ''} aria-label="Remove stop">×</button>
+        </div>`).join('')}
+      </div>
+      <button type="button" class="button button--ghost" id="addRouteStop">Add stop</button>
+      <div class="route-editor__heading"><strong>Commercial segments</strong><span>Prices and timings are generated from the ordered stops.</span></div>
+      <div class="route-editor__segments">
+        ${segments.length ? segments.map((segment, index) => `<div class="route-segment-row" data-segment-row="${index}">
+          <strong>${esc(segment.origin)} → ${esc(segment.destination)}</strong>
+          <input data-segment-field="price" type="number" min="0" aria-label="${esc(segment.origin)} to ${esc(segment.destination)} price" value="${esc(segment.price)}" placeholder="Price" />
+          <input data-segment-field="duration_seconds" type="number" min="0" aria-label="Duration in seconds" value="${esc(segment.duration_seconds)}" placeholder="Duration (seconds)" />
+          <input data-segment-field="distance_meters" type="number" min="0" aria-label="Distance in meters" value="${esc(segment.distance_meters)}" placeholder="Distance (meters)" />
+          <label><input data-segment-field="active" type="checkbox" ${segment.active ? 'checked' : ''} /> Active</label>
+        </div>`).join('') : '<p class="empty-state">Add named stops to configure commercial segments.</p>'}
+      </div>
+      <input type="hidden" name="stops" id="routeStopsPayload" />
+      <input type="hidden" name="segments" id="routeSegmentsPayload" />
+    </div>`;
+}
+
+function syncRouteEditorPayload() {
+  const editor = state.routeEditor;
+  if (!editor) return;
+  const stops = editor.stops.map((stop) => ({
+    name: String(stop.name ?? '').trim(),
+    latitude: stop.latitude === '' ? null : Number(stop.latitude),
+    longitude: stop.longitude === '' ? null : Number(stop.longitude),
+    offset_minutes: Number(stop.offset_minutes || 0),
+  }));
+  const stopsPayload = document.querySelector('#routeStopsPayload');
+  const segmentsPayload = document.querySelector('#routeSegmentsPayload');
+  if (stopsPayload) stopsPayload.value = JSON.stringify(stops);
+  if (segmentsPayload) segmentsPayload.value = JSON.stringify(editor.segments.map((segment) => ({
+    ...segment,
+    price: segment.price === '' ? null : Number(segment.price),
+    distance_meters: segment.distance_meters === '' ? null : Number(segment.distance_meters),
+    duration_seconds: segment.duration_seconds === '' ? null : Number(segment.duration_seconds),
+  })));
+}
+
+function refreshRouteEditor() {
+  const editor = document.querySelector('#routeEditor');
+  if (!editor) return;
+  editor.outerHTML = routeEditorFields();
+  syncRouteEditorPayload();
+  bindRouteEditor();
+}
+
+function bindRouteEditor() {
+  const editor = document.querySelector('#routeEditor');
+  if (!editor || !state.routeEditor) return;
+  syncRouteEditorPayload();
+  editor.addEventListener('input', (event) => {
+    const stopRow = event.target.closest('[data-stop-row]');
+    const segmentRow = event.target.closest('[data-segment-row]');
+    if (stopRow) state.routeEditor.stops[Number(stopRow.dataset.stopRow)][event.target.dataset.stopField] = event.target.type === 'number' ? event.target.value : event.target.value;
+    if (segmentRow) state.routeEditor.segments[Number(segmentRow.dataset.segmentRow)][event.target.dataset.segmentField] = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+    syncRouteEditorPayload();
+  });
+  editor.addEventListener('change', (event) => {
+    if (event.target.closest('[data-stop-row]') && event.target.dataset.stopField === 'name') refreshRouteEditor();
+  });
+  editor.querySelector('#addRouteStop')?.addEventListener('click', () => {
+    state.routeEditor.stops.push({ name: '', latitude: '', longitude: '', offset_minutes: 0 });
+    refreshRouteEditor();
+  });
+  editor.querySelectorAll('[data-stop-remove]').forEach((button) => button.addEventListener('click', () => {
+    state.routeEditor.stops.splice(Number(button.dataset.stopRemove), 1);
+    refreshRouteEditor();
+  }));
+  editor.querySelectorAll('[data-stop-up]').forEach((button) => button.addEventListener('click', () => {
+    const index = Number(button.dataset.stopUp);
+    [state.routeEditor.stops[index - 1], state.routeEditor.stops[index]] = [state.routeEditor.stops[index], state.routeEditor.stops[index - 1]];
+    refreshRouteEditor();
+  }));
+  editor.querySelectorAll('[data-stop-down]').forEach((button) => button.addEventListener('click', () => {
+    const index = Number(button.dataset.stopDown);
+    [state.routeEditor.stops[index], state.routeEditor.stops[index + 1]] = [state.routeEditor.stops[index + 1], state.routeEditor.stops[index]];
+    refreshRouteEditor();
+  }));
 }
 
 function redirectLogin() {
@@ -289,7 +432,7 @@ function content() {
   }
 
   if (state.module === 'routes') {
-    const form = state.routeFormOpen ? `<form id="routeForm" class="premium-form-grid fleet-form"><input type="hidden" name="id" value="${esc(state.routeEditingId ?? '')}" /><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.routeEditingId ? 'Update route' : 'Create a route'}</strong><span>Define the service corridor and intermediate stops.</span></div></div><label><span>Origin</span><input name="origin" required maxlength="150" placeholder="Starting terminal" /></label><label><span>Destination</span><input name="destination" required maxlength="150" placeholder="Destination terminal" /></label><label><span>Distance (km)</span><input name="distance_km" type="number" min="0" required placeholder="0" /></label><label><span>Intermediate stops</span><input name="stops" placeholder="Stop 1, Stop 2" /></label><label><span>Commercial segments JSON</span><textarea name="segments" rows="6" placeholder='[{"origin":"Georgetown","destination":"Rosignol","price":40,"duration_seconds":4500,"distance_meters":45000}]'></textarea></label><label><span>Published</span><select name="active"><option value="1">Active</option><option value="0">Inactive</option></select></label><div class="form-actions"><button type="submit" class="button button--primary button--with-icon">${icon('save')}${state.routeEditingId ? 'Update route' : 'Save route'}</button> <button type="button" class="button button--ghost button--with-icon" id="cancelRoute">${icon('close')}Cancel</button></div><div id="routeMessage" aria-live="polite"></div></form>` : '';
+    const form = state.routeFormOpen ? `<form id="routeForm" class="premium-form-grid fleet-form"><input type="hidden" name="id" value="${esc(state.routeEditingId ?? '')}" /><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.routeEditingId ? 'Update route' : 'Create a route'}</strong><span>Define the service corridor, ordered stops and commercial fares.</span></div></div><label><span>Origin terminal</span><input name="origin" required maxlength="150" placeholder="Starting terminal" /></label><label><span>Destination terminal</span><input name="destination" required maxlength="150" placeholder="Destination terminal" /></label><label><span>Distance (km)</span><input name="distance_km" type="number" min="0" required placeholder="0" /></label>${routeEditorFields()}<label><span>Published</span><select name="active"><option value="1">Active</option><option value="0">Inactive</option></select></label><div class="form-actions"><button type="submit" class="button button--primary button--with-icon">${icon('save')}${state.routeEditingId ? 'Update route' : 'Save route'}</button> <button type="button" class="button button--ghost button--with-icon" id="cancelRoute">${icon('close')}Cancel</button></div><div id="routeMessage" aria-live="polite"></div></form>` : '';
     return `
       <section class="admin-panel admin-panel--pad">
         <div class="module-view__header">
@@ -372,8 +515,20 @@ function content() {
       ${state.reportData ? reportView(state.reportType, state.reportData, { widgetOrder: state.reportWidgetOrder }) : ''}`;
   }
 
-  if (state.module === 'users') return table('Users', ['Name', 'Email', 'Legacy role', 'Roles', 'Effective permissions', 'Status'], state.users.map((user) => [user.name, user.email, user.role, (user.roles ?? []).map((role) => role.label ?? role.name).join(', '), (user.permissions ?? []).length, user.active ? 'Active' : 'Disabled']));
-  if (state.module === 'roles') return table('Roles', ['Name', 'Label', 'System', 'Permissions'], state.roles.map((role) => [role.name, role.label, role.system ? 'Yes' : 'No', (role.permissions ?? []).length]));
+  if (state.module === 'users') {
+    const user = state.userForm ?? { name: '', email: '', phone: '', role: 'passenger', active: true, role_ids: [], permission_grants: {} };
+    const canManageRoles = state.permissions.includes('roles.manage');
+    const canAssignPermissions = state.permissions.includes('permissions.assign');
+    const roleOptions = [...state.roles];
+    if (user.role && !roleOptions.some((role) => role.name === user.role)) roleOptions.unshift({ name: user.role, label: `${user.role} (legacy)` });
+    const userForm = state.userFormOpen ? `<form id="userForm" class="premium-form-grid fleet-form"><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.userEditingId ? 'Update user access' : 'Create user'}</strong><span>Roles and direct grants are checked again by Laravel.</span></div></div><label><span>Name</span><input name="name" required maxlength="150" value="${esc(user.name)}" /></label><label><span>Email</span><input name="email" type="email" required maxlength="190" value="${esc(user.email)}" /></label><label><span>Phone</span><input name="phone" maxlength="40" value="${esc(user.phone ?? '')}" /></label><label><span>Legacy access role</span><select name="role" ${canManageRoles ? '' : 'disabled'}>${roleOptions.map((role) => `<option value="${esc(role.name)}" ${user.role === role.name ? 'selected' : ''}>${esc(role.label ?? role.name)}</option>`).join('')}</select></label><label><span>Password ${state.userEditingId ? '(leave blank to keep)' : ''}</span><input name="password" type="password" ${state.userEditingId ? '' : 'required'} minlength="8" /></label><label><span>Status</span><select name="active"><option value="1" ${user.active !== false ? 'selected' : ''}>Active</option><option value="0" ${user.active === false ? 'selected' : ''}>Disabled</option></select></label><fieldset class="access-checks"><legend>Roles ${canManageRoles ? '' : '(requires roles.manage)'}</legend>${state.roles.map((role) => `<label><input type="checkbox" data-user-role="${esc(role.id)}" ${user.role_ids?.map(Number).includes(Number(role.id)) ? 'checked' : ''} ${canManageRoles ? '' : 'disabled'} /> ${esc(role.label ?? role.name)}</label>`).join('')}</fieldset><fieldset class="access-checks"><legend>Direct permissions ${canAssignPermissions ? '' : '(requires permissions.assign)'}</legend>${state.permissionCatalog.map((permission) => `<label><input type="checkbox" data-user-permission="${esc(permission.key)}" ${user.permission_grants?.[permission.key] ? 'checked' : ''} ${canAssignPermissions ? '' : 'disabled'} /> ${esc(permission.label ?? permission.key)}</label>`).join('')}</fieldset><div class="form-actions"><button type="submit" class="button button--primary">${state.userEditingId ? 'Update user' : 'Create user'}</button><button type="button" class="button button--ghost" id="cancelUser">Cancel</button></div><div id="userMessage" aria-live="polite"></div></form>` : '';
+    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Access control</div><h2>Users</h2></div><button class="button button--primary" id="addUser" type="button">Add user</button></div>${userForm}</section>${table('Users', ['Name', 'Email', 'Roles', 'Effective permissions', 'Status', 'Actions'], state.users.map((item) => [item.name, item.email, (item.roles ?? []).map((role) => role.label ?? role.name).join(', ') || item.role, (item.permissions ?? []).length, item.active ? 'Active' : 'Disabled', { html: `<div class="table-actions"><button class="button button--icon" data-edit-user="${esc(item.id)}" type="button" aria-label="Edit user">${icon('edit')}</button><button class="button button--icon" data-disable-user="${esc(item.id)}" type="button" aria-label="Disable user" ${item.active ? '' : 'disabled'}>${icon('archive')}</button></div>` }]))}`;
+  }
+  if (state.module === 'roles') {
+    const editing = state.roles.find((role) => String(role.id) === String(state.roleEditingId));
+    const roleForm = editing ? `<form id="roleForm" class="premium-form-grid fleet-form"><label><span>Role label</span><input name="label" required maxlength="120" value="${esc(editing.label)}" /></label><fieldset class="access-checks"><legend>Permissions</legend>${state.permissionCatalog.map((permission) => `<label><input type="checkbox" data-role-permission="${esc(permission.key)}" ${(editing.permissions ?? []).some((item) => item.key === permission.key) ? 'checked' : ''} /> ${esc(permission.label ?? permission.key)}</label>`).join('')}</fieldset><div class="form-actions"><button class="button button--primary" type="submit">Save role</button><button class="button button--ghost" id="cancelRole" type="button">Cancel</button></div><div id="roleMessage" aria-live="polite"></div></form>` : '';
+    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Access control</div><h2>Roles</h2></div></div>${roleForm}</section>${table('Roles', ['Name', 'Label', 'System', 'Permissions', 'Actions'], state.roles.map((role) => [role.name, role.label, role.system ? 'Yes' : 'No', (role.permissions ?? []).length, { html: `<button class="button button--icon" data-edit-role="${esc(role.id)}" type="button" aria-label="Edit role" ${role.system && state.user?.role !== 'superadmin' ? 'disabled' : ''}>${icon('edit')}</button>` }]))}`;
+  }
   if (state.module === 'permissions') return table('Permissions', ['Key', 'Label', 'Resource'], state.permissionCatalog.map((permission) => [permission.key, permission.label, permission.resource]));
 
   return '';
@@ -482,8 +637,12 @@ async function loadModule() {
       state.reportData = await api.report(state.reportType, { from: state.reportFrom, to: state.reportTo });
     }
 
-    if (state.module === 'users') state.users = await api.users();
-    if (state.module === 'roles') state.roles = await api.roles();
+    if (state.module === 'users') {
+      [state.users, state.roles, state.permissionCatalog] = await Promise.all([api.users(), api.roles(), api.permissions()]);
+    }
+    if (state.module === 'roles') {
+      [state.roles, state.permissionCatalog] = await Promise.all([api.roles(), api.permissions()]);
+    }
     if (state.module === 'permissions') state.permissionCatalog = await api.permissions();
 
     state.loading = false;
@@ -537,6 +696,53 @@ function wire() {
     void loadModule();
   });
 
+  document.querySelector('#addUser')?.addEventListener('click', () => {
+    state.userFormOpen = true;
+    state.userEditingId = null;
+    state.userForm = { name: '', email: '', phone: '', role: 'passenger', active: true, role_ids: [], permission_grants: {} };
+    render();
+  });
+  document.querySelector('#cancelUser')?.addEventListener('click', () => {
+    state.userFormOpen = false;
+    state.userEditingId = null;
+    state.userForm = null;
+    render();
+  });
+  document.querySelectorAll('[data-edit-user]').forEach((button) => button.addEventListener('click', () => {
+    const user = state.users.find((item) => String(item.id) === String(button.dataset.editUser));
+    if (!user) return;
+    state.userFormOpen = true;
+    state.userEditingId = user.id;
+    state.userForm = { ...user, role_ids: (user.roles ?? []).map((role) => role.id), permission_grants: Object.fromEntries((user.direct_permissions ?? []).map((permission) => [permission.key, permission.pivot?.granted !== false])) };
+    render();
+  }));
+  document.querySelectorAll('[data-disable-user]').forEach((button) => button.addEventListener('click', async () => {
+    if (!confirm('Disable this user account?')) return;
+    try { await api.disableUser(button.dataset.disableUser); state.users = await api.users(); render(); } catch (error) { state.error = error.message; render(); }
+  }));
+  document.querySelector('#userForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const roleIds = [...document.querySelectorAll('[data-user-role]:checked')].map((input) => Number(input.dataset.userRole));
+    const grants = Object.fromEntries([...document.querySelectorAll('[data-user-permission]')].map((input) => [input.dataset.userPermission, input.checked]));
+    const data = { name: form.get('name'), email: form.get('email'), phone: form.get('phone'), active: form.get('active') === '1' };
+    if (state.permissions.includes('roles.manage')) {
+      data.role = form.get('role');
+      data.role_ids = roleIds;
+    }
+    if (state.permissions.includes('permissions.assign')) data.permission_grants = grants;
+    if (String(form.get('password') ?? '').trim()) data.password = form.get('password');
+    try { await api.saveUser(data, state.userEditingId); state.users = await api.users(); state.userFormOpen = false; state.userEditingId = null; state.userForm = null; render(); } catch (error) { const message = document.querySelector('#userMessage'); if (message) message.textContent = error.message; }
+  });
+  document.querySelectorAll('[data-edit-role]').forEach((button) => button.addEventListener('click', () => { state.roleEditingId = button.dataset.editRole; render(); }));
+  document.querySelector('#cancelRole')?.addEventListener('click', () => { state.roleEditingId = null; render(); });
+  document.querySelector('#roleForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const permissionKeys = [...document.querySelectorAll('[data-role-permission]:checked')].map((input) => input.dataset.rolePermission);
+    try { await api.updateRole(state.roleEditingId, { label: form.get('label'), permission_keys: permissionKeys }); state.roles = await api.roles(); state.roleEditingId = null; render(); } catch (error) { const message = document.querySelector('#roleMessage'); if (message) message.textContent = error.message; }
+  });
+
   document.querySelectorAll('[data-report-widget]').forEach((widget) => {
     widget.addEventListener('dragstart', (event) => {
       event.dataTransfer?.setData('text/plain', widget.dataset.reportWidget ?? '');
@@ -566,12 +772,14 @@ function wire() {
     event.preventDefault();
     const form = new FormData(routeForm);
     const id = String(form.get('id') ?? '').trim() || null;
-    const stops = String(form.get('stops') ?? '').split(',').map((name) => name.trim()).filter(Boolean).map((name) => ({ name }));
+    let stops = [];
     let segments = [];
     const message = document.querySelector('#routeMessage');
     try {
+      stops = JSON.parse(String(form.get('stops') ?? '[]'));
       segments = JSON.parse(String(form.get('segments') ?? '[]'));
-      if (!Array.isArray(segments)) throw new Error('Segments must be a JSON array.');
+      if (!Array.isArray(stops) || stops.length < 2) throw new Error('Add at least two ordered stops.');
+      if (stops.some((stop) => !stop.name)) throw new Error('Every stop needs a name.');
       await api.saveRoute({
         origin: form.get('origin'),
         destination: form.get('destination'),
@@ -584,6 +792,7 @@ function wire() {
       state.routes = await api.routes();
       state.routeFormOpen = false;
       state.routeEditingId = null;
+      state.routeEditor = null;
       render();
     } catch (error) {
       message.textContent = error.message;
@@ -593,12 +802,14 @@ function wire() {
   document.querySelector('#addRoute')?.addEventListener('click', () => {
     state.routeFormOpen = true;
     state.routeEditingId = null;
+    state.routeEditor = routeEditorFrom();
     render();
   });
 
   document.querySelector('#cancelRoute')?.addEventListener('click', () => {
     state.routeFormOpen = false;
     state.routeEditingId = null;
+    state.routeEditor = null;
     render();
   });
 
@@ -608,6 +819,7 @@ function wire() {
       if (!route) return;
       state.routeFormOpen = true;
       state.routeEditingId = route.id;
+      state.routeEditor = routeEditorFrom(route);
       render();
       const form = document.querySelector('#routeForm');
       form.elements.id.value = route.id;
@@ -615,11 +827,7 @@ function wire() {
       form.elements.destination.value = route.destination ?? '';
       form.elements.distance_km.value = route.distance_km ?? 0;
       form.elements.active.value = route.active ? '1' : '0';
-      form.elements.stops.value = (route.stops ?? []).map((stop) => stop.name).join(', ');
-      form.elements.segments.value = JSON.stringify((route.segments ?? []).map((segment) => ({
-        origin: segment.origin, destination: segment.destination, price: segment.price,
-        distance_meters: segment.distance_meters, duration_seconds: segment.duration_seconds, active: segment.active,
-      })), null, 2);
+      syncRouteEditorPayload();
       form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
@@ -637,6 +845,8 @@ function wire() {
       }
     });
   });
+
+  bindRouteEditor();
 
   document.querySelector('#driverForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();

@@ -26,14 +26,7 @@ const mobileNavigation = document.querySelector('#mobileNavigation');
 let featuredTrip = null;
 let featuredJourney = null;
 let revealObserver = null;
-const validSegments = new Set([
-  'Georgetown::Rosignol',
-  'Georgetown::New Amsterdam',
-  'Rosignol::Georgetown',
-  'Rosignol::New Amsterdam',
-  'New Amsterdam::Georgetown',
-  'New Amsterdam::Rosignol',
-]);
+let publishedSegments = [];
 
 function esc(value = '') {
   return String(value).replace(/[&<>'"]/g, (character) => ({
@@ -58,6 +51,51 @@ function routeCode(name = '') {
 function setText(selector, value) {
   const element = document.querySelector(selector);
   if (element) element.textContent = String(value ?? '');
+}
+
+function populateSegmentSelectors(routes) {
+  const segments = routes.flatMap((route) => (Array.isArray(route.segments) ? route.segments : [])
+    .filter((segment) => segment.active !== false)
+    .map((segment) => ({
+      origin: String(segment.origin ?? '').trim(),
+      destination: String(segment.destination ?? '').trim(),
+      routeId: route.id,
+    }))
+    .filter((segment) => segment.origin && segment.destination));
+  publishedSegments = [...new Map(segments.map((segment) => [
+    `${segment.origin}::${segment.destination}`,
+    segment,
+  ])).values()];
+
+  const originSelect = bookingForm?.querySelector('[name="origin"]');
+  const destinationSelect = bookingForm?.querySelector('[name="destination"]');
+  if (!originSelect || !destinationSelect) return;
+
+  const origins = [...new Set(publishedSegments.map((segment) => segment.origin))].sort();
+  const renderOptions = (values, label) => [
+    `<option value="">${label}</option>`,
+    ...values.map((value) => `<option value="${esc(value)}">${esc(value)}</option>`),
+  ].join('');
+  originSelect.innerHTML = renderOptions(origins, 'Select departure point');
+  const destinations = [...new Set(publishedSegments.map((segment) => segment.destination))].sort();
+  destinationSelect.innerHTML = renderOptions(destinations, 'Select destination point');
+  originSelect.disabled = origins.length === 0;
+  destinationSelect.disabled = destinations.length === 0;
+}
+
+function filterDestinationSelector(origin) {
+  const destinationSelect = bookingForm?.querySelector('[name="destination"]');
+  if (!destinationSelect) return;
+  const destinations = [...new Set(publishedSegments
+    .filter((segment) => !origin || segment.origin === origin)
+    .map((segment) => segment.destination))].sort();
+  const selected = destinationSelect.value;
+  destinationSelect.innerHTML = [
+    '<option value="">Select destination point</option>',
+    ...destinations.map((value) => `<option value="${esc(value)}">${esc(value)}</option>`),
+  ].join('');
+  if (destinations.includes(selected)) destinationSelect.value = selected;
+  destinationSelect.disabled = destinations.length === 0;
 }
 
 function renderMapFallback(message = 'Route map is temporarily unavailable. Please try again.') {
@@ -372,6 +410,7 @@ async function loadRoutes() {
 
   try {
     const routes = await fetchRoutes();
+    populateSegmentSelectors(routes);
 
     setText('#routeCount', routes.length);
     setText('#serviceStatus', 'Online');
@@ -538,8 +577,8 @@ bookingForm?.addEventListener('submit', (event) => {
     return;
   }
 
-  if (!validSegments.has(`${origin}::${destination}`)) {
-    setText('#searchMessage', 'Select a valid Encore route between Georgetown, Rosignol and New Amsterdam.');
+  if (!publishedSegments.some((segment) => segment.origin === origin && segment.destination === destination)) {
+    setText('#searchMessage', 'Select a published route segment from the available route data.');
     return;
   }
 
@@ -557,6 +596,10 @@ bookingForm?.addEventListener('submit', (event) => {
   if (date) params.set('date', date);
 
   location.href = `/passenger/?${params.toString()}`;
+});
+
+bookingForm?.querySelector('[name="origin"]')?.addEventListener('change', (event) => {
+  filterDestinationSelector(event.target.value);
 });
 
 document.querySelector('.swap')?.addEventListener('click', (event) => {

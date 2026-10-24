@@ -47,7 +47,23 @@ export const vehicleStatus = async () => {
 };
 
 export const users = async () => (await requestJson('/admin/users')).data ?? [];
+export const saveUser = async (data, id = null) => {
+  const payload = await requestJson(id ? `/admin/users/${encodeURIComponent(id)}` : '/admin/users', {
+    method: id ? 'PUT' : 'POST', body: JSON.stringify(data),
+  });
+  return payload.data ?? payload;
+};
+export const disableUser = async (id) => {
+  const payload = await requestJson(`/admin/users/${encodeURIComponent(id)}/disable`, { method: 'POST' });
+  return payload.data ?? payload;
+};
 export const roles = async () => (await requestJson('/admin/roles')).data ?? [];
+export const updateRole = async (id, data) => {
+  const payload = await requestJson(`/admin/roles/${encodeURIComponent(id)}`, {
+    method: 'PUT', body: JSON.stringify(data),
+  });
+  return payload.data ?? payload;
+};
 export const permissions = async () => (await requestJson('/admin/permissions')).data ?? [];
 
 export const routes = async () => {

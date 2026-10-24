@@ -67,8 +67,8 @@ class AdminAccessController extends Controller
     public function updateRole(Request $request, Role $role, AuditService $audit)
     {
         $data = $request->validate(['label' => ['required','string','max:120'], 'permission_keys' => ['sometimes','array'], 'permission_keys.*' => ['string','exists:permissions,key']]);
-        if ($role->system && $request->user()?->role !== 'superadmin') abort(403, 'Only a system administrator can change system roles.');
-        if (array_key_exists('permission_keys', $data) && $request->user()?->role !== 'superadmin') {
+        if ($role->system && !$this->isSystemAdministrator($request->user())) abort(403, 'Only a system administrator can change system roles.');
+        if (array_key_exists('permission_keys', $data) && !$this->isSystemAdministrator($request->user())) {
             foreach ($data['permission_keys'] as $key) {
                 if (!$this->permissions->allows($request->user(), $key)) abort(403, 'You cannot grant a permission you do not hold.');
             }
@@ -102,7 +102,7 @@ class AdminAccessController extends Controller
             abort(403, 'Role assignment requires roles.manage.');
         }
 
-        if (($data['role'] ?? null) === 'superadmin' && $actor->role !== 'superadmin') {
+        if (($data['role'] ?? null) === 'superadmin' && !$this->isSystemAdministrator($actor)) {
             abort(403, 'Only a system administrator can assign superadmin access.');
         }
 
@@ -111,7 +111,7 @@ class AdminAccessController extends Controller
             abort(403, 'Direct permission assignment requires permissions.assign.');
         }
 
-        if ($actor->role === 'superadmin') return;
+        if ($this->isSystemAdministrator($actor)) return;
 
         foreach ($data['permission_grants'] as $key => $granted) {
             if ($granted && !$this->permissions->allows($actor, (string) $key)) {
@@ -131,6 +131,14 @@ class AdminAccessController extends Controller
             }
             $user->permissions()->sync($rows);
         }
+    }
+
+    private function isSystemAdministrator(?User $user): bool
+    {
+        return $user !== null
+            && $user->active
+            && $this->permissions->allows($user, 'roles.manage')
+            && $this->permissions->allows($user, 'permissions.assign');
     }
 
     private function userPayload(User $user): array

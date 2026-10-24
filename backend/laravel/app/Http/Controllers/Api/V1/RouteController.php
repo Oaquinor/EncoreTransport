@@ -10,6 +10,7 @@ use App\Models\RouteSegment;
 use App\Services\Audit\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use OpenApi\Attributes as OA;
 
 class RouteController extends Controller
@@ -108,6 +109,19 @@ class RouteController extends Controller
 
     private function replaceStops(TransportRoute $route, array $stops, array $segmentData = []): void
     {
+        if (count($stops) < 2) {
+            throw ValidationException::withMessages(['stops' => 'A route must contain at least an origin and destination stop.']);
+        }
+
+        $first = trim((string) ($stops[0]['name'] ?? ''));
+        $last = trim((string) ($stops[array_key_last($stops)]['name'] ?? ''));
+        if (strcasecmp($first, trim((string) $route->origin)) !== 0) {
+            throw ValidationException::withMessages(['stops' => 'The first stop must match the route origin.']);
+        }
+        if (strcasecmp($last, trim((string) $route->destination)) !== 0) {
+            throw ValidationException::withMessages(['stops' => 'The last stop must match the route destination.']);
+        }
+
         $route->stops()->delete();
         foreach (array_values($stops) as $index => $stop) {
             RouteStop::query()->create([

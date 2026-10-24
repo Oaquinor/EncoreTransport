@@ -6,9 +6,10 @@
 | Security hardening | VERIFIED | Security headers, token storage, guest-data minimization, admin authorization and assistant audit redaction are covered by code/tests. |
 | Composer dependencies | VERIFIED | Laravel 12.70.1 is installed and `composer audit` reports no advisories. |
 | npm production audit | PARTIAL | `npm audit` reports 11 advisories, including transitive Expo/node-forge/zod, shell-quote, source-map-js, uuid and Vite; force remediation would downgrade Expo across a breaking major. |
-| Route segments | IMPLEMENTED | Persisted segments, interval overlap check, segment-aware search/seats/quote/booking. |
+| Route segments | VERIFIED | Website selectors use published backend segments; Admin uses ordered visual stop/segment editing; Laravel enforces origin/destination consistency; feature tests pass. |
 | Seat concurrency | VERIFIED | Transactional segment-aware path, overlap tests and distinct physical-seat counting pass against a fresh SQLite test database. |
 | Explicit permissions | IMPLEMENTED | Laravel permission middleware and catalog are active. |
+| Admin access maintenance | IMPLEMENTED WITHOUT FULL UI E2E | Users can be created/updated/disabled and roles can be edited from the dashboard using secured existing APIs; authenticated browser acceptance remains pending. |
 | Payment provider | BLOCKED | Gateway remains intentionally `unconfigured` until approved credentials/provider exist. |
 | Email | PARTIAL | Laravel mail configuration exists; delivery templates/provider acceptance still required. |
 | WhatsApp/OpenClaw | PARTIAL | Boundary documented; gateway, bindings and credentials not present. |

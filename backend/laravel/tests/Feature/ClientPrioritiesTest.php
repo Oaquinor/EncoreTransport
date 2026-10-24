@@ -77,8 +77,8 @@ class ClientPrioritiesTest extends TestCase
             'distance_km' => 105,
             'active' => true,
             'stops' => [
-                ['name' => 'Soesdyke Junction'],
-                ['name' => 'Timehri'],
+                ['name' => 'Georgetown'],
+                ['name' => 'Linden'],
             ],
         ];
 
@@ -95,16 +95,24 @@ class ClientPrioritiesTest extends TestCase
             ->assertForbidden();
 
         $this->withToken($adminToken)
+            ->postJson('/api/v1/admin/routes', [
+                ...$payload,
+                'stops' => [['name' => 'Wrong origin'], ['name' => 'Linden']],
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['stops']);
+
+        $this->withToken($adminToken)
             ->putJson('/api/v1/admin/routes/'.$routeId, [
                 ...$payload,
                 'destination' => 'Mackenzie',
                 'active' => false,
-                'stops' => [['name' => 'Timehri']],
+                'stops' => [['name' => 'Georgetown'], ['name' => 'Mackenzie']],
             ])
             ->assertOk()
             ->assertJsonPath('data.destination', 'Mackenzie')
             ->assertJsonPath('data.active', false)
-            ->assertJsonCount(1, 'data.stops');
+            ->assertJsonCount(2, 'data.stops');
 
         $this->getJson('/api/v1/routes/'.$routeId)->assertNotFound();
     }
