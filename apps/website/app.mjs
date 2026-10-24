@@ -2,29 +2,19 @@ import {
   fetchRoutes,
   fetchPassengerSearch,
   fetchLiveNetwork,
-  mapJourney,
   health,
 } from '../../packages/shared/api.mjs';
-import {
-  renderJourneyMap,
-  renderLiveNetworkMap,
-  renderLocationMap,
-  destroyRealMap,
-} from '../../packages/shared/real-map.mjs';
-import { appConfig } from '../../packages/shared/app-config.mjs';
+import { renderLiveNetworkMap } from '../../packages/shared/real-map.mjs';
 import { formatMoney } from '../../packages/shared/formatters.mjs';
 
 const destinationGrid = document.querySelector('#destinationGrid');
 const bookingForm = document.querySelector('#bookingForm');
 const seatPreview = document.querySelector('#seatPreview');
 const routeMapCanvas = document.querySelector('#routeMapCanvas');
-const modalMapCanvas = document.querySelector('#modalMapCanvas');
-const modal = document.querySelector('#routeModal');
 const mobileMenuToggle = document.querySelector('#mobileMenuToggle');
 const mobileNavigation = document.querySelector('#mobileNavigation');
 
 let featuredTrip = null;
-let featuredJourney = null;
 let revealObserver = null;
 let publishedSegments = [];
 
@@ -46,6 +36,12 @@ function routeCode(name = '') {
     .join('')
     .slice(0, 3)
     .toUpperCase() || 'ET';
+}
+
+function routeImageMarkup(value) {
+  const image = String(value ?? '').trim();
+  if (!image || (!image.startsWith('/') && !/^https:\/\//i.test(image))) return '';
+  return `<img src="${esc(image)}" alt="" loading="lazy" decoding="async">`;
 }
 
 function setText(selector, value) {
@@ -112,34 +108,8 @@ function renderMapFallback(message = 'Route map is temporarily unavailable. Plea
 function initializeBusinessFooter() {
   setText('#copyrightYear', new Date().getFullYear());
   const config = globalThis.__ENCORE_CONFIG__ ?? {};
-  const location = config.businessLocation ?? {
-    name: 'Georgetown, Guyana · provisional city view',
-    latitude: 6.8013,
-    longitude: -58.1551,
-  };
-  const map = document.querySelector('#businessMap');
-  const status = document.querySelector('#businessMapStatus');
 
-  if (location && Number.isFinite(Number(location.latitude)) && Number.isFinite(Number(location.longitude))) {
-    if (status) status.textContent = location.name || 'Encore Transport city view';
-    const renderBusinessMap = () => {
-      void renderLocationMap(map, location).catch(() => {
-        if (status) status.textContent = 'City location map unavailable.';
-      });
-    };
-
-    if ('IntersectionObserver' in window && map) {
-      const observer = new IntersectionObserver((entries, instance) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
-        instance.disconnect();
-        renderBusinessMap();
-      }, { rootMargin: '360px' });
-      observer.observe(map);
-    } else {
-      window.setTimeout(renderBusinessMap, 1200);
-    }
-  }
-
+  let visibleSocials = 0;
   document.querySelectorAll('[data-social]').forEach((link) => {
     const network = link.dataset.social;
     const url = config.socialLinks?.[network];
@@ -148,10 +118,14 @@ function initializeBusinessFooter() {
       link.removeAttribute('aria-disabled');
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
+      visibleSocials += 1;
     } else {
-      link.addEventListener('click', (event) => event.preventDefault());
+      link.remove();
     }
   });
+  const socialBlock = document.querySelector('.public-footer__social-block');
+  if (socialBlock && visibleSocials === 0) socialBlock.remove();
+  document.querySelector('.public-footer__details')?.classList.toggle('has-socials', visibleSocials > 0);
 }
 
 function minutes(seconds) {
@@ -434,7 +408,7 @@ async function loadRoutes() {
         data-reveal
         href="/passenger/?origin=${encodeURIComponent(route.origin ?? '')}&destination=${encodeURIComponent(route.destination ?? '')}&passengers=1">
         <div class="destination-visual">
-          <span class="destination-code">${routeCode(route.destination)}</span>
+          ${routeImageMarkup(route.image_url) || `<span class="destination-code" aria-hidden="true">${routeCode(route.destination)}</span>`}
         </div>
 
         <div class="destination-body">
@@ -479,7 +453,6 @@ async function loadFeaturedTrip() {
 
     if (!trips.length) {
       featuredTrip = null;
-      featuredJourney = null;
       renderFeatured(null);
       renderSeats([]);
       setText('#mapStatus', 'No trip available');
@@ -493,7 +466,6 @@ async function loadFeaturedTrip() {
     renderSeats([]);
   } catch (error) {
     featuredTrip = null;
-    featuredJourney = null;
     setText('#tripCount', '—');
     setText('#mapStatus', 'Unavailable');
     setText('#mapEta', '—');
@@ -505,16 +477,45 @@ async function loadFeaturedTrip() {
 let liveNetworkTimer = null;
 let liveNetworkObserver = null;
 let liveNetworkStarted = false;
+let latestNetwork = null;
+
+function updateNetworkRoutes(network) {
+  latestNetwork = network;
+  const select = document.querySelector('#networkRouteSelect');
+  if (!select) return;
+  const previous = select.value;
+  const routes = Array.isArray(network.routes) ? network.routes : [];
+  select.innerHTML = ['<option value="">All routes</option>', ...routes.map((route) =>
+    `<option value="${esc(route.id ?? route.route_id ?? '')}">${esc(route.name ?? `${route.origin ?? ''} → ${route.destination ?? ''}`)}</option>`,
+  )].join('');
+  if ([...select.options].some((option) => option.value === previous)) select.value = previous;
+  renderNetworkSelection();
+}
+
+function renderNetworkSelection() {
+  if (!latestNetwork || !routeMapCanvas) return;
+  const routeId = document.querySelector('#networkRouteSelect')?.value;
+  const routes = Array.isArray(latestNetwork.routes) ? latestNetwork.routes : [];
+  const trips = Array.isArray(latestNetwork.trips) ? latestNetwork.trips : [];
+  const selectedRoute = routes.find((route) => String(route.id ?? route.route_id) === String(routeId));
+  const filtered = routeId ? {
+    ...latestNetwork,
+    routes: selectedRoute ? [selectedRoute] : [],
+    trips: trips.filter((trip) => String(trip.route_id ?? trip.route?.id) === String(routeId)),
+  } : latestNetwork;
+  void renderLiveNetworkMap(routeMapCanvas, filtered);
+}
 
 async function refreshLiveNetwork() {
   try {
     const network = await fetchLiveNetwork();
+    updateNetworkRoutes(network);
     const tripCount = Array.isArray(network.trips) ? network.trips.length : 0;
     const routeCount = Array.isArray(network.routes) ? network.routes.length : 0;
     setText('#mapStatus', tripCount ? `${tripCount} bus${tripCount === 1 ? '' : 'es'} live` : 'No buses live');
     setText('#mapEta', network.updated_at ? new Date(network.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—');
     setText('#routeCount', routeCount || '—');
-    if (routeMapCanvas) await renderLiveNetworkMap(routeMapCanvas, network);
+    if (routeMapCanvas) renderNetworkSelection();
   } catch {
     setText('#mapStatus', 'Live network unavailable');
     if (routeMapCanvas && !routeMapCanvas.querySelector('.leaflet-container')) {
@@ -561,7 +562,10 @@ function setMinimumDate() {
     .slice(0, 10);
 
   input.min = localDate;
+  if (!input.value || input.value < localDate) input.value = localDate;
 }
+
+document.querySelector('#networkRouteSelect')?.addEventListener('change', renderNetworkSelection);
 
 bookingForm?.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -610,39 +614,6 @@ document.querySelector('.swap')?.addEventListener('click', (event) => {
   if (!origin || !destination) return;
 
   [origin.value, destination.value] = [destination.value, origin.value];
-});
-
-async function openModal() {
-  modal?.classList.add('is-open');
-  modal?.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-
-  if (featuredJourney && modalMapCanvas) {
-    const map = await renderJourneyMap(modalMapCanvas, featuredJourney);
-    requestAnimationFrame(() => map?.invalidateSize());
-  }
-}
-
-function closeModal() {
-  modal?.classList.remove('is-open');
-  modal?.setAttribute('aria-hidden', 'true');
-  document.body.style.overflow = '';
-
-  if (modalMapCanvas) destroyRealMap(modalMapCanvas);
-}
-
-document.querySelectorAll('[data-open-map]').forEach((element) => {
-  element.addEventListener('click', openModal);
-});
-
-document.querySelectorAll('[data-close-map]').forEach((element) => {
-  element.addEventListener('click', closeModal);
-});
-
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && modal?.classList.contains('is-open')) {
-    closeModal();
-  }
 });
 
 initializeMotion();

@@ -58,6 +58,12 @@ const TILE_TEMPLATE =
 
 const money = (value: number) => formatCurrency(value);
 
+function localCalendarDate() {
+  const today = new Date();
+  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+  return today.toISOString().slice(0, 10);
+}
+
 async function request(
   path: string,
   options: RequestInit = {},
@@ -70,7 +76,7 @@ export default function App() {
   const [screen, setScreen] = useState<'search' | 'trip' | 'booking' | 'status'>('search');
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
-  const [travelDate, setTravelDate] = useState('');
+  const [travelDate, setTravelDate] = useState(localCalendarDate);
   const [routes, setRoutes] = useState<RouteOption[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [trip, setTrip] = useState<Trip | null>(null);

@@ -34,9 +34,9 @@ assert.equal(
 );
 
 assert.equal(
-  websiteApp.includes('renderJourneyMap'),
+  websiteApp.includes('renderLiveNetworkMap') && website.includes('id="networkRouteSelect"'),
   true,
-  'Website must render the map through the shared map component.',
+  'Website must render the live map through the shared map component and offer route filtering.',
 );
 
 /*
@@ -74,10 +74,15 @@ assert.equal(
 );
 
 assert.equal(
-  websiteApp.includes('rootMargin: \'360px\'') &&
-    websiteApp.includes('renderBusinessMap'),
+  !websiteApp.includes('provisional city view') && !website.includes('id="businessMap"'),
   true,
-  'The footer location map must load lazily instead of competing with trip data.',
+  'The footer must not display a provisional office location or map.',
+);
+
+assert.equal(
+  !sharedMap.includes('networkStopFallbacks') && !sharedMap.includes('Georgetown\', latitude: 6.8013'),
+  true,
+  'Live network maps must not invent stop coordinates when location data is missing.',
 );
 
 assert.equal(

@@ -51,6 +51,12 @@ assert.equal(
   true,
 );
 
+assert.match(
+  app,
+  /rawRequest\(\s*`\/trips\/\$\{activeTrip\.id\}\/location`,\s*\{\},\s*activeToken/,
+  'Driver Mobile must authenticate its private trip-location request.',
+);
+
 assert.equal(
   app.includes("['boarding', 'in_progress']"),
   true,

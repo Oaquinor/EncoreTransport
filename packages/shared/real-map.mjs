@@ -539,12 +539,6 @@ function escapePopup(value = '') {
   }[character]));
 }
 
-const networkStopFallbacks = [
-  { name: 'Georgetown', latitude: 6.8013, longitude: -58.1551 },
-  { name: 'Rosignol', latitude: 6.2718, longitude: -57.5311 },
-  { name: 'New Amsterdam', latitude: 6.2470, longitude: -57.5170 },
-];
-
 export async function renderLiveNetworkMap(container, network, options = {}) {
   if (!container) return null;
 
@@ -557,7 +551,7 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
     const map = L.map(container, {
       zoomControl: options.zoomControl !== false,
       attributionControl: true,
-    });
+    }).setView([0, 0], 2);
     const tileLayer = L.tileLayer(tileLayerUrl(), tileLayerOptions).addTo(map);
     tileLayer.on('tileerror', () => runtimeStatus(container, 'Map tiles unavailable.', 'Live vehicle data will continue updating when the map service recovers.'));
     state = { map, vehicleMarkers: new Map(), nodeMarkers: new Map() };
@@ -569,16 +563,25 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
   const trips = Array.isArray(network?.trips) ? network.trips : [];
   const stops = routes.flatMap((route) => Array.isArray(route.stops) ? route.stops : [])
     .filter(validCoordinate);
-  const visibleStops = stops.length ? stops : networkStopFallbacks;
+  const visibleStops = stops;
+  const seenNodes = new Set();
 
   for (const stop of visibleStops) {
     const key = `${stop.name}:${stop.latitude}:${stop.longitude}`;
+    seenNodes.add(key);
     if (state.nodeMarkers.has(key)) continue;
     const marker = L.marker([Number(stop.latitude), Number(stop.longitude)], {
       icon: markerIcon(L, 'destination', '●'),
       title: stop.name,
     }).addTo(state.map).bindTooltip(stop.name, { direction: 'top', offset: [0, -20] });
     state.nodeMarkers.set(key, marker);
+  }
+
+  for (const [key, marker] of state.nodeMarkers) {
+    if (!seenNodes.has(key)) {
+      marker.remove();
+      state.nodeMarkers.delete(key);
+    }
   }
 
   const seen = new Set();
@@ -614,11 +617,13 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
     ...visibleStops.map((point) => [Number(point.latitude), Number(point.longitude)]),
     ...trips.filter(validCoordinate).map((point) => [Number(point.latitude), Number(point.longitude)]),
   ];
-  if (!state.didFit && points.length) {
+  const viewKey = points.map((point) => point.join(',')).sort().join('|');
+  if (points.length && state.lastViewKey !== viewKey) {
     state.map.fitBounds(L.latLngBounds(points).pad(0.18), { animate: false, maxZoom: 11 });
-    state.didFit = true;
+    state.lastViewKey = viewKey;
   }
   requestAnimationFrame(() => state.map.invalidateSize());
-  clearRuntimeStatus(container);
+  if (points.length) clearRuntimeStatus(container);
+  else runtimeStatus(container, 'No current locations to show', 'The map will update when a bus shares a recent, authorized location.');
   return state.map;
 }

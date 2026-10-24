@@ -11,6 +11,7 @@ use App\Models\Trip;
 use App\Services\Audit\AuditService;
 use App\Services\Auth\PermissionService;
 use App\Services\Trips\TripStateService;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -39,13 +40,15 @@ class AdminTripController extends Controller
             $bus = Bus::query()->lockForUpdate()->findOrFail($data['bus_id']);
             if ($bus->status !== 'operational') throw ValidationException::withMessages(['bus_id' => 'Choose an operational vehicle.']);
 
-            $driver = Driver::query()->findOrFail($data['driver_id']);
+            $driver = Driver::query()->lockForUpdate()->findOrFail($data['driver_id']);
             if (!in_array($driver->status, ['active', 'upcoming'], true)) {
                 throw ValidationException::withMessages(['driver_id' => 'Choose an active driver.']);
             }
 
             $availableSeats = $bus->seats()->where('active', true)->where('blocked', false)->count();
             if ($availableSeats < 1) throw ValidationException::withMessages(['bus_id' => 'The selected vehicle has no available seats configured.']);
+
+            $this->assertNoAssignmentConflict($data);
 
             $trip = Trip::query()->create($data + ['status' => 'scheduled', 'available_seats' => $availableSeats]);
             $audit->record($request->user(), 'trip.created', $trip);
@@ -57,34 +60,37 @@ class AdminTripController extends Controller
 
     public function update(Request $request, Trip $trip, AuditService $audit)
     {
-        if ($trip->status !== 'scheduled') {
-            return response()->json(['message' => 'Only scheduled trips can be edited.'], 409);
-        }
-        if ($trip->bookings()->whereIn('status', ['pending_payment', 'confirmed'])->exists()) {
-            return response()->json(['message' => 'A trip with held or confirmed bookings cannot be edited.'], 409);
-        }
-
         $data = $this->validated($request);
         $this->assertAssignmentPermissions($request, $data, $trip);
 
-        $updated = DB::transaction(function () use ($data, $trip, $request, $audit) {
+        $result = DB::transaction(function () use ($data, $trip, $request, $audit) {
+            $trip = Trip::query()->lockForUpdate()->findOrFail($trip->id);
+            if ($trip->status !== 'scheduled') {
+                return response()->json(['message' => 'Only scheduled trips can be edited.'], 409);
+            }
+            if ($trip->bookings()->whereIn('status', ['pending_payment', 'confirmed'])->exists()) {
+                return response()->json(['message' => 'A trip with held or confirmed bookings cannot be edited.'], 409);
+            }
+
             $route = TransportRoute::query()->whereKey($data['transport_route_id'])->where('active', true)->first();
             if (!$route) throw ValidationException::withMessages(['transport_route_id' => 'Choose an active route.']);
 
             $bus = Bus::query()->lockForUpdate()->findOrFail($data['bus_id']);
             if ($bus->status !== 'operational') throw ValidationException::withMessages(['bus_id' => 'Choose an operational vehicle.']);
 
-            $driver = Driver::query()->findOrFail($data['driver_id']);
+            $driver = Driver::query()->lockForUpdate()->findOrFail($data['driver_id']);
             if (!in_array($driver->status, ['active', 'upcoming'], true)) {
                 throw ValidationException::withMessages(['driver_id' => 'Choose an active driver.']);
             }
 
+            $this->assertNoAssignmentConflict($data, $trip->id);
+
             $trip->fill($data + ['available_seats' => $bus->seats()->where('active', true)->where('blocked', false)->count()])->save();
             $audit->record($request->user(), 'trip.updated', $trip);
-            return $trip->fresh(['route', 'bus', 'driver']);
+            return new TripResource($trip->fresh(['route', 'bus', 'driver']));
         });
 
-        return new TripResource($updated);
+        return $result;
     }
 
     public function cancel(Request $request, Trip $trip, TripStateService $states)
@@ -98,7 +104,7 @@ class AdminTripController extends Controller
 
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'transport_route_id' => ['required', 'integer', 'exists:transport_routes,id'],
             'bus_id' => ['required', 'integer', 'exists:buses,id'],
             'driver_id' => ['required', 'integer', 'exists:drivers,id'],
@@ -107,6 +113,41 @@ class AdminTripController extends Controller
             'arrival_time' => ['required', 'date_format:H:i'],
             'price_per_passenger' => ['required', 'integer', 'min:0'],
         ]);
+        if ($data['departure_time'] === $data['arrival_time']) {
+            throw ValidationException::withMessages(['arrival_time' => 'Departure and arrival times must differ.']);
+        }
+
+        return $data;
+    }
+
+    private function assertNoAssignmentConflict(array $data, ?int $ignoreTripId = null): void
+    {
+        $start = CarbonImmutable::parse($data['departure_date'].' '.$data['departure_time']);
+        $end = CarbonImmutable::parse($data['departure_date'].' '.$data['arrival_time']);
+        if (!$end->greaterThan($start)) $end = $end->addDay();
+
+        $from = $start->subDay()->toDateString();
+        $through = $end->toDateString();
+        $assignments = Trip::query()
+            ->whereIn('status', ['scheduled', 'boarding', 'in_progress'])
+            ->whereBetween('departure_date', [$from, $through])
+            ->where(function ($query) use ($data) {
+                $query->where('bus_id', $data['bus_id'])
+                    ->orWhere('driver_id', $data['driver_id']);
+            })
+            ->when($ignoreTripId, fn ($query) => $query->where('id', '!=', $ignoreTripId))
+            ->get(['id', 'bus_id', 'driver_id', 'departure_date', 'departure_time', 'arrival_time']);
+
+        foreach ($assignments as $assigned) {
+            $assignedStart = CarbonImmutable::parse($assigned->departure_date->toDateString().' '.$assigned->departure_time);
+            $assignedEnd = CarbonImmutable::parse($assigned->departure_date->toDateString().' '.$assigned->arrival_time);
+            if (!$assignedEnd->greaterThan($assignedStart)) $assignedEnd = $assignedEnd->addDay();
+
+            if ($start->lessThan($assignedEnd) && $end->greaterThan($assignedStart)) {
+                $resource = (int) $assigned->bus_id === (int) $data['bus_id'] ? 'bus_id' : 'driver_id';
+                throw ValidationException::withMessages([$resource => 'The selected '.($resource === 'bus_id' ? 'vehicle' : 'driver').' has an overlapping trip assignment.']);
+            }
+        }
     }
 
     private function assertAssignmentPermissions(Request $request, array $data, ?Trip $trip = null): void

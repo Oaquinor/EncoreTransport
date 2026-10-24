@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\BookingSeat;
 use App\Models\Bus;
 use App\Models\BusSeat;
+use App\Models\Driver;
 use App\Models\Trip;
 use App\Models\User;
 use Database\Seeders\Demo\EncoreTransportDemoSeeder;
@@ -64,6 +65,64 @@ class OperationalCoreTest extends TestCase
             ->postJson('/api/v1/admin/trips/'.$tripId.'/cancel')
             ->assertOk()
             ->assertJsonPath('data.status', 'cancelled');
+    }
+
+    public function test_admin_trip_assignments_reject_bus_driver_and_overnight_conflicts(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+        $token = $this->tokenFor($admin);
+        $template = Trip::query()->firstOrFail();
+        $route = $template->transport_route_id;
+        $baseDate = now()->addDays(12)->toDateString();
+        $otherDriver = Driver::query()->create(['name' => 'Second Driver', 'license_number' => 'D-TEST-SECOND', 'status' => 'active']);
+        $otherBus = Bus::query()->create(['code' => 'BUS-TEST-SECOND', 'plate' => 'ET-TEST-002', 'capacity' => 1, 'status' => 'operational']);
+        BusSeat::query()->create(['bus_id' => $otherBus->id, 'seat_number' => '1', 'active' => true, 'blocked' => false]);
+
+        $overnight = [
+            'transport_route_id' => $route,
+            'bus_id' => $template->bus_id,
+            'driver_id' => $template->driver_id,
+            'departure_date' => $baseDate,
+            'departure_time' => '23:00',
+            'arrival_time' => '01:00',
+            'price_per_passenger' => 80,
+        ];
+        $created = $this->withToken($token)->postJson('/api/v1/admin/trips', $overnight)->assertCreated();
+
+        $this->withToken($token)->postJson('/api/v1/admin/trips', [...$overnight,
+            'bus_id' => $template->bus_id,
+            'driver_id' => $otherDriver->id,
+            'departure_time' => '23:30',
+            'arrival_time' => '00:30',
+        ])->assertUnprocessable()->assertJsonValidationErrors(['bus_id']);
+
+        $this->withToken($token)->postJson('/api/v1/admin/trips', [...$overnight,
+            'bus_id' => $otherBus->id,
+            'departure_date' => now()->addDays(13)->toDateString(),
+            'driver_id' => $template->driver_id,
+            'departure_time' => '00:30',
+            'arrival_time' => '02:00',
+        ])->assertUnprocessable()->assertJsonValidationErrors(['driver_id']);
+
+        $this->withToken($token)->postJson('/api/v1/admin/trips', [...$overnight,
+            'bus_id' => $template->bus_id,
+            'driver_id' => $otherDriver->id,
+            'departure_date' => now()->addDays(13)->toDateString(),
+            'departure_time' => '01:00',
+            'arrival_time' => '02:00',
+        ])->assertCreated();
+
+        $independent = $this->withToken($token)->postJson('/api/v1/admin/trips', [...$overnight,
+            'bus_id' => $otherBus->id,
+            'driver_id' => $otherDriver->id,
+            'departure_time' => '08:00',
+            'arrival_time' => '09:00',
+        ])->assertCreated()->json('data.id');
+        $this->withToken($token)->putJson('/api/v1/admin/trips/'.$independent, [...$overnight,
+            'departure_time' => '23:30',
+            'arrival_time' => '00:30',
+        ])->assertUnprocessable()->assertJsonValidationErrors(['bus_id']);
+        $this->assertSame('23:00', $created->json('data.departureTime'));
     }
 
     public function test_booking_holds_real_seats_and_prevents_duplicate(): void

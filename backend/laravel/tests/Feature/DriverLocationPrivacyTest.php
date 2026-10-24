@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\ApiToken;
+use App\Models\Booking;
 use App\Models\DriverLocation;
 use App\Models\Trip;
 use App\Models\User;
@@ -80,6 +81,54 @@ class DriverLocationPrivacyTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.id', $trip->id)
             ->assertJsonPath('data.status', $trip->status);
+    }
+
+    public function test_driver_api_flow_supports_passenger_boarding_incidents_and_trip_completion(): void
+    {
+        $trip = Trip::query()->firstOrFail();
+        $driverUser = $trip->driver?->user;
+        $this->assertNotNull($driverUser);
+        $token = $this->tokenFor($driverUser);
+        $passenger = User::query()->where('role', 'passenger')->firstOrFail();
+        $booking = Booking::query()->create([
+            'public_id' => (string) Str::uuid(),
+            'user_id' => $passenger->id,
+            'reference' => 'ET-DRIVER-FLOW',
+            'trip_id' => $trip->id,
+            'passenger_name' => 'Boarding QA',
+            'passenger_email' => 'boarding@example.test',
+            'passenger_phone' => '',
+            'seat_numbers' => ['1'],
+            'status' => 'confirmed',
+            'confirmed_at' => now(),
+            'total_amount' => 80,
+        ]);
+        $bookingPassenger = $booking->passengers()->create([
+            'full_name' => 'Boarding QA',
+            'email' => 'boarding@example.test',
+            'status' => 'booked',
+        ]);
+
+        $this->withToken($token)->getJson('/api/v1/driver/me')->assertOk();
+        $this->withToken($token)->getJson('/api/v1/driver/trips/current')
+            ->assertOk()->assertJsonPath('data.id', $trip->id);
+        $this->withToken($token)->getJson('/api/v1/driver/trips/'.$trip->id.'/passengers')
+            ->assertOk()->assertJsonPath('data.0.id', $bookingPassenger->id);
+        $this->withToken($token)->postJson('/api/v1/driver/trips/'.$trip->id.'/passengers/'.$bookingPassenger->id.'/board')
+            ->assertOk()->assertJsonPath('data.status', 'boarded');
+
+        $this->withToken($token)->postJson('/api/v1/driver/incidents', [
+            'trip_id' => $trip->id,
+            'title' => 'Driver flow QA incident',
+            'description' => 'Recorded from the authenticated driver workflow.',
+            'severity' => 'low',
+        ])->assertCreated();
+        $this->assertDatabaseHas('incidents', ['trip_id' => $trip->id, 'title' => 'Driver flow QA incident']);
+
+        $this->withToken($token)->postJson('/api/v1/driver/trips/'.$trip->id.'/start')
+            ->assertOk()->assertJsonPath('data.status', 'in_progress');
+        $this->withToken($token)->postJson('/api/v1/driver/trips/'.$trip->id.'/complete')
+            ->assertOk()->assertJsonPath('data.status', 'completed');
     }
 
     public function test_driver_can_save_vehicle_condition_with_a_fuel_reading(): void

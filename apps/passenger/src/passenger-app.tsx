@@ -72,6 +72,12 @@ const TOKEN = 'encore_api_token';
 const GUEST_TOKEN = 'encore_guest_booking_token';
 const DRAFT = 'encore_booking_draft';
 
+function localCalendarDate() {
+  const today = new Date();
+  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+  return today.toISOString().slice(0, 10);
+}
+
 const money = (value: number, currency?: string) => formatMoney(value, currency);
 
 function api<T = any>(path: string, options: RequestInit = {}) {
@@ -87,7 +93,7 @@ function initialFilters() {
   return {
     origin: query.get('origin') ?? '',
     destination: query.get('destination') ?? '',
-    date: query.get('date') ?? '',
+    date: query.get('date') ?? localCalendarDate(),
     passengers: Math.max(
       1,
       Number(query.get('passengers') ?? 1) || 1,

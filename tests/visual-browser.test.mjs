@@ -71,6 +71,11 @@ try {
             links.map((link) => link.getAttribute('href').slice(1))
               .filter((id) => id && !document.getElementById(id)));
           assert.deepEqual(missingAnchors, [], 'Website in-page navigation must point to existing sections');
+          assert.equal(await page.locator('.public-quick-links').count(), 0, 'Redundant quick links must be removed');
+          assert.equal(await page.locator('#package-tracking a[href="/track-package/"]').count(), 1, 'Package tracking must have a clear destination');
+          assert.equal(await page.locator('#networkRouteSelect').count(), 1, 'The live map must offer route selection');
+          assert.equal(await page.locator('[data-open-map]').count(), 0, 'The generic current-route CTA must not show without a selected trip');
+          assert.ok(await page.locator('#bookingForm input[name="date"]').inputValue(), 'The booking date must default to today');
 
           const menu = page.locator('#mobileMenuToggle');
           await menu.click();
@@ -78,10 +83,6 @@ try {
           await page.keyboard.press('Escape');
           assert.equal(await menu.getAttribute('aria-expanded'), 'false', 'Escape must close the mobile menu');
 
-          await page.locator('[data-open-map]').first().click();
-          assert.equal(await page.locator('#routeModal').getAttribute('aria-hidden'), 'false', 'Route preview must open');
-          await page.locator('#routeModal button[data-close-map]').click();
-          assert.equal(await page.locator('#routeModal').getAttribute('aria-hidden'), 'true', 'Route preview must close');
         }
         if (['driver', 'admin'].includes(surface)) {
           assert.equal(new URL(page.url()).pathname, '/login/', `${surface} must require staff sign-in`);

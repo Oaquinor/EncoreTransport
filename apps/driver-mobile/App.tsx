@@ -134,6 +134,8 @@ export default function App() {
       ),
       rawRequest(
         `/trips/${activeTrip.id}/location`,
+        {},
+        activeToken,
       ).catch(() => ({
         data: null,
       })),

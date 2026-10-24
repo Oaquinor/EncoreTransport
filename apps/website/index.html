@@ -161,9 +161,6 @@
             Book your trip <span aria-hidden="true">→</span>
           </a>
 
-          <button class="btn btn-secondary public-secondary" type="button" data-open-map>
-            Explore current route
-          </button>
         </div>
 
         <div class="public-trust-strip" aria-label="Encore Transport benefits">
@@ -243,7 +240,7 @@
           <div class="public-booking-card__details">
             <label class="booking-field public-field">
               <span class="booking-label">Travel date</span>
-              <input type="date" name="date" />
+            <input type="date" name="date" required />
             </label>
 
             <label class="booking-field public-field">
@@ -259,10 +256,14 @@
       </div>
     </section>
 
-    <section class="public-quick-links shell" aria-label="Encore Transport quick links">
-      <a href="#destinations"><span class="public-quick-links__icon" aria-hidden="true">↗</span><span><strong>Explore routes</strong><small>See the corridors currently available.</small></span></a>
-      <a href="#tracking"><span class="public-quick-links__icon" aria-hidden="true">⌖</span><span><strong>Preview your journey</strong><small>Review the route before you book.</small></span></a>
-      <a href="/track-package/"><span class="public-quick-links__icon" aria-hidden="true">▣</span><span><strong>Track a package</strong><small>Follow a shipment with its reference.</small></span></a>
+    <section class="parcel-feature shell" id="package-tracking" aria-labelledby="parcelTitle">
+      <div class="parcel-feature__art" aria-hidden="true"><span>▤</span><i></i><b></b><em></em></div>
+      <div class="parcel-feature__copy">
+        <span class="public-section-label">Package tracking</span>
+        <h2 id="parcelTitle">Your package, easier to follow.</h2>
+        <p>Enter your tracking reference to see the latest update recorded for your shipment.</p>
+      </div>
+      <a class="btn btn-primary" href="/track-package/">Track my package <span aria-hidden="true">→</span></a>
     </section>
 
     <section class="public-section shell" id="destinations" aria-labelledby="routesTitle">
@@ -363,11 +364,11 @@
     <section class="public-section public-route-section" id="tracking" aria-labelledby="routeTitleHome">
       <div class="shell public-route-layout">
         <header class="public-section-copy public-route-copy" data-reveal>
-          <span class="public-section-label">Know the journey</span>
-          <h2 id="routeTitleHome">See the route before you travel.</h2>
+          <span class="public-section-label">Explore the network</span>
+          <h2 id="routeTitleHome">Get to know our routes.</h2>
 
       <p>
-            See Georgetown, Rosignol and New Amsterdam with the buses currently operating across the network.
+            Choose a route to see its stops and buses that have shared a recent, authorized location.
           </p>
 
           <div class="public-route-summary">
@@ -382,15 +383,12 @@
             </article>
           </div>
 
-          <button class="btn btn-secondary public-secondary" type="button" data-open-map>
-            View route details
-          </button>
         </header>
 
         <div class="map-card public-map-card" data-reveal>
           <div class="public-map-card__bar">
-            <div><i aria-hidden="true"></i><span>Live network</span></div>
-            <span>Vehicle overview</span>
+            <label for="networkRouteSelect">Route</label>
+            <select id="networkRouteSelect" aria-label="Choose a route"><option value="">All routes</option></select>
           </div>
 
           <div id="routeMapCanvas" class="website-real-map public-real-map" aria-label="Encore live network map"></div>
@@ -520,9 +518,9 @@
           <p>Encore Transport is building a connected travel experience for passengers, operations teams and future cargo services.</p>
         </header>
         <div class="public-about-grid">
-          <article data-reveal><span>Purpose</span><h3>Make every journey easier to plan.</h3><p>Official company history, trajectory and origin story will be added after Jamol confirms the approved wording.</p></article>
+          <article data-reveal><span>Purpose</span><h3>Make every journey easier to plan.</h3><p>Find available trips, review your route and choose a seat before you continue.</p></article>
           <article data-reveal><span>Vision</span><h3>Move with confidence.</h3><p>The platform is designed around clear departures, real availability and practical operational visibility.</p></article>
-          <article data-reveal><span>Guyana</span><h3>Built for local routes.</h3><p>Route and destination content will be expanded with verified Guyana and Berbice imagery supplied or approved by the client.</p></article>
+          <article data-reveal><span>Our network</span><h3>Travel between the places we serve.</h3><p>Explore published routes and current departures to plan your next trip.</p></article>
         </div>
       </div>
     </section>
@@ -532,12 +530,12 @@
         <header class="public-section-copy" data-reveal>
           <span class="public-section-label">Contact Us</span>
           <h2 id="contactTitle">Need help planning a trip?</h2>
-          <p>Customer support channels and business contact details will be published once Encore Transport confirms the official email, phone and service hours.</p>
+          <p>Need help with a booking? Start with the trip and package tools, or review the answers to common questions.</p>
         </header>
         <div class="public-contact-card" data-reveal>
-          <strong>Contact details pending confirmation</strong>
-          <span>We will not publish an unverified phone number or email address.</span>
-          <a class="btn btn-secondary" href="#book">Book your trip <span aria-hidden="true">→</span></a>
+          <strong>How can we help?</strong>
+          <span>Find a trip, check your booking or follow a package update.</span>
+          <a class="btn btn-secondary" href="#faq">Visit travel help <span aria-hidden="true">→</span></a>
         </div>
       </div>
     </section>
@@ -582,13 +580,10 @@
     </div>
 
     <div class="shell public-footer__details">
-      <div class="public-footer__location">
-        <div class="public-footer__section-heading"><strong>Find Encore Transport</strong><span id="businessMapStatus">Georgetown, Guyana · provisional city view.</span></div>
-        <div id="businessMap" class="public-footer__map" aria-label="Encore Transport city location map"><div class="public-footer__map-empty">Showing a provisional Georgetown city view until the official office location is confirmed.</div></div>
-      </div>
+      <div class="public-footer__location"><strong>Plan your next trip</strong><span>Search routes and departures, then choose the journey that works for you.</span><a href="#book">Find a trip →</a></div>
       <div class="public-footer__social-block">
         <strong>Follow Encore</strong>
-        <p>Official social accounts will be linked after Jamol confirms the handles.</p>
+        <p>News and travel updates from Encore Transport.</p>
         <div class="public-footer__socials" aria-label="Encore Transport social media">
           <a data-social="instagram" href="#" aria-disabled="true" aria-label="Instagram">
             <svg class="social-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" class="social-icon__dot"/></svg>
@@ -612,30 +607,6 @@
       <nav aria-label="Legal navigation"><a href="#contact">Privacy</a><a href="#contact">Terms</a><a href="#contact">Accessibility</a></nav>
     </div>
   </footer>
-</div>
-
-<div class="route-modal" id="routeModal" aria-hidden="true">
-  <div class="route-modal-backdrop" data-close-map></div>
-
-  <section class="route-modal-panel" role="dialog" aria-modal="true" aria-labelledby="routeTitle">
-    <header>
-      <div>
-        <span>Trip route</span>
-        <h2 id="routeTitle">Encore route</h2>
-      </div>
-      <button type="button" data-close-map aria-label="Close">×</button>
-    </header>
-
-    <div class="route-modal-map">
-      <div id="modalMapCanvas" class="website-real-map website-real-map--modal" aria-label="Trip route detail map"></div>
-    </div>
-
-    <footer>
-      <div><small>Distance</small><strong id="routeDistance">—</strong></div>
-      <div><small>Estimated time</small><strong id="routeDuration">—</strong></div>
-      <a class="btn btn-primary" id="bookRouteLink" href="/passenger/">Choose this trip</a>
-    </footer>
-  </section>
 </div>
 
 <script type="module" src="./app.mjs"></script>
