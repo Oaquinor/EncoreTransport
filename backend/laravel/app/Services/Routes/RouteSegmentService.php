@@ -37,6 +37,10 @@ class RouteSegmentService
             ->where('active', true)
             ->first();
 
+        if (!$segment) {
+            throw ValidationException::withMessages(['segment' => 'This direction is not configured for the selected route.']);
+        }
+
         return [
             'origin' => $originStop->name,
             'destination' => $destinationStop->name,

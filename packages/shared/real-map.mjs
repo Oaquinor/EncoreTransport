@@ -37,6 +37,7 @@ let leafletPromise = null;
 let tileProbePromise = null;
 let tileProbeTimestamp = 0;
 const mapRegistry = new WeakMap();
+const liveMapRegistry = new WeakMap();
 
 function ensureSharedStyles() {
   if (document.querySelector('style[data-encore-map-styles]')) return;
@@ -323,6 +324,8 @@ export function destroyRealMap(container) {
     mapRegistry.delete(container);
   }
 
+  liveMapRegistry.delete(container);
+
   container.innerHTML = '';
 }
 
@@ -528,4 +531,94 @@ export async function renderLocationMap(container, location, options = {}) {
 
   requestAnimationFrame(() => map.invalidateSize());
   return map;
+}
+
+function escapePopup(value = '') {
+  return String(value).replace(/[&<>'"]/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;',
+  }[character]));
+}
+
+const networkStopFallbacks = [
+  { name: 'Georgetown', latitude: 6.8013, longitude: -58.1551 },
+  { name: 'Rosignol', latitude: 6.2718, longitude: -57.5311 },
+  { name: 'New Amsterdam', latitude: 6.2470, longitude: -57.5170 },
+];
+
+export async function renderLiveNetworkMap(container, network, options = {}) {
+  if (!container) return null;
+
+  container.classList.add('encore-real-map');
+  let state = liveMapRegistry.get(container);
+  const L = state?.map ? window.L : await loadLeaflet();
+
+  if (!state?.map) {
+    container.innerHTML = '';
+    const map = L.map(container, {
+      zoomControl: options.zoomControl !== false,
+      attributionControl: true,
+    });
+    const tileLayer = L.tileLayer(tileLayerUrl(), tileLayerOptions).addTo(map);
+    tileLayer.on('tileerror', () => runtimeStatus(container, 'Map tiles unavailable.', 'Live vehicle data will continue updating when the map service recovers.'));
+    state = { map, vehicleMarkers: new Map(), nodeMarkers: new Map() };
+    liveMapRegistry.set(container, state);
+    mapRegistry.set(container, map);
+  }
+
+  const routes = Array.isArray(network?.routes) ? network.routes : [];
+  const trips = Array.isArray(network?.trips) ? network.trips : [];
+  const stops = routes.flatMap((route) => Array.isArray(route.stops) ? route.stops : [])
+    .filter(validCoordinate);
+  const visibleStops = stops.length ? stops : networkStopFallbacks;
+
+  for (const stop of visibleStops) {
+    const key = `${stop.name}:${stop.latitude}:${stop.longitude}`;
+    if (state.nodeMarkers.has(key)) continue;
+    const marker = L.marker([Number(stop.latitude), Number(stop.longitude)], {
+      icon: markerIcon(L, 'destination', '●'),
+      title: stop.name,
+    }).addTo(state.map).bindTooltip(stop.name, { direction: 'top', offset: [0, -20] });
+    state.nodeMarkers.set(key, marker);
+  }
+
+  const seen = new Set();
+  for (const trip of trips) {
+    if (!validCoordinate(trip)) continue;
+    const key = String(trip.trip_id);
+    seen.add(key);
+    const popup = `<strong>${escapePopup(trip.bus_code || 'Encore bus')}</strong><br>${escapePopup(trip.origin || '')} → ${escapePopup(trip.destination || '')}<br>Status: ${escapePopup(trip.status || '')}<br>Updated: ${escapePopup(trip.last_location_at || '—')}`;
+    const coordinates = [Number(trip.latitude), Number(trip.longitude)];
+    let marker = state.vehicleMarkers.get(key);
+    if (!marker) {
+      marker = L.marker(coordinates, {
+        icon: markerIcon(L, 'vehicle', '🚌'),
+        title: trip.bus_code || 'Encore bus',
+      }).addTo(state.map);
+      state.vehicleMarkers.set(key, marker);
+    } else {
+      marker.setLatLng(coordinates);
+    }
+    marker.setPopupContent?.(popup);
+    if (!marker.getPopup()) marker.bindPopup(popup);
+    else marker.getPopup().setContent(popup);
+  }
+
+  for (const [key, marker] of state.vehicleMarkers) {
+    if (!seen.has(key)) {
+      marker.remove();
+      state.vehicleMarkers.delete(key);
+    }
+  }
+
+  const points = [
+    ...visibleStops.map((point) => [Number(point.latitude), Number(point.longitude)]),
+    ...trips.filter(validCoordinate).map((point) => [Number(point.latitude), Number(point.longitude)]),
+  ];
+  if (!state.didFit && points.length) {
+    state.map.fitBounds(L.latLngBounds(points).pad(0.18), { animate: false, maxZoom: 11 });
+    state.didFit = true;
+  }
+  requestAnimationFrame(() => state.map.invalidateSize());
+  clearRuntimeStatus(container);
+  return state.map;
 }

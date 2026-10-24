@@ -24,6 +24,7 @@ class BookingService
         private readonly RouteSegmentService $segments,
         private readonly NotificationService $notifications,
         private readonly GuestBookingAccess $guestAccess,
+        private readonly SeatAvailabilityService $availability,
     ) {}
 
     public function create(array $data, ?int $userId): Booking
@@ -52,22 +53,7 @@ class BookingService
                 throw ValidationException::withMessages(['passengers' => 'A passenger is required for each selected seat.']);
             }
 
-            $alreadyReserved = BookingSeat::query()
-                ->where('trip_id', $trip->id)
-                ->whereIn('bus_seat_id', $seatIds)
-                ->where('origin_stop_sequence', '<', $segment['destination_sequence'])
-                ->where('destination_stop_sequence', '>', $segment['origin_sequence'])
-                ->where(function ($query) {
-                    $query->where('status', 'confirmed')
-                        ->orWhere(function ($held) {
-                            $held->where('status', 'held')
-                                ->where(function ($time) {
-                                    $time->whereNull('held_until')->orWhere('held_until', '>', now());
-                                });
-                        });
-                })
-                ->lockForUpdate()
-                ->exists();
+            $alreadyReserved = $this->availability->hasReservedSeats($trip, $segment, $seatIds, true);
 
             if ($alreadyReserved) {
                 throw ValidationException::withMessages(['seat_ids' => 'One or more selected seats are no longer available.']);

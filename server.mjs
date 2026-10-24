@@ -1,10 +1,14 @@
 import { createServer, request as httpRequest } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { readFile, stat } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { gzip } from 'node:zlib';
+import { promisify } from 'node:util';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
+const gzipAsync = promisify(gzip);
 
 const mimeTypes = new Map([
   ['.html', 'text/html; charset=utf-8'],
@@ -95,7 +99,7 @@ function resolveVendorPath(rootDirectory, pathname) {
   return relativePath ? safeJoin(rootDirectory, relativePath) : null;
 }
 
-async function serveFile(response, filePath) {
+async function serveFile(response, filePath, request) {
   if (!filePath) {
     response.writeHead(404, {
       'Content-Type': 'text/plain; charset=utf-8',
@@ -108,21 +112,42 @@ async function serveFile(response, filePath) {
   try {
     const fileStat = await stat(filePath);
     if (fileStat.isDirectory()) {
-      return serveFile(response, path.join(filePath, 'index.html'));
+      return serveFile(response, path.join(filePath, 'index.html'), request);
     }
 
     const extension = path.extname(filePath).toLowerCase();
     const fileContents = await readFile(filePath);
+    const etag = `"${createHash('sha1').update(fileContents).digest('hex')}"`;
+    if (request?.headers?.['if-none-match'] === etag) {
+      response.writeHead(304, { ETag: etag });
+      response.end();
+      return;
+    }
+    const isHtml = extension === '.html';
+    const isCompressible = /^(text\/|application\/(javascript|json|manifest\+json))/.test(mimeTypes.get(extension) ?? '');
+    const production = process.env.NODE_ENV === 'production';
+    const acceptsGzip = String(request?.headers?.['accept-encoding'] ?? '').includes('gzip');
+    const body = production && acceptsGzip && isCompressible
+      ? await gzipAsync(fileContents)
+      : fileContents;
 
-    response.writeHead(200, {
+    const headers = {
       'Content-Type': mimeTypes.get(extension) ?? 'application/octet-stream',
-      'Cache-Control': 'no-store',
+      'Cache-Control': isHtml
+        ? 'no-cache'
+        : (production ? 'public, max-age=86400' : 'no-cache'),
+      ETag: etag,
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'camera=(), microphone=(), payment=(), usb=()',
-    });
-    response.end(fileContents);
+    };
+    if (body !== fileContents) {
+      headers['Content-Encoding'] = 'gzip';
+      headers.Vary = 'Accept-Encoding';
+    }
+    response.writeHead(200, headers);
+    response.end(body);
   } catch {
     response.writeHead(404, {
       'Content-Type': 'text/plain; charset=utf-8',
@@ -217,7 +242,7 @@ export function createEncoreServer({
       resolveVendorPath(rootDirectory, parsedUrl.pathname) ??
       resolvePublicPath(rootDirectory, parsedUrl.pathname);
 
-    await serveFile(response, requestPath);
+    await serveFile(response, requestPath, request);
   });
 }
 

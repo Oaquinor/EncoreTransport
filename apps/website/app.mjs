@@ -1,12 +1,13 @@
 import {
   fetchRoutes,
   fetchPassengerSearch,
-  fetchTripSeats,
+  fetchLiveNetwork,
   mapJourney,
   health,
 } from '../../packages/shared/api.mjs';
 import {
   renderJourneyMap,
+  renderLiveNetworkMap,
   renderLocationMap,
   destroyRealMap,
 } from '../../packages/shared/real-map.mjs';
@@ -448,73 +449,9 @@ async function loadFeaturedTrip() {
       return;
     }
 
-    let selectedTrip = trips[0];
-    let selectedSeats = [];
-
-    const seatResults = await Promise.allSettled(
-      trips.slice(0, 6).map((trip) => fetchTripSeats(trip.id)),
-    );
-    for (let index = 0; index < seatResults.length; index += 1) {
-      const result = seatResults[index];
-      const seats = result.status === 'fulfilled' && Array.isArray(result.value)
-        ? result.value
-        : [];
-      if (!selectedSeats.length) {
-        selectedTrip = trips[index];
-        selectedSeats = seats;
-      }
-      if (seats.length) {
-        selectedTrip = trips[index];
-        selectedSeats = seats;
-        break;
-      }
-    }
-
-    featuredTrip = selectedTrip;
+    featuredTrip = trips[0];
     renderFeatured(featuredTrip);
-    renderSeats(selectedSeats);
-
-    try {
-      featuredJourney = await mapJourney(featuredTrip.origin, featuredTrip.destination);
-
-      setText('#mapStatus', 'Route loaded');
-      setText(
-        '#mapEta',
-        featuredJourney.route?.durationSeconds
-          ? `${minutes(featuredJourney.route.durationSeconds)} min`
-          : '—',
-      );
-      setText(
-        '#routeDistance',
-        featuredJourney.route?.distanceMeters
-          ? km(featuredJourney.route.distanceMeters)
-          : '—',
-      );
-      setText(
-        '#routeDuration',
-        featuredJourney.route?.durationSeconds
-          ? `${minutes(featuredJourney.route.durationSeconds)} min`
-          : '—',
-      );
-      setText('#routeTitle', `${featuredTrip.origin} → ${featuredTrip.destination}`);
-
-      const link = document.querySelector('#bookRouteLink');
-      if (link) {
-        link.href =
-          `/passenger/?origin=${encodeURIComponent(featuredTrip.origin)}` +
-          `&destination=${encodeURIComponent(featuredTrip.destination)}` +
-          `&date=${encodeURIComponent(featuredTrip.date ?? '')}` +
-          '&passengers=1';
-      }
-
-      await renderJourneyMap(routeMapCanvas, featuredJourney);
-    } catch (error) {
-      featuredJourney = null;
-      setText('#mapStatus', 'Route unavailable');
-      setText('#mapEta', '—');
-
-      renderMapFallback('The route could not be loaded right now. Please try again.');
-    }
+    renderSeats([]);
   } catch (error) {
     featuredTrip = null;
     featuredJourney = null;
@@ -523,7 +460,55 @@ async function loadFeaturedTrip() {
     setText('#mapEta', '—');
     renderFeatured(null);
     renderSeats([]);
-    renderMapFallback('Trip data is temporarily unavailable. Please try again.');
+  }
+}
+
+let liveNetworkTimer = null;
+let liveNetworkObserver = null;
+let liveNetworkStarted = false;
+
+async function refreshLiveNetwork() {
+  try {
+    const network = await fetchLiveNetwork();
+    const tripCount = Array.isArray(network.trips) ? network.trips.length : 0;
+    const routeCount = Array.isArray(network.routes) ? network.routes.length : 0;
+    setText('#mapStatus', tripCount ? `${tripCount} bus${tripCount === 1 ? '' : 'es'} live` : 'No buses live');
+    setText('#mapEta', network.updated_at ? new Date(network.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—');
+    setText('#routeCount', routeCount || '—');
+    if (routeMapCanvas) await renderLiveNetworkMap(routeMapCanvas, network);
+  } catch {
+    setText('#mapStatus', 'Live network unavailable');
+    if (routeMapCanvas && !routeMapCanvas.querySelector('.leaflet-container')) {
+      renderMapFallback('Live vehicle positions are temporarily unavailable.');
+    }
+  }
+}
+
+function startLiveNetwork() {
+  if (liveNetworkStarted) return;
+  liveNetworkStarted = true;
+  void refreshLiveNetwork();
+  const schedule = () => {
+    if (liveNetworkTimer) window.clearInterval(liveNetworkTimer);
+    liveNetworkTimer = document.visibilityState === 'visible'
+      ? window.setInterval(refreshLiveNetwork, 25000)
+      : null;
+  };
+  schedule();
+  document.addEventListener('visibilitychange', schedule, { passive: true });
+}
+
+function initializeLiveNetwork() {
+  if (!routeMapCanvas) return;
+  if ('IntersectionObserver' in window) {
+    liveNetworkObserver = new IntersectionObserver((entries, observer) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect();
+      startLiveNetwork();
+    }, { rootMargin: '240px' });
+    liveNetworkObserver.observe(routeMapCanvas);
+  } else {
+    window.setTimeout(startLiveNetwork, 800);
   }
 }
 
@@ -621,15 +606,6 @@ initializeMotion();
 initializeMobileNavigation();
 setMinimumDate();
 initializeBusinessFooter();
-
-try {
-  await health();
-  setText('#serviceStatus', 'Online');
-} catch {
-  setText('#serviceStatus', 'Unavailable');
-}
-
-await Promise.allSettled([
-  loadRoutes(),
-  loadFeaturedTrip(),
-]);
+initializeLiveNetwork();
+void health().then(() => setText('#serviceStatus', 'Online')).catch(() => setText('#serviceStatus', 'Unavailable'));
+void Promise.allSettled([loadRoutes(), loadFeaturedTrip()]);

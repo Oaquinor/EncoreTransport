@@ -79,6 +79,9 @@ export async function requestJson(
   }
 
   let response;
+  const controller = options.signal ? null : new AbortController();
+  const timeout = Number(options.timeoutMs ?? 10000);
+  const timeoutId = controller ? setTimeout(() => controller.abort(), timeout) : null;
 
   try {
     response = await fetch(
@@ -86,9 +89,11 @@ export async function requestJson(
       {
         ...options,
         headers,
+        signal: options.signal ?? controller?.signal,
       },
     );
   } catch (error) {
+    if (timeoutId) clearTimeout(timeoutId);
     throw new ApiError(
       'Unable to reach Encore Transport. Check your connection and try again.',
       0,
@@ -97,6 +102,8 @@ export async function requestJson(
       },
     );
   }
+
+  if (timeoutId) clearTimeout(timeoutId);
 
   let payload = null;
 

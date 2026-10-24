@@ -3,6 +3,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 class Trip extends Model {
     protected $fillable=['transport_route_id','bus_id','driver_id','departure_date','departure_time','arrival_time','status','started_at','completed_at','cancelled_at','available_seats','price_per_passenger','seat_map'];
     protected $casts=['departure_date'=>'date','started_at'=>'datetime','completed_at'=>'datetime','cancelled_at'=>'datetime','seat_map'=>'array'];
@@ -12,4 +13,5 @@ class Trip extends Model {
     public function bookings():HasMany{return $this->hasMany(Booking::class);}
     public function incidents():HasMany{return $this->hasMany(Incident::class);}
     public function locations():HasMany{return $this->hasMany(DriverLocation::class);}
+    public function latestLocation():HasOne{return $this->hasOne(DriverLocation::class)->latestOfMany('recorded_at');}
 }

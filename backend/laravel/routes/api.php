@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\DriverScheduleController;
 use App\Http\Controllers\Api\V1\DriverTripController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\IncidentController;
+use App\Http\Controllers\Api\V1\LiveNetworkController;
 use App\Http\Controllers\Api\V1\MapController;
 use App\Http\Controllers\Api\V1\PackageController;
 use App\Http\Controllers\Api\V1\PaymentController;
@@ -36,6 +37,7 @@ Route::prefix('v1')->group(function () {
     Route::get('trips/{trip}', [TripController::class, 'show']);
     Route::get('trips/{trip}/seats', [SeatController::class, 'index']);
     Route::get('trips/{trip}/quote', [PricingController::class, 'show']);
+    Route::get('network/live', LiveNetworkController::class)->middleware('throttle:30,1');
 
     Route::prefix('maps')->group(function () {
         Route::get('search', [MapController::class, 'search'])->middleware('throttle:60,1');

@@ -21,6 +21,7 @@ export {
 
 export {
   fetchPassengerSearch,
+  fetchLiveNetwork,
   fetchRoute,
   fetchRoutes,
   fetchTripDetails,

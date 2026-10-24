@@ -4,22 +4,34 @@ import {
 
 const journeyCache = new Map();
 const journeyRequests = new Map();
+let routesCache = null;
+let routesRequest = null;
 
 export function health() {
   return requestJson(
     '/health',
-    { token: false },
+    { token: false, timeoutMs: 3000 },
   );
 }
 
 export async function fetchRoutes() {
-  const payload =
-    await requestJson(
-      '/routes',
-      { token: false },
-    );
+  if (routesCache && routesCache.expiresAt > Date.now()) return routesCache.value;
+  if (routesRequest) return routesRequest;
 
-  return payload.data ?? [];
+  routesRequest = requestJson('/routes', { token: false, timeoutMs: 5000 })
+    .then((payload) => {
+      const value = payload.data ?? [];
+      routesCache = { value, expiresAt: Date.now() + 45000 };
+      return value;
+    })
+    .finally(() => { routesRequest = null; });
+
+  return routesRequest;
+}
+
+export async function fetchLiveNetwork() {
+  const payload = await requestJson('/network/live', { token: false, timeoutMs: 5000 });
+  return payload.data ?? payload;
 }
 
 export async function fetchRoute(id) {
@@ -69,7 +81,7 @@ export async function fetchPassengerSearch(
   const payload =
     await requestJson(
       `/trips/search?${query}`,
-      { token: false },
+      { token: false, timeoutMs: 8000 },
     );
 
   const trips =

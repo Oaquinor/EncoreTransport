@@ -1082,8 +1082,8 @@ function Status({
             : 'Booking status updated.'}
         </h2>
         <p>
-          No payment success is simulated. A final ticket is issued only after
-          a configured provider verifies payment.
+          Online payment is temporarily unavailable. Your booking has been
+          held while payment options are being finalized.
         </p>
       </div>
 

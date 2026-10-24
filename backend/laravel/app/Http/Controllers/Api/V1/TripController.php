@@ -4,16 +4,16 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\TripResource;
-use App\Models\BookingSeat;
 use App\Models\Trip;
 use Illuminate\Http\Request;
+use App\Services\Bookings\SeatAvailabilityService;
 use App\Services\Routes\RouteSegmentService;
 use OpenApi\Attributes as OA;
 
 class TripController extends Controller
 {
     #[OA\Get(path:'/api/v1/trips/search',operationId:'searchTrips',summary:'Buscar viajes disponibles',tags:['Trips'],responses:[new OA\Response(response:200,description:'Viajes')])]
-    public function search(Request $request, RouteSegmentService $segments)
+    public function search(Request $request, RouteSegmentService $segments, SeatAvailabilityService $availability)
     {
         $filters=$request->validate([
             'origin'=>['nullable','string','max:150'],
@@ -30,13 +30,7 @@ class TripController extends Controller
             ->filter(function (Trip $trip) use ($filters, $passengers, $segments) {
                 try {
                     $segment = $segments->resolve($trip->route, $filters['origin'] ?? null, $filters['destination'] ?? null);
-                    $reserved = BookingSeat::query()->where('trip_id', $trip->id)
-                        ->where('origin_stop_sequence', '<', $segment['destination_sequence'])
-                        ->where('destination_stop_sequence', '>', $segment['origin_sequence'])
-                        ->where(fn ($q) => $q->where('status', 'confirmed')->orWhere(fn ($held) => $held->where('status', 'held')->where(fn ($time) => $time->whereNull('held_until')->orWhere('held_until', '>', now()))))
-                        ->distinct('bus_seat_id')->count('bus_seat_id');
-                    $capacity = $trip->bus?->seats()->where('active', true)->where('blocked', false)->count() ?? 0;
-                    if ($capacity - $reserved < $passengers) return false;
+                    if ($availability->availableCount($trip, $segment) < $passengers) return false;
                     $trip->setAttribute('_requested_segment', $segment);
                     return true;
                 }
