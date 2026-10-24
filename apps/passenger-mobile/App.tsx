@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import MapView, { Marker, Polyline, UrlTile } from 'react-native-maps';
 import { formatCurrency } from '@encore/domain';
+import { requestJson } from '@encore/api-client';
 
 type Trip = {
   id: number | string;
@@ -61,27 +62,7 @@ async function request(
   options: RequestInit = {},
   token = '',
 ) {
-  const response = await fetch(`${API}${path}`, {
-    ...options,
-    headers: {
-      Accept: 'application/json',
-      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers ?? {}),
-    },
-  });
-
-  const payload = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    const detail = payload?.errors
-      ? Object.values(payload.errors).flat().join(' ')
-      : payload?.message;
-
-    throw new Error(detail || `API ${response.status}`);
-  }
-
-  return payload;
+  return requestJson<any>(API, path, options, { token });
 }
 
 export default function App() {
@@ -329,7 +310,7 @@ export default function App() {
 
           <View style={styles.row}>
             <View style={styles.metric}>
-              <Text style={styles.muted}>Server total</Text>
+              <Text style={styles.muted}>Trip total</Text>
               <Text style={styles.metricValue}>{money(quote?.total ?? 0)}</Text>
             </View>
             <View style={styles.metric}>
@@ -479,12 +460,12 @@ export default function App() {
           </Text>
           <Text>Status: {booking?.status ?? 'unknown'}</Text>
           <Text>Seat: {selectedSeat?.seat_number ?? '—'}</Text>
-          <Text>Server total: {money(Number(booking?.total_amount ?? 0))}</Text>
+          <Text>Total: {money(Number(booking?.total_amount ?? 0))}</Text>
         </View>
 
         <Text style={styles.copy}>
-          No payment success is simulated. A final ticket is available only after
-          a configured payment provider verifies the transaction.
+          Online payment is temporarily unavailable. Your booking has been
+          held while payment options are being finalized.
         </Text>
 
         <TouchableOpacity

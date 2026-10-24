@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 
 import * as Location from 'expo-location';
+import { requestJson } from '@encore/api-client';
 
 import MapView, {
   Marker,
@@ -38,31 +39,7 @@ async function rawRequest(
   options: RequestInit = {},
   token = '',
 ) {
-  const response = await fetch(`${API}${path}`, {
-    ...options,
-    headers: {
-      Accept: 'application/json',
-      ...(options.body
-        ? { 'Content-Type': 'application/json' }
-        : {}),
-      ...(token
-        ? { Authorization: `Bearer ${token}` }
-        : {}),
-      ...(options.headers ?? {}),
-    },
-  });
-
-  const payload =
-    await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(
-      payload?.message ??
-      `API ${response.status}`,
-    );
-  }
-
-  return payload;
+  return requestJson<any>(API, path, options, { token });
 }
 
 function validCoordinate(value: unknown) {

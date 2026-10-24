@@ -27,7 +27,7 @@ class TripController extends Controller
             // Segment matching is resolved against ordered route stops below.
             ->when($filters['date']??null,fn($q,$v)=>$q->whereDate('departure_date',$v))
             ->orderBy('departure_date')->orderBy('departure_time')->get()
-            ->filter(function (Trip $trip) use ($filters, $passengers, $segments) {
+            ->filter(function (Trip $trip) use ($filters, $passengers, $segments, $availability) {
                 try {
                     $segment = $segments->resolve($trip->route, $filters['origin'] ?? null, $filters['destination'] ?? null);
                     if ($availability->availableCount($trip, $segment) < $passengers) return false;

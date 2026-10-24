@@ -1,12 +1,53 @@
 import type { AuthResponse, Booking, BookingPassengerInput, Driver, Incident, MapJourney, Passenger, Quote, Route, Seat, Trip, TripSearchFilters, User, Vehicle } from '@encore/types';
 
 export class ApiError extends Error { constructor(public status:number,message:string,public payload:unknown=null){super(message);this.name='ApiError';} }
+export class TimeoutError extends ApiError { constructor(message='The request timed out.') { super(408, message); this.name='TimeoutError'; } }
+export interface RequestCredentials { token?: string | null; guestToken?: string | null; }
+
+function validationMessage(payload: any) {
+  return payload?.errors
+    ? Object.values(payload.errors).flat().join(' ')
+    : payload?.message;
+}
+
+export async function requestJson<T>(
+  baseUrl: string,
+  path: string,
+  init: RequestInit = {},
+  credentials: RequestCredentials = {},
+): Promise<T> {
+  const controller = init.signal ? null : new AbortController();
+  const timeoutId = controller ? setTimeout(() => controller.abort(), 10000) : null;
+  const headers = new Headers(init.headers);
+  headers.set('Accept', 'application/json');
+  if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  if (credentials.token) headers.set('Authorization', `Bearer ${credentials.token}`);
+  if (credentials.guestToken) headers.set('X-Guest-Booking-Token', credentials.guestToken);
+
+  try {
+    const response = await fetch(`${baseUrl.replace(/\/$/, '')}${path}`, {
+      ...init,
+      headers,
+      signal: init.signal ?? controller?.signal,
+    });
+    const payload = response.status === 204 ? null : await response.json().catch(() => null);
+    if (!response.ok) throw new ApiError(response.status, validationMessage(payload) ?? `Request failed (${response.status})`, payload);
+    return payload as T;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (timeoutId && error && typeof error === 'object' && (error as { name?: string }).name === 'AbortError') throw new TimeoutError();
+    throw new ApiError(0, 'Unable to reach Encore Transport.', error);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
 export interface EncoreApiClientOptions{baseUrl?:string;token?:string|null;}
 export class EncoreApiClient{
   private baseUrl:string;private token:string|null;
   constructor(options:EncoreApiClientOptions={}){this.baseUrl=(options.baseUrl??'/api/v1').replace(/\/$/,'');this.token=options.token??null;}
   setToken(token:string|null){this.token=token;}getToken(){return this.token;}
-  private async request<T>(path:string,init:RequestInit={}):Promise<T>{const headers=new Headers(init.headers);headers.set('Accept','application/json');if(init.body&&!headers.has('Content-Type'))headers.set('Content-Type','application/json');if(this.token)headers.set('Authorization',`Bearer ${this.token}`);let response:Response;try{response=await fetch(`${this.baseUrl}${path}`,{...init,headers});}catch(error){throw new ApiError(0,'Unable to reach Encore Transport.',error);}const payload=response.status===204?null:await response.json().catch(()=>null);if(!response.ok){const message=(payload as any)?.errors?Object.values((payload as any).errors).flat().join(' '):(payload as any)?.message;throw new ApiError(response.status,message??`Request failed (${response.status})`,payload);}return payload as T;}
+  private request<T>(path:string,init:RequestInit={}):Promise<T>{return requestJson<T>(this.baseUrl,path,init,{token:this.token});}
   login(email:string,password:string){return this.request<AuthResponse>('/auth/login',{method:'POST',body:JSON.stringify({email,password})}).then(r=>(this.token=r.token,r));}
   register(payload:{name:string;email:string;phone?:string;password:string;password_confirmation:string}){return this.request<AuthResponse>('/auth/register',{method:'POST',body:JSON.stringify(payload)}).then(r=>(this.token=r.token,r));}
   me(){return this.request<{user:User}>('/auth/me');}async logout(){const r=await this.request<{message:string}>('/auth/logout',{method:'POST'});this.token=null;return r;}

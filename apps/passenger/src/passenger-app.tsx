@@ -11,6 +11,7 @@ import {
   renderJourneyMap,
 } from '../../../packages/shared/real-map.mjs';
 import { formatMoney } from '../../../packages/shared/formatters.mjs';
+import { requestJson } from '@encore/api-client';
 
 type Screen = 'home' | 'results' | 'trip' | 'seats' | 'passengers' | 'review' | 'status';
 
@@ -65,46 +66,11 @@ const OPERATIONAL_POINTS = ['Georgetown', 'Rosignol', 'New Amsterdam'] as const;
 
 const money = (value: number, currency?: string) => formatMoney(value, currency);
 
-async function api(path: string, options: RequestInit = {}) {
-  const token = sessionStorage.getItem(TOKEN);
-
-  const headers = new Headers(options.headers);
-  headers.set('Accept', 'application/json');
-
-  if (options.body) {
-    headers.set('Content-Type', 'application/json');
-  }
-
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
-  }
-
-  const guestToken = sessionStorage.getItem(GUEST_TOKEN);
-  if (guestToken) {
-    headers.set('X-Guest-Booking-Token', guestToken);
-  }
-
-  const response = await fetch(`${API}${path}`, {
-    ...options,
-    headers,
+function api<T = any>(path: string, options: RequestInit = {}) {
+  return requestJson<T>(API, path, options, {
+    token: sessionStorage.getItem(TOKEN),
+    guestToken: sessionStorage.getItem(GUEST_TOKEN),
   });
-
-  const payload = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    const detail = payload.errors
-      ? Object.values(payload.errors).flat().join(' ')
-      : payload.message;
-
-    const error = new Error(
-      String(detail || `Request failed (${response.status})`),
-    );
-
-    (error as Error & { status?: number }).status = response.status;
-    throw error;
-  }
-
-  return payload;
 }
 
 function initialFilters() {
