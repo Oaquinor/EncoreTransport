@@ -11,6 +11,8 @@ class NotificationService
 
     public function sendEmail(?User $recipient, string $event, array $payload = []): bool { return $this->email->send($recipient, $event, $payload); }
 
+    public function sendEmailToAddress(string $address, string $event, array $payload = []): bool { return $this->email->sendToAddress($address, $event, $payload); }
+
     public function sendWhatsApp(?User $recipient, string $event, array $payload = []): bool
     {
         return $this->whatsapp->send($recipient, $event, $payload);

@@ -48,6 +48,10 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
 
+        'gmail_api' => [
+            'transport' => 'gmail_api',
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],

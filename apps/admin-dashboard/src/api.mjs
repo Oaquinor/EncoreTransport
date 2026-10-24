@@ -5,6 +5,19 @@ export const dashboard = async () => {
   return payload.data ?? payload;
 };
 
+export const saveTrip = async (data, id = null) => {
+  const payload = await requestJson(id ? `/admin/trips/${encodeURIComponent(id)}` : '/admin/trips', {
+    method: id ? 'PUT' : 'POST',
+    body: JSON.stringify(data),
+  });
+  return payload.data ?? payload;
+};
+
+export const cancelTrip = async (id) => {
+  const payload = await requestJson(`/admin/trips/${encodeURIComponent(id)}/cancel`, { method: 'POST' });
+  return payload.data ?? payload;
+};
+
 export const incidents = async () => {
   const payload = await requestJson('/admin/incidents');
   return payload.data ?? [];
@@ -65,6 +78,11 @@ export const updateRole = async (id, data) => {
   return payload.data ?? payload;
 };
 export const permissions = async () => (await requestJson('/admin/permissions')).data ?? [];
+
+export const settings = async () => (await requestJson('/admin/settings')).data ?? {};
+export const saveEmailSettings = async (data) => (await requestJson('/admin/settings/email', {
+  method: 'PUT', body: JSON.stringify(data),
+})).data ?? {};
 
 export const routes = async () => {
   const payload = await requestJson('/admin/routes');

@@ -50,7 +50,7 @@ class DriverController extends Controller
             ->with(['route', 'bus', 'driver'])
             ->where('driver_id', $driver->id)
             ->whereIn('status', ['scheduled', 'boarding', 'in_progress'])
-            ->orderByRaw("FIELD(status, 'in_progress', 'boarding', 'scheduled')")
+            ->orderByRaw("CASE status WHEN 'in_progress' THEN 0 WHEN 'boarding' THEN 1 WHEN 'scheduled' THEN 2 ELSE 3 END")
             ->orderBy('departure_date')
             ->orderBy('departure_time')
             ->first();

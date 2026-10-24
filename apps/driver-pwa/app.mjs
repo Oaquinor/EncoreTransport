@@ -341,7 +341,6 @@ function wire() {
       await updateVehicleStatus({
         trip_id: state.currentTrip.id,
         fuel_percent: fuelValue === '' ? null : Number(fuelValue),
-        fuel_status: 'reported',
         engine_status: document.querySelector('#engineStatus')?.value,
         tires_status: document.querySelector('#tiresStatus')?.value,
         network_status: document.querySelector('#networkStatus')?.value,

@@ -24,6 +24,16 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'google' => [
+        'gmail' => [
+            'client_id' => env('GMAIL_CLIENT_ID'),
+            'client_secret' => env('GMAIL_CLIENT_SECRET'),
+            'refresh_token' => env('GMAIL_REFRESH_TOKEN'),
+            'token_uri' => env('GMAIL_TOKEN_URI', 'https://oauth2.googleapis.com/token'),
+            'api_uri' => env('GMAIL_API_URI', 'https://gmail.googleapis.com/gmail/v1'),
+        ],
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

@@ -28,6 +28,12 @@ const state = {
   dashboard: null,
   incidents: [],
   schedules: [],
+  scheduleFormOpen: false,
+  scheduleEditingId: null,
+  scheduleForm: null,
+  tripFormOpen: false,
+  tripEditingId: null,
+  tripForm: null,
   packages: [],
   routes: [],
   drivers: [],
@@ -48,6 +54,7 @@ const state = {
   users: [],
   roles: [],
   permissionCatalog: [],
+  generalSettings: null,
   userFormOpen: false,
   userEditingId: null,
   userForm: null,
@@ -374,10 +381,25 @@ function content() {
   }
 
   if (state.module === 'trips') {
-    return table(
-      'Trips',
-      ['Route', 'Date', 'Departure', 'Bus', 'Driver', 'Status'],
-      (dashboard.trips ?? []).map((trip) => [
+    const permissions = new Set(state.permissions);
+    const canCreate = permissions.has('trips.create') && permissions.has('trips.assign_driver') && permissions.has('trips.assign_vehicle');
+    const canEdit = permissions.has('trips.update') && permissions.has('trips.assign_driver') && permissions.has('trips.assign_vehicle');
+    const canCancel = permissions.has('trips.cancel');
+    const trip = state.tripForm ?? {};
+    const form = state.tripFormOpen ? `
+      <form id="tripForm" class="premium-form-grid fleet-form">
+        <div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.tripEditingId ? 'Update scheduled trip' : 'Create scheduled trip'}</strong><span>Choose an active route, operational vehicle and available driver.</span></div></div>
+        <label><span>Route</span><select name="transport_route_id" required><option value="">Select route</option>${(dashboard.routes ?? []).map((route) => `<option value="${esc(route.id)}" ${String(trip.transport_route_id) === String(route.id) ? 'selected' : ''}>${esc(route.origin)} → ${esc(route.destination)}</option>`).join('')}</select></label>
+        <label><span>Vehicle</span><select name="bus_id" required><option value="">Select operational vehicle</option>${(dashboard.buses ?? []).filter((bus) => bus.status === 'operational').map((bus) => `<option value="${esc(bus.id)}" ${String(trip.bus_id) === String(bus.id) ? 'selected' : ''}>${esc(bus.code)} · ${esc(bus.plate)} · ${esc(bus.capacity)} seats</option>`).join('')}</select></label>
+        <label><span>Driver</span><select name="driver_id" required><option value="">Select available driver</option>${(dashboard.drivers ?? []).filter((driver) => ['active', 'upcoming'].includes(driver.status)).map((driver) => `<option value="${esc(driver.id)}" ${String(trip.driver_id) === String(driver.id) ? 'selected' : ''}>${esc(driver.name)} · ${esc(driver.status)}</option>`).join('')}</select></label>
+        <label><span>Departure date</span><input name="departure_date" type="date" min="${new Date().toISOString().slice(0, 10)}" required value="${esc(String(trip.departure_date ?? '').slice(0, 10))}" /></label>
+        <label><span>Departure time</span><input name="departure_time" type="time" required value="${esc(String(trip.departure_time ?? '').slice(0, 5))}" /></label>
+        <label><span>Arrival time</span><input name="arrival_time" type="time" required value="${esc(String(trip.arrival_time ?? '').slice(0, 5))}" /></label>
+        <label><span>Price per passenger</span><input name="price_per_passenger" type="number" min="0" required value="${esc(trip.price_per_passenger ?? '')}" /></label>
+        <div class="form-actions"><button class="button button--primary" type="submit">${state.tripEditingId ? 'Update trip' : 'Create trip'}</button><button class="button button--ghost" id="cancelTripForm" type="button">Cancel</button></div>
+        <div id="tripMessage" aria-live="polite"></div>
+      </form>` : '';
+    const rows = (dashboard.trips ?? []).map((trip) => [
         trip.route?.origin && trip.route?.destination
           ? `${trip.route.origin} → ${trip.route.destination}`
           : '—',
@@ -386,8 +408,14 @@ function content() {
         trip.bus?.code,
         trip.driver?.name,
         trip.status,
-      ]),
-    );
+        ...((canEdit || canCancel) ? [{ html: `<div class="table-actions">${canEdit && trip.status === 'scheduled' ? `<button class="button button--icon" data-edit-trip="${esc(trip.id)}" type="button" aria-label="Edit trip">${icon('edit')}</button>` : ''}${canCancel && trip.status === 'scheduled' ? `<button class="button button--icon" data-cancel-trip="${esc(trip.id)}" type="button" aria-label="Cancel trip">${icon('archive')}</button>` : ''}</div>` }] : []),
+      ]);
+    return `
+      <section class="admin-panel admin-panel--pad">
+        <div class="module-view__header"><div><div class="eyebrow">Service planning</div><h2>Trips</h2><p class="module-subtitle">Publish scheduled departures for passenger booking.</p></div>${canCreate ? `<button class="button button--primary" id="addTrip" type="button">Add trip</button>` : ''}</div>
+        ${form}
+      </section>
+      ${table('Scheduled and completed trips', ['Route', 'Date', 'Departure', 'Bus', 'Driver', 'Status', ...((canEdit || canCancel) ? ['Actions'] : [])], rows, { id: 'admin-trips' })}`;
   }
 
   if (state.module === 'bookings') {
@@ -462,18 +490,37 @@ function content() {
   }
 
   if (state.module === 'schedules') {
-    return table(
-      'Driver schedules',
-      ['Date', 'Driver', 'Vehicle', 'Start', 'End', 'Status'],
-      state.schedules.map((schedule) => [
+    const canManage = state.permissions.includes('schedules.manage');
+    const schedule = state.scheduleForm ?? {};
+    const form = state.scheduleFormOpen && canManage ? `
+      <form id="scheduleForm" class="premium-form-grid fleet-form">
+        <div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.scheduleEditingId ? 'Update driver schedule' : 'Create driver schedule'}</strong><span>Prevent overlapping assignments for each driver.</span></div></div>
+        <label><span>Driver</span><select name="driver_id" required><option value="">Select driver</option>${(state.dashboard?.drivers ?? []).map((driver) => `<option value="${esc(driver.id)}" ${String(schedule.driver_id) === String(driver.id) ? 'selected' : ''}>${esc(driver.name)}</option>`).join('')}</select></label>
+        <label><span>Vehicle</span><select name="bus_id"><option value="">No vehicle assigned</option>${(state.dashboard?.buses ?? []).map((bus) => `<option value="${esc(bus.id)}" ${String(schedule.bus_id ?? '') === String(bus.id) ? 'selected' : ''}>${esc(bus.code)} · ${esc(bus.plate)}</option>`).join('')}</select></label>
+        <label><span>Trip</span><select name="trip_id"><option value="">No trip linked</option>${(state.dashboard?.trips ?? []).map((trip) => `<option value="${esc(trip.id)}" ${String(schedule.trip_id ?? '') === String(trip.id) ? 'selected' : ''}>${esc(trip.route?.origin ?? '')} → ${esc(trip.route?.destination ?? '')} · ${esc(String(trip.departure_date ?? '').slice(0, 10))}</option>`).join('')}</select></label>
+        <label><span>Work date</span><input name="work_date" type="date" required value="${esc(schedule.work_date ?? '')}" /></label>
+        <label><span>Starts at</span><input name="starts_at" type="time" required value="${esc(schedule.starts_at ?? '')}" /></label>
+        <label><span>Ends at</span><input name="ends_at" type="time" required value="${esc(schedule.ends_at ?? '')}" /></label>
+        <label><span>Status</span><select name="status"><option value="scheduled" ${schedule.status === 'scheduled' ? 'selected' : ''}>Scheduled</option><option value="active" ${schedule.status === 'active' ? 'selected' : ''}>Active</option><option value="changed" ${schedule.status === 'changed' ? 'selected' : ''}>Changed</option><option value="cancelled" ${schedule.status === 'cancelled' ? 'selected' : ''}>Cancelled</option></select></label>
+        <label class="form-span-2"><span>Notes</span><textarea name="notes" maxlength="2000">${esc(schedule.notes ?? '')}</textarea></label>
+        <div class="form-actions"><button class="button button--primary" type="submit">${state.scheduleEditingId ? 'Update schedule' : 'Save schedule'}</button><button class="button button--ghost" id="cancelSchedule" type="button">Cancel</button></div>
+        <div id="scheduleMessage" aria-live="polite"></div>
+      </form>` : '';
+    const rows = state.schedules.map((schedule) => [
         String(schedule.work_date ?? '').slice(0, 10),
         schedule.driver?.name,
         schedule.bus?.code,
         schedule.starts_at,
         schedule.ends_at,
         schedule.status,
-      ]),
-    );
+        ...(canManage ? [{ html: `<button class="button button--icon" data-edit-schedule="${esc(schedule.id)}" type="button" aria-label="Edit schedule">${icon('edit')}</button>` }] : []),
+      ]);
+    return `
+      <section class="admin-panel admin-panel--pad">
+        <div class="module-view__header"><div><div class="eyebrow">Operations planning</div><h2>Driver schedules</h2><p class="module-subtitle">Assign drivers, vehicles and trips without overlapping work.</p></div>${canManage ? `<button class="button button--primary" id="addSchedule" type="button">Add schedule</button>` : ''}</div>
+        ${form}
+      </section>
+      ${table('Schedule records', ['Date', 'Driver', 'Vehicle', 'Start', 'End', 'Status', ...(canManage ? ['Actions'] : [])], rows, { id: 'driver-schedules' })}`;
   }
 
   if (state.module === 'packages') {
@@ -530,6 +577,12 @@ function content() {
     return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Access control</div><h2>Roles</h2></div></div>${roleForm}</section>${table('Roles', ['Name', 'Label', 'System', 'Permissions', 'Actions'], state.roles.map((role) => [role.name, role.label, role.system ? 'Yes' : 'No', (role.permissions ?? []).length, { html: `<button class="button button--icon" data-edit-role="${esc(role.id)}" type="button" aria-label="Edit role" ${role.system && state.user?.role !== 'superadmin' ? 'disabled' : ''}>${icon('edit')}</button>` }]))}`;
   }
   if (state.module === 'permissions') return table('Permissions', ['Key', 'Label', 'Resource'], state.permissionCatalog.map((permission) => [permission.key, permission.label, permission.resource]));
+
+  if (state.module === 'settings') {
+    const settings = state.generalSettings ?? {};
+    const canUpdate = state.permissions.includes('settings.update');
+    return `<section class="admin-panel admin-panel--pad"><div class="eyebrow">System configuration</div><h2>General</h2><p class="module-subtitle">Set the address shown as the sender on passenger booking emails.</p><div class="settings-status ${settings.gmail_api_ready ? 'settings-status--ready' : 'settings-status--pending'}" role="status">${settings.gmail_api_ready ? 'Gmail API is ready to send email.' : 'Gmail authorization is incomplete. A server OAuth refresh token and MAIL_MAILER=gmail_api are required.'}</div><form id="emailSettingsForm" class="premium-form-grid fleet-form"><label><span>Sender email</span><input name="mail_from_address" type="email" autocomplete="email" maxlength="254" required value="${esc(settings.mail_from_address ?? '')}" ${canUpdate ? '' : 'disabled'} /></label><label><span>Sender name</span><input name="mail_from_name" maxlength="120" required value="${esc(settings.mail_from_name ?? 'Encore Transport')}" ${canUpdate ? '' : 'disabled'} /></label>${canUpdate ? '<div class="form-actions"><button class="button button--primary" type="submit">Save email settings</button></div>' : ''}<div id="emailSettingsMessage" aria-live="polite"></div></form></section>`;
+  }
 
   return '';
 }
@@ -644,6 +697,7 @@ async function loadModule() {
       [state.roles, state.permissionCatalog] = await Promise.all([api.roles(), api.permissions()]);
     }
     if (state.module === 'permissions') state.permissionCatalog = await api.permissions();
+    if (state.module === 'settings') state.generalSettings = await api.settings();
 
     state.loading = false;
   } catch (error) {
@@ -675,6 +729,22 @@ function wire() {
 
   document.querySelector('#retry')?.addEventListener('click', loadModule);
 
+  document.querySelector('#emailSettingsForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const message = document.querySelector('#emailSettingsMessage');
+    try {
+      state.generalSettings = await api.saveEmailSettings({
+        mail_from_address: form.get('mail_from_address'),
+        mail_from_name: form.get('mail_from_name'),
+      });
+      if (message) message.textContent = 'Email sender settings saved.';
+      render();
+    } catch (error) {
+      if (message) message.textContent = error.message;
+    }
+  });
+
   document.querySelector('#logout')?.addEventListener('click', async () => {
     try {
       await logout();
@@ -694,6 +764,129 @@ function wire() {
     state.reportTo = document.querySelector('#reportTo')?.value ?? '';
     state.reportData = null;
     void loadModule();
+  });
+
+  document.querySelector('#addSchedule')?.addEventListener('click', () => {
+    state.scheduleFormOpen = true;
+    state.scheduleEditingId = null;
+    state.scheduleForm = {
+      driver_id: '', bus_id: '', trip_id: '',
+      work_date: new Date().toISOString().slice(0, 10),
+      starts_at: '08:00', ends_at: '09:00', status: 'scheduled', notes: '',
+    };
+    render();
+  });
+  document.querySelector('#cancelSchedule')?.addEventListener('click', () => {
+    state.scheduleFormOpen = false;
+    state.scheduleEditingId = null;
+    state.scheduleForm = null;
+    render();
+  });
+  document.querySelectorAll('[data-edit-schedule]').forEach((button) => button.addEventListener('click', () => {
+    const schedule = state.schedules.find((item) => String(item.id) === String(button.dataset.editSchedule));
+    if (!schedule) return;
+    state.scheduleFormOpen = true;
+    state.scheduleEditingId = schedule.id;
+    state.scheduleForm = {
+      ...schedule,
+      work_date: String(schedule.work_date ?? '').slice(0, 10),
+      starts_at: String(schedule.starts_at ?? '').slice(0, 5),
+      ends_at: String(schedule.ends_at ?? '').slice(0, 5),
+    };
+    render();
+  }));
+  document.querySelector('#scheduleForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const data = {
+      driver_id: Number(form.get('driver_id')),
+      bus_id: form.get('bus_id') ? Number(form.get('bus_id')) : null,
+      trip_id: form.get('trip_id') ? Number(form.get('trip_id')) : null,
+      work_date: form.get('work_date'),
+      starts_at: form.get('starts_at'),
+      ends_at: form.get('ends_at'),
+      status: form.get('status'),
+      notes: form.get('notes') || null,
+    };
+    try {
+      await api.saveSchedule(data, state.scheduleEditingId);
+      state.schedules = await api.schedules();
+      state.scheduleFormOpen = false;
+      state.scheduleEditingId = null;
+      state.scheduleForm = null;
+      render();
+    } catch (error) {
+      const message = document.querySelector('#scheduleMessage');
+      if (message) message.textContent = error.message;
+    }
+  });
+
+  document.querySelector('#addTrip')?.addEventListener('click', () => {
+    state.tripFormOpen = true;
+    state.tripEditingId = null;
+    state.tripForm = {
+      transport_route_id: '', bus_id: '', driver_id: '',
+      departure_date: new Date().toISOString().slice(0, 10),
+      departure_time: '08:00', arrival_time: '09:00', price_per_passenger: '',
+    };
+    render();
+  });
+  document.querySelector('#cancelTripForm')?.addEventListener('click', () => {
+    state.tripFormOpen = false;
+    state.tripEditingId = null;
+    state.tripForm = null;
+    render();
+  });
+  document.querySelectorAll('[data-edit-trip]').forEach((button) => button.addEventListener('click', () => {
+    const trip = (state.dashboard?.trips ?? []).find((item) => String(item.id) === String(button.dataset.editTrip));
+    if (!trip) return;
+    state.tripFormOpen = true;
+    state.tripEditingId = trip.id;
+    state.tripForm = {
+      transport_route_id: trip.transport_route_id,
+      bus_id: trip.bus_id,
+      driver_id: trip.driver_id,
+      departure_date: String(trip.departure_date ?? '').slice(0, 10),
+      departure_time: String(trip.departure_time ?? '').slice(0, 5),
+      arrival_time: String(trip.arrival_time ?? '').slice(0, 5),
+      price_per_passenger: trip.price_per_passenger ?? '',
+    };
+    render();
+  }));
+  document.querySelectorAll('[data-cancel-trip]').forEach((button) => button.addEventListener('click', async () => {
+    if (!confirm('Cancel this trip? Held or confirmed bookings must be resolved first.')) return;
+    try {
+      await api.cancelTrip(button.dataset.cancelTrip);
+      state.dashboard = await api.dashboard();
+      render();
+    } catch (error) {
+      state.error = error.message;
+      render();
+    }
+  }));
+  document.querySelector('#tripForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const data = {
+      transport_route_id: Number(form.get('transport_route_id')),
+      bus_id: Number(form.get('bus_id')),
+      driver_id: Number(form.get('driver_id')),
+      departure_date: form.get('departure_date'),
+      departure_time: form.get('departure_time'),
+      arrival_time: form.get('arrival_time'),
+      price_per_passenger: Number(form.get('price_per_passenger')),
+    };
+    try {
+      await api.saveTrip(data, state.tripEditingId);
+      state.dashboard = await api.dashboard();
+      state.tripFormOpen = false;
+      state.tripEditingId = null;
+      state.tripForm = null;
+      render();
+    } catch (error) {
+      const message = document.querySelector('#tripMessage');
+      if (message) message.textContent = error.message;
+    }
   });
 
   document.querySelector('#addUser')?.addEventListener('click', () => {

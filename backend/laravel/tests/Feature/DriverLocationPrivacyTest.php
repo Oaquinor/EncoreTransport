@@ -68,6 +68,40 @@ class DriverLocationPrivacyTest extends TestCase
             );
     }
 
+    public function test_driver_can_load_their_current_or_next_trip(): void
+    {
+        $trip = Trip::query()->firstOrFail();
+        $driverUser = $trip->driver?->user;
+
+        $this->assertNotNull($driverUser);
+
+        $this->withToken($this->tokenFor($driverUser))
+            ->getJson('/api/v1/driver/trips/current')
+            ->assertOk()
+            ->assertJsonPath('data.id', $trip->id)
+            ->assertJsonPath('data.status', $trip->status);
+    }
+
+    public function test_driver_can_save_vehicle_condition_with_a_fuel_reading(): void
+    {
+        $trip = Trip::query()->firstOrFail();
+        $driverUser = $trip->driver?->user;
+
+        $this->assertNotNull($driverUser);
+
+        $this->withToken($this->tokenFor($driverUser))
+            ->postJson('/api/v1/driver/vehicle-status', [
+                'trip_id' => $trip->id,
+                'fuel_percent' => 68,
+                'engine_status' => 'ok',
+                'tires_status' => 'warning',
+                'network_status' => 'online',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.fuel_percent', 68)
+            ->assertJsonPath('data.engine_status', 'ok');
+    }
+
     public function test_admin_can_read_current_trip_location(): void
     {
         $trip = Trip::query()->firstOrFail();

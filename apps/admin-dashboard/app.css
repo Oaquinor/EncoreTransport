@@ -19,6 +19,9 @@
 .button--icon:disabled { opacity: .4; cursor: not-allowed; }
 .fleet-module { background: linear-gradient(145deg, #ffffff 0%, #f4fbfd 100%); }
 .module-subtitle { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+.settings-status { margin: 16px 0; padding: 12px 14px; border-radius: 12px; font-size: 13px; }
+.settings-status--ready { background: #e7f5ee; color: #176d50; }
+.settings-status--pending { background: #fff4df; color: #805814; }
 .fleet-form { margin: 18px 0 3px; padding: 20px; border: 1px solid #d9eaf0; border-radius: 18px; background: rgba(255,255,255,.82); box-shadow: 0 10px 30px rgba(23, 94, 122, .07); }
 .fleet-form label { display: grid; gap: 7px; color: #496476; font-size: 11px; font-weight: 800; }
 .fleet-form input, .fleet-form select, .fleet-form textarea { width: 100%; min-height: 46px; border: 1px solid #d4e2e8; border-radius: 11px; background: #fff; color: var(--ink); padding: 0 13px; font: inherit; outline: none; transition: border-color .18s, box-shadow .18s, background .18s; }

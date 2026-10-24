@@ -101,9 +101,15 @@ class BookingService
 
             $this->refreshAvailableSeats($trip);
             $this->audit->record($userId ? User::query()->find($userId) : null, 'booking.created', $booking);
-            if ($userId) {
-                $recipient = User::query()->find($userId);
-                DB::afterCommit(fn () => $this->notifications->sendEmail($recipient, 'booking_created', ['reference' => $booking->reference, 'status' => $booking->status]));
+            if (filter_var($booking->passenger_email, FILTER_VALIDATE_EMAIL)) {
+                $email = $booking->passenger_email;
+                $payload = [
+                    'reference' => $booking->reference,
+                    'status' => $booking->status,
+                    'total_amount' => $booking->total_amount,
+                    'seats' => implode(', ', $booking->seat_numbers ?? []),
+                ];
+                DB::afterCommit(fn () => $this->notifications->sendEmailToAddress($email, 'booking_created', $payload));
             }
 
             $booking = $booking->load(['trip.route','trip.bus','reservedSeats.seat','passengers']);

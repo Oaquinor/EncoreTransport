@@ -21,7 +21,12 @@ const { server, host, port } = await startEncoreServer({
   quiet: true,
 });
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({
+  headless: true,
+  ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+    ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
+    : {}),
+});
 const failures = [];
 
 try {
@@ -61,6 +66,26 @@ try {
         assert.match(metrics.viewportMeta, /width=device-width/);
         assert.ok(metrics.documentWidth <= metrics.viewport + 1, `${surface} ${width}px horizontal overflow: ${metrics.documentWidth}px > ${metrics.viewport}px`);
         assert.equal(pageErrors.length, 0, `${surface} ${width}px page errors: ${pageErrors.join('; ')}`);
+        if (surface === 'website' && width === 390) {
+          const missingAnchors = await page.locator('a[href^="#"]').evaluateAll((links) =>
+            links.map((link) => link.getAttribute('href').slice(1))
+              .filter((id) => id && !document.getElementById(id)));
+          assert.deepEqual(missingAnchors, [], 'Website in-page navigation must point to existing sections');
+
+          const menu = page.locator('#mobileMenuToggle');
+          await menu.click();
+          assert.equal(await menu.getAttribute('aria-expanded'), 'true', 'Mobile menu must open');
+          await page.keyboard.press('Escape');
+          assert.equal(await menu.getAttribute('aria-expanded'), 'false', 'Escape must close the mobile menu');
+
+          await page.locator('[data-open-map]').first().click();
+          assert.equal(await page.locator('#routeModal').getAttribute('aria-hidden'), 'false', 'Route preview must open');
+          await page.locator('#routeModal button[data-close-map]').click();
+          assert.equal(await page.locator('#routeModal').getAttribute('aria-hidden'), 'true', 'Route preview must close');
+        }
+        if (['driver', 'admin'].includes(surface)) {
+          assert.equal(new URL(page.url()).pathname, '/login/', `${surface} must require staff sign-in`);
+        }
         await page.evaluate(async () => {
           document.documentElement.style.scrollBehavior = 'auto';
           for (let position = 0; position < document.body.scrollHeight; position += window.innerHeight * 0.8) {

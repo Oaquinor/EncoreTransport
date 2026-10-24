@@ -31,6 +31,39 @@ class OperationalCoreTest extends TestCase
             ->assertOk()->assertJsonCount(55,'data');
     }
 
+    public function test_admin_can_create_edit_and_cancel_a_scheduled_trip(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+        $trip = Trip::query()->firstOrFail();
+        $token = $this->tokenFor($admin);
+        $payload = [
+            'transport_route_id' => $trip->transport_route_id,
+            'bus_id' => $trip->bus_id,
+            'driver_id' => $trip->driver_id,
+            'departure_date' => now()->addDays(5)->toDateString(),
+            'departure_time' => '09:00',
+            'arrival_time' => '12:00',
+            'price_per_passenger' => 90,
+        ];
+
+        $created = $this->withToken($token)
+            ->postJson('/api/v1/admin/trips', $payload)
+            ->assertCreated()
+            ->assertJsonPath('data.status', 'scheduled')
+            ->assertJsonPath('data.availableSeats', 55);
+        $tripId = $created->json('data.id');
+
+        $this->withToken($token)
+            ->putJson('/api/v1/admin/trips/'.$tripId, array_merge($payload, ['price_per_passenger' => 95]))
+            ->assertOk()
+            ->assertJsonPath('data.baseFare', 95);
+
+        $this->withToken($token)
+            ->postJson('/api/v1/admin/trips/'.$tripId.'/cancel')
+            ->assertOk()
+            ->assertJsonPath('data.status', 'cancelled');
+    }
+
     public function test_booking_holds_real_seats_and_prevents_duplicate(): void
     {
         $trip=Trip::query()->firstOrFail();

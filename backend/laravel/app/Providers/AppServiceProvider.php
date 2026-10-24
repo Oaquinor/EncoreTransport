@@ -6,6 +6,8 @@ use App\Contracts\Maps\MapServiceInterface;
 use App\Services\Maps\TomTomMapService;
 use App\Services\Payments\PaymentGatewayInterface;
 use App\Services\Payments\UnconfiguredPaymentGateway;
+use App\Services\Mail\GmailApiTransport;
+use Illuminate\Mail\MailManager;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -21,5 +23,10 @@ class AppServiceProvider extends ServiceProvider
             default=>throw new \RuntimeException('Payment gateway adapter is not installed for: '.config('encore.payment_gateway')),
         });
     }
-    public function boot(): void {}
+    public function boot(): void
+    {
+        $this->app->make(MailManager::class)->extend('gmail_api', function () {
+            return new GmailApiTransport();
+        });
+    }
 }

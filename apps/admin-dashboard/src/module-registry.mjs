@@ -12,6 +12,7 @@ export const modules=[
   {id:'users',label:'Users',group:'Access control',permission:'users.view'},
   {id:'roles',label:'Roles',group:'Access control',permission:'roles.view'},
   {id:'permissions',label:'Permissions',group:'Access control',permission:'permissions.view'},
+  {id:'settings',label:'General',group:'System',permission:'settings.view'},
 ];
 export const requestedButBlocked=[
   'Credit Note','Invoice','Supplier Payments','Customer Payments','Accounts','Ride Requests','Expense','Salary','Event','Tours','Feedback','Campaign','Fuel','Enquiry','CRM','Masters','Admin Center','Configuration','Configurations','Admins','Transaction','Logs','Allocation','My Companies','Maintenance','Inspection','Zone','Stoppage','Toll','Garages','Employee','Leave','Clients','Suppliers','Offices','Support-Contact','Connect Support'

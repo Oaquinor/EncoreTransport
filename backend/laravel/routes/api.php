@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\V1\AdminAccessController;
 use App\Http\Controllers\Api\V1\AssistantController;
 use App\Http\Controllers\Api\V1\AdminFleetController;
 use App\Http\Controllers\Api\V1\AdminReportController;
+use App\Http\Controllers\Api\V1\AdminSettingsController;
+use App\Http\Controllers\Api\V1\AdminTripController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BookingController;
 use App\Http\Controllers\Api\V1\DriverController;
@@ -106,6 +108,9 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:60,1');
 
     Route::middleware('api.token')->group(function () {
+        Route::middleware('permission:settings.view')->get('admin/settings', [AdminSettingsController::class, 'show']);
+        Route::middleware('permission:settings.update')->put('admin/settings/email', [AdminSettingsController::class, 'updateEmail']);
+
         Route::middleware('permission:reports.view')->group(function () {
             Route::get('admin/reports', [AdminReportController::class, 'index']);
             Route::get('admin/reports/travel', [AdminReportController::class, 'travel']);
@@ -126,6 +131,10 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::middleware(['api.token', 'permission:dashboard.view'])->get('admin/dashboard', [AdminDashboardController::class, 'show']);
+    Route::middleware(['api.token', 'permission:trips.view'])->get('admin/trips', [AdminTripController::class, 'index']);
+    Route::middleware(['api.token', 'permission:trips.create'])->post('admin/trips', [AdminTripController::class, 'store']);
+    Route::middleware(['api.token', 'permission:trips.update'])->put('admin/trips/{trip}', [AdminTripController::class, 'update']);
+    Route::middleware(['api.token', 'permission:trips.cancel'])->post('admin/trips/{trip}/cancel', [AdminTripController::class, 'cancel']);
     Route::middleware(['api.token', 'permission:routes.view'])->get('admin/routes', [RouteController::class, 'adminIndex']);
     Route::middleware(['api.token', 'permission:routes.create'])->post('admin/routes', [RouteController::class, 'store']);
     Route::middleware(['api.token', 'permission:routes.update'])->put('admin/routes/{transportRoute}', [RouteController::class, 'update']);
