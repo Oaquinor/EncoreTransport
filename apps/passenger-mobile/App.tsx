@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -26,6 +26,7 @@ type Trip = {
   status: string;
   busCode?: string;
 };
+type RouteOption = { origin: string; destination: string; stops?: { name: string }[]; segments?: { origin: string; destination: string; active?: boolean }[] };
 
 type Seat = {
   id: number;
@@ -69,6 +70,8 @@ export default function App() {
   const [screen, setScreen] = useState<'search' | 'trip' | 'booking' | 'status'>('search');
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
+  const [travelDate, setTravelDate] = useState('');
+  const [routes, setRoutes] = useState<RouteOption[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [trip, setTrip] = useState<Trip | null>(null);
   const [seats, setSeats] = useState<Seat[]>([]);
@@ -85,6 +88,20 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    void request('/routes').then((payload) => setRoutes(payload.data ?? payload ?? [])).catch((caught) => setError(caught instanceof Error ? caught.message : 'Unable to load routes.'));
+  }, []);
+
+  const origins = [...new Set(routes.flatMap((route) => route.stops?.length ? route.stops.map((stop) => stop.name) : [route.origin]))];
+  const destinations = [...new Set(routes.filter((route) => !origin || route.stops?.some((stop) => stop.name === origin) || route.origin === origin).flatMap((route) => {
+    if (route.segments?.length && origin) return route.segments.filter((segment) => segment.origin === origin && segment.active !== false).map((segment) => segment.destination);
+    if (route.stops?.length && origin) {
+      const start = route.stops.findIndex((stop) => stop.name === origin);
+      return start >= 0 ? route.stops.slice(start + 1).map((stop) => stop.name) : [];
+    }
+    return route.stops?.length ? route.stops.slice(1).map((stop) => stop.name) : [route.destination];
+  }))];
+
   const selectedSeat = useMemo(
     () => seats.find((seat) => selected.includes(seat.id)),
     [seats, selected],
@@ -100,6 +117,7 @@ export default function App() {
         destination,
         passengers: '1',
       });
+      if (travelDate) query.set('date', travelDate);
 
       const payload = await request(`/trips/search?${query}`);
       setTrips(Array.isArray(payload.data) ? payload.data : []);
@@ -116,14 +134,11 @@ export default function App() {
     setError('');
 
     try {
-      const routeQuery = new URLSearchParams({
-        origin: selectedTrip.origin,
-        destination: selectedTrip.destination,
-      });
+      const routeQuery = new URLSearchParams({ origin, destination });
 
       const [seatPayload, quotePayload, journeyPayload] = await Promise.all([
-        request(`/trips/${selectedTrip.id}/seats`),
-        request(`/trips/${selectedTrip.id}/quote?passengers=1`),
+        request(`/trips/${selectedTrip.id}/seats?${routeQuery}`),
+        request(`/trips/${selectedTrip.id}/quote?passengers=1&${routeQuery}`),
         request(`/maps/journey?${routeQuery}`),
       ]);
 
@@ -174,6 +189,8 @@ export default function App() {
               email: passengerEmail.trim() || null,
               phone: phone.trim() || null,
             }],
+            origin,
+            destination,
           }),
         },
         currentToken,
@@ -210,13 +227,17 @@ export default function App() {
             placeholder="Origin"
             value={origin}
             onChangeText={setOrigin}
+            placeholderTextColor="#75808d"
           />
+          <View style={styles.suggestions}>{origins.map((point) => <TouchableOpacity key={point} onPress={() => { setOrigin(point); setDestination(''); }}><Text style={styles.link}>{point}</Text></TouchableOpacity>)}</View>
           <TextInput
             style={styles.input}
             placeholder="Destination"
             value={destination}
             onChangeText={setDestination}
           />
+          <View style={styles.suggestions}>{destinations.map((point) => <TouchableOpacity key={point} onPress={() => setDestination(point)}><Text style={styles.link}>{point}</Text></TouchableOpacity>)}</View>
+          <TextInput style={styles.input} placeholder="Travel date (YYYY-MM-DD)" value={travelDate} onChangeText={setTravelDate} />
 
           <TouchableOpacity
             style={styles.button}
@@ -549,6 +570,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 14,
     color: '#0d1c28',
+  },
+  suggestions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
   },
   button: {
     backgroundColor: '#0b2232',

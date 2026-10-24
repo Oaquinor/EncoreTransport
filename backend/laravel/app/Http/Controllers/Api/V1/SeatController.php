@@ -7,8 +7,8 @@ use App\Models\Trip;
 use App\Services\Bookings\BookingService;
 use App\Services\Bookings\SeatAvailabilityService;
 use App\Services\Routes\RouteSegmentService;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SeatController extends Controller
 {
@@ -39,10 +39,6 @@ class SeatController extends Controller
                 'blocked' => $seat->blocked,
                 'available' => !$seat->blocked && !$reservedIds->contains($seat->id),
             ]);
-
-        $trip->forceFill([
-            'available_seats' => $seats->where('available', true)->count(),
-        ])->save();
 
         return response()->json([
             'data' => $seats->values(),

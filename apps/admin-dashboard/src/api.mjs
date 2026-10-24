@@ -31,6 +31,11 @@ export const updateIncident = async (id, changes) => {
   return payload.data ?? payload;
 };
 
+export const cancelBooking = async (id) => {
+  const payload = await requestJson(`/bookings/${encodeURIComponent(id)}/cancel`, { method: 'POST' });
+  return payload.data ?? payload;
+};
+
 export const schedules = async () => {
   const payload = await requestJson('/admin/driver-schedules');
   return payload.data ?? [];

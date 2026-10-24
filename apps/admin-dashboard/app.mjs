@@ -421,12 +421,13 @@ function content() {
   if (state.module === 'bookings') {
     return table(
       'Bookings',
-      ['Reference', 'Passenger', 'Status', 'Total'],
+      ['Reference', 'Passenger', 'Status', 'Total', 'Actions'],
       (dashboard.bookings ?? []).map((booking) => [
         booking.reference,
         booking.passenger_name,
         booking.status,
         booking.total_amount,
+        ['draft', 'pending_payment'].includes(booking.status) ? { html: `<button class="button button--ghost" data-cancel-booking="${esc(booking.id)}" type="button">Cancel unpaid</button>` } : '—',
       ]),
     );
   }
@@ -478,13 +479,13 @@ function content() {
   if (state.module === 'incidents') {
     return table(
       'Incidents',
-      ['Trip', 'Title', 'Severity', 'Status', 'Created'],
+      ['Trip', 'Title', 'Severity', 'Status', 'Update status'],
       state.incidents.map((incident) => [
         incident.trip?.id,
         incident.title,
         incident.severity,
-        incident.status,
-        incident.created_at,
+        { html: `<select data-incident-status="${esc(incident.id)}">${['open', 'in_progress', 'resolved', 'dismissed'].map((status) => `<option value="${status}" ${incident.status === status ? 'selected' : ''}>${status.replaceAll('_', ' ')}</option>`).join('')}</select>` },
+        { html: `<button class="button button--ghost" data-save-incident="${esc(incident.id)}" type="button">Save</button>` },
       ]),
     );
   }
@@ -728,6 +729,31 @@ function wire() {
   });
 
   document.querySelector('#retry')?.addEventListener('click', loadModule);
+
+  document.querySelectorAll('[data-save-incident]').forEach((button) => button.addEventListener('click', async () => {
+    const id = button.dataset.saveIncident;
+    const status = document.querySelector(`[data-incident-status="${CSS.escape(id)}"]`)?.value;
+    try {
+      await api.updateIncident(id, { status });
+      state.incidents = await api.incidents();
+      render();
+    } catch (error) {
+      state.error = error.message;
+      render();
+    }
+  }));
+
+  document.querySelectorAll('[data-cancel-booking]').forEach((button) => button.addEventListener('click', async () => {
+    if (!confirm('Cancel this unpaid booking and release its seats?')) return;
+    try {
+      await api.cancelBooking(button.dataset.cancelBooking);
+      state.dashboard = await api.dashboard();
+      render();
+    } catch (error) {
+      state.error = error.message;
+      render();
+    }
+  }));
 
   document.querySelector('#emailSettingsForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();

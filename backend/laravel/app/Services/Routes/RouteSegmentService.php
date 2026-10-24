@@ -30,12 +30,13 @@ class RouteSegmentService
             throw ValidationException::withMessages(['segment' => 'Select two stops in travel order on this route.']);
         }
 
-        $segment = RouteSegment::query()
-            ->where('transport_route_id', $route->id)
-            ->where('origin_stop_sequence', $originStop->sequence)
-            ->where('destination_stop_sequence', $destinationStop->sequence)
-            ->where('active', true)
-            ->first();
+        $segments = $route->relationLoaded('segments') ? $route->segments : $route->segments()->get();
+        $segment = $segments->first(fn (RouteSegment $candidate) => (int) $candidate->transport_route_id === (int) $route->id
+            && (int) $candidate->origin_stop_sequence === (int) $originStop->sequence
+            && (int) $candidate->destination_stop_sequence === (int) $destinationStop->sequence
+            && $candidate->active
+            && strcasecmp(trim($candidate->origin_name), trim($originStop->name)) === 0
+            && strcasecmp(trim($candidate->destination_name), trim($destinationStop->name)) === 0);
 
         if (!$segment) {
             throw ValidationException::withMessages(['segment' => 'This direction is not configured for the selected route.']);

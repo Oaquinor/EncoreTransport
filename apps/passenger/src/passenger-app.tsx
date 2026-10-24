@@ -29,6 +29,15 @@ type ApiTrip = {
   driverName?: string;
   status: string;
   availableSeats: number;
+  requested_origin?: string;
+  requested_destination?: string;
+};
+
+type ApiRoute = {
+  origin: string;
+  destination: string;
+  stops?: { name: string; sequence: number }[];
+  segments?: { origin: string; destination: string; active?: boolean }[];
 };
 
 type Passenger = {
@@ -62,7 +71,6 @@ const API = '/api/v1';
 const TOKEN = 'encore_api_token';
 const GUEST_TOKEN = 'encore_guest_booking_token';
 const DRAFT = 'encore_booking_draft';
-const OPERATIONAL_POINTS = ['Georgetown', 'Rosignol', 'New Amsterdam'] as const;
 
 const money = (value: number, currency?: string) => formatMoney(value, currency);
 
@@ -93,6 +101,7 @@ export function PassengerApp() {
   const [history, setHistory] = useState<Screen[]>([]);
   const [filters, setFilters] = useState(start);
   const [trips, setTrips] = useState<ApiTrip[]>([]);
+  const [routes, setRoutes] = useState<ApiRoute[]>([]);
   const [selectedTrip, setSelectedTrip] = useState<ApiTrip | null>(null);
   const [seats, setSeats] = useState<SeatDto[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
@@ -176,7 +185,14 @@ export function PassengerApp() {
         api(`/trips/${trip.id}/quote?passengers=${filters.passengers}&origin=${encodeURIComponent(filters.origin)}&destination=${encodeURIComponent(filters.destination)}`),
       ]);
 
-      setSelectedTrip(detail.data ?? detail);
+      const tripDetail = detail.data ?? detail;
+      setSelectedTrip({
+        ...tripDetail,
+        origin: trip.requested_origin ?? filters.origin ?? tripDetail.origin,
+        destination: trip.requested_destination ?? filters.destination ?? tripDetail.destination,
+        availableSeats: trip.availableSeats,
+        baseFare: trip.baseFare,
+      });
       setSeats(seatPayload.data ?? []);
       setQuote(quotePayload.data ?? quotePayload);
       setSelected([]);
@@ -228,6 +244,10 @@ export function PassengerApp() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    void api('/routes').then((payload) => setRoutes(payload.data ?? payload ?? [])).catch((caught) => setError((caught as Error).message));
+  }, []);
 
   useEffect(() => {
     const query = new URLSearchParams(location.search);
@@ -304,6 +324,7 @@ export function PassengerApp() {
           {screen === 'home' && (
             <Home
               filters={filters}
+              routes={routes}
               setFilters={setFilters}
               onSearch={() => search(filters)}
               loading={loading}
@@ -451,11 +472,13 @@ function Journey({ step }: { step: number }) {
 
 function Home({
   filters,
+  routes,
   setFilters,
   onSearch,
   loading,
 }: {
   filters: any;
+  routes: ApiRoute[];
   setFilters: (value: any) => void;
   onSearch: () => void;
   loading: boolean;
@@ -488,6 +511,7 @@ function Home({
         <PointField
           label="From"
           value={filters.origin}
+          options={[...new Set(routes.flatMap((route) => route.stops?.length ? route.stops.map((stop) => stop.name) : [route.origin]))]}
           onChange={(value) => setFilters({ ...filters, origin: value })}
         />
 
@@ -506,6 +530,14 @@ function Home({
         <PointField
           label="To"
           value={filters.destination}
+          options={[...new Set(routes.filter((route) => !filters.origin || route.stops?.some((stop) => stop.name === filters.origin) || route.origin === filters.origin).flatMap((route) => {
+            if (route.segments?.length && filters.origin) return route.segments.filter((segment) => segment.origin === filters.origin && segment.active !== false).map((segment) => segment.destination);
+            if (route.stops?.length && filters.origin) {
+              const start = route.stops.findIndex((stop) => stop.name === filters.origin);
+              return start >= 0 ? route.stops.slice(start + 1).map((stop) => stop.name) : [];
+            }
+            return route.stops?.length ? route.stops.slice(1).map((stop) => stop.name) : [route.destination];
+          }))]}
           onChange={(value) => setFilters({ ...filters, destination: value })}
         />
 
@@ -537,10 +569,12 @@ function Home({
 function PointField({
   label,
   value,
+  options,
   onChange,
 }: {
   label: string;
   value: string;
+  options: string[];
   onChange: (value: string) => void;
 }) {
   return (
@@ -548,7 +582,7 @@ function PointField({
       <span>{label}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)} required>
         <option value="">Select point</option>
-        {OPERATIONAL_POINTS.map((point) => <option key={point} value={point}>{point}</option>)}
+        {options.map((point) => <option key={point} value={point}>{point}</option>)}
       </select>
     </label>
   );

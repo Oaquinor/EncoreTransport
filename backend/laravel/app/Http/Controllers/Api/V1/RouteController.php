@@ -57,14 +57,39 @@ class RouteController extends Controller
         $data = $this->validated($request);
 
         $route = DB::transaction(function () use ($data, $audit, $request, $transportRoute) {
+            $hasStops = array_key_exists('stops', $data);
+            $hasSegments = array_key_exists('segments', $data);
             $stops = $data['stops'] ?? [];
             $segments = $data['segments'] ?? [];
             unset($data['stops']);
             unset($data['segments']);
+
+            $transportRoute = TransportRoute::query()->lockForUpdate()->findOrFail($transportRoute->id);
+            $existingStops = $transportRoute->stops()->orderBy('sequence')->get();
+            $hasTripHistory = $transportRoute->trips()->exists();
+            if ($hasTripHistory) {
+                if (isset($data['origin']) && strcasecmp(trim($data['origin']), trim($transportRoute->origin)) !== 0
+                    || isset($data['destination']) && strcasecmp(trim($data['destination']), trim($transportRoute->destination)) !== 0) {
+                    throw ValidationException::withMessages(['route' => 'Route terminals cannot change after trips or bookings exist.']);
+                }
+                if ($hasStops) $this->assertHistoricalStopSequence($existingStops->all(), $stops);
+            } elseif (!$hasStops && $existingStops->isNotEmpty()) {
+                $origin = $data['origin'] ?? $transportRoute->origin;
+                $destination = $data['destination'] ?? $transportRoute->destination;
+                if (strcasecmp(trim($origin), trim((string) $existingStops->first()->name)) !== 0
+                    || strcasecmp(trim($destination), trim((string) $existingStops->last()->name)) !== 0) {
+                    throw ValidationException::withMessages(['stops' => 'Include the full stop sequence when changing route terminals.']);
+                }
+            }
+
             $transportRoute->fill($data)->save();
-            $this->replaceStops($transportRoute, $stops, $segments);
+            if ($hasStops) {
+                $this->replaceStops($transportRoute, $stops, $segments, $hasTripHistory);
+            } elseif ($hasSegments) {
+                $this->updateSegments($transportRoute, $segments);
+            }
             $audit->record($request->user(), 'route.updated', $transportRoute);
-            return $transportRoute->fresh('stops');
+            return $transportRoute->fresh(['stops', 'segments']);
         });
 
         return new RouteResource($route);
@@ -107,7 +132,7 @@ class RouteController extends Controller
         ]);
     }
 
-    private function replaceStops(TransportRoute $route, array $stops, array $segmentData = []): void
+    private function replaceStops(TransportRoute $route, array $stops, array $segmentData = [], bool $preserveSequence = false): void
     {
         if (count($stops) < 2) {
             throw ValidationException::withMessages(['stops' => 'A route must contain at least an origin and destination stop.']);
@@ -120,6 +145,41 @@ class RouteController extends Controller
         }
         if (strcasecmp($last, trim((string) $route->destination)) !== 0) {
             throw ValidationException::withMessages(['stops' => 'The last stop must match the route destination.']);
+        }
+
+        $this->assertUniqueStopNames($stops);
+        $segmentMap = $this->normalizeSegments($stops, $segmentData);
+
+        if ($preserveSequence) {
+            $existing = $route->stops()->orderBy('sequence')->get();
+            $this->assertHistoricalStopSequence($existing->all(), $stops);
+            $historicalStops = array_map(fn ($index, $stop) => $stop + ['sequence' => (int) $existing[$index]->sequence], array_keys(array_values($stops)), array_values($stops));
+            $segmentMap = $this->normalizeSegments($historicalStops, $segmentData);
+            foreach (array_values($stops) as $index => $stop) {
+                $existing[$index]->forceFill([
+                    'latitude' => $stop['latitude'] ?? null,
+                    'longitude' => $stop['longitude'] ?? null,
+                    'offset_minutes' => $stop['offset_minutes'] ?? 0,
+                ])->save();
+            }
+            foreach ($segmentMap as $pair => $segment) {
+                [$fromSequence, $toSequence] = array_map('intval', explode(':', $pair));
+                $fromStop = $existing->firstWhere('sequence', $fromSequence);
+                $toStop = $existing->firstWhere('sequence', $toSequence);
+                RouteSegment::query()->updateOrCreate([
+                    'transport_route_id' => $route->id,
+                    'origin_stop_sequence' => $fromSequence,
+                    'destination_stop_sequence' => $toSequence,
+                ], [
+                    'origin_name' => $fromStop->name,
+                    'destination_name' => $toStop->name,
+                    'price' => $segment['price'] ?? null,
+                    'distance_meters' => $segment['distance_meters'] ?? null,
+                    'duration_seconds' => $segment['duration_seconds'] ?? null,
+                    'active' => $segment['active'] ?? true,
+                ]);
+            }
+            return;
         }
 
         $route->stops()->delete();
@@ -137,25 +197,90 @@ class RouteController extends Controller
         $route->segments()->delete();
         foreach ($ordered as $fromIndex => $from) {
             foreach ($ordered->slice($fromIndex + 1) as $to) {
+                $segment = $segmentMap[$from->sequence.':'.$to->sequence] ?? [];
                 RouteSegment::query()->create([
                     'transport_route_id' => $route->id,
                     'origin_stop_sequence' => $from->sequence,
                     'destination_stop_sequence' => $to->sequence,
                     'origin_name' => $from->name,
                     'destination_name' => $to->name,
+                    'price' => $segment['price'] ?? null,
+                    'distance_meters' => $segment['distance_meters'] ?? null,
+                    'duration_seconds' => $segment['duration_seconds'] ?? null,
+                    'active' => $segment['active'] ?? true,
                 ]);
             }
         }
-        foreach ($segmentData as $segment) {
-            $route->segments()
-                ->where('origin_name', $segment['origin'])
-                ->where('destination_name', $segment['destination'])
-                ->update([
+    }
+
+    private function updateSegments(TransportRoute $route, array $segmentData): void
+    {
+        $stops = $route->stops()->orderBy('sequence')->get()->map(fn ($stop) => [
+            'name' => $stop->name,
+            'sequence' => (int) $stop->sequence,
+        ])->all();
+        $segmentMap = $this->normalizeSegments($stops, $segmentData);
+        foreach ($segmentMap as $pair => $segment) {
+            [$fromSequence, $toSequence] = array_map('intval', explode(':', $pair));
+            $fromStop = collect($stops)->firstWhere('sequence', $fromSequence);
+            $toStop = collect($stops)->firstWhere('sequence', $toSequence);
+            RouteSegment::query()->updateOrCreate([
+                    'transport_route_id' => $route->id,
+                    'origin_stop_sequence' => $fromSequence,
+                    'destination_stop_sequence' => $toSequence,
+                ], [
+                    'origin_name' => $fromStop['name'],
+                    'destination_name' => $toStop['name'],
                     'price' => $segment['price'] ?? null,
                     'distance_meters' => $segment['distance_meters'] ?? null,
                     'duration_seconds' => $segment['duration_seconds'] ?? null,
                     'active' => $segment['active'] ?? true,
                 ]);
         }
+    }
+
+    private function assertHistoricalStopSequence(array $existingStops, array $requestedStops): void
+    {
+        $existing = collect($existingStops)->sortBy('sequence')->values();
+        if ($existing->count() !== count($requestedStops)) {
+            throw ValidationException::withMessages(['stops' => 'Stop count cannot change after trips or bookings exist; preserve historical sequence references.']);
+        }
+        foreach (array_values($requestedStops) as $index => $stop) {
+            if (strcasecmp(trim((string) $existing[$index]->name), trim((string) $stop['name'])) !== 0) {
+                throw ValidationException::withMessages(['stops' => 'Stop order and names cannot change after trips or bookings exist.']);
+            }
+        }
+    }
+
+    private function assertUniqueStopNames(array $stops): void
+    {
+        $names = array_map(fn ($stop) => mb_strtolower(trim((string) $stop['name'])), $stops);
+        if (count($names) !== count(array_unique($names))) {
+            throw ValidationException::withMessages(['stops' => 'Stop names must be unique on a route so segment selection remains unambiguous.']);
+        }
+    }
+
+    private function normalizeSegments(array $stops, array $segmentData): array
+    {
+        $sequenceByName = [];
+        foreach (array_values($stops) as $index => $stop) {
+            $sequenceByName[mb_strtolower(trim((string) $stop['name']))] = (int) ($stop['sequence'] ?? $index + 1);
+        }
+        $normalized = [];
+        foreach ($segmentData as $segment) {
+            $origin = mb_strtolower(trim((string) $segment['origin']));
+            $destination = mb_strtolower(trim((string) $segment['destination']));
+            $from = $sequenceByName[$origin] ?? null;
+            $to = $sequenceByName[$destination] ?? null;
+            if (!$from || !$to || $from >= $to) {
+                throw ValidationException::withMessages(['segments' => 'Every segment must connect two stops on this route in travel order.']);
+            }
+            $key = $from.':'.$to;
+            if (isset($normalized[$key])) {
+                throw ValidationException::withMessages(['segments' => 'Duplicate route segment submitted.']);
+            }
+            $normalized[$key] = $segment;
+        }
+        return $normalized;
     }
 }

@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\ApiToken;
 use App\Models\Booking;
 use App\Models\BookingSeat;
+use App\Models\Bus;
+use App\Models\BusSeat;
 use App\Models\Trip;
 use App\Models\User;
 use Database\Seeders\Demo\EncoreTransportDemoSeeder;
@@ -112,7 +114,83 @@ class OperationalCoreTest extends TestCase
         $base=['trip_id'=>$trip->id,'seat_ids'=>[$seat->id],'passengers'=>[['full_name'=>'Segment Passenger']]];
         $this->withToken($token)->postJson('/api/v1/bookings',$base+['origin'=>'Georgetown','destination'=>'Rosignol'])->assertCreated();
         $this->withToken($token)->postJson('/api/v1/bookings',$base+['origin'=>'Rosignol','destination'=>'New Amsterdam'])->assertCreated();
+        $this->getJson('/api/v1/trips/search?origin=Georgetown&destination=Rosignol')
+            ->assertOk()->assertJsonPath('data.0.availableSeats', 54)
+            ->assertJsonPath('data.0.origin', 'Georgetown')->assertJsonPath('data.0.destination', 'Rosignol')
+            ->assertJsonPath('data.0.baseFare', 40);
+        $this->getJson('/api/v1/trips/search?origin=Rosignol&destination=New%20Amsterdam')
+            ->assertOk()->assertJsonPath('data.0.availableSeats', 54)->assertJsonPath('data.0.baseFare', 45);
+        $this->getJson('/api/v1/trips/search?origin=Georgetown&destination=New%20Amsterdam')
+            ->assertOk()->assertJsonPath('data.0.availableSeats', 54);
+        $this->getJson('/api/v1/trips/'.$trip->id.'/quote?passengers=1&origin=Georgetown&destination=Rosignol')
+            ->assertOk()->assertJsonPath('data.base_fare', 40);
+        $this->getJson('/api/v1/trips/'.$trip->id.'/quote?passengers=1&origin=Rosignol&destination=New%20Amsterdam')
+            ->assertOk()->assertJsonPath('data.base_fare', 45);
         $this->withToken($token)->postJson('/api/v1/bookings',$base+['origin'=>'Georgetown','destination'=>'New Amsterdam'])->assertStatus(422);
+    }
+
+    public function test_blocked_seats_are_not_available_or_bookable(): void
+    {
+        $trip = Trip::query()->firstOrFail();
+        $seat = $trip->bus->seats()->firstOrFail();
+        $seat->forceFill(['blocked' => true])->save();
+        $trip->forceFill(['available_seats' => 55])->save();
+        $user = User::query()->where('email', 'passenger@example.test')->firstOrFail();
+        $token = $this->tokenFor($user);
+
+        $this->getJson('/api/v1/trips/'.$trip->id.'/seats')
+            ->assertOk()->assertJsonFragment(['id' => $seat->id, 'blocked' => true, 'available' => false]);
+        $this->assertDatabaseHas('trips', ['id' => $trip->id, 'available_seats' => 55]);
+        $this->withToken($token)->postJson('/api/v1/bookings', [
+            'trip_id' => $trip->id,
+            'seat_ids' => [$seat->id],
+            'passengers' => [['full_name' => 'Blocked Seat Passenger']],
+        ])->assertUnprocessable();
+        $this->assertDatabaseMissing('booking_seats', ['trip_id' => $trip->id, 'bus_seat_id' => $seat->id]);
+    }
+
+    public function test_search_calculates_availability_for_each_bus_not_stale_trip_counter(): void
+    {
+        $firstTrip = Trip::query()->firstOrFail();
+        $firstTrip->forceFill(['available_seats' => 1])->save();
+        $bus = Bus::query()->create(['code' => 'BUS-002', 'plate' => 'ET-002', 'capacity' => 2, 'status' => 'operational']);
+        foreach (['1', '2'] as $number) {
+            BusSeat::query()->create(['bus_id' => $bus->id, 'seat_number' => $number, 'active' => true, 'blocked' => false]);
+        }
+        $secondTrip = Trip::query()->create([
+            'transport_route_id' => $firstTrip->transport_route_id,
+            'bus_id' => $bus->id,
+            'driver_id' => $firstTrip->driver_id,
+            'departure_date' => $firstTrip->departure_date,
+            'departure_time' => '08:00:00',
+            'arrival_time' => '11:15:00',
+            'status' => 'scheduled',
+            'available_seats' => 0,
+            'price_per_passenger' => 85,
+        ]);
+
+        $response = $this->getJson('/api/v1/trips/search?origin=Georgetown&destination=New%20Amsterdam&per_page=10')->assertOk();
+        $this->assertSame(55, collect($response->json('data'))->firstWhere('id', $firstTrip->id)['availableSeats']);
+        $this->assertSame(2, collect($response->json('data'))->firstWhere('id', $secondTrip->id)['availableSeats']);
+        $this->assertDatabaseHas('trips', ['id' => $firstTrip->id, 'available_seats' => 1]);
+        $this->assertDatabaseHas('trips', ['id' => $secondTrip->id, 'available_seats' => 0]);
+    }
+
+    public function test_cancelling_a_hold_releases_its_seat_for_the_same_segment(): void
+    {
+        $trip = Trip::query()->firstOrFail();
+        $seat = $trip->bus->seats()->firstOrFail();
+        $user = User::query()->where('email', 'passenger@example.test')->firstOrFail();
+        $token = $this->tokenFor($user);
+        $booking = $this->withToken($token)->postJson('/api/v1/bookings', [
+            'trip_id' => $trip->id,
+            'seat_ids' => [$seat->id],
+            'passengers' => [['full_name' => 'Cancel Passenger']],
+        ])->assertCreated()->json('data.id');
+
+        $this->withToken($token)->postJson('/api/v1/bookings/'.$booking.'/cancel')->assertOk();
+        $this->getJson('/api/v1/trips/'.$trip->id.'/seats')->assertOk()
+            ->assertJsonFragment(['id' => $seat->id, 'available' => true]);
     }
 
     public function test_unconfigured_payment_gateway_fails_explicitly_instead_of_simulating_success(): void

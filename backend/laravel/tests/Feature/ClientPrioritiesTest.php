@@ -117,6 +117,25 @@ class ClientPrioritiesTest extends TestCase
         $this->getJson('/api/v1/routes/'.$routeId)->assertNotFound();
     }
 
+    public function test_admin_cannot_change_a_route_sequence_used_by_existing_trips(): void
+    {
+        $trip = Trip::query()->with('route.stops')->firstOrFail();
+        $route = $trip->route;
+        $adminToken = $this->tokenFor(User::query()->where('role', 'admin')->firstOrFail());
+        $before = $route->stops->sortBy('sequence')->pluck('name')->values()->all();
+        $changed = $route->stops->sortBy('sequence')->map(fn ($stop) => ['name' => $stop->name])->values()->all();
+        $changed[1]['name'] = 'Historical Stop Changed';
+
+        $this->withToken($adminToken)->putJson('/api/v1/admin/routes/'.$route->id, [
+            'origin' => $route->origin,
+            'destination' => $route->destination,
+            'distance_km' => $route->distance_km,
+            'stops' => $changed,
+        ])->assertStatus(422)->assertJsonValidationErrors(['stops']);
+
+        $this->assertSame($before, $route->fresh()->stops()->orderBy('sequence')->pluck('name')->all());
+    }
+
     public function test_admin_can_create_driver_and_vehicle_but_passenger_cannot(): void
     {
         $adminToken = $this->tokenFor(User::query()->where('role', 'admin')->firstOrFail());

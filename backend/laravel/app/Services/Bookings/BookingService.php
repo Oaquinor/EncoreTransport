@@ -42,6 +42,7 @@ class BookingService
             $seats = BusSeat::query()
                 ->where('bus_id', $trip->bus_id)
                 ->where('active', true)
+                ->where('blocked', false)
                 ->whereIn('id', $seatIds)
                 ->lockForUpdate()
                 ->get();
@@ -158,9 +159,11 @@ class BookingService
 
     public function refreshAvailableSeats(Trip $trip): void
     {
-        $totalSeats = BusSeat::query()->where('bus_id', $trip->bus_id)->where('active', true)->count();
+        $usableSeatIds = BusSeat::query()->where('bus_id', $trip->bus_id)->where('active', true)->where('blocked', false)->pluck('id');
+        $totalSeats = $usableSeatIds->count();
         $reservedSeats = BookingSeat::query()
             ->where('trip_id', $trip->id)
+            ->whereIn('bus_seat_id', $usableSeatIds)
             ->where(function ($query) {
                 $query->where('status', 'confirmed')
                     ->orWhere(function ($held) {
