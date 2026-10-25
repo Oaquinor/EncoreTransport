@@ -3,6 +3,7 @@ import {
   fetchPassengerSearch,
   fetchLiveNetwork,
   health,
+  requestJson,
 } from '../../packages/shared/api.mjs';
 import { renderLiveNetworkMap } from '../../packages/shared/real-map.mjs';
 import { formatMoney } from '../../packages/shared/formatters.mjs';
@@ -126,6 +127,63 @@ function initializeBusinessFooter() {
   const socialBlock = document.querySelector('.public-footer__social-block');
   if (socialBlock && visibleSocials === 0) socialBlock.remove();
   document.querySelector('.public-footer__details')?.classList.toggle('has-socials', visibleSocials > 0);
+}
+
+async function applyPublishedWebsiteContent() {
+  try {
+    const payload = await requestJson('/website-content');
+    const data = payload.data ?? {};
+    if (!data || !Object.keys(data).length) return;
+    const selectors = {
+      hero: { section: '#home', title: '.hero-copy h1', description: '.hero-copy > p' },
+      tracking: { section: '#package-tracking', title: '#parcelTitle', subtitle: '.parcel-feature__copy p', button: '#package-tracking > a' },
+      routes: { section: '#destinations', title: '#routesTitle', subtitle: '#destinations .public-section-head > div > p' },
+      faq: { section: '#faq', title: '#faqTitle', subtitle: '.public-faq-copy > p' },
+      about: { section: '#about', title: '#aboutTitle', subtitle: '#about .public-section-copy > p' },
+      contact: { section: '#contact', title: '#contactTitle', subtitle: '#contact .public-section-copy > p', button: '#contact .public-contact-card a' },
+      final_cta: { section: '.public-final-cta', title: '.public-final-cta h2', subtitle: '.public-final-cta p', button: '.public-final-cta a' },
+    };
+    for (const [key, values] of Object.entries(data.sections ?? {})) {
+      const target = selectors[key];
+      if (!target) continue;
+      const section = document.querySelector(target.section);
+      if (!section) continue;
+      if (values.enabled === false) { section.hidden = true; continue; }
+      section.hidden = false;
+      for (const [field, selector] of [['title',target.title],['description',target.description],['subtitle',target.subtitle]]) {
+        if (values[field] && selector) setText(selector, values[field]);
+      }
+      if (values.button_label && target.button) setText(`${target.button}`, values.button_label);
+      if (values.button_url && target.button) {
+        const link = document.querySelector(target.button);
+        if (link && ((values.button_url.startsWith('/') && !values.button_url.startsWith('//')) || values.button_url.startsWith('#') || /^https:\/\//i.test(values.button_url))) link.href = values.button_url;
+      }
+      if (values.image_url) {
+        const imageTarget = key === 'hero' ? document.querySelector('.hero-visual') : section;
+        if (imageTarget && (values.image_url.startsWith('/storage/') || /^https:\/\//i.test(values.image_url))) {
+          imageTarget.style.setProperty('--cms-section-image', `url(${JSON.stringify(values.image_url)})`);
+          imageTarget.classList.add('cms-section-image');
+        }
+      }
+    }
+    const orderedCmsSections = Object.entries(data.sections ?? {})
+      .filter(([key]) => selectors[key])
+      .sort((a, b) => Number(a[1].order ?? 0) - Number(b[1].order ?? 0))
+      .map(([key]) => document.querySelector(selectors[key].section)).filter(Boolean);
+    if (orderedCmsSections.length > 1) {
+      const parent = orderedCmsSections[0].parentElement;
+      const positions = orderedCmsSections.map((node) => [...parent.children].indexOf(node)).sort((a, b) => a - b);
+      positions.forEach((position, index) => {
+        const anchor = parent.children[position];
+        if (anchor && anchor !== orderedCmsSections[index]) parent.insertBefore(orderedCmsSections[index], anchor);
+      });
+    }
+    if (Array.isArray(data.faqs)) {
+      const list = document.querySelector('.public-faq-list');
+      if (list) list.innerHTML = data.faqs.filter((faq) => faq.enabled !== false).map((faq) => `<details data-reveal><summary>${esc(faq.question)}</summary><p>${esc(faq.answer)}</p></details>`).join('');
+      observeDynamicReveal(list);
+    }
+  } catch { /* CMS remains optional until a published version exists. */ }
 }
 
 function minutes(seconds) {
@@ -303,11 +361,11 @@ function renderSeats(seats) {
   if (!Array.isArray(seats) || seats.length === 0) {
     seatPreview.innerHTML = `
       <div class="seat-preview-empty">
-        <strong>55-seat coach layout preview</strong>
-        <span>Select a departure to check live availability for each seat.</span>
+        <strong>Illustrative coach layout</strong>
+        <span>This preview is not the assigned vehicle. Choose a departure to see its actual seat plan and live availability.</span>
       </div>`;
 
-    setText('#seatState', '55-seat coach layout · live availability appears after selecting a trip.');
+    setText('#seatState', 'Illustrative layout · the selected departure shows its own seat plan and live availability.');
     return;
   }
 
@@ -478,6 +536,7 @@ let liveNetworkTimer = null;
 let liveNetworkObserver = null;
 let liveNetworkStarted = false;
 let latestNetwork = null;
+let selectedNetworkTripId = null;
 
 function updateNetworkRoutes(network) {
   latestNetwork = network;
@@ -503,21 +562,40 @@ function renderNetworkSelection() {
     routes: selectedRoute ? [selectedRoute] : [],
     trips: trips.filter((trip) => String(trip.route_id ?? trip.route?.id) === String(routeId)),
   } : latestNetwork;
-  void renderLiveNetworkMap(routeMapCanvas, filtered);
+  const tripsForList = Array.isArray(filtered.trips) ? filtered.trips : [];
+  const liveTrips = tripsForList.filter((trip) => !trip.is_stale && Number.isFinite(Number(trip.latitude)) && Number.isFinite(Number(trip.longitude)));
+  if (!tripsForList.some((trip) => String(trip.trip_id) === String(selectedNetworkTripId))) selectedNetworkTripId = null;
+  const list = document.querySelector('#networkBusList');
+  if (list) {
+    list.innerHTML = tripsForList.length ? tripsForList.map((trip) => {
+      const isLive = !trip.is_stale && Number.isFinite(Number(trip.latitude)) && Number.isFinite(Number(trip.longitude));
+      const timestamp = trip.last_location_at ? new Date(trip.last_location_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'No position recorded';
+      const selected = String(trip.trip_id) === String(selectedNetworkTripId);
+      return `<article class="public-network-bus${selected ? ' is-selected' : ''}" data-network-bus="${esc(trip.trip_id)}"><div class="public-network-bus__identity"><span class="public-network-bus__icon" aria-hidden="true">🚌</span><div><strong>${esc(trip.bus_code || 'Encore bus')}</strong><span>${esc(trip.origin || '')} → ${esc(trip.destination || '')}</span></div></div><div class="public-network-bus__meta"><span class="public-network-bus__status${isLive ? ' is-live' : ' is-stale'}"><i></i>${isLive ? 'Sharing location' : 'GPS not current'}</span><small>${esc(timestamp)}</small></div><button type="button" data-network-trip="${esc(trip.trip_id)}" aria-pressed="${selected}" ${isLive ? '' : 'disabled'}>${selected ? 'Selected on map' : isLive ? 'Show on map' : 'Location unavailable'}</button></article>`;
+    }).join('') : '<div class="public-network-empty"><strong>No buses are sharing a live location right now.</strong><span>Check again later for current, authorized GPS updates.</span></div>';
+  }
+  void renderLiveNetworkMap(routeMapCanvas, filtered, { selectedTripId: selectedNetworkTripId });
 }
 
 async function refreshLiveNetwork() {
   try {
     const network = await fetchLiveNetwork();
     updateNetworkRoutes(network);
-    const tripCount = Array.isArray(network.trips) ? network.trips.length : 0;
+    const trips = Array.isArray(network.trips) ? network.trips : [];
+    const tripCount = trips.filter((trip) => !trip.is_stale && Number.isFinite(Number(trip.latitude)) && Number.isFinite(Number(trip.longitude))).length;
+    const staleCount = trips.length - tripCount;
     const routeCount = Array.isArray(network.routes) ? network.routes.length : 0;
-    setText('#mapStatus', tripCount ? `${tripCount} bus${tripCount === 1 ? '' : 'es'} live` : 'No buses live');
-    setText('#mapEta', network.updated_at ? new Date(network.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—');
+    setText('#mapStatus', `${tripCount} bus${tripCount === 1 ? '' : 'es'} live${staleCount ? ` · ${staleCount} GPS not current` : ''}`);
+    const latestLocation = trips.map((trip) => trip.last_location_at).filter(Boolean).sort().at(-1);
+    setText('#mapEta', latestLocation ? new Date(latestLocation).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'No recent GPS');
     setText('#routeCount', routeCount || '—');
     if (routeMapCanvas) renderNetworkSelection();
   } catch {
     setText('#mapStatus', 'Live network unavailable');
+    setText('#mapEta', 'Update unavailable');
+    const list = document.querySelector('#networkBusList');
+    if (list) list.innerHTML = '<div class="public-network-empty"><strong>We could not refresh live vehicle locations.</strong><span>Live markers are cleared until the connection returns.</span><button type="button" data-network-retry>Try again</button></div>';
+    if (routeMapCanvas) void renderLiveNetworkMap(routeMapCanvas, { routes: [], trips: [] });
     if (routeMapCanvas && !routeMapCanvas.querySelector('.leaflet-container')) {
       renderMapFallback('Live vehicle positions are temporarily unavailable.');
     }
@@ -566,6 +644,16 @@ function setMinimumDate() {
 }
 
 document.querySelector('#networkRouteSelect')?.addEventListener('change', renderNetworkSelection);
+document.querySelector('#networkBusList')?.addEventListener('click', (event) => {
+  if (event.target.closest('[data-network-retry]')) {
+    void refreshLiveNetwork();
+    return;
+  }
+  const button = event.target.closest('[data-network-trip]');
+  if (!button || button.disabled) return;
+  selectedNetworkTripId = button.dataset.networkTrip;
+  renderNetworkSelection();
+});
 
 bookingForm?.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -621,5 +709,6 @@ initializeMobileNavigation();
 setMinimumDate();
 initializeBusinessFooter();
 initializeLiveNetwork();
+void applyPublishedWebsiteContent();
 void health().then(() => setText('#serviceStatus', 'Online')).catch(() => setText('#serviceStatus', 'Unavailable'));
 void Promise.allSettled([loadRoutes(), loadFeaturedTrip()]);

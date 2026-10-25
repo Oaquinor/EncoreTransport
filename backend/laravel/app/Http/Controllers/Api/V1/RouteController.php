@@ -10,6 +10,7 @@ use App\Models\RouteSegment;
 use App\Services\Audit\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use OpenApi\Attributes as OA;
 
@@ -101,6 +102,27 @@ class RouteController extends Controller
         $audit->record($request->user(), 'route.deactivated', $transportRoute);
 
         return new RouteResource($transportRoute->fresh('stops'));
+    }
+
+    public function uploadImage(Request $request, TransportRoute $transportRoute, AuditService $audit)
+    {
+        $data = $request->validate(['image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120']]);
+        $path = $data['image']->store('routes', 'public');
+        if (!$path) abort(500, 'The route image could not be stored.');
+        $oldPath = $transportRoute->image_path;
+        $transportRoute->update(['image_path' => $path]);
+        if ($oldPath && $oldPath !== $path) Storage::disk('public')->delete($oldPath);
+        $audit->record($request->user(), 'route.image_updated', $transportRoute);
+        return new RouteResource($transportRoute->fresh(['stops', 'segments']));
+    }
+
+    public function deleteImage(Request $request, TransportRoute $transportRoute, AuditService $audit)
+    {
+        $path = $transportRoute->image_path;
+        $transportRoute->update(['image_path' => null]);
+        if ($path) Storage::disk('public')->delete($path);
+        $audit->record($request->user(), 'route.image_removed', $transportRoute);
+        return new RouteResource($transportRoute->fresh(['stops', 'segments']));
     }
 
     private function validated(Request $request): array

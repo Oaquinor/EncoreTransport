@@ -36,6 +36,11 @@ export const cancelBooking = async (id) => {
   return payload.data ?? payload;
 };
 
+export const bookingDetails = async (id) => {
+  const payload = await requestJson(`/bookings/${encodeURIComponent(id)}`);
+  return payload.data ?? payload;
+};
+
 export const schedules = async () => {
   const payload = await requestJson('/admin/driver-schedules');
   return payload.data ?? [];
@@ -109,6 +114,26 @@ export const deactivateRoute = async (id) => {
   const payload = await requestJson(`/admin/routes/${encodeURIComponent(id)}/deactivate`, { method: 'POST' });
   return payload.data ?? payload;
 };
+
+export const uploadRouteImage = async (id, image) => {
+  const form = new FormData(); form.append('image', image);
+  const payload = await requestJson(`/admin/routes/${encodeURIComponent(id)}/image`, { method: 'POST', body: form });
+  return payload.data ?? payload;
+};
+export const deleteRouteImage = async (id) => (await requestJson(`/admin/routes/${encodeURIComponent(id)}/image`, { method: 'DELETE' })).data ?? {};
+export const websiteContent = async () => (await requestJson('/admin/website-content')).data ?? {};
+export const websiteMedia = async () => (await requestJson('/admin/website-content/media')).data ?? [];
+export const saveWebsiteDraft = async (data) => (await requestJson('/admin/website-content/draft', { method: 'PUT', body: JSON.stringify(data) })).data ?? {};
+export const publishWebsiteContent = async (data) => (await requestJson('/admin/website-content/publish', { method: 'PUT', body: JSON.stringify(data) })).data ?? {};
+export const uploadWebsiteMedia = async (section, image) => {
+  const form = new FormData();
+  form.append('section', section);
+  form.append('image', image);
+  return (await requestJson('/admin/website-content/media', { method: 'POST', body: form })).data ?? {};
+};
+export const deleteWebsiteMedia = async (imagePath) => (await requestJson('/admin/website-content/media', {
+  method: 'DELETE', body: JSON.stringify({ image_path: imagePath }),
+})).data ?? {};
 
 export const drivers = async () => {
   const payload = await requestJson('/admin/drivers');

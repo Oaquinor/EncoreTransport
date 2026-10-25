@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class AdminFleetController extends Controller
 {
@@ -123,7 +124,7 @@ class AdminFleetController extends Controller
 
     private function vehicleData(Request $request, ?Bus $bus = null): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'code' => ['required', 'string', 'max:50', Rule::unique('buses', 'code')->ignore($bus?->id)],
             'plate' => ['required', 'string', 'max:50', Rule::unique('buses', 'plate')->ignore($bus?->id)],
             'capacity' => ['required', 'integer', 'min:1', 'max:500'],
@@ -133,8 +134,17 @@ class AdminFleetController extends Controller
             'seats.*.row_number' => ['nullable', 'integer', 'min:1'],
             'seats.*.position_index' => ['nullable', 'integer', 'min:1'],
             'seats.*.seat_class' => ['nullable', 'string', 'max:32'],
+            'seats.*.seat_type' => ['nullable', 'string', 'max:32'],
             'seats.*.active' => ['sometimes', 'boolean'],
+            'seats.*.window' => ['sometimes', 'boolean'],
+            'seats.*.aisle' => ['sometimes', 'boolean'],
+            'seats.*.accessible' => ['sometimes', 'boolean'],
+            'seats.*.blocked' => ['sometimes', 'boolean'],
         ]);
+        if (array_key_exists('seats', $data) && count($data['seats']) !== (int) $data['capacity']) {
+            throw ValidationException::withMessages(['capacity' => 'Capacity must match the number of configured seats.']);
+        }
+        return $data;
     }
 
     private function replaceSeats(Bus $bus, array $seats): void
@@ -153,7 +163,12 @@ class AdminFleetController extends Controller
                 'row_number' => $seat['row_number'] ?? intdiv($index, 4) + 1,
                 'position_index' => $seat['position_index'] ?? ($index % 4) + 1,
                 'seat_class' => $seat['seat_class'] ?? 'standard',
+                'seat_type' => $seat['seat_type'] ?? 'seat',
                 'active' => $seat['active'] ?? true,
+                'window' => $seat['window'] ?? false,
+                'aisle' => $seat['aisle'] ?? false,
+                'accessible' => $seat['accessible'] ?? false,
+                'blocked' => $seat['blocked'] ?? false,
             ]);
         }
     }

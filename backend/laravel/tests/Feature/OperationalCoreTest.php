@@ -8,10 +8,15 @@ use App\Models\BookingSeat;
 use App\Models\Bus;
 use App\Models\BusSeat;
 use App\Models\Driver;
+use App\Models\Incident;
+use App\Models\Payment;
 use App\Models\Trip;
 use App\Models\User;
+use App\Services\Bookings\SeatAvailabilityService;
+use App\Services\Payments\PaymentGatewayInterface;
 use Database\Seeders\Demo\EncoreTransportDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -125,6 +130,49 @@ class OperationalCoreTest extends TestCase
         $this->assertSame('23:00', $created->json('data.departureTime'));
     }
 
+    public function test_admin_can_review_incident_status_severity_and_resolution_timestamp(): void
+    {
+        $trip = Trip::query()->firstOrFail();
+        $driverUser = $trip->driver?->user;
+        $this->assertNotNull($driverUser);
+
+        $created = $this->withToken($this->tokenFor($driverUser))
+            ->postJson('/api/v1/driver/incidents', [
+                'trip_id' => $trip->id,
+                'title' => 'Route condition report',
+                'description' => 'A loose sign was reported near the stop.',
+                'severity' => 'low',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.status', 'open');
+
+        $incidentId = $created->json('data.id');
+        $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+        $adminToken = $this->tokenFor($admin);
+
+        $this->withToken($adminToken)->getJson('/api/v1/admin/incidents')
+            ->assertOk()->assertJsonPath('data.0.id', $incidentId);
+
+        foreach (['in_progress', 'resolved', 'dismissed', 'open'] as $status) {
+            $response = $this->withToken($adminToken)
+                ->patchJson('/api/v1/admin/incidents/'.$incidentId, [
+                    'status' => $status,
+                    'severity' => 'high',
+                    'title' => 'Route condition reviewed',
+                ])
+                ->assertOk()
+                ->assertJsonPath('data.status', $status)
+                ->assertJsonPath('data.severity', 'high')
+                ->assertJsonPath('data.title', 'Route condition reviewed');
+
+            $incident = Incident::query()->findOrFail($incidentId);
+            $this->assertSame($status === 'resolved', $incident->resolved_at !== null);
+            if ($status === 'resolved') {
+                $this->assertNotNull($response->json('data.resolved_at'));
+            }
+        }
+    }
+
     public function test_booking_holds_real_seats_and_prevents_duplicate(): void
     {
         $trip=Trip::query()->firstOrFail();
@@ -162,6 +210,32 @@ class OperationalCoreTest extends TestCase
             ->getJson('/api/v1/bookings/'.$bookingId)
             ->assertOk()
             ->assertJsonPath('data.id', $bookingId);
+        $this->withHeader('X-Guest-Booking-Token', $guestToken)
+            ->postJson('/api/v1/bookings/'.$bookingId.'/cancel')
+            ->assertOk()
+            ->assertJsonPath('data.status', 'cancelled');
+    }
+
+    public function test_multi_passenger_booking_requires_and_holds_one_seat_per_passenger(): void
+    {
+        $trip = Trip::query()->firstOrFail();
+        $seatIds = $trip->bus->seats()->where('active', true)->limit(2)->pluck('id')->all();
+        $this->assertCount(2, $seatIds);
+
+        $response = $this->postJson('/api/v1/bookings', [
+            'trip_id' => $trip->id,
+            'seat_ids' => $seatIds,
+            'passengers' => [
+                ['full_name' => 'Passenger One'],
+                ['full_name' => 'Passenger Two'],
+            ],
+        ])->assertCreated()
+            ->assertJsonCount(2, 'data.passengers')
+            ->assertJsonCount(2, 'data.reserved_seats');
+
+        $this->assertDatabaseCount('booking_passengers', 2);
+        $this->assertDatabaseCount('booking_seats', 2);
+        $this->assertNotEmpty($response->json('guest_access_token'));
     }
 
     public function test_same_seat_can_be_reused_only_on_non_overlapping_segments(): void
@@ -235,6 +309,61 @@ class OperationalCoreTest extends TestCase
         $this->assertDatabaseHas('trips', ['id' => $secondTrip->id, 'available_seats' => 0]);
     }
 
+    public function test_batched_availability_uses_two_queries_for_a_page_of_trips(): void
+    {
+        $template = Trip::query()->firstOrFail();
+        $seat = BusSeat::query()->where('bus_id', $template->bus_id)->where('active', true)->where('blocked', false)->firstOrFail();
+        $trips = collect([$template]);
+
+        for ($index = 0; $index < 11; $index++) {
+            $trip = Trip::query()->create([
+                'transport_route_id' => $template->transport_route_id,
+                'bus_id' => $template->bus_id,
+                'driver_id' => $template->driver_id,
+                'departure_date' => now()->addDays(2 + $index)->toDateString(),
+                'departure_time' => '08:00:00',
+                'arrival_time' => '11:00:00',
+                'status' => 'scheduled',
+                'available_seats' => 55,
+                'price_per_passenger' => 80,
+            ]);
+            $booking = $trip->bookings()->create([
+                'public_id' => (string) Str::uuid(),
+                'reference' => 'ET-AVAILABILITY-'.$index,
+                'passenger_name' => 'Availability Fixture',
+                'passenger_email' => '',
+                'passenger_phone' => '',
+                'seat_numbers' => [$seat->seat_number],
+                'status' => 'pending_payment',
+                'expires_at' => now()->addMinutes(15),
+                'total_amount' => 80,
+            ]);
+            BookingSeat::query()->create([
+                'booking_id' => $booking->id,
+                'trip_id' => $trip->id,
+                'bus_seat_id' => $seat->id,
+                'origin_stop_sequence' => 1,
+                'destination_stop_sequence' => 2,
+                'status' => 'held',
+                'held_until' => now()->addMinutes(15),
+            ]);
+            $trips->push($trip);
+        }
+
+        $segments = $trips->mapWithKeys(fn (Trip $trip) => [$trip->id => ['origin_sequence' => 1, 'destination_sequence' => 2]]);
+        DB::connection()->flushQueryLog();
+        DB::connection()->enableQueryLog();
+
+        $counts = app(SeatAvailabilityService::class)->availableCountsForTrips($trips, $segments->all());
+        $availabilityQueries = DB::connection()->getQueryLog();
+        DB::connection()->disableQueryLog();
+
+        $this->assertCount(12, $counts);
+        $this->assertSame(55, $counts[$template->id]);
+        $this->assertSame([54], array_values(array_unique(collect($counts)->except($template->id)->all())));
+        $this->assertCount(2, $availabilityQueries, 'A page of trips loads active seats and live reservations in two batched queries.');
+    }
+
     public function test_cancelling_a_hold_releases_its_seat_for_the_same_segment(): void
     {
         $trip = Trip::query()->firstOrFail();
@@ -266,6 +395,56 @@ class OperationalCoreTest extends TestCase
         $this->withToken($token)->postJson('/api/v1/bookings/'.$bookingId.'/payments',[
             'idempotency_key'=>(string)Str::uuid(),
         ])->assertStatus(503)->assertJsonPath('message','Payment gateway is not configured.');
+    }
+
+    public function test_failed_payment_can_be_retried_with_the_same_idempotency_key(): void
+    {
+        $trip = Trip::query()->firstOrFail();
+        $seat = $trip->bus->seats()->firstOrFail();
+        $user = User::query()->where('email', 'passenger@example.test')->firstOrFail();
+        $token = $this->tokenFor($user);
+        $bookingId = $this->withToken($token)->postJson('/api/v1/bookings', [
+            'trip_id' => $trip->id,
+            'seat_ids' => [$seat->id],
+            'passengers' => [['full_name' => 'Retry Passenger']],
+        ])->assertCreated()->json('data.id');
+        $idempotencyKey = (string) Str::uuid();
+
+        $this->withToken($token)->postJson('/api/v1/bookings/'.$bookingId.'/payments', [
+            'idempotency_key' => $idempotencyKey,
+        ])->assertStatus(503);
+
+        config(['encore.payment_gateway' => 'test']);
+        app()->instance(PaymentGatewayInterface::class, new class implements PaymentGatewayInterface {
+            public function initiate(Payment $payment, array $context = []): array
+            {
+                return ['checkout_url' => 'https://payments.example.test/checkout/'.$payment->public_id];
+            }
+
+            public function verifyWebhook(array $payload, array $headers = []): array
+            {
+                return ['valid' => false];
+            }
+        });
+
+        $this->withToken($token)->postJson('/api/v1/bookings/'.$bookingId.'/payments', [
+            'idempotency_key' => $idempotencyKey,
+        ])->assertCreated()->assertJsonPath('data.payment.status', 'processing');
+
+        $this->withToken($token)->postJson('/api/v1/bookings/'.$bookingId.'/payments', [
+            'idempotency_key' => $idempotencyKey,
+        ])->assertCreated()
+            ->assertJsonPath('data.idempotent_replay', true)
+            ->assertJsonPath('data.gateway.checkout_url', 'https://payments.example.test/checkout/'.Payment::query()->where('booking_id', $bookingId)->value('public_id'))
+            ->assertJsonMissingPath('data.payment.metadata')
+            ->assertJsonMissingPath('data.payment.idempotency_key');
+
+        $this->withToken($token)->getJson('/api/v1/bookings/'.$bookingId.'/payments')->assertOk()
+            ->assertJsonMissingPath('data.0.metadata')
+            ->assertJsonMissingPath('data.0.idempotency_key');
+
+        $this->assertSame(1, Payment::query()->where('booking_id', $bookingId)->count());
+        $this->assertSame('processing', Payment::query()->where('booking_id', $bookingId)->value('status'));
     }
 
     public function test_expired_booking_releases_held_seat(): void

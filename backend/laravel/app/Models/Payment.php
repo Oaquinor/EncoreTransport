@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Payment extends Model
 {
+    protected $hidden = ['idempotency_key', 'metadata'];
+
     protected $fillable = [
         'public_id','booking_id','idempotency_key','gateway','status','amount_minor','currency',
         'gateway_reference','metadata','verified_at',

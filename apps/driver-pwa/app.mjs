@@ -16,7 +16,7 @@ import {
   requestJson,
 } from '../../packages/shared/api.mjs';
 import { badge, progressBar, statCard } from '../../packages/shared/ui.mjs';
-import { renderJourneyMap, destroyRealMap } from '../../packages/shared/real-map.mjs';
+import { renderJourneyMapWithLoader, destroyRealMap } from '../../packages/shared/real-map.mjs';
 
 const appRoot = document.querySelector('#app');
 
@@ -240,24 +240,15 @@ async function hydrateRouteMap() {
 
   if (!container || !trip) return;
 
-  try {
+  const mapOptions = {};
+  await renderJourneyMapWithLoader(container, async () => {
     const [journey, locationPayload] = await Promise.all([
       mapJourney(trip.origin, trip.destination),
       requestJson(`/trips/${trip.id}/location`).catch(() => ({ data: null })),
     ]);
-
-    await renderJourneyMap(container, journey, {
-      driverLocation: locationPayload?.data ?? null,
-    });
-  } catch (error) {
-    container.innerHTML = `
-      <div class="encore-map-fallback">
-        <div>
-          <strong>Route map unavailable</strong>
-          <span>${esc(error.message)}</span>
-        </div>
-      </div>`;
-  }
+    mapOptions.driverLocation = locationPayload?.data ?? null;
+    return journey;
+  }, mapOptions);
 }
 
 async function load() {

@@ -56,9 +56,9 @@ class BookingController extends Controller
     }
 
     #[OA\Post(path: '/api/v1/bookings/{booking}/cancel', operationId: 'cancelBooking', summary: 'Cancelar reserva sin pagar', tags: ['Bookings'], security: [['bearerAuth'=>[]]], parameters: [new OA\Parameter(name:'booking',in:'path',required:true,schema:new OA\Schema(type:'integer'))], responses: [new OA\Response(response:200,description:'Reserva cancelada'),new OA\Response(response:422,description:'Estado invalido')])]
-    public function cancel(Request $request, Booking $booking, BookingService $service)
+    public function cancel(Request $request, Booking $booking, BookingService $service, GuestBookingAccess $guestAccess)
     {
-        $this->assertOwnership($request, $booking);
+        $this->assertOwnership($request, $booking, $guestAccess);
         return response()->json(['data' => $service->cancel($booking, $request->user())]);
     }
 

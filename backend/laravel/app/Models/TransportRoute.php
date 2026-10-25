@@ -9,7 +9,7 @@ class TransportRoute extends Model
 {
     protected $fillable = [
         'origin','destination','origin_latitude','origin_longitude','destination_latitude','destination_longitude',
-        'distance_km','distance_meters','duration_seconds','route_geometry','active',
+        'distance_km','distance_meters','duration_seconds','route_geometry','image_path','active',
     ];
 
     protected $casts = [

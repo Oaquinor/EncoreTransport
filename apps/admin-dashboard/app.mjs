@@ -6,7 +6,7 @@ import {
   requestJson,
 } from '../../packages/shared/api.mjs';
 import {
-  renderJourneyMap,
+  renderJourneyMapWithLoader,
   destroyRealMap,
 } from '../../packages/shared/real-map.mjs';
 import { modules } from './src/module-registry.mjs';
@@ -15,6 +15,8 @@ import {
   dashboardView,
   table,
   reportView,
+  incidentsView,
+  bookingDetailsView,
   icon,
 } from './src/views.mjs';
 
@@ -38,11 +40,18 @@ const state = {
   routes: [],
   drivers: [],
   vehicles: [],
+  vehicleEditingId: null,
+  vehicleSeatLayout: [],
+  vehicleDraft: null,
   driverFormOpen: false,
   driverEditingId: null,
   routeFormOpen: false,
   routeEditingId: null,
   routeEditor: null,
+  websiteContent: null,
+  websiteMedia: [],
+  cmsImageSection: 'hero',
+  cmsPendingMediaDeletes: [],
   vehicleStatus: [],
   reportType: 'executive',
   reportData: null,
@@ -71,6 +80,39 @@ function esc(value = '') {
   }[character]));
 }
 
+async function optimizeImageForUpload(file) {
+  if (typeof createImageBitmap !== 'function' || typeof File !== 'function') return file;
+  let bitmap;
+  try { bitmap = await createImageBitmap(file); } catch { return file; }
+  try {
+    const maxDimension = 2200;
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1 && file.size <= 512 * 1024) return file;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const context = canvas.getContext('2d');
+    if (!context) return file;
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.84));
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.webp`, { type: 'image/webp', lastModified: Date.now() });
+  } finally { bitmap.close?.(); }
+}
+
+function captureVehicleDraft() {
+  const form = document.querySelector('#vehicleForm');
+  if (!form) return state.vehicleDraft;
+  state.vehicleDraft = {
+    code: form.elements.code.value,
+    plate: form.elements.plate.value,
+    capacity: form.elements.capacity.value,
+    status: form.elements.status.value,
+    positionsPerRow: document.querySelector('#vehiclePositionsPerRow')?.value ?? '4',
+  };
+  return state.vehicleDraft;
+}
+
 function routeEditorFrom(route = null) {
   const stops = (route?.stops ?? []).slice().sort((a, b) => Number(a.sequence ?? 0) - Number(b.sequence ?? 0)).map((stop) => ({
     name: stop.name ?? '',
@@ -90,6 +132,45 @@ function routeEditorFrom(route = null) {
       active: segment.active !== false,
     })),
   };
+}
+
+const cmsSections = ['hero', 'tracking', 'routes', 'faq', 'about', 'contact', 'final_cta'];
+function blankWebsiteContent() {
+  const source = {
+    hero: ['Travel with confidence.','Every step of the way.','Find a trip, choose your route and select your seat.','',''],
+    tracking: ['Your package, easier to follow.','','Enter your tracking reference to see the latest update recorded for your shipment.','Track my package','/track-package/'],
+    routes: ['See where Encore can take you.','','Browse the routes currently available and continue straight to matching departures.','',''],
+    faq: ['A few things you may want to know.','','Quick answers for planning a trip, choosing seats and tracking a package.','',''],
+    about: ['A clearer way to move people and packages.','','Encore Transport is building a connected travel experience for passengers, operations teams and future cargo services.','',''],
+    contact: ['Need help planning a trip.','','Need help with a booking? Start with the trip and package tools, or review the answers to common questions.','Visit travel help','#faq'],
+    final_cta: ['Find your next trip with Encore Transport.','','Search current departures and continue when you find the trip that works for you.','Book your trip','/passenger/'],
+  };
+  return {
+    sections: Object.fromEntries(cmsSections.map((key, order) => [key, { title: source[key][0], subtitle: source[key][1], description: source[key][2], button_label: source[key][3], button_url: source[key][4], enabled: true, order }])),
+    faqs: [
+      { question: 'How do I find an Encore Transport trip?', answer: 'Choose your departure city, destination, travel date and number of passengers. We’ll show the departures currently available for that search.', enabled: true },
+      { question: 'Can I choose my seat before I travel?', answer: 'Yes. After choosing a departure, continue to Passenger to see the seats currently available for that bus and select the seats you want.', enabled: true },
+      { question: 'Can I see the route before booking?', answer: 'Yes. When route information is available, you can review the trip map and estimated travel time before continuing.', enabled: true },
+      { question: 'How do I track a package?', answer: 'Open Package Tracking and enter the tracking number provided for your shipment to see its latest recorded status.', enabled: true },
+    ],
+  };
+}
+
+function cmsImageEditor(content, selectedKey, writable) {
+  const sections = Object.keys(content.sections ?? {});
+  const item = content.sections?.[selectedKey] ?? {};
+  const media = state.websiteMedia ?? [];
+  const library = media.length
+    ? `<div class="cms-library">${media.map((asset) => `<article class="cms-library-item"><img src="${esc(asset.image_url)}" alt="Stored website image" /><small>${esc(asset.image_path.split('/').pop())} · ${(Number(asset.size || 0) / 1024 / 1024).toFixed(1)} MB</small><div class="cms-library-actions">${writable ? `<button type="button" class="button button--ghost" data-cms-use-media="${esc(asset.image_path)}">Use in ${esc(selectedKey.replaceAll('_',' '))}</button><button type="button" class="button button--icon" data-cms-delete-media="${esc(asset.image_path)}" aria-label="Delete image">×</button>` : ''}</div></article>`).join('')}</div>`
+    : '<p class="cms-library-empty">Uploaded images will appear here so you can reuse them in other sections.</p>';
+  return `<article class="cms-card cms-media"><h3>Section image</h3><label>Website section<select id="cmsImageSection" ${writable?'':'disabled'}>${sections.map((key)=>`<option value="${esc(key)}" ${key===selectedKey?'selected':''}>${esc(key.replaceAll('_',' '))}</option>`).join('')}</select></label><label>Upload image<input id="cmsImageInput" type="file" accept="image/jpeg,image/png,image/webp" ${writable?'':'disabled'} /><small>JPG, PNG or WebP · maximum 5 MB · saved to the reusable image library</small></label><div id="cmsImagePreview" class="cms-image-preview">${item.image_url?`<img src="${esc(item.image_url)}" alt="Website section preview" />`:'No image selected for this section.'}</div>${item.image_path?'<button class="button button--ghost" id="cmsRemoveImage" type="button">Remove image from this section</button>':''}<h3>Image library</h3>${library}</article>`;
+}
+
+function websiteEditor() {
+  const editable = state.websiteContent?.draft ?? blankWebsiteContent();
+  const sections = Object.entries(editable.sections ?? {}).sort((a,b)=>Number(a[1].order??0)-Number(b[1].order??0));
+  const writable = state.permissions.includes('settings.update');
+  return `<section class="admin-panel admin-panel--pad cms-editor"><div class="eyebrow">Website editor</div><h2>Public website content</h2><p class="module-subtitle">Change approved text and destinations while keeping the site layout safe.</p><div class="cms-grid">${sections.map(([key, item], index)=>`<article class="cms-card"><header><strong>${esc(key.replaceAll('_',' ').replace(/^./, c=>c.toUpperCase()))}</strong><label><input type="checkbox" data-cms-enabled="${esc(key)}" ${item.enabled===false?'':'checked'} ${writable?'':'disabled'} /> Visible</label><div><button type="button" class="button button--icon" data-cms-move="${esc(key)}" data-direction="-1" ${index===0||!writable?'disabled':''} aria-label="Move up">↑</button><button type="button" class="button button--icon" data-cms-move="${esc(key)}" data-direction="1" ${index===sections.length-1||!writable?'disabled':''} aria-label="Move down">↓</button></div></header><label>Title<input data-cms-key="${esc(key)}" data-cms-field="title" maxlength="180" value="${esc(item.title??'')}" ${writable?'':'disabled'} /></label><label>Subtitle<input data-cms-key="${esc(key)}" data-cms-field="subtitle" maxlength="240" value="${esc(item.subtitle??'')}" ${writable?'':'disabled'} /></label><label>Description<textarea data-cms-key="${esc(key)}" data-cms-field="description" maxlength="1200" rows="2" ${writable?'':'disabled'}>${esc(item.description??'')}</textarea></label><label>Button text<input data-cms-key="${esc(key)}" data-cms-field="button_label" maxlength="80" value="${esc(item.button_label??'')}" ${writable?'':'disabled'} /></label><label>Button destination<input data-cms-key="${esc(key)}" data-cms-field="button_url" maxlength="500" value="${esc(item.button_url??'')}" placeholder="/passenger/ or #destinations" ${writable?'':'disabled'} /></label></article>`).join('')}</div>${cmsImageEditor(editable,state.cmsImageSection,writable)}<article class="cms-card"><h3>Frequently asked questions</h3>${(editable.faqs??[]).map((faq,index)=>`<div class="cms-faq"><label>Question<input data-cms-faq="question" data-index="${index}" maxlength="240" value="${esc(faq.question)}" ${writable?'':'disabled'} /></label><label>Answer<textarea data-cms-faq="answer" data-index="${index}" maxlength="1200" rows="2" ${writable?'':'disabled'}>${esc(faq.answer)}</textarea></label><label><input data-cms-faq-visible="${index}" type="checkbox" ${faq.enabled===false?'':'checked'} ${writable?'':'disabled'} /> Visible</label></div>`).join('')}<button type="button" class="button button--ghost" id="cmsAddFaq" ${writable?'':'disabled'}>Add a question</button></article><div class="cms-preview"><strong>Preview</strong><h3>${esc(sections[0]?.[1]?.title || 'Section title')}</h3><p>${esc(sections[0]?.[1]?.description || 'Your published content will keep the current website design.')}</p></div><div class="form-actions">${writable?'<button class="button button--ghost" id="cmsDiscard" type="button">Discard changes</button><button class="button button--ghost" id="cmsSave" type="button">Save draft</button><button class="button button--primary" id="cmsPublish" type="button">Publish</button>':''}<span id="cmsMessage" aria-live="polite">${writable?'Draft and publishing access enabled.':'Read only; settings.update is required to edit.'}</span></div></section>`;
 }
 
 function segmentKey(origin, destination) {
@@ -113,6 +194,16 @@ function routeSegmentRows(editor) {
   return rows;
 }
 
+function routeSegmentsMarkup(segments) {
+  return segments.length ? segments.map((segment, index) => `<div class="route-segment-row" data-segment-row="${index}">
+    <strong>${esc(segment.origin)} → ${esc(segment.destination)}</strong>
+    <input data-segment-field="price" type="number" min="0" aria-label="${esc(segment.origin)} to ${esc(segment.destination)} price" value="${esc(segment.price)}" placeholder="Price" />
+    <input data-segment-field="duration_seconds" type="number" min="0" aria-label="Duration in seconds" value="${esc(segment.duration_seconds)}" placeholder="Duration (seconds)" />
+    <input data-segment-field="distance_meters" type="number" min="0" aria-label="Distance in meters" value="${esc(segment.distance_meters)}" placeholder="Distance (meters)" />
+    <label><input data-segment-field="active" type="checkbox" ${segment.active ? 'checked' : ''} /> Active</label>
+  </div>`).join('') : '<p class="empty-state">Add named stops to configure commercial segments.</p>';
+}
+
 function routeEditorFields() {
   const editor = state.routeEditor ?? routeEditorFrom();
   const segments = routeSegmentRows(editor);
@@ -133,15 +224,7 @@ function routeEditorFields() {
       </div>
       <button type="button" class="button button--ghost" id="addRouteStop">Add stop</button>
       <div class="route-editor__heading"><strong>Commercial segments</strong><span>Prices and timings are generated from the ordered stops.</span></div>
-      <div class="route-editor__segments">
-        ${segments.length ? segments.map((segment, index) => `<div class="route-segment-row" data-segment-row="${index}">
-          <strong>${esc(segment.origin)} → ${esc(segment.destination)}</strong>
-          <input data-segment-field="price" type="number" min="0" aria-label="${esc(segment.origin)} to ${esc(segment.destination)} price" value="${esc(segment.price)}" placeholder="Price" />
-          <input data-segment-field="duration_seconds" type="number" min="0" aria-label="Duration in seconds" value="${esc(segment.duration_seconds)}" placeholder="Duration (seconds)" />
-          <input data-segment-field="distance_meters" type="number" min="0" aria-label="Distance in meters" value="${esc(segment.distance_meters)}" placeholder="Distance (meters)" />
-          <label><input data-segment-field="active" type="checkbox" ${segment.active ? 'checked' : ''} /> Active</label>
-        </div>`).join('') : '<p class="empty-state">Add named stops to configure commercial segments.</p>'}
-      </div>
+      <div class="route-editor__segments">${routeSegmentsMarkup(segments)}</div>
       <input type="hidden" name="stops" id="routeStopsPayload" />
       <input type="hidden" name="segments" id="routeSegmentsPayload" />
     </div>`;
@@ -175,6 +258,13 @@ function refreshRouteEditor() {
   bindRouteEditor();
 }
 
+function refreshRouteSegments() {
+  const container = document.querySelector('.route-editor__segments');
+  if (!container || !state.routeEditor) return;
+  container.innerHTML = routeSegmentsMarkup(routeSegmentRows(state.routeEditor));
+  syncRouteEditorPayload();
+}
+
 function bindRouteEditor() {
   const editor = document.querySelector('#routeEditor');
   if (!editor || !state.routeEditor) return;
@@ -182,12 +272,12 @@ function bindRouteEditor() {
   editor.addEventListener('input', (event) => {
     const stopRow = event.target.closest('[data-stop-row]');
     const segmentRow = event.target.closest('[data-segment-row]');
-    if (stopRow) state.routeEditor.stops[Number(stopRow.dataset.stopRow)][event.target.dataset.stopField] = event.target.type === 'number' ? event.target.value : event.target.value;
+    if (stopRow) {
+      state.routeEditor.stops[Number(stopRow.dataset.stopRow)][event.target.dataset.stopField] = event.target.type === 'number' ? event.target.value : event.target.value;
+      if (event.target.dataset.stopField === 'name') refreshRouteSegments();
+    }
     if (segmentRow) state.routeEditor.segments[Number(segmentRow.dataset.segmentRow)][event.target.dataset.segmentField] = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
     syncRouteEditorPayload();
-  });
-  editor.addEventListener('change', (event) => {
-    if (event.target.closest('[data-stop-row]') && event.target.dataset.stopField === 'name') refreshRouteEditor();
   });
   editor.querySelector('#addRouteStop')?.addEventListener('click', () => {
     state.routeEditor.stops.push({ name: '', latitude: '', longitude: '', offset_minutes: 0 });
@@ -419,30 +509,30 @@ function content() {
   }
 
   if (state.module === 'bookings') {
-    return table(
+    return `${table(
       'Bookings',
-      ['Reference', 'Passenger', 'Status', 'Total', 'Actions'],
+      ['Reference', 'Trip', 'Departure', 'Passenger', 'Passengers', 'Seats', 'Status', 'Total', 'Actions'],
       (dashboard.bookings ?? []).map((booking) => [
         booking.reference,
+        booking.trip?.route?.origin && booking.trip?.route?.destination ? `${booking.trip.route.origin} → ${booking.trip.route.destination}` : '—',
+        [String(booking.trip?.departure_date ?? '').slice(0, 10), String(booking.trip?.departure_time ?? '').slice(0, 5)].filter(Boolean).join(' · ') || '—',
         booking.passenger_name,
+        booking.passengers_count ?? 0,
+        Array.isArray(booking.seat_numbers) && booking.seat_numbers.length ? booking.seat_numbers.join(', ') : '—',
         booking.status,
         booking.total_amount,
-        ['draft', 'pending_payment'].includes(booking.status) ? { html: `<button class="button button--ghost" data-cancel-booking="${esc(booking.id)}" type="button">Cancel unpaid</button>` } : '—',
+        { html: `<div class="table-actions"><button class="button button--icon" data-view-booking="${esc(booking.id)}" type="button" aria-label="View booking ${esc(booking.reference)}" title="View booking details">${icon('view')}</button>${['draft', 'pending_payment'].includes(booking.status) ? `<button class="button button--ghost" data-cancel-booking="${esc(booking.id)}" type="button">Cancel unpaid</button>` : ''}</div>` },
       ]),
-    );
+    )}<dialog class="booking-details-dialog" id="bookingDetailsDialog" aria-label="Booking details"><div id="bookingDetailsContent"></div></dialog>`;
   }
 
   if (state.module === 'vehicles') {
-    return `<section class="admin-panel admin-panel--pad fleet-module"><div class="module-view__header"><div><div class="eyebrow">Fleet registry</div><h2>Vehicles</h2><p class="module-subtitle">Keep vehicle capacity and operational status accurate.</p></div><span class="badge badge--neutral">${state.vehicles.length} records</span></div><form id="vehicleForm" class="premium-form-grid fleet-form"><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>Add vehicle to fleet</strong><span>Vehicle capacity controls seat availability.</span></div></div><label><span>Vehicle code</span><input name="code" required placeholder="BUS-001" /></label><label><span>Plate</span><input name="plate" required placeholder="Registration plate" /></label><label><span>Capacity</span><input name="capacity" type="number" min="1" max="500" required placeholder="42" /></label><label><span>Status</span><select name="status"><option value="operational">Operational</option><option value="maintenance">Maintenance</option><option value="out_of_service">Out of service</option></select></label><div class="form-actions"><button class="button button--primary button--with-icon" type="submit">${icon('save')}Save vehicle</button></div><div id="vehicleMessage" aria-live="polite"></div></form></section>${table(
-      'Vehicles',
-      ['Code', 'Plate', 'Capacity', 'Status'],
-      state.vehicles.map((bus) => [
-        bus.code,
-        bus.plate,
-        bus.capacity,
-        bus.status,
-      ]),
-    )}`;
+    const editing = state.vehicles.find((bus) => String(bus.id) === String(state.vehicleEditingId));
+    const seats = state.vehicleSeatLayout ?? [];
+    const vehicleDraft = state.vehicleDraft ?? {};
+    const positionCount = String(vehicleDraft.positionsPerRow ?? '4');
+    const seatEditor = `<section class="vehicle-layout-editor"><div class="vehicle-layout-heading"><div><strong>Seat layout</strong><span>Set each seat’s real number, row and position. Capacity follows the seats below.</span></div><div class="vehicle-layout-tools"><label>Positions per row<select id="vehiclePositionsPerRow"><option value="2" ${positionCount==='2'?'selected':''}>2</option><option value="3" ${positionCount==='3'?'selected':''}>3</option><option value="4" ${positionCount==='4'?'selected':''}>4</option><option value="5" ${positionCount==='5'?'selected':''}>5</option><option value="6" ${positionCount==='6'?'selected':''}>6</option></select></label><button type="button" class="button button--ghost" id="generateVehicleLayout">Generate numbers</button><button type="button" class="button button--ghost" id="addVehicleSeat">Add seat</button></div></div><div class="vehicle-seat-grid">${seats.length ? seats.map((seat,index)=>`<article class="vehicle-seat-item"><label>Seat<input data-vehicle-seat="${index}" data-seat-field="seat_number" value="${esc(seat.seat_number)}" maxlength="16" required /></label><label>Row<input data-vehicle-seat="${index}" data-seat-field="row_number" type="number" min="1" value="${esc(seat.row_number ?? 1)}" required /></label><label>Position<input data-vehicle-seat="${index}" data-seat-field="position_index" type="number" min="1" value="${esc(seat.position_index ?? index+1)}" required /></label><label>Class<select data-vehicle-seat="${index}" data-seat-field="seat_class"><option value="standard" ${seat.seat_class==='standard'?'selected':''}>Standard</option><option value="premium" ${seat.seat_class==='premium'?'selected':''}>Premium</option><option value="accessible" ${seat.seat_class==='accessible'?'selected':''}>Accessible</option></select></label><label class="vehicle-seat-flag"><input data-vehicle-seat="${index}" data-seat-field="active" type="checkbox" ${seat.active===false?'':'checked'} /> Active</label><label class="vehicle-seat-flag"><input data-vehicle-seat="${index}" data-seat-field="window" type="checkbox" ${seat.window?'checked':''} /> Window</label><label class="vehicle-seat-flag"><input data-vehicle-seat="${index}" data-seat-field="aisle" type="checkbox" ${seat.aisle?'checked':''} /> Aisle</label><label class="vehicle-seat-flag"><input data-vehicle-seat="${index}" data-seat-field="accessible_flag" type="checkbox" ${seat.accessible?'checked':''} /> Accessible</label><label class="vehicle-seat-flag"><input data-vehicle-seat="${index}" data-seat-field="blocked" type="checkbox" ${seat.blocked?'checked':''} /> Blocked</label><button type="button" class="button button--icon" data-remove-vehicle-seat="${index}" aria-label="Remove seat ${esc(seat.seat_number)}">×</button></article>`).join('') : '<p class="vehicle-layout-empty">Generate sequential seat numbers or add seats one by one to describe this vehicle.</p>'}</div><span class="vehicle-seat-count">${seats.length} configured seats</span></section>`;
+    return `<section class="admin-panel admin-panel--pad fleet-module"><div class="module-view__header"><div><div class="eyebrow">Fleet registry</div><h2>Vehicles</h2><p class="module-subtitle">Maintain each vehicle’s real capacity, seat positions and operational status.</p></div><span class="badge badge--neutral">${state.vehicles.length} records</span></div><form id="vehicleForm" class="premium-form-grid fleet-form"><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${editing ? 'Update vehicle and layout' : 'Add vehicle to fleet'}</strong><span>Generate a starting layout, then adjust rows, positions and seat features to match the actual coach.</span></div></div><label><span>Vehicle code</span><input name="code" required maxlength="50" value="${esc(vehicleDraft.code ?? editing?.code ?? '')}" placeholder="BUS-001" /></label><label><span>Plate</span><input name="plate" required maxlength="50" value="${esc(vehicleDraft.plate ?? editing?.plate ?? '')}" placeholder="Registration plate" /></label><label><span>Capacity</span><input name="capacity" id="vehicleCapacity" type="number" min="1" max="500" ${editing ? 'readonly' : ''} required value="${editing ? seats.length : esc(vehicleDraft.capacity ?? '')}" /></label><label><span>Status</span><select name="status"><option value="operational" ${(vehicleDraft.status ?? editing?.status ?? 'operational')==='operational'?'selected':''}>Operational</option><option value="maintenance" ${(vehicleDraft.status ?? editing?.status)==='maintenance'?'selected':''}>Maintenance</option><option value="out_of_service" ${(vehicleDraft.status ?? editing?.status)==='out_of_service'?'selected':''}>Out of service</option></select></label>${seatEditor}<div class="form-actions"><button class="button button--primary button--with-icon" type="submit">${icon('save')}${editing ? 'Save vehicle changes' : 'Save vehicle'}</button>${editing ? '<button class="button button--ghost" id="cancelVehicleEdit" type="button">Cancel</button>' : ''}</div><div id="vehicleMessage" aria-live="polite"></div></form></section>${table('Vehicles',['Code','Plate','Capacity','Status','Actions'],state.vehicles.map((bus)=>[bus.code,bus.plate,bus.capacity,bus.status,{html:`<button class="button button--icon" data-edit-vehicle="${esc(bus.id)}" type="button" aria-label="Edit vehicle ${esc(bus.code)}">${icon('edit')}</button>`}]))}`;
   }
 
   if (state.module === 'drivers') {
@@ -461,7 +551,9 @@ function content() {
   }
 
   if (state.module === 'routes') {
-    const form = state.routeFormOpen ? `<form id="routeForm" class="premium-form-grid fleet-form"><input type="hidden" name="id" value="${esc(state.routeEditingId ?? '')}" /><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.routeEditingId ? 'Update route' : 'Create a route'}</strong><span>Define the service corridor, ordered stops and commercial fares.</span></div></div><label><span>Origin terminal</span><input name="origin" required maxlength="150" placeholder="Starting terminal" /></label><label><span>Destination terminal</span><input name="destination" required maxlength="150" placeholder="Destination terminal" /></label><label><span>Distance (km)</span><input name="distance_km" type="number" min="0" required placeholder="0" /></label>${routeEditorFields()}<label><span>Published</span><select name="active"><option value="1">Active</option><option value="0">Inactive</option></select></label><div class="form-actions"><button type="submit" class="button button--primary button--with-icon">${icon('save')}${state.routeEditingId ? 'Update route' : 'Save route'}</button> <button type="button" class="button button--ghost button--with-icon" id="cancelRoute">${icon('close')}Cancel</button></div><div id="routeMessage" aria-live="polite"></div></form>` : '';
+    const selectedRoute = state.routes.find((route) => String(route.id) === String(state.routeEditingId));
+    const routeImage = state.routeFormOpen && state.routeEditingId ? `<label class="file-field"><span>Website card image</span><input name="route_image" id="routeImageInput" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG or WebP · maximum 5 MB</small></label><div class="route-image-preview" id="routeImagePreview">${selectedRoute?.image_url ? `<img src="${esc(selectedRoute.image_url)}" alt="Current image for ${esc(selectedRoute.origin)} to ${esc(selectedRoute.destination)}" />` : '<span>Public route card graphic fallback</span>'}</div>${selectedRoute?.image_url ? '<button type="button" class="button button--ghost" id="removeRouteImage">Remove route image</button>' : ''}` : '';
+    const form = state.routeFormOpen ? `<form id="routeForm" class="premium-form-grid fleet-form"><input type="hidden" name="id" value="${esc(state.routeEditingId ?? '')}" /><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.routeEditingId ? 'Update route' : 'Create a route'}</strong><span>Define the service corridor, ordered stops and commercial fares.</span></div></div><label><span>Origin terminal</span><input name="origin" required maxlength="150" placeholder="Starting terminal" /></label><label><span>Destination terminal</span><input name="destination" required maxlength="150" placeholder="Destination terminal" /></label><label><span>Distance (km)</span><input name="distance_km" type="number" min="0" required placeholder="0" /></label>${routeEditorFields()}${routeImage}<label><span>Published</span><select name="active"><option value="1">Active</option><option value="0">Inactive</option></select></label><div class="form-actions"><button type="submit" class="button button--primary button--with-icon">${icon('save')}${state.routeEditingId ? 'Update route' : 'Save route'}</button> <button type="button" class="button button--ghost button--with-icon" id="cancelRoute">${icon('close')}Cancel</button></div><div id="routeMessage" aria-live="polite"></div></form>` : '';
     return `
       <section class="admin-panel admin-panel--pad">
         <div class="module-view__header">
@@ -477,17 +569,7 @@ function content() {
   }
 
   if (state.module === 'incidents') {
-    return table(
-      'Incidents',
-      ['Trip', 'Title', 'Severity', 'Status', 'Update status'],
-      state.incidents.map((incident) => [
-        incident.trip?.id,
-        incident.title,
-        incident.severity,
-        { html: `<select data-incident-status="${esc(incident.id)}">${['open', 'in_progress', 'resolved', 'dismissed'].map((status) => `<option value="${status}" ${incident.status === status ? 'selected' : ''}>${status.replaceAll('_', ' ')}</option>`).join('')}</select>` },
-        { html: `<button class="button button--ghost" data-save-incident="${esc(incident.id)}" type="button">Save</button>` },
-      ]),
-    );
+    return incidentsView(state.incidents, state.permissions.includes('incidents.update'));
   }
 
   if (state.module === 'schedules') {
@@ -585,6 +667,8 @@ function content() {
     return `<section class="admin-panel admin-panel--pad"><div class="eyebrow">System configuration</div><h2>General</h2><p class="module-subtitle">Set the address shown as the sender on passenger booking emails.</p><div class="settings-status ${settings.gmail_api_ready ? 'settings-status--ready' : 'settings-status--pending'}" role="status">${settings.gmail_api_ready ? 'Gmail API is ready to send email.' : 'Gmail authorization is incomplete. A server OAuth refresh token and MAIL_MAILER=gmail_api are required.'}</div><form id="emailSettingsForm" class="premium-form-grid fleet-form"><label><span>Sender email</span><input name="mail_from_address" type="email" autocomplete="email" maxlength="254" required value="${esc(settings.mail_from_address ?? '')}" ${canUpdate ? '' : 'disabled'} /></label><label><span>Sender name</span><input name="mail_from_name" maxlength="120" required value="${esc(settings.mail_from_name ?? 'Encore Transport')}" ${canUpdate ? '' : 'disabled'} /></label>${canUpdate ? '<div class="form-actions"><button class="button button--primary" type="submit">Save email settings</button></div>' : ''}<div id="emailSettingsMessage" aria-live="polite"></div></form></section>`;
   }
 
+  if (state.module === 'website') return websiteEditor();
+
   return '';
 }
 
@@ -628,25 +712,15 @@ async function hydrateAdminMap() {
 
   if (!tripId || !origin || !destination) return;
 
-  try {
+  const mapOptions = {};
+  await renderJourneyMapWithLoader(container, async () => {
     const [journey, locationPayload] = await Promise.all([
       mapJourney(origin, destination),
-      requestJson(`/trips/${tripId}/location`)
-        .catch(() => ({ data: null })),
+      requestJson(`/trips/${tripId}/location`).catch(() => ({ data: null })),
     ]);
-
-    await renderJourneyMap(container, journey, {
-      driverLocation: locationPayload?.data ?? null,
-    });
-  } catch (error) {
-    container.innerHTML = `
-      <div class="encore-map-fallback">
-        <div>
-          <strong>Map unavailable</strong>
-          <span>${esc(error.message)}</span>
-        </div>
-      </div>`;
-  }
+    mapOptions.driverLocation = locationPayload?.data ?? null;
+    return journey;
+  }, mapOptions);
 }
 
 async function loadModule() {
@@ -673,6 +747,10 @@ async function loadModule() {
 
     if (state.module === 'routes') {
       state.routes = await api.routes();
+    }
+    if (state.module === 'website') {
+      [state.websiteContent, state.websiteMedia] = await Promise.all([api.websiteContent(), api.websiteMedia()]);
+      if (!state.websiteContent.draft?.sections || !Object.keys(state.websiteContent.draft.sections).length) state.websiteContent.draft = blankWebsiteContent();
     }
 
     if (state.module === 'drivers') {
@@ -732,9 +810,15 @@ function wire() {
 
   document.querySelectorAll('[data-save-incident]').forEach((button) => button.addEventListener('click', async () => {
     const id = button.dataset.saveIncident;
-    const status = document.querySelector(`[data-incident-status="${CSS.escape(id)}"]`)?.value;
+    const field = (name) => document.querySelector(`[data-incident-${name}="${CSS.escape(id)}"]`);
+    const changes = {
+      status: field('status')?.value,
+      severity: field('severity')?.value,
+      title: field('title')?.value,
+      description: field('description')?.value,
+    };
     try {
-      await api.updateIncident(id, { status });
+      await api.updateIncident(id, changes);
       state.incidents = await api.incidents();
       render();
     } catch (error) {
@@ -752,6 +836,22 @@ function wire() {
     } catch (error) {
       state.error = error.message;
       render();
+    }
+  }));
+
+  document.querySelectorAll('[data-view-booking]').forEach((button) => button.addEventListener('click', async () => {
+    const dialog = document.querySelector('#bookingDetailsDialog');
+    const content = document.querySelector('#bookingDetailsContent');
+    if (!dialog || !content) return;
+    dialog.showModal();
+    content.innerHTML = '<div class="booking-detail-loading" role="status">Loading booking details…</div>';
+    try {
+      const booking = await api.bookingDetails(button.dataset.viewBooking);
+      content.innerHTML = bookingDetailsView(booking);
+      content.querySelector('[data-close-booking-details]')?.addEventListener('click', () => dialog.close());
+    } catch (error) {
+      content.innerHTML = `<div class="booking-detail-error" role="alert"><strong>Booking details could not be loaded.</strong><p>${esc(error.message)}</p><button class="button button--ghost" type="button" data-close-booking-details>Close</button></div>`;
+      content.querySelector('[data-close-booking-details]')?.addEventListener('click', () => dialog.close());
     }
   }));
 
@@ -1007,6 +1107,8 @@ function wire() {
         stops,
         segments,
       }, id);
+      const routeImage = form.get('route_image');
+      if (id && routeImage instanceof File && routeImage.size > 0) await api.uploadRouteImage(id, await optimizeImageForUpload(routeImage));
       message.textContent = 'Route saved.';
       state.routes = await api.routes();
       state.routeFormOpen = false;
@@ -1066,6 +1168,132 @@ function wire() {
   });
 
   bindRouteEditor();
+
+  document.querySelector('#routeImageInput')?.addEventListener('change', (event) => {
+    const file = event.target.files?.[0];
+    const preview = document.querySelector('#routeImagePreview');
+    if (!file || !preview) return;
+    if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      event.target.value = '';
+      preview.textContent = 'Choose a JPG, PNG or WebP image under 5 MB.';
+      return;
+    }
+    preview.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Preview of selected route image" />`;
+  });
+  document.querySelector('#removeRouteImage')?.addEventListener('click', async () => {
+    const message = document.querySelector('#routeMessage');
+    try { await api.deleteRouteImage(state.routeEditingId); state.routes = await api.routes(); state.routeEditingId = null; state.routeFormOpen = false; render(); }
+    catch (error) { if (message) message.textContent = error.message; }
+  });
+
+  document.querySelectorAll('[data-cms-key]').forEach((input) => input.addEventListener('input', () => {
+    const section = state.websiteContent.draft.sections[input.dataset.cmsKey];
+    section[input.dataset.cmsField] = input.value;
+    if (Number(section.order ?? 0) === 0) {
+      const title = document.querySelector('.cms-preview h3');
+      const description = document.querySelector('.cms-preview p');
+      if (title) title.textContent = section.title || 'Section title';
+      if (description) description.textContent = section.description || 'Your published content will keep the current website design.';
+    }
+    const message = document.querySelector('#cmsMessage');
+    if (message) message.textContent = 'Unsaved changes · preview the wording here before publishing.';
+  }));
+  document.querySelector('#cmsImageSection')?.addEventListener('change', (event) => { state.cmsImageSection = event.target.value; render(); });
+  document.querySelector('#cmsImageInput')?.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    const message = document.querySelector('#cmsMessage');
+    if (!file) return;
+    if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      event.target.value = '';
+      if (message) message.textContent = 'Choose a JPG, PNG or WebP image under 5 MB.';
+      return;
+    }
+    try {
+      const section = state.websiteContent.draft.sections[state.cmsImageSection];
+      const optimized = await optimizeImageForUpload(file);
+      const uploaded = await api.uploadWebsiteMedia(state.cmsImageSection, optimized);
+      if (section.image_path && section.image_path !== uploaded.image_path) state.cmsPendingMediaDeletes.push(section.image_path);
+      section.image_path = uploaded.image_path;
+      section.image_url = uploaded.image_url;
+      state.websiteMedia = [uploaded, ...state.websiteMedia.filter((asset) => asset.image_path !== uploaded.image_path)];
+      const preview = document.querySelector('#cmsImagePreview');
+      if (preview) preview.innerHTML = `<img src="${esc(uploaded.image_url)}" alt="Website section preview" />`;
+      render();
+      const status = document.querySelector('#cmsMessage');
+      if (status) status.textContent = 'Image uploaded. Save the draft or publish the section to use it on the website.';
+    } catch (error) { if (message) message.textContent = error.message; }
+  });
+  document.querySelector('#cmsRemoveImage')?.addEventListener('click', () => {
+    const section = state.websiteContent.draft.sections[state.cmsImageSection];
+    if (section?.image_path) state.cmsPendingMediaDeletes.push(section.image_path);
+    if (section) { section.image_path = null; section.image_url = null; }
+    render();
+  });
+  document.querySelectorAll('[data-cms-use-media]').forEach((button) => button.addEventListener('click', () => {
+    const asset = state.websiteMedia.find((item) => item.image_path === button.dataset.cmsUseMedia);
+    const section = state.websiteContent.draft.sections[state.cmsImageSection];
+    if (!asset || !section) return;
+    if (section.image_path && section.image_path !== asset.image_path) state.cmsPendingMediaDeletes.push(section.image_path);
+    section.image_path = asset.image_path;
+    section.image_url = asset.image_url;
+    render();
+    const message = document.querySelector('#cmsMessage');
+    if (message) message.textContent = 'Library image selected. Save the draft or publish to apply it.';
+  }));
+  document.querySelectorAll('[data-cms-delete-media]').forEach((button) => button.addEventListener('click', async () => {
+    const imagePath = button.dataset.cmsDeleteMedia;
+    const message = document.querySelector('#cmsMessage');
+    const referencedInDraft = Object.values(state.websiteContent.draft.sections ?? {}).some((section) => section.image_path === imagePath);
+    if (referencedInDraft) {
+      if (message) message.textContent = 'Remove this image from each draft section and publish before deleting it from the library.';
+      return;
+    }
+    try {
+      await api.deleteWebsiteMedia(imagePath);
+      state.websiteMedia = state.websiteMedia.filter((asset) => asset.image_path !== imagePath);
+      render();
+      const status = document.querySelector('#cmsMessage');
+      if (status) status.textContent = 'Image deleted from the library.';
+    } catch (error) { if (message) message.textContent = error.message; }
+  }));
+  document.querySelectorAll('[data-cms-enabled]').forEach((input) => input.addEventListener('change', () => { state.websiteContent.draft.sections[input.dataset.cmsEnabled].enabled = input.checked; }));
+  document.querySelectorAll('[data-cms-faq]').forEach((input) => input.addEventListener('input', () => { state.websiteContent.draft.faqs[Number(input.dataset.index)][input.dataset.cmsFaq] = input.value; }));
+  document.querySelectorAll('[data-cms-faq-visible]').forEach((input) => input.addEventListener('change', () => { state.websiteContent.draft.faqs[Number(input.dataset.cmsFaqVisible)].enabled = input.checked; }));
+  document.querySelectorAll('[data-cms-move]').forEach((button) => button.addEventListener('click', () => {
+    const ordered = Object.entries(state.websiteContent.draft.sections).sort((a,b)=>Number(a[1].order??0)-Number(b[1].order??0));
+    const i = ordered.findIndex(([key]) => key === button.dataset.cmsMove);
+    const j = i + Number(button.dataset.direction);
+    if (j < 0 || j >= ordered.length) return;
+    [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
+    ordered.forEach(([, section], order) => { section.order = order; });
+    render();
+  }));
+  document.querySelector('#cmsAddFaq')?.addEventListener('click', () => { state.websiteContent.draft.faqs.push({ question: '', answer: '', enabled: true }); render(); });
+  document.querySelectorAll('[data-cms-faq-remove]').forEach((button) => button.addEventListener('click', () => { state.websiteContent.draft.faqs.splice(Number(button.dataset.cmsFaqRemove), 1); render(); }));
+  document.querySelector('#cmsDiscard')?.addEventListener('click', async () => { state.websiteContent = await api.websiteContent(); state.cmsPendingMediaDeletes = []; render(); });
+  const saveCms = async (publish) => {
+    const message = document.querySelector('#cmsMessage');
+    try {
+      state.websiteContent.draft = publish
+        ? await api.publishWebsiteContent(state.websiteContent.draft)
+        : await api.saveWebsiteDraft(state.websiteContent.draft);
+      if (publish) state.websiteContent.published = state.websiteContent.draft;
+      if (publish && state.cmsPendingMediaDeletes.length) {
+        const pending = [...new Set(state.cmsPendingMediaDeletes)];
+        state.cmsPendingMediaDeletes = [];
+        for (const imagePath of pending) {
+          try {
+            await api.deleteWebsiteMedia(imagePath);
+            state.websiteMedia = state.websiteMedia.filter((asset) => asset.image_path !== imagePath);
+          }
+          catch { /* The API keeps an image while any saved section still references it. */ }
+        }
+      }
+      if (message) message.textContent = publish ? 'Website content published.' : 'Draft saved. It is not public yet.';
+    } catch (error) { if (message) message.textContent = error.message; }
+  };
+  document.querySelector('#cmsSave')?.addEventListener('click', () => saveCms(false));
+  document.querySelector('#cmsPublish')?.addEventListener('click', () => saveCms(true));
 
   document.querySelector('#driverForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -1130,21 +1358,84 @@ function wire() {
     });
   });
 
+  document.querySelector('#generateVehicleLayout')?.addEventListener('click', () => {
+    const draft = captureVehicleDraft() ?? {};
+    const capacity = Number(document.querySelector('#vehicleCapacity')?.value ?? 0);
+    const perRow = Number(document.querySelector('#vehiclePositionsPerRow')?.value ?? 4);
+    if (!Number.isInteger(capacity) || capacity < 1 || capacity > 500) {
+      const message = document.querySelector('#vehicleMessage');
+      if (message) message.textContent = 'Enter a capacity from 1 to 500 before generating seat numbers.';
+      return;
+    }
+    state.vehicleSeatLayout = Array.from({ length: capacity }, (_, index) => ({
+      seat_number: String(index + 1), row_number: Math.floor(index / perRow) + 1,
+      position_index: index % perRow + 1, seat_class: 'standard', seat_type: 'seat',
+      active: true, window: false, aisle: false, accessible: false, blocked: false,
+    }));
+    draft.capacity = capacity;
+    state.vehicleDraft = draft;
+    render();
+  });
+  document.querySelector('#addVehicleSeat')?.addEventListener('click', () => {
+    const draft = captureVehicleDraft() ?? {};
+    const next = (state.vehicleSeatLayout?.length ?? 0) + 1;
+    const perRow = Number(document.querySelector('#vehiclePositionsPerRow')?.value ?? 4);
+    state.vehicleSeatLayout.push({ seat_number: String(next), row_number: Math.ceil(next / perRow), position_index: (next - 1) % perRow + 1, seat_class: 'standard', seat_type: 'seat', active: true, window: false, aisle: false, accessible: false, blocked: false });
+    draft.capacity = next;
+    state.vehicleDraft = draft;
+    render();
+  });
+  document.querySelectorAll('[data-vehicle-seat]').forEach((input) => input.addEventListener(input.type === 'text' ? 'input' : 'change', () => {
+    const seat = state.vehicleSeatLayout[Number(input.dataset.vehicleSeat)];
+    if (!seat) return;
+    const field = input.dataset.seatField;
+    if (field === 'accessible_flag') seat.accessible = input.checked;
+    else if (['active', 'window', 'aisle', 'blocked'].includes(field)) seat[field] = input.checked;
+    else if (['row_number', 'position_index'].includes(field)) seat[field] = Number(input.value);
+    else seat[field] = input.value;
+  }));
+  document.querySelectorAll('[data-remove-vehicle-seat]').forEach((button) => button.addEventListener('click', () => {
+    const draft = captureVehicleDraft() ?? {};
+    state.vehicleSeatLayout.splice(Number(button.dataset.removeVehicleSeat), 1);
+    draft.capacity = state.vehicleSeatLayout.length;
+    state.vehicleDraft = draft;
+    render();
+  }));
+  document.querySelector('#cancelVehicleEdit')?.addEventListener('click', () => {
+    state.vehicleEditingId = null;
+    state.vehicleSeatLayout = [];
+    state.vehicleDraft = null;
+    render();
+  });
+  document.querySelectorAll('[data-edit-vehicle]').forEach((button) => button.addEventListener('click', () => {
+    const bus = state.vehicles.find((item) => String(item.id) === String(button.dataset.editVehicle));
+    if (!bus) return;
+    state.vehicleEditingId = bus.id;
+    state.vehicleSeatLayout = (bus.seats ?? []).map((seat) => ({ ...seat }));
+    state.vehicleDraft = { code: bus.code, plate: bus.plate, status: bus.status, capacity: bus.seats?.length ?? bus.capacity, positionsPerRow: '4' };
+    render();
+    document.querySelector('#vehicleForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
   document.querySelector('#vehicleForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const message = document.querySelector('#vehicleMessage');
     try {
-      await api.saveVehicle({
+      if (!state.vehicleSeatLayout.length) throw new Error('Add or generate at least one seat before saving this vehicle.');
+      const vehicle = await api.saveVehicle({
         code: form.get('code'),
         plate: form.get('plate'),
-        capacity: Number(form.get('capacity')),
+        capacity: state.vehicleSeatLayout.length,
         status: form.get('status'),
-      });
+        seats: state.vehicleSeatLayout.map(({ seat_number, row_number, position_index, seat_class, seat_type, active, window, aisle, accessible, blocked }) => ({ seat_number: String(seat_number).trim(), row_number: Number(row_number), position_index: Number(position_index), seat_class, seat_type, active, window, aisle, accessible, blocked })),
+      }, state.vehicleEditingId);
       state.vehicles = await api.vehicles();
+      state.vehicleEditingId = null;
+      state.vehicleSeatLayout = [];
+      state.vehicleDraft = null;
       render();
     } catch (error) {
-      message.textContent = error.message;
+      if (message) message.textContent = error.message;
     }
   });
 }

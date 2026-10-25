@@ -47,6 +47,23 @@ function validCoordinate(value: unknown) {
   return Number.isFinite(number);
 }
 
+function statusLabel(status: string | null | undefined) {
+  const labels: Record<string, string> = {
+    scheduled: 'Programado', upcoming: 'Próximo', boarding: 'Abordaje',
+    in_progress: 'En curso', completed: 'Completado', cancelled: 'Cancelado',
+    open: 'Abierto', resolved: 'Resuelto', dismissed: 'Descartado',
+    operational: 'Operativo', active: 'Activo', pending: 'Pendiente',
+  };
+  return status ? labels[status] ?? status.replaceAll('_', ' ') : 'Sin estado';
+}
+
+function userFacingError(error: unknown, fallback: string) {
+  if (error instanceof Error && /[áéíóúñ¿¡]/i.test(error.message)) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export default function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -131,7 +148,7 @@ export default function App() {
       ),
       rawRequest(
         `/maps/journey?${routeQuery}`,
-      ),
+      ).catch(() => null),
       rawRequest(
         `/trips/${activeTrip.id}/location`,
         {},
@@ -146,8 +163,9 @@ export default function App() {
     );
 
     setJourney(
-      journeyPayload.data ??
-      journeyPayload,
+      journeyPayload?.data ??
+      journeyPayload ??
+      null,
     );
 
     setLatestLocation(
@@ -211,11 +229,7 @@ export default function App() {
       );
     } catch (caught) {
       setToken('');
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Login failed.',
-      );
+      setError(userFacingError(caught, 'No se pudo iniciar sesión. Revisa tu correo y contraseña.'));
     } finally {
       setLoading(false);
     }
@@ -256,11 +270,7 @@ export default function App() {
         activeTrip,
       );
     } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Refresh failed.',
-      );
+      setError(userFacingError(caught, 'No se pudo actualizar la información.'));
     } finally {
       setLoading(false);
     }
@@ -293,11 +303,7 @@ export default function App() {
 
       await refresh();
     } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Unable to update trip.',
-      );
+      setError(userFacingError(caught, 'No se pudo actualizar el viaje.'));
     } finally {
       setLoading(false);
     }
@@ -326,11 +332,7 @@ export default function App() {
         [],
       );
     } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Unable to board passenger.',
-      );
+      setError(userFacingError(caught, 'No se pudo registrar el abordaje del pasajero.'));
     }
   };
 
@@ -361,11 +363,7 @@ export default function App() {
       setIncidentTitle('');
       setIncidentDescription('');
     } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Unable to report incident.',
-      );
+      setError(userFacingError(caught, 'No se pudo reportar la incidencia.'));
     }
   };
 
@@ -426,7 +424,7 @@ export default function App() {
     );
 
     setLocationMessage(
-      'Current GPS position sent to Operations.',
+      'La ubicación GPS se envió a Operaciones.',
     );
   };
 
@@ -436,14 +434,14 @@ export default function App() {
       !['boarding', 'in_progress'].includes(trip.status)
     ) {
       setLocationMessage(
-        'GPS can be sent only while the trip is boarding or in progress.',
+        'Solo puedes enviar tu ubicación GPS durante el abordaje o mientras el viaje está en curso.',
       );
       return;
     }
 
     setError('');
     setLocationMessage(
-      'Requesting location permission…',
+      'Solicitando permiso de ubicación…',
     );
 
     try {
@@ -455,13 +453,13 @@ export default function App() {
         Location.PermissionStatus.GRANTED
       ) {
         setLocationMessage(
-          'Location permission was not granted. No position was sent.',
+          'No se concedió el permiso de ubicación. No se envió ninguna posición.',
         );
         return;
       }
 
       setLocationMessage(
-        'Reading current GPS position…',
+        'Obteniendo la ubicación GPS actual…',
       );
 
       const current =
@@ -474,11 +472,7 @@ export default function App() {
     } catch (caught) {
       setLocationMessage('');
 
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Unable to read the current GPS position.',
-      );
+      setError(userFacingError(caught, 'No se pudo obtener la ubicación GPS actual.'));
     }
   };
 
@@ -493,7 +487,7 @@ export default function App() {
 
     setError('');
     setLocationMessage(
-      'Requesting location permission…',
+      'Solicitando permiso de ubicación…',
     );
 
     try {
@@ -505,7 +499,7 @@ export default function App() {
         Location.PermissionStatus.GRANTED
       ) {
         setLocationMessage(
-          'Location permission was not granted. Live GPS was not started.',
+          'No se concedió el permiso de ubicación. No se inició el GPS en vivo.',
         );
         return;
       }
@@ -522,11 +516,7 @@ export default function App() {
             void persistLocation(
               location,
             ).catch((caught) => {
-              setError(
-                caught instanceof Error
-                  ? caught.message
-                  : 'Unable to send a GPS update.',
-              );
+              setError(userFacingError(caught, 'No se pudo enviar la actualización GPS.'));
             });
           },
         );
@@ -537,16 +527,12 @@ export default function App() {
       setTracking(true);
 
       setLocationMessage(
-        'Live GPS is active while this app remains in the foreground.',
+        'El GPS en vivo está activo mientras la aplicación permanece abierta en primer plano.',
       );
     } catch (caught) {
       setLocationMessage('');
 
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Unable to start live GPS.',
-      );
+      setError(userFacingError(caught, 'No se pudo iniciar el GPS en vivo.'));
     }
   };
 
@@ -559,20 +545,20 @@ export default function App() {
           </Text>
 
           <Text style={styles.brandSub}>
-            TRANSPORT · DRIVER
+            TRANSPORTE · CONDUCTOR
           </Text>
 
           <Text style={styles.title}>
-            Driver access
+            Acceso para conductores
           </Text>
 
           <Text style={styles.copy}>
-            Use the account assigned by Operations.
+            Usa la cuenta que te asignó Operaciones.
           </Text>
 
           <TextInput
             style={styles.input}
-            placeholder="Email"
+            placeholder="Correo electrónico"
             autoCapitalize="none"
             keyboardType="email-address"
             value={email}
@@ -581,7 +567,7 @@ export default function App() {
 
           <TextInput
             style={styles.input}
-            placeholder="Password"
+            placeholder="Contraseña"
             secureTextEntry
             value={password}
             onChangeText={setPassword}
@@ -593,7 +579,7 @@ export default function App() {
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              Sign in
+              Iniciar sesión
             </Text>
           </TouchableOpacity>
 
@@ -621,7 +607,7 @@ export default function App() {
             </Text>
 
             <Text style={styles.brandSub}>
-              TRANSPORT · DRIVER
+              TRANSPORTE · CONDUCTOR
             </Text>
           </View>
 
@@ -629,13 +615,13 @@ export default function App() {
             onPress={refresh}
           >
             <Text style={styles.link}>
-              Refresh
+              Actualizar
             </Text>
           </TouchableOpacity>
         </View>
 
         <Text style={styles.title}>
-          {driver?.name ?? 'Driver'}
+          {driver?.name ?? 'Conductor'}
         </Text>
 
         <Text style={styles.copy}>
@@ -652,7 +638,7 @@ export default function App() {
 
         <View style={styles.card}>
           <Text style={styles.cardKicker}>
-            SCHEDULE
+            HORARIO
           </Text>
 
           {schedule.length
@@ -678,13 +664,13 @@ export default function App() {
                     </View>
 
                     <Text style={styles.status}>
-                      {item.status}
+                      {statusLabel(item.status)}
                     </Text>
                   </View>
                 ))
             : (
               <Text style={styles.copy}>
-                No upcoming schedule entries.
+                No tienes turnos próximos.
               </Text>
             )}
         </View>
@@ -693,7 +679,7 @@ export default function App() {
           <>
             <View style={styles.card}>
               <Text style={styles.cardKicker}>
-                ASSIGNED TRIP
+                VIAJE ASIGNADO
               </Text>
 
               <Text style={styles.cardTitle}>
@@ -705,7 +691,7 @@ export default function App() {
               </Text>
 
               <Text>
-                Status: {trip.status}
+                Estado: {statusLabel(trip.status)}
               </Text>
             </View>
 
@@ -782,20 +768,31 @@ export default function App() {
                         latestLocation.longitude,
                       ),
                     }}
-                    title="Current vehicle position"
+                    title="Ubicación actual del autobús"
                     pinColor="#2da9df"
                   />
                 )}
               </MapView>
             )}
 
+            {!journey && (
+              <View style={styles.card}>
+                <Text style={styles.cardKicker}>
+                  MAPA DE RUTA
+                </Text>
+                <Text style={styles.copy}>
+                  El mapa no está disponible ahora. Puedes continuar con la información y las acciones del viaje.
+                </Text>
+              </View>
+            )}
+
             <View style={styles.card}>
               <Text style={styles.cardKicker}>
-                LIVE GPS
+                GPS EN VIVO
               </Text>
 
               <Text style={styles.copy}>
-                GPS is transmitted only after you grant device permission and only while the assigned trip is boarding or in progress.
+                La ubicación se comparte solo después de conceder el permiso del dispositivo y mientras el viaje asignado esté en abordaje o en curso.
               </Text>
 
               {!!locationMessage && (
@@ -810,7 +807,7 @@ export default function App() {
                   onPress={sendCurrentLocation}
                 >
                   <Text style={styles.secondaryButtonText}>
-                    Send current GPS
+                    Enviar ubicación actual
                   </Text>
                 </TouchableOpacity>
 
@@ -820,7 +817,7 @@ export default function App() {
                     onPress={startLocationTracking}
                   >
                     <Text style={styles.buttonText}>
-                      Start live GPS
+                      Iniciar GPS en vivo
                     </Text>
                   </TouchableOpacity>
                 ) : (
@@ -829,7 +826,7 @@ export default function App() {
                     onPress={stopLocationTracking}
                   >
                     <Text style={styles.stopButtonText}>
-                      Stop live GPS
+                      Detener GPS en vivo
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -838,7 +835,7 @@ export default function App() {
 
             <View style={styles.card}>
               <Text style={styles.cardKicker}>
-                PASSENGERS
+                PASAJEROS
               </Text>
 
               {passengers.length
@@ -872,15 +869,15 @@ export default function App() {
                     >
                       <Text style={styles.smallButtonText}>
                         {passenger.boarded_at
-                          ? 'Boarded'
-                          : 'Board'}
+                          ? 'Abordó'
+                          : 'Registrar abordaje'}
                       </Text>
                     </TouchableOpacity>
                   </View>
                 ))
                 : (
                   <Text style={styles.copy}>
-                    No confirmed passengers.
+                    Todavía no hay pasajeros confirmados.
                   </Text>
                 )}
             </View>
@@ -899,19 +896,19 @@ export default function App() {
             >
               <Text style={styles.buttonText}>
                 {trip.status === 'in_progress'
-                  ? 'Complete trip'
-                  : 'Start trip'}
+                  ? 'Finalizar viaje'
+                  : 'Iniciar viaje'}
               </Text>
             </TouchableOpacity>
 
             <View style={styles.card}>
               <Text style={styles.cardKicker}>
-                INCIDENT
+                INCIDENCIA
               </Text>
 
               <TextInput
                 style={styles.input}
-                placeholder="Incident title"
+                placeholder="Título de la incidencia"
                 value={incidentTitle}
                 onChangeText={setIncidentTitle}
               />
@@ -921,7 +918,7 @@ export default function App() {
                   styles.input,
                   styles.textArea,
                 ]}
-                placeholder="Describe what happened"
+                placeholder="Describe lo ocurrido"
                 multiline
                 value={incidentDescription}
                 onChangeText={
@@ -934,7 +931,7 @@ export default function App() {
                 onPress={reportIncident}
               >
                 <Text style={styles.secondaryButtonText}>
-                  Report incident
+                  Reportar incidencia
                 </Text>
               </TouchableOpacity>
             </View>
@@ -942,7 +939,7 @@ export default function App() {
         ) : (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>
-              No active or upcoming trip assigned.
+              No tienes viajes activos o próximos asignados.
             </Text>
           </View>
         )}
@@ -959,7 +956,7 @@ export default function App() {
           }}
         >
           <Text style={styles.secondaryButtonText}>
-            Sign out
+            Cerrar sesión
           </Text>
         </TouchableOpacity>
       </ScrollView>

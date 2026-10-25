@@ -52,7 +52,7 @@ function ensureSharedStyles() {
     .encore-map-marker--destination{background:#1f9d74}
     .encore-map-marker--vehicle{background:#2da9df;border-radius:50%;transform:none}
     .encore-map-marker--vehicle span{transform:none}
-    .encore-map-fallback{min-height:260px;display:grid;place-items:center;padding:24px;text-align:center;background:linear-gradient(145deg,#dbeef5,#f4f9fb);color:#536c7c}
+    .encore-map-fallback{box-sizing:border-box;width:100%;height:100%;min-height:inherit;display:grid;place-items:center;padding:24px;text-align:center;background:linear-gradient(145deg,#dbeef5,#f4f9fb);color:#536c7c}
     .encore-map-fallback strong{display:block;color:#102130;margin-bottom:6px}
     .encore-map-attribution-note{font-size:11px;color:#667b89}
     .encore-map-runtime-status{position:absolute;z-index:900;left:12px;right:12px;bottom:12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.95);border:1px solid #d7e3e9;color:#536c7c;font-size:12px;box-shadow:0 8px 22px rgba(20,55,75,.14)}
@@ -332,6 +332,7 @@ export function destroyRealMap(container) {
 export async function renderJourneyMap(container, journey, options = {}) {
   if (!container) return null;
 
+  ensureSharedStyles();
   destroyRealMap(container);
   container.classList.add('encore-real-map');
 
@@ -475,6 +476,7 @@ export async function renderJourneyMap(container, journey, options = {}) {
 export async function renderJourneyMapWithLoader(container, loadJourney, options = {}) {
   if (!container) return null;
 
+  ensureSharedStyles();
   container.innerHTML = `
     <div class="encore-map-fallback">
       <div>
@@ -611,6 +613,14 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
       marker.remove();
       state.vehicleMarkers.delete(key);
     }
+  }
+
+  const selectedMarker = options.selectedTripId
+    ? state.vehicleMarkers.get(String(options.selectedTripId))
+    : null;
+  if (selectedMarker) {
+    state.map.setView(selectedMarker.getLatLng(), Math.max(state.map.getZoom(), 10), { animate: false });
+    selectedMarker.openPopup();
   }
 
   const points = [

@@ -46,7 +46,7 @@ class AdminDashboardController extends Controller {
         }
 
         $bookings = $canBookings
-            ? Booking::query()->latest()->limit(100)->get()
+            ? Booking::query()->with(['trip.route', 'trip.bus'])->withCount('passengers')->latest()->limit(100)->get()
             : collect();
         $capacity = $canTrips && $canVehicles
             ? $trips->sum(fn ($trip) => (int) ($trip->bus?->capacity ?? 0))

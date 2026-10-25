@@ -12,8 +12,7 @@ class LiveNetworkController extends Controller
     {
         $trips = Trip::query()
             ->with(['route.stops', 'bus', 'latestLocation'])
-            ->whereIn('status', ['scheduled', 'boarding', 'in_progress'])
-            ->whereHas('latestLocation')
+            ->where('status', 'in_progress')
             ->orderBy('departure_date')
             ->orderBy('departure_time')
             ->get();
@@ -35,6 +34,8 @@ class LiveNetworkController extends Controller
         $activeTrips = $trips->map(function (Trip $trip) {
             $location = $trip->latestLocation;
             $departure = $trip->departure_date?->toDateString().' '.$trip->departure_time;
+            $recordedAt = $location?->recorded_at;
+            $isStale = !$recordedAt || $recordedAt->lt(now()->subMinutes(5)) || $recordedAt->gt(now()->addMinute());
 
             return [
                 'trip_id' => (string) $trip->id,
@@ -42,10 +43,11 @@ class LiveNetworkController extends Controller
                 'origin' => $trip->route?->origin,
                 'destination' => $trip->route?->destination,
                 'bus_code' => $trip->bus?->code,
-                'latitude' => (float) $location->latitude,
-                'longitude' => (float) $location->longitude,
-                'heading' => $location->heading !== null ? (float) $location->heading : null,
-                'last_location_at' => $location->recorded_at?->toIso8601String(),
+                'latitude' => !$isStale && $location ? (float) $location->latitude : null,
+                'longitude' => !$isStale && $location ? (float) $location->longitude : null,
+                'heading' => !$isStale && $location?->heading !== null ? (float) $location->heading : null,
+                'last_location_at' => $recordedAt?->toIso8601String(),
+                'is_stale' => $isStale,
                 'status' => $trip->status,
                 'departure_time' => $departure,
                 'estimated_arrival' => $trip->arrival_time,

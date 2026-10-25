@@ -4,6 +4,7 @@ namespace App\Http\Resources\Api\V1;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class RouteResource extends JsonResource
 {
@@ -12,6 +13,7 @@ class RouteResource extends JsonResource
         return [
             'id'=>$this->id,'origin'=>$this->origin,'destination'=>$this->destination,
             'distance_km'=>$this->distance_km,'distance_meters'=>$this->distance_meters,'duration_seconds'=>$this->duration_seconds,
+            'image_url'=>$this->image_path ? Storage::disk('public')->url($this->image_path) : null,
             'origin_coordinates'=>$this->origin_latitude!==null?['latitude'=>(float)$this->origin_latitude,'longitude'=>(float)$this->origin_longitude]:null,
             'destination_coordinates'=>$this->destination_latitude!==null?['latitude'=>(float)$this->destination_latitude,'longitude'=>(float)$this->destination_longitude]:null,
             'route_geometry'=>$this->route_geometry,'active'=>(bool)$this->active,

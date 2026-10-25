@@ -68,12 +68,13 @@ class SeatAvailabilityService
                         ->where(fn ($time) => $time->whereNull('held_until')->orWhere('held_until', '>', now())));
             })
             ->get(['trip_id', 'bus_seat_id', 'origin_stop_sequence', 'destination_stop_sequence']);
+        $reservationsByTrip = $reservations->groupBy('trip_id');
 
         $result = [];
         foreach ($tripList as $trip) {
             $segment = $segmentsByTripId[$trip->id] ?? null;
             if (!$segment) continue;
-            $reserved = $reservations->where('trip_id', $trip->id)
+            $reserved = ($reservationsByTrip->get($trip->id) ?? collect())
                 ->filter(fn ($bookingSeat) => $bookingSeat->origin_stop_sequence < $segment['destination_sequence']
                     && $bookingSeat->destination_stop_sequence > $segment['origin_sequence'])
                 ->pluck('bus_seat_id')->unique()->count();

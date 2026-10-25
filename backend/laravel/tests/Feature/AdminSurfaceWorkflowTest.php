@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\ApiToken;
 use App\Models\Bus;
+use App\Models\Booking;
 use App\Models\Driver;
 use App\Models\Role;
 use App\Models\User;
@@ -76,13 +77,50 @@ class AdminSurfaceWorkflowTest extends TestCase
 
         $vehicle = $this->withToken($adminToken)->postJson('/api/v1/admin/vehicles', [
             'code' => 'BUS-QA-8821', 'plate' => 'ET-QA-8821', 'capacity' => 2, 'status' => 'operational',
-        ])->assertCreated();
+            'seats' => [
+                ['seat_number' => 'A1', 'row_number' => 1, 'position_index' => 1, 'window' => true],
+                ['seat_number' => 'A2', 'row_number' => 1, 'position_index' => 2, 'aisle' => true],
+            ],
+        ])->assertCreated()->assertJsonPath('data.seats.0.seat_number', 'A1');
         $busId = $vehicle->json('data.id');
         $this->withToken($adminToken)->putJson('/api/v1/admin/vehicles/'.$busId, [
             'code' => 'BUS-QA-8821', 'plate' => 'ET-QA-8822', 'capacity' => 2, 'status' => 'maintenance',
-        ])->assertOk()->assertJsonPath('data.status', 'maintenance');
+            'seats' => [
+                ['seat_number' => 'A1', 'row_number' => 1, 'position_index' => 1, 'window' => true],
+                ['seat_number' => 'A2', 'row_number' => 1, 'position_index' => 2, 'aisle' => true, 'accessible' => true, 'blocked' => true],
+            ],
+        ])->assertOk()->assertJsonPath('data.status', 'maintenance')
+            ->assertJsonPath('data.seats.1.accessible', true)
+            ->assertJsonPath('data.seats.1.blocked', true);
+        $this->withToken($adminToken)->putJson('/api/v1/admin/vehicles/'.$busId, [
+            'code' => 'BUS-QA-8821', 'plate' => 'ET-QA-8822', 'capacity' => 3, 'status' => 'maintenance',
+            'seats' => [['seat_number' => 'A1'], ['seat_number' => 'A2']],
+        ])->assertUnprocessable()->assertJsonValidationErrors('capacity');
         $this->assertInstanceOf(Bus::class, Bus::query()->findOrFail($busId));
         $this->assertInstanceOf(Driver::class, Driver::query()->findOrFail($driverId));
+    }
+
+    public function test_admin_booking_list_and_existing_detail_endpoint_supply_operational_context(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+        $passenger = User::query()->where('email', 'passenger@example.test')->firstOrFail();
+        $booking = Booking::query()->where('reference', 'ET-DEMO-BOOKING')->firstOrFail();
+
+        $dashboard = $this->withToken($this->tokenFor($admin))->getJson('/api/v1/admin/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.bookings.0.reference', 'ET-DEMO-BOOKING')
+            ->assertJsonPath('data.bookings.0.trip.route.origin', 'Georgetown')
+            ->assertJsonPath('data.bookings.0.passengers_count', 0);
+
+        $this->assertNotEmpty($dashboard->json('data.bookings.0.trip.bus.code'));
+        $this->withToken($this->tokenFor($admin))->getJson('/api/v1/bookings/'.$booking->id)
+            ->assertOk()
+            ->assertJsonPath('data.reference', 'ET-DEMO-BOOKING')
+            ->assertJsonPath('data.trip.route.destination', 'New Amsterdam')
+            ->assertJsonStructure(['data' => ['reserved_seats', 'passengers', 'payments', 'ticket']]);
+
+        $this->withToken($this->tokenFor($passenger))->getJson('/api/v1/bookings/'.$booking->id)
+            ->assertOk()->assertJsonPath('data.user_id', $passenger->id);
     }
 
     private function tokenFor(User $user): string

@@ -13,6 +13,7 @@ function esc(value = '') {
 export function icon(name) {
   const paths = {
     plus: '<path d="M12 5v14M5 12h14"/>',
+    view: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
     edit: '<path d="m4 16-.8 4.8L8 20l10.8-10.8a2.1 2.1 0 0 0-3-3L5 17z"/><path d="m14.5 7.5 2 2"/>',
     archive: '<path d="M4 7h16M6 7v12h12V7M9 11h6"/><path d="m5 4h14v3H5z"/>',
     save: '<path d="M5 4h12l2 2v14H5z"/><path d="M8 4v6h8V4M8 20v-6h8v6"/>',
@@ -38,7 +39,7 @@ export function table(title, headers, rows, options = {}) {
           <div class="eyebrow">${esc(options.eyebrow ?? title)}</div>
           <h2>${esc(title)}</h2>
         </div>
-        <span class="badge badge--neutral">${rows.length} records</span>
+        <span class="badge badge--neutral">${rows.length} ${rows.length === 1 ? 'record' : 'records'}</span>
       </div>
 
       <div class="premium-table-toolbar">
@@ -85,13 +86,42 @@ export function table(title, headers, rows, options = {}) {
       </div>
 
       <footer class="premium-table-footer" data-table-footer="${esc(id)}">
-        <span data-table-count>${rows.length} records</span>
+        <span data-table-count>${rows.length} ${rows.length === 1 ? 'record' : 'records'}</span>
         <div>
           <button type="button" data-table-prev>Previous</button>
           <span data-table-page>1 / 1</span>
           <button type="button" data-table-next>Next</button>
         </div>
       </footer>
+    </section>`;
+}
+
+export function bookingDetailsView(booking) {
+  const trip = booking.trip ?? {};
+  const route = trip.route ?? {};
+  const seats = booking.reserved_seats?.map((item) => item.seat?.seat_number).filter(Boolean)
+    ?? booking.seat_numbers ?? [];
+  const passengers = booking.passengers ?? [];
+  const payments = booking.payments ?? [];
+  const tripLabel = route.origin && route.destination ? `${route.origin} → ${route.destination}` : 'Route unavailable';
+  const tripDate = [String(trip.departure_date ?? '').slice(0, 10), String(trip.departure_time ?? '').slice(0, 5)].filter(Boolean).join(' · ') || 'Departure unavailable';
+
+  return `
+    <div class="booking-detail-header">
+      <div><div class="eyebrow">Booking details</div><h2>${esc(booking.reference ?? 'Booking')}</h2></div>
+      <button class="button button--icon" type="button" data-close-booking-details aria-label="Close booking details">${icon('close')}</button>
+    </div>
+    <div class="booking-detail-grid">
+      <article><span>Status</span><strong>${esc(String(booking.status ?? 'unknown').replaceAll('_', ' '))}</strong></article>
+      <article><span>Trip</span><strong>${esc(tripLabel)}</strong><small>${esc(tripDate)}${trip.bus?.code ? ` · ${esc(trip.bus.code)}` : ''}</small></article>
+      <article><span>Lead passenger</span><strong>${esc(booking.passenger_name ?? '—')}</strong><small>${esc(booking.passenger_email || 'No email')} · ${esc(booking.passenger_phone || 'No phone')}</small></article>
+      <article><span>Seats</span><strong>${esc(seats.length ? seats.join(', ') : 'Not assigned')}</strong></article>
+      <article><span>Passengers</span><strong>${passengers.length}</strong><small>${passengers.map((passenger) => esc(passenger.full_name)).join(', ') || 'No passenger records'}</small></article>
+      <article><span>Booking total</span><strong>${money(booking.total_amount ?? 0)}</strong></article>
+    </div>
+    <section class="booking-detail-payments"><h3>Payments and ticket</h3>
+      ${payments.length ? `<ul>${payments.map((payment) => `<li><span>${esc(payment.gateway ?? 'Payment')} · ${esc(payment.currency ?? '')}</span><strong>${esc(payment.status)} · ${money(Number(payment.amount_minor ?? 0) / 100)}</strong></li>`).join('')}</ul>` : '<p>No payment attempts recorded.</p>'}
+      <p>Ticket: <strong>${esc(booking.ticket?.status ?? 'Not issued')}</strong>${booking.ticket?.issued_at ? ` · issued ${esc(booking.ticket.issued_at)}` : ''}</p>
     </section>`;
 }
 
@@ -124,7 +154,7 @@ export function dashboardView(data) {
     ) : ''}`;
 }
 
-export function incidentsView(items) {
+export function incidentsView(items, canUpdate = false) {
   return `
     <section class="admin-panel admin-panel--pad module-view">
       <div class="module-view__header">
@@ -132,7 +162,7 @@ export function incidentsView(items) {
           <div class="eyebrow">Operational follow-up</div>
           <h2>Incidents</h2>
         </div>
-        <span class="badge badge--neutral">${items.length} records</span>
+        <span class="badge badge--neutral">${items.length} ${items.length === 1 ? 'record' : 'records'}</span>
       </div>
 
       <div class="premium-record-list">
@@ -147,26 +177,18 @@ export function incidentsView(items) {
                     <span>Trip ${esc(item.trip?.id ?? '—')}</span>
                     <span>${esc(String(item.created_at ?? '').slice(0, 16))}</span>
                   </div>
-                  <h3>${esc(item.title ?? 'Incident')}</h3>
-                  <p>${esc(item.description ?? '')}</p>
+                  ${canUpdate ? `<div class="incident-edit-fields"><label><span>Title</span><input data-incident-title="${esc(item.id)}" maxlength="120" value="${esc(item.title ?? '')}" /></label><label><span>Description</span><textarea data-incident-description="${esc(item.id)}" maxlength="5000" rows="3">${esc(item.description ?? '')}</textarea></label></div>` : `<h3>${esc(item.title ?? 'Incident')}</h3><p>${esc(item.description ?? '')}</p>`}
                 </div>
 
                 <div class="premium-record__actions">
-                  <label>
-                    <span>Status</span>
-                    <select data-incident-status="${esc(item.id)}">
-                      ${['open', 'in_progress', 'resolved', 'dismissed'].map((status) => `
-                        <option value="${status}" ${item.status === status ? 'selected' : ''}>
-                          ${status.replaceAll('_', ' ')}
-                        </option>`).join('')}
-                    </select>
-                  </label>
+                  ${canUpdate ? `<label><span>Severity</span><select data-incident-severity="${esc(item.id)}">${['low', 'medium', 'high'].map((severity) => `<option value="${severity}" ${item.severity === severity ? 'selected' : ''}>${severity}</option>`).join('')}</select></label>
+                  <label><span>Status</span><select data-incident-status="${esc(item.id)}">${['open', 'in_progress', 'resolved', 'dismissed'].map((status) => `<option value="${status}" ${item.status === status ? 'selected' : ''}>${status.replaceAll('_', ' ')}</option>`).join('')}</select></label>
                   <button
                     type="button"
                     class="button button--ghost"
                     data-save-incident="${esc(item.id)}">
                     Save
-                  </button>
+                  </button>` : `<span class="badge badge--neutral">${esc(item.status ?? 'open').replaceAll('_', ' ')}</span>`}
                 </div>
               </article>`).join('')
           : `<div class="et-empty">No incidents found.</div>`}

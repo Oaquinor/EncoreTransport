@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\ApiToken;
 use App\Models\Booking;
+use App\Models\Driver;
 use App\Models\DriverLocation;
+use App\Models\Role;
 use App\Models\Trip;
 use App\Models\User;
 use Database\Seeders\Demo\EncoreTransportDemoSeeder;
@@ -81,6 +83,39 @@ class DriverLocationPrivacyTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.id', $trip->id)
             ->assertJsonPath('data.status', $trip->status);
+    }
+
+    public function test_assigned_driver_can_persist_location_during_boarding(): void
+    {
+        $trip = Trip::query()->firstOrFail();
+        $trip->update(['status' => 'boarding']);
+        $driverUser = $trip->driver?->user;
+
+        $this->assertNotNull($driverUser);
+
+        $recordedAt = now()->toISOString();
+
+        $this->withToken($this->tokenFor($driverUser))
+            ->postJson('/api/v1/driver/locations', [
+                'trip_id' => $trip->id,
+                'latitude' => 18.486058,
+                'longitude' => -69.931212,
+                'heading' => 90,
+                'speed_kph' => 18.5,
+                'recorded_at' => $recordedAt,
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.trip_id', $trip->id)
+            ->assertJsonPath('data.latitude', '18.4860580')
+            ->assertJsonPath('data.longitude', '-69.9312120');
+
+        $this->assertDatabaseHas('driver_locations', [
+            'driver_id' => $trip->driver_id,
+            'trip_id' => $trip->id,
+            'latitude' => 18.486058,
+            'longitude' => -69.931212,
+            'speed_kph' => 18.5,
+        ]);
     }
 
     public function test_driver_api_flow_supports_passenger_boarding_incidents_and_trip_completion(): void
@@ -218,19 +253,23 @@ class DriverLocationPrivacyTest extends TestCase
     public function test_unassigned_driver_cannot_read_other_trip_location(): void
     {
         $trip = Trip::query()->firstOrFail();
-
-        $otherDriver = User::query()
-            ->where('role', 'driver')
-            ->whereKeyNot(
-                $trip->driver?->user_id
-            )
-            ->first();
-
-        if (!$otherDriver) {
-            $this->markTestSkipped(
-                'Demo seed contains only one driver account.'
-            );
-        }
+        $otherDriver = User::query()->create([
+            'name' => 'Unassigned Driver',
+            'email' => 'unassigned-driver@example.test',
+            'role' => 'driver',
+            'phone' => '+18095550009',
+            'active' => true,
+            'password' => 'password',
+        ]);
+        $otherDriver->roles()->attach(
+            Role::query()->where('name', 'driver')->firstOrFail()->id
+        );
+        Driver::query()->create([
+            'user_id' => $otherDriver->id,
+            'name' => $otherDriver->name,
+            'license_number' => 'D-QA-UNASSIGNED',
+            'status' => 'upcoming',
+        ]);
 
         $this->withToken(
             $this->tokenFor($otherDriver)

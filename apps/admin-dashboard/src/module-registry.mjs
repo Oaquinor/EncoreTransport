@@ -5,6 +5,7 @@ export const modules=[
   {id:'vehicles',label:'Vehicles',group:'Fleet',permission:'vehicles.view'},
   {id:'drivers',label:'Drivers',group:'Fleet',permission:'drivers.view'},
   {id:'routes',label:'Routes',group:'Fleet',permission:'routes.view'},
+  {id:'website',label:'Website content',group:'System',permission:'settings.view'},
   {id:'schedules',label:'Driver schedules',group:'Fleet',permission:'schedules.view'},
   {id:'packages',label:'Packages',group:'Customer service',permission:'cargo.view'},
   {id:'incidents',label:'Incidents',group:'Customer service',permission:'incidents.view'},
