@@ -1,0 +1,27 @@
+EncoreTransport — native mobile E2E evidence
+Date: 2026-10-25
+Environment: Android emulator emulator-5554, x86_64, API 36. No production services/data.
+
+Driver Mobile — real local API check
+- `npm run validate:mobile`: PASS (native GPS contract and TypeScript checks for Passenger Mobile and Driver Mobile).
+- Android debug APK: `assembleDebug` PASS; installed with adb PASS.
+- Against isolated Laravel + SQLite demo: POST `/auth/login`, GET `/driver/me`, `/driver/trips/current`, `/driver/schedule`, `/driver/trips/1/passengers`, and `/trips/1/location` returned success; demo schedule and passenger list were empty.
+- TomTom journey returned HTTP 503 without `TOMTOM_API_KEY`. The previous app treated this optional map failure as login failure, then crashed because `{data:null}` was treated as a map. Both issues were corrected.
+- Rebuilt APK UI: authenticated Driver Demo, assigned Georgetown → New Amsterdam trip, and displayed the unavailable-map fallback; the screen stayed interactive without a JS crash.
+
+Driver Mobile — isolated UI action contract check
+- After the Laravel/SQLite temporary files were removed by the WSL environment, an isolated local Node mock exposed the mobile contract. No application/backend source was changed for this mock and no real data was touched.
+- Through Android UI, login succeeded and displayed the assigned trip.
+- Tapping `Iniciar viaje` sent `POST /driver/trips/1/start`; the mock returned `in_progress`, and the UI switched to `Finalizar viaje`.
+- Tapping `Finalizar viaje` sent `POST /driver/trips/1/complete`; the mock returned `completed`, and the UI changed to “No tienes viajes activos o próximos asignados.”
+- With the trip in progress, the native one-time GPS button prompted for foreground location permission. After permission was granted and an emulator coordinate was supplied, the app sent `POST /driver/locations` with `trip_id`, latitude, longitude, heading, speed, and timestamp, then showed “La ubicación GPS se envió a Operaciones.” The mock returned HTTP 201.
+- These checks prove mobile UI wiring, permission flow, request shape, and state updates against a mock, not Laravel persistence. Laravel/Driver PWA E2E separately covers real trip transitions and GPS behavior. Continuous mobile GPS tracking was not tested.
+
+Passenger Mobile
+- Android debug APK completed search Georgetown → New Amsterdam (2026-10-28), selected BUS-001 seat 55, and created booking `ET-TQHCQIGOLK` for $85.
+- The payment attempt returned failed and the booking remained pending/unpaid.
+- Native cancellation/expiry/multi-passenger flows were not repeated here; backend tests and Passenger Web E2E cover them.
+
+Limitations
+- Debug builds only; no release signing or physical-device verification.
+- Real TomTom routing/tiles, production payment callbacks, and production mail credentials were unavailable and not simulated.

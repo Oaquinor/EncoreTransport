@@ -1,0 +1,3 @@
+EncoreTransport visual review, 2026-10-24
+
+Includes screenshots for Website, Passenger, Driver, Admin, Login and Tracking at 360, 390, 768, 1024, 1440 and 1920 px. The flows folders include authenticated CMS, route image and three-segment editor, fleet seat layout, driver/trip creation, user and role management, driver schedules, vehicle reports, booking details, incident review and status changes, passenger booking/cancellation, and public network map states from local SQLite review environments. The accompanying report also records the availability batching check and local microbenchmark. See EncoreTransport_Closeout_Report.md for findings, validation results and external blockers. No production data or credentials included.
