@@ -18,6 +18,7 @@ export function icon(name) {
     archive: '<path d="M4 7h16M6 7v12h12V7M9 11h6"/><path d="m5 4h14v3H5z"/>',
     save: '<path d="M5 4h12l2 2v14H5z"/><path d="M8 4v6h8V4M8 20v-6h8v6"/>',
     close: '<path d="m6 6 12 12M18 6 6 18"/>',
+    user: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.7-3.3 3.2-5 7-5s6.3 1.7 7 5"/>',
   };
   return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] ?? ''}</svg>`;
 }
@@ -317,6 +318,36 @@ export function reportView(kind, data, options = {}) {
       ]),
       { id: 'travel-report' },
     );
+  }
+
+  if (kind === 'bookings') {
+    return table('Bookings Report', ['Reference', 'Created', 'Trip date', 'Route', 'Vehicle', 'Passenger', 'Passengers', 'Seats', 'Amount', 'Booking', 'Payment'],
+      (data.items ?? []).map((item) => [item.reference, item.created_at, item.trip_date, item.route, item.vehicle, item.passenger, item.passenger_count, item.seats, money(item.amount), item.status, item.payment_status]),
+      { id: 'bookings-report' });
+  }
+
+  if (kind === 'revenue') {
+    return table('Revenue Report', ['Payment', 'Paid at', 'Booking', 'Route', 'Amount', 'Currency', 'Gateway'],
+      (data.items ?? []).map((item) => [item.payment_reference, item.paid_at, item.booking_reference, item.route, money(Number(item.amount ?? 0) / 100), item.currency, item.gateway]),
+      { id: 'revenue-report' });
+  }
+
+  if (kind === 'incidents') {
+    return table('Incidents Report', ['Incident', 'Reported', 'Route', 'Driver', 'Title', 'Severity', 'Status', 'Resolved'],
+      (data.items ?? []).map((item) => [item.id, item.reported_at, item.route, item.driver, item.title, item.severity, item.status, item.resolved_at]),
+      { id: 'incidents-report' });
+  }
+
+  if (kind === 'packages') {
+    return table('Packages Report', ['Reference', 'Created', 'Route', 'Driver', 'Status', 'Delivered'],
+      (data.items ?? []).map((item) => [item.reference, item.created_at, item.route, item.driver, item.status, item.delivered_at]),
+      { id: 'packages-report' });
+  }
+
+  if (kind === 'schedules') {
+    return table('Schedules Report', ['Date', 'Start', 'End', 'Driver', 'Vehicle', 'Route', 'Status'],
+      (data.items ?? []).map((item) => [item.date, item.starts_at, item.ends_at, item.driver, item.vehicle, item.route, item.status]),
+      { id: 'schedules-report' });
   }
 
   if (kind === 'vehicles') {

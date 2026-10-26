@@ -1028,6 +1028,16 @@ body {
   background: var(--pub-navy);
   color: #fff;
 }
+.public-service-card__icon svg {
+  display: block;
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 
 .public-service-card > div:nth-child(3) {
   grid-column: 1 / -1;
@@ -1184,7 +1194,7 @@ body {
   box-shadow: var(--pub-shadow-sm);
 }
 .parcel-feature__art { position: relative; display: grid; place-items: center; width: 126px; height: 112px; border-radius: 24px; background: linear-gradient(145deg, #0e4058, #078fbd); color: white; transform: rotate(-3deg); }
-.parcel-feature__art span { z-index: 1; font-size: 3.5rem; font-weight: 900; line-height: 1; }
+.parcel-feature__art svg { z-index: 1; width: 74px; height: 74px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 5px 8px rgba(0,0,0,.16)); }
 .parcel-feature__art i, .parcel-feature__art b, .parcel-feature__art em { position: absolute; width: 10px; height: 10px; border: 2px solid #fff; border-radius: 50%; background: #11a6d4; }
 .parcel-feature__art i { left: 27px; bottom: 17px; }.parcel-feature__art b { right: 27px; bottom: 17px; }.parcel-feature__art em { right: 17px; top: 18px; width: 6px; height: 6px; }
 .parcel-feature__copy h2 { margin: 4px 0 7px; color: var(--pub-ink); font-size: clamp(1.35rem, 2vw, 2rem); letter-spacing: -.04em; }
@@ -1686,7 +1696,7 @@ body {
 @media (max-width: 760px) {
   .parcel-feature { grid-template-columns: 72px minmax(0, 1fr); gap: 16px; margin-block: 20px 48px; padding: 20px; border-radius: 20px; }
   .parcel-feature__art { width: 68px; height: 68px; border-radius: 17px; }
-  .parcel-feature__art span { font-size: 2.5rem; }
+  .parcel-feature__art svg { width: 48px; height: 48px; }
   .parcel-feature > .btn { grid-column: 1 / -1; width: 100%; justify-content: center; }
   .public-map-card__bar { min-height: 58px; height: auto; padding: 9px 12px; }
   .public-map-card__bar select { min-width: 0; flex: 1; }

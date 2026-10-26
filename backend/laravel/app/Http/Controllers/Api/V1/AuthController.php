@@ -11,6 +11,7 @@ use App\Services\Audit\AuditService;
 use App\Services\Auth\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use OpenApi\Attributes as OA;
@@ -82,7 +83,9 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json(['user' => $request->user(), 'permissions' => $this->permissions->effective($request->user())]);
+        $user = $request->user();
+
+        return response()->json(['user' => $this->userPayload($user), 'permissions' => $this->permissions->effective($user)]);
     }
 
     public function logout(Request $request)
@@ -113,8 +116,19 @@ class AuthController extends Controller
             'token' => $plain,
             'token_type' => 'Bearer',
             'expires_at' => $token->expires_at,
-            'user' => $user,
+            'user' => $this->userPayload($user),
             'permissions' => $this->permissions->effective($user),
         ];
+    }
+
+    private function userPayload(User $user): array
+    {
+        $payload = $user->toArray();
+        $photoPath = $user->driver?->photo_path;
+        $payload['avatar_url'] = $photoPath
+            ? Storage::disk('public')->url($photoPath)
+            : null;
+
+        return $payload;
     }
 }

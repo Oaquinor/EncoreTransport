@@ -11,6 +11,7 @@ import {
 } from '../../packages/shared/real-map.mjs';
 import { modules } from './src/module-registry.mjs';
 import * as api from './src/api.mjs';
+import { reportFilename, reportToCsv, reportToJson } from './src/report-export.mjs';
 import {
   dashboardView,
   table,
@@ -377,14 +378,28 @@ function sidebar() {
       </nav>
 
       <div class="admin-access-profile" aria-label="Current access profile">
-        <span class="admin-access-profile__icon" aria-hidden="true">✓</span>
+        <span class="admin-access-profile__avatar">
+          ${profileImageSource(state.user) ? `<img src="${esc(profileImageSource(state.user))}" alt="" class="admin-access-profile__photo" data-profile-avatar-photo>` : ''}
+          <span class="admin-access-profile__icon" data-profile-avatar-fallback ${profileImageSource(state.user) ? 'hidden' : ''}>${icon('user')}</span>
+        </span>
         <div>
-          <small>Access profile</small>
-          <strong>${esc(state.user?.role ?? 'Staff account')}</strong>
-          <span>${state.permissions.length} active permissions</span>
+          <small>Account profile</small>
+          <strong>${esc(state.user?.name ?? state.user?.role ?? 'Staff account')}</strong>
+          <span>${esc(state.user?.role ?? 'Staff account')} · ${state.permissions.length} permissions</span>
         </div>
       </div>
     </aside>`;
+}
+
+function profileImageSource(user) {
+  const candidate = user?.avatar_url ?? user?.profile_photo_url ?? user?.photo_url ?? user?.avatar ?? user?.photo_path ?? user?.driver?.photo_url ?? user?.driver?.photo_path;
+  if (typeof candidate !== 'string' || !candidate.trim()) return '';
+  const value = candidate.trim();
+  if (/^https:\/\//i.test(value) || (value.startsWith('/') && !value.startsWith('//'))) return value;
+  if (/^(storage\/)?(avatars|profiles|users|drivers)\//i.test(value)) {
+    return `/storage/${value.replace(/^storage\//i, '')}`;
+  }
+  return '';
 }
 
 function liveMapPanel() {
@@ -636,9 +651,15 @@ function content() {
             <option value="travel" ${state.reportType === 'travel' ? 'selected' : ''}>Travel Report</option>
             <option value="vehicles" ${state.reportType === 'vehicles' ? 'selected' : ''}>Vehicle Report</option>
             <option value="trips" ${state.reportType === 'trips' ? 'selected' : ''}>Trip Report</option>
+            <option value="bookings" ${state.reportType === 'bookings' ? 'selected' : ''}>Bookings Report</option>
+            <option value="revenue" ${state.reportType === 'revenue' ? 'selected' : ''}>Revenue Report</option>
+            <option value="incidents" ${state.reportType === 'incidents' ? 'selected' : ''}>Incidents Report</option>
+            <option value="packages" ${state.reportType === 'packages' ? 'selected' : ''}>Packages Report</option>
+            <option value="schedules" ${state.reportType === 'schedules' ? 'selected' : ''}>Schedules Report</option>
             <option value="trip-costs" ${state.reportType === 'trip-costs' ? 'selected' : ''}>Trip Cost Summary</option>
           </select>
           <div class="report-filters"><label><span>From</span><input id="reportFrom" type="date" value="${esc(state.reportFrom)}" /></label><label><span>To</span><input id="reportTo" type="date" value="${esc(state.reportTo)}" /></label><button class="button button--primary" id="applyReportFilters" type="button">Update report</button></div>
+          ${state.reportData ? '<div class="report-outputs" aria-label="Report output options"><span>Export current report</span><button class="button button--ghost" id="exportReportCsv" type="button">Download CSV</button><button class="button button--ghost" id="exportReportJson" type="button">Download JSON</button><button class="button button--ghost" id="printReport" type="button">Print / Save PDF</button></div>' : ''}
         </div>
       </section>
 
@@ -670,6 +691,23 @@ function content() {
   if (state.module === 'website') return websiteEditor();
 
   return '';
+}
+
+function downloadReport(format) {
+  if (!state.reportData) return;
+  const isCsv = format === 'csv';
+  const body = isCsv
+    ? reportToCsv(state.reportType, state.reportData)
+    : reportToJson(state.reportType, state.reportData);
+  const type = isCsv ? 'text/csv;charset=utf-8' : 'application/json;charset=utf-8';
+  const blobUrl = URL.createObjectURL(new Blob([body], { type }));
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = reportFilename(state.reportType, format);
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
 }
 
 function render() {
@@ -788,6 +826,16 @@ async function loadModule() {
 }
 
 function wire() {
+  document.querySelectorAll('[data-profile-avatar-photo]').forEach((photo) => photo.addEventListener('error', () => {
+    photo.hidden = true;
+    const fallback = photo.parentElement?.querySelector('[data-profile-avatar-fallback]');
+    if (fallback) fallback.hidden = false;
+  }, { once: true }));
+
+  document.querySelector('#exportReportCsv')?.addEventListener('click', () => downloadReport('csv'));
+  document.querySelector('#exportReportJson')?.addEventListener('click', () => downloadReport('json'));
+  document.querySelector('#printReport')?.addEventListener('click', () => window.print());
+
   document.querySelectorAll('[data-module]').forEach((button) => {
     button.addEventListener('click', () => {
       if (state.accessDenied) return;

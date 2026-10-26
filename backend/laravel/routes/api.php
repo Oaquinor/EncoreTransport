@@ -125,6 +125,11 @@ Route::prefix('v1')->group(function () {
             Route::get('admin/reports/vehicles', [AdminReportController::class, 'vehicles']);
             Route::get('admin/reports/trips', [AdminReportController::class, 'trips']);
             Route::get('admin/reports/trip-costs', [AdminReportController::class, 'tripCosts']);
+            Route::get('admin/reports/bookings', [AdminReportController::class, 'bookings']);
+            Route::get('admin/reports/revenue', [AdminReportController::class, 'revenue']);
+            Route::get('admin/reports/incidents', [AdminReportController::class, 'incidents']);
+            Route::get('admin/reports/packages', [AdminReportController::class, 'packages']);
+            Route::get('admin/reports/schedules', [AdminReportController::class, 'schedules']);
         });
 
         Route::middleware('permission:incidents.view')->get('admin/incidents', [IncidentController::class, 'index']);

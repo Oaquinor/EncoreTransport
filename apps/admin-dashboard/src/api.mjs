@@ -182,6 +182,11 @@ export const report = async (type, params = {}) => {
     travel: '/travel',
     vehicles: '/vehicles',
     trips: '/trips',
+    bookings: '/bookings',
+    revenue: '/revenue',
+    incidents: '/incidents',
+    packages: '/packages',
+    schedules: '/schedules',
     'trip-costs': '/trip-costs',
   }[type] ?? '';
 

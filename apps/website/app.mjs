@@ -574,7 +574,8 @@ function renderNetworkSelection() {
       return `<article class="public-network-bus${selected ? ' is-selected' : ''}" data-network-bus="${esc(trip.trip_id)}"><div class="public-network-bus__identity"><span class="public-network-bus__icon" aria-hidden="true">🚌</span><div><strong>${esc(trip.bus_code || 'Encore bus')}</strong><span>${esc(trip.origin || '')} → ${esc(trip.destination || '')}</span></div></div><div class="public-network-bus__meta"><span class="public-network-bus__status${isLive ? ' is-live' : ' is-stale'}"><i></i>${isLive ? 'Sharing location' : 'GPS not current'}</span><small>${esc(timestamp)}</small></div><button type="button" data-network-trip="${esc(trip.trip_id)}" aria-pressed="${selected}" ${isLive ? '' : 'disabled'}>${selected ? 'Selected on map' : isLive ? 'Show on map' : 'Location unavailable'}</button></article>`;
     }).join('') : '<div class="public-network-empty"><strong>No buses are sharing a live location right now.</strong><span>Check again later for current, authorized GPS updates.</span></div>';
   }
-  void renderLiveNetworkMap(routeMapCanvas, filtered, { selectedTripId: selectedNetworkTripId });
+  void renderLiveNetworkMap(routeMapCanvas, filtered, { selectedTripId: selectedNetworkTripId })
+    .catch((error) => renderMapFallback(`Live map could not be drawn: ${String(error?.message ?? 'map service unavailable')}`));
 }
 
 async function refreshLiveNetwork() {
@@ -589,15 +590,14 @@ async function refreshLiveNetwork() {
     const latestLocation = trips.map((trip) => trip.last_location_at).filter(Boolean).sort().at(-1);
     setText('#mapEta', latestLocation ? new Date(latestLocation).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'No recent GPS');
     setText('#routeCount', routeCount || '—');
-    if (routeMapCanvas) renderNetworkSelection();
   } catch {
     setText('#mapStatus', 'Live network unavailable');
     setText('#mapEta', 'Update unavailable');
     const list = document.querySelector('#networkBusList');
     if (list) list.innerHTML = '<div class="public-network-empty"><strong>We could not refresh live vehicle locations.</strong><span>Live markers are cleared until the connection returns.</span><button type="button" data-network-retry>Try again</button></div>';
-    if (routeMapCanvas) void renderLiveNetworkMap(routeMapCanvas, { routes: [], trips: [] });
-    if (routeMapCanvas && !routeMapCanvas.querySelector('.leaflet-container')) {
-      renderMapFallback('Live vehicle positions are temporarily unavailable.');
+    if (routeMapCanvas) {
+      void renderLiveNetworkMap(routeMapCanvas, { routes: [], trips: [] })
+        .catch(() => renderMapFallback('Live vehicle positions are temporarily unavailable.'));
     }
   }
 }

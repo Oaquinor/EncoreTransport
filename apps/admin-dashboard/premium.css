@@ -93,17 +93,35 @@ body {
   background: rgba(255,255,255,.045);
 }
 
+.admin-access-profile__avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  overflow: hidden;
+  border: 1px solid rgba(142,224,255,.28);
+  border-radius: 50%;
+  background: rgba(105,208,245,.12);
+}
+
+.admin-access-profile__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .admin-access-profile__icon {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  flex: 0 0 28px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  background: rgba(105,208,245,.18);
   color: #8ee0ff;
-  font-weight: 950;
 }
+.admin-access-profile__icon .ui-icon { width: 21px; height: 21px; }
+.admin-access-profile [hidden] { display: none !important; }
 
 .admin-access-profile div { display: grid; gap: 2px; min-width: 0; }
 .admin-access-profile small { color: #7896a6; font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 850; }

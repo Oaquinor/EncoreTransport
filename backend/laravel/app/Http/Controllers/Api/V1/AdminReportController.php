@@ -9,7 +9,6 @@ use App\Models\Incident;
 use App\Models\Payment;
 use App\Models\Trip;
 use App\Models\TransportPackage;
-use App\Models\VehicleStatusReport;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
@@ -55,13 +54,24 @@ class AdminReportController extends Controller
         $confirmedBookings = (clone $bookings)->where('status', 'confirmed')->count();
         $activeFleet = Bus::query()->where('status', 'operational')->count();
 
-        $daily = collect(range(0, $from->diffInDays($to)))->map(function (int $offset) use ($from) {
+        $dailyTrips = Trip::query()->selectRaw('DATE(departure_date) as report_date, COUNT(*) as total')
+            ->whereBetween('departure_date', [$from->toDateString(), $to->toDateString()])
+            ->groupBy('report_date')->pluck('total', 'report_date');
+        $dailyBookings = Booking::query()->selectRaw('DATE(created_at) as report_date, COUNT(*) as total')
+            ->whereBetween('created_at', [$from, $to])
+            ->whereIn('status', ['confirmed', 'pending_payment'])
+            ->groupBy('report_date')->pluck('total', 'report_date');
+        $dailyRevenue = Payment::query()->selectRaw('DATE(created_at) as report_date, SUM(amount_minor) as total')
+            ->whereBetween('created_at', [$from, $to])->where('status', 'paid')
+            ->groupBy('report_date')->pluck('total', 'report_date');
+        $daily = collect(range(0, $from->diffInDays($to)))->map(function (int $offset) use ($from, $dailyTrips, $dailyBookings, $dailyRevenue) {
             $day = $from->addDays($offset);
+            $date = $day->toDateString();
             return [
-                'date' => $day->toDateString(),
-                'trips' => Trip::query()->whereDate('departure_date', $day)->count(),
-                'bookings' => Booking::query()->whereDate('created_at', $day)->whereIn('status', ['confirmed', 'pending_payment'])->count(),
-                'revenue_minor' => (int) Payment::query()->whereDate('created_at', $day)->where('status', 'paid')->sum('amount_minor'),
+                'date' => $date,
+                'trips' => (int) ($dailyTrips[$date] ?? 0),
+                'bookings' => (int) ($dailyBookings[$date] ?? 0),
+                'revenue_minor' => (int) ($dailyRevenue[$date] ?? 0),
             ];
         })->values();
 
@@ -142,18 +152,20 @@ class AdminReportController extends Controller
     public function vehicles(Request $request)
     {
         [$from, $to] = $this->period($request);
-        $items = Bus::query()->orderBy('code')->get()->map(function ($bus) use ($from, $to) {
-            $tripQuery = Trip::query()->where('bus_id', $bus->id)
-                ->whereBetween('departure_date', [$from->toDateString(), $to->toDateString()]);
-            $latest = VehicleStatusReport::query()->where('bus_id', $bus->id)->latest('reported_at')->first();
+        $tripStats = Trip::query()->selectRaw("bus_id, COUNT(*) as trip_count, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count")
+            ->whereBetween('departure_date', [$from->toDateString(), $to->toDateString()])
+            ->groupBy('bus_id')->get()->keyBy('bus_id');
+        $items = Bus::query()->with('latestVehicleStatus')->orderBy('code')->get()->map(function ($bus) use ($tripStats) {
+            $tripStat = $tripStats->get($bus->id);
+            $latest = $bus->latestVehicleStatus;
             return [
                 'bus_id' => $bus->id,
                 'code' => $bus->code,
                 'plate' => $bus->plate,
                 'status' => $bus->status,
                 'capacity' => (int) $bus->capacity,
-                'trips' => (clone $tripQuery)->count(),
-                'completed_trips' => (clone $tripQuery)->where('status', 'completed')->count(),
+                'trips' => (int) ($tripStat?->trip_count ?? 0),
+                'completed_trips' => (int) ($tripStat?->completed_count ?? 0),
                 'latest_vehicle_status' => $latest?->only(['fuel_status', 'engine_status', 'tires_status', 'network_status', 'fuel_percent', 'reported_at']),
             ];
         });
@@ -192,6 +204,131 @@ class AdminReportController extends Controller
         return response()->json(['data' => [
             'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
             'items' => $items,
+        ]]);
+    }
+
+    public function bookings(Request $request)
+    {
+        [$from, $to] = $this->period($request);
+        $items = Booking::query()->with([
+            'trip.route', 'trip.bus', 'passengers', 'reservedSeats.seat', 'payments',
+        ])->whereBetween('created_at', [$from, $to])
+            ->orderByDesc('created_at')->limit(1000)->get()
+            ->map(fn ($booking) => [
+                'reference' => $booking->reference,
+                'created_at' => $booking->created_at?->toIso8601String(),
+                'trip_date' => $booking->trip?->departure_date?->toDateString(),
+                'route' => trim(($booking->trip?->route?->origin ?? '') . ' → ' . ($booking->trip?->route?->destination ?? '')),
+                'vehicle' => $booking->trip?->bus?->code,
+                'passenger' => $booking->passenger_name,
+                'passenger_count' => $booking->passengers->count() ?: 1,
+                'seats' => $booking->reservedSeats->pluck('seat.seat_number')->filter()->values()->all()
+                    ?: (array) ($booking->seat_numbers ?? []),
+                'amount' => (float) $booking->total_amount,
+                'status' => $booking->status,
+                'payment_status' => $booking->payments->sortByDesc('created_at')->first()?->status ?? 'not_started',
+            ]);
+
+        return response()->json(['data' => [
+            'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
+            'items' => $items,
+            'limitations' => ['rows' => 'The report is capped at the latest 1,000 matching bookings.'],
+        ]]);
+    }
+
+    public function revenue(Request $request)
+    {
+        [$from, $to] = $this->period($request);
+        $items = Payment::query()->with('booking.trip.route')
+            ->whereBetween('created_at', [$from, $to])
+            ->where('status', 'paid')
+            ->orderByDesc('created_at')->limit(1000)->get()
+            ->map(fn ($payment) => [
+                'payment_reference' => $payment->gateway_reference ?: $payment->public_id,
+                'paid_at' => $payment->verified_at?->toIso8601String() ?? $payment->created_at?->toIso8601String(),
+                'booking_reference' => $payment->booking?->reference,
+                'route' => trim(($payment->booking?->trip?->route?->origin ?? '') . ' → ' . ($payment->booking?->trip?->route?->destination ?? '')),
+                'amount' => (int) $payment->amount_minor,
+                'currency' => $payment->currency,
+                'gateway' => $payment->gateway,
+            ]);
+
+        return response()->json(['data' => [
+            'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
+            'total_minor' => (int) $items->sum('amount'),
+            'items' => $items,
+            'limitations' => ['rows' => 'The report includes paid transactions and is capped at the latest 1,000 matching payments.'],
+        ]]);
+    }
+
+    public function incidents(Request $request)
+    {
+        [$from, $to] = $this->period($request);
+        $items = Incident::query()->with(['trip.route', 'driver'])
+            ->whereBetween('created_at', [$from, $to])
+            ->orderByDesc('created_at')->limit(1000)->get()
+            ->map(fn ($incident) => [
+                'id' => $incident->id,
+                'reported_at' => $incident->created_at?->toIso8601String(),
+                'route' => trim(($incident->trip?->route?->origin ?? '') . ' → ' . ($incident->trip?->route?->destination ?? '')),
+                'driver' => $incident->driver?->name,
+                'title' => $incident->title,
+                'severity' => $incident->severity,
+                'status' => $incident->status,
+                'resolved_at' => $incident->resolved_at?->toIso8601String(),
+            ]);
+
+        return response()->json([
+            'data' => [
+                'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
+                'items' => $items,
+                'limitations' => ['rows' => 'The report is capped at the latest 1,000 matching incidents.'],
+            ],
+        ]);
+    }
+
+    public function packages(Request $request)
+    {
+        [$from, $to] = $this->period($request);
+        $items = TransportPackage::query()->with(['trip.route', 'driver'])
+            ->whereBetween('created_at', [$from, $to])
+            ->orderByDesc('created_at')->limit(1000)->get()
+            ->map(fn ($package) => [
+                'reference' => $package->reference,
+                'created_at' => $package->created_at?->toIso8601String(),
+                'route' => trim(($package->trip?->route?->origin ?? '') . ' → ' . ($package->trip?->route?->destination ?? '')),
+                'driver' => $package->driver?->name,
+                'status' => $package->status,
+                'delivered_at' => $package->delivered_at?->toIso8601String(),
+            ]);
+
+        return response()->json(['data' => [
+            'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
+            'items' => $items,
+            'limitations' => ['rows' => 'The report is capped at the latest 1,000 matching packages.'],
+        ]]);
+    }
+
+    public function schedules(Request $request)
+    {
+        [$from, $to] = $this->period($request);
+        $items = \App\Models\DriverSchedule::query()->with(['driver', 'bus', 'trip.route'])
+            ->whereBetween('work_date', [$from->toDateString(), $to->toDateString()])
+            ->orderBy('work_date')->orderBy('starts_at')->limit(1000)->get()
+            ->map(fn ($schedule) => [
+                'date' => $schedule->work_date?->toDateString(),
+                'starts_at' => $schedule->starts_at,
+                'ends_at' => $schedule->ends_at,
+                'driver' => $schedule->driver?->name,
+                'vehicle' => $schedule->bus?->code,
+                'route' => trim(($schedule->trip?->route?->origin ?? '') . ' → ' . ($schedule->trip?->route?->destination ?? '')),
+                'status' => $schedule->status,
+            ]);
+
+        return response()->json(['data' => [
+            'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
+            'items' => $items,
+            'limitations' => ['rows' => 'The report is capped at 1,000 matching assignments.'],
         ]]);
     }
 

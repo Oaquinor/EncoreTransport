@@ -68,11 +68,14 @@ try {
       if (visualTokens?.[surface]) {
         await page.addInitScript((token) => sessionStorage.setItem('encore_api_token', token), visualTokens[surface]);
       }
-      if (process.env.VISUAL_API_TARGET) {
+      if (process.env.VISUAL_API_TARGET || (surface === 'website' && width === 1440)) {
         // Keep screenshots deterministic when the PHP server is single
-        // threaded and the external tile provider is unavailable.
+        // threaded and the external tile provider is unavailable. The website
+        // map runtime is also checked without a backend via a live-network fixture.
         await page.route('**/api/v1/maps/tiles/**', (route) =>
           route.fulfill({ status: 204, body: '' }));
+      }
+      if (process.env.VISUAL_API_TARGET) {
         await page.route('**/api/v1/maps/journey**', (route) => route.fulfill({
           status: 503,
           contentType: 'application/json',
@@ -80,7 +83,7 @@ try {
         }));
       }
       let liveNetworkFixture = 'empty';
-      if (process.env.VISUAL_API_TARGET && surface === 'website') {
+      if (surface === 'website') {
         // The map visual contract checks the no-active-buses state. Live GPS
         // API behavior is covered by LiveNetworkTest with persisted fixtures.
         await page.route('**/api/v1/network/live', (route) => {
@@ -151,7 +154,7 @@ try {
           assert.equal(await menu.getAttribute('aria-expanded'), 'false', 'Escape must close the mobile menu');
 
         }
-        if (surface === 'website' && width === 1440 && visualTokens) {
+        if (surface === 'website' && width === 1440) {
           await page.locator('#networkBusList').scrollIntoViewIfNeeded();
           await page.waitForFunction(() => document.querySelector('#networkBusList .public-network-empty')?.innerText.includes('No buses are sharing a live location right now'), null, { timeout: 10000 }).catch(async (error) => {
             const state = await page.evaluate(() => ({ status: document.querySelector('#mapStatus')?.textContent, listing: document.querySelector('#networkBusList')?.innerText }));
@@ -161,6 +164,8 @@ try {
             'The public map explains when there are no current authorized positions');
           assert.match(await page.locator('#mapStatus').innerText(), /0 buses live/,
             'Scheduled trips without live GPS are not presented as live buses');
+          assert.equal(await page.locator('#routeMapCanvas.leaflet-container').count(), 1,
+            'The public map initializes once and remains visible without live vehicle positions');
         }
         if (['driver', 'admin'].includes(surface)) {
           if (visualTokens) {
@@ -225,11 +230,13 @@ try {
           await new Promise((resolve) => setTimeout(resolve, 750));
         });
         await page.screenshot({ path: `artifacts/visual/${surface}-${width}.png`, fullPage: true, timeout: 60000 });
-        if (surface === 'website' && width === 1440 && visualTokens) {
+        if (surface === 'website' && width === 1440) {
           liveNetworkFixture = 'active';
           await page.reload({ waitUntil: 'domcontentloaded' });
           await page.locator('#networkBusList').scrollIntoViewIfNeeded();
           await page.locator('[data-network-bus="101"]').waitFor();
+          assert.equal(await page.locator('#routeMapCanvas.leaflet-container').count(), 1,
+            'Refreshing live data reuses the existing map instance');
           assert.equal(await page.locator('[data-network-bus]').count(), 3, 'The public map lists multiple live buses and keeps stale buses identifiable');
           assert.match(await page.locator('#mapStatus').innerText(), /2 buses live · 1 GPS not current/, 'The map distinguishes current GPS from stale data');
           await page.locator('#networkRouteSelect').selectOption('10');

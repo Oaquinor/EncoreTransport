@@ -38,6 +38,7 @@ let tileProbePromise = null;
 let tileProbeTimestamp = 0;
 const mapRegistry = new WeakMap();
 const liveMapRegistry = new WeakMap();
+const liveMapRequests = new WeakMap();
 
 function ensureSharedStyles() {
   if (document.querySelector('style[data-encore-map-styles]')) return;
@@ -317,6 +318,8 @@ function clearRuntimeStatus(container) {
 export function destroyRealMap(container) {
   if (!container) return;
 
+  liveMapRequests.set(container, (liveMapRequests.get(container) ?? 0) + 1);
+
   const existing = mapRegistry.get(container);
 
   if (existing) {
@@ -544,9 +547,16 @@ function escapePopup(value = '') {
 export async function renderLiveNetworkMap(container, network, options = {}) {
   if (!container) return null;
 
+  const requestId = (liveMapRequests.get(container) ?? 0) + 1;
+  liveMapRequests.set(container, requestId);
   container.classList.add('encore-real-map');
   let state = liveMapRegistry.get(container);
   const L = state?.map ? window.L : await loadLeaflet();
+
+  // A network refresh can overlap while Leaflet is still loading. Recheck the
+  // map registry after the await and discard outdated refreshes.
+  if (liveMapRequests.get(container) !== requestId) return null;
+  state = liveMapRegistry.get(container);
 
   if (!state?.map) {
     container.innerHTML = '';
@@ -556,6 +566,7 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
     }).setView([0, 0], 2);
     const tileLayer = L.tileLayer(tileLayerUrl(), tileLayerOptions).addTo(map);
     tileLayer.on('tileerror', () => runtimeStatus(container, 'Map tiles unavailable.', 'Live vehicle data will continue updating when the map service recovers.'));
+    tileLayer.on('load', () => clearRuntimeStatus(container));
     state = { map, vehicleMarkers: new Map(), nodeMarkers: new Map() };
     liveMapRegistry.set(container, state);
     mapRegistry.set(container, map);

@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
 const realMap = fs.readFileSync('packages/shared/real-map.mjs', 'utf8');
+const websiteApp = fs.readFileSync('apps/website/app.mjs', 'utf8');
 const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const envExample = fs.readFileSync('backend/laravel/.env.example', 'utf8');
 const mapService = fs.readFileSync(
@@ -55,6 +56,18 @@ assert.doesNotMatch(
   realMap,
   /TOMTOM_API_KEY/,
   'The browser renderer must not reference TOMTOM_API_KEY.',
+);
+
+assert.match(
+  realMap,
+  /liveMapRequests/,
+  'Overlapping live-network renders must not initialize or paint the same map out of order.',
+);
+
+assert.match(
+  websiteApp,
+  /renderLiveNetworkMap\(routeMapCanvas,[\s\S]*?\.catch\(/,
+  'Map initialization failures must result in a visible fallback instead of an empty panel.',
 );
 
 console.log('map-runtime-contract.test.mjs: OK');
