@@ -90,6 +90,12 @@ export const updateRole = async (id, data) => {
 export const permissions = async () => (await requestJson('/admin/permissions')).data ?? [];
 
 export const settings = async () => (await requestJson('/admin/settings')).data ?? {};
+export const uploadProfilePhoto = async (photo) => {
+  const form = new FormData();
+  form.append('photo', photo);
+  const payload = await requestJson('/auth/profile/photo', { method: 'POST', body: form });
+  return payload.data?.user ?? payload.user ?? null;
+};
 export const saveEmailSettings = async (data) => (await requestJson('/admin/settings/email', {
   method: 'PUT', body: JSON.stringify(data),
 })).data ?? {};

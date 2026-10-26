@@ -9,6 +9,7 @@ export const modules=[
   {id:'schedules',label:'Driver schedules',group:'Fleet',permission:'schedules.view'},
   {id:'packages',label:'Packages',group:'Customer service',permission:'cargo.view'},
   {id:'incidents',label:'Incidents',group:'Customer service',permission:'incidents.view'},
+  {id:'customers',label:'Customers',group:'Customer service',permission:'users.view'},
   {id:'reports',label:'Reports',group:'Reports',permission:'reports.view'},
   {id:'users',label:'Users',group:'Access control',permission:'users.view'},
   {id:'roles',label:'Roles',group:'Access control',permission:'roles.view'},
@@ -16,5 +17,5 @@ export const modules=[
   {id:'settings',label:'General',group:'System',permission:'settings.view'},
 ];
 export const requestedButBlocked=[
-  'Credit Note','Invoice','Supplier Payments','Customer Payments','Accounts','Ride Requests','Expense','Salary','Event','Tours','Feedback','Campaign','Fuel','Enquiry','CRM','Masters','Admin Center','Configuration','Configurations','Admins','Transaction','Logs','Allocation','My Companies','Maintenance','Inspection','Zone','Stoppage','Toll','Garages','Employee','Leave','Clients','Suppliers','Offices','Support-Contact','Connect Support'
+  'Credit Note','Invoice','Supplier Payments','Customer Payments','Accounts','Ride Requests','Expense','Salary','Event','Tours','Feedback','Campaign','Fuel','Enquiry','CRM','Masters','Admin Center','Configuration','Configurations','Admins','Transaction','Logs','Allocation','My Companies','Maintenance','Inspection','Zone','Stoppage','Toll','Garages','Employee','Leave','Suppliers','Offices','Support-Contact','Connect Support'
 ];

@@ -216,6 +216,31 @@ class OperationalCoreTest extends TestCase
             ->assertJsonPath('data.status', 'cancelled');
     }
 
+    public function test_registered_passenger_checkout_saves_account_and_lead_passenger_on_booking(): void
+    {
+        $registered = $this->postJson('/api/v1/auth/register', [
+            'name' => 'Checkout Passenger',
+            'email' => 'checkout-passenger@example.test',
+            'phone' => '+5926000001',
+            'password' => 'CheckoutPass123',
+            'password_confirmation' => 'CheckoutPass123',
+        ])->assertCreated()->assertJsonPath('user.name', 'Checkout Passenger');
+
+        $trip = Trip::query()->firstOrFail();
+        $seat = $trip->bus->seats()->where('active', true)->firstOrFail();
+        $booking = $this->withToken($registered->json('token'))->postJson('/api/v1/bookings', [
+            'trip_id' => $trip->id,
+            'seat_ids' => [$seat->id],
+            'passengers' => [['full_name' => 'Checkout Passenger', 'email' => 'checkout-passenger@example.test']],
+        ])->assertCreated()->assertJsonPath('data.passenger_name', 'Checkout Passenger');
+
+        $this->assertDatabaseHas('bookings', [
+            'id' => $booking->json('data.id'),
+            'user_id' => $registered->json('user.id'),
+            'passenger_name' => 'Checkout Passenger',
+        ]);
+    }
+
     public function test_multi_passenger_booking_requires_and_holds_one_seat_per_passenger(): void
     {
         $trip = Trip::query()->firstOrFail();

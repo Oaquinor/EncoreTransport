@@ -386,7 +386,9 @@ function sidebar() {
           <small>Account profile</small>
           <strong>${esc(state.user?.name ?? state.user?.role ?? 'Staff account')}</strong>
           <span>${esc(state.user?.role ?? 'Staff account')} · ${state.permissions.length} permissions</span>
+          <label class="admin-profile-photo-action"><input type="file" accept="image/jpeg,image/png,image/webp" data-profile-photo-input /><span>${profileImageSource(state.user) ? 'Change photo' : 'Add photo'}</span></label>
         </div>
+        <span class="admin-profile-photo-message" data-profile-photo-message aria-live="polite"></span>
       </div>
     </aside>`;
 }
@@ -395,11 +397,35 @@ function profileImageSource(user) {
   const candidate = user?.avatar_url ?? user?.profile_photo_url ?? user?.photo_url ?? user?.avatar ?? user?.photo_path ?? user?.driver?.photo_url ?? user?.driver?.photo_path;
   if (typeof candidate !== 'string' || !candidate.trim()) return '';
   const value = candidate.trim();
-  if (/^https:\/\//i.test(value) || (value.startsWith('/') && !value.startsWith('//'))) return value;
+  if (/^https:\/\//i.test(value) || (/^http:\/\//i.test(value) && location.protocol === 'http:') || (value.startsWith('/') && !value.startsWith('//'))) return value;
   if (/^(storage\/)?(avatars|profiles|users|drivers)\//i.test(value)) {
     return `/storage/${value.replace(/^storage\//i, '')}`;
   }
   return '';
+}
+
+function accessRoleList(roles, selectedIds = [], disabled = false) {
+  return `<label class="access-search"><span>Find a role</span><input type="search" placeholder="Search roles" data-access-filter="roles" /></label><div class="access-list__items" data-access-list="roles">${roles.map((role) => {
+    const selected = selectedIds.map(Number).includes(Number(role.id));
+    return `<div class="access-row" data-access-item="${esc(`${role.label ?? role.name} ${role.name}`.toLowerCase())}"><div><strong>${esc(role.label ?? role.name)}</strong><small>${esc(role.name)}</small></div><button type="button" class="access-toggle ${selected ? 'is-on' : ''}" data-user-role="${esc(role.id)}" aria-pressed="${selected}" ${disabled ? 'disabled' : ''}>${selected ? 'Assigned' : 'Not assigned'}</button></div>`;
+  }).join('')}</div>`;
+}
+
+function directPermissionList(permissions, directGrants = {}, assignedRoleIds = [], roles = [], disabled = false) {
+  const assigned = roles.filter((role) => assignedRoleIds.map(Number).includes(Number(role.id)));
+  return `<label class="access-search"><span>Find a permission</span><input type="search" placeholder="Search permissions" data-access-filter="permissions" /></label><div class="access-list__items" data-access-list="permissions">${permissions.map((permission) => {
+    const value = directGrants[permission.key] == null ? 'inherit' : directGrants[permission.key] ? 'allow' : 'deny';
+    const providedByRole = assigned.some((role) => (role.permissions ?? []).some((item) => item.key === permission.key));
+    return `<div class="access-row" data-access-item="${esc(`${permission.label ?? permission.key} ${permission.key} ${permission.resource ?? ''}`.toLowerCase())}"><div><strong>${esc(permission.label ?? permission.key)}</strong><small>${esc(permission.resource ?? permission.key)} · ${providedByRole ? 'Granted by assigned role' : 'No assigned role grants this'}</small></div><select aria-label="${esc(permission.label ?? permission.key)} access" data-user-permission="${esc(permission.key)}" ${disabled ? 'disabled' : ''}><option value="inherit" ${value === 'inherit' ? 'selected' : ''}>Inherit</option><option value="allow" ${value === 'allow' ? 'selected' : ''}>Allow</option><option value="deny" ${value === 'deny' ? 'selected' : ''}>Deny</option></select></div>`;
+  }).join('')}</div>`;
+}
+
+function rolePermissionList(permissions, assignedPermissionKeys = []) {
+  const assigned = new Set(assignedPermissionKeys);
+  return `<label class="access-search"><span>Find a permission</span><input type="search" placeholder="Search permissions" data-access-filter="role-permissions" /></label><div class="access-list__items" data-access-list="role-permissions">${permissions.map((permission) => {
+    const selected = assigned.has(permission.key);
+    return `<div class="access-row" data-access-item="${esc(`${permission.label ?? permission.key} ${permission.key} ${permission.resource ?? ''}`.toLowerCase())}"><div><strong>${esc(permission.label ?? permission.key)}</strong><small>${esc(permission.resource ?? permission.key)}</small></div><button type="button" class="access-toggle ${selected ? 'is-on' : ''}" data-role-permission="${esc(permission.key)}" aria-pressed="${selected}">${selected ? 'Enabled' : 'Disabled'}</button></div>`;
+  }).join('')}</div>`;
 }
 
 function liveMapPanel() {
@@ -672,12 +698,16 @@ function content() {
     const canAssignPermissions = state.permissions.includes('permissions.assign');
     const roleOptions = [...state.roles];
     if (user.role && !roleOptions.some((role) => role.name === user.role)) roleOptions.unshift({ name: user.role, label: `${user.role} (legacy)` });
-    const userForm = state.userFormOpen ? `<form id="userForm" class="premium-form-grid fleet-form"><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.userEditingId ? 'Update user access' : 'Create user'}</strong><span>Roles and direct grants are checked again by Laravel.</span></div></div><label><span>Name</span><input name="name" required maxlength="150" value="${esc(user.name)}" /></label><label><span>Email</span><input name="email" type="email" required maxlength="190" value="${esc(user.email)}" /></label><label><span>Phone</span><input name="phone" maxlength="40" value="${esc(user.phone ?? '')}" /></label><label><span>Legacy access role</span><select name="role" ${canManageRoles ? '' : 'disabled'}>${roleOptions.map((role) => `<option value="${esc(role.name)}" ${user.role === role.name ? 'selected' : ''}>${esc(role.label ?? role.name)}</option>`).join('')}</select></label><label><span>Password ${state.userEditingId ? '(leave blank to keep)' : ''}</span><input name="password" type="password" ${state.userEditingId ? '' : 'required'} minlength="8" /></label><label><span>Status</span><select name="active"><option value="1" ${user.active !== false ? 'selected' : ''}>Active</option><option value="0" ${user.active === false ? 'selected' : ''}>Disabled</option></select></label><fieldset class="access-checks"><legend>Roles ${canManageRoles ? '' : '(requires roles.manage)'}</legend>${state.roles.map((role) => `<label><input type="checkbox" data-user-role="${esc(role.id)}" ${user.role_ids?.map(Number).includes(Number(role.id)) ? 'checked' : ''} ${canManageRoles ? '' : 'disabled'} /> ${esc(role.label ?? role.name)}</label>`).join('')}</fieldset><fieldset class="access-checks"><legend>Direct permissions ${canAssignPermissions ? '' : '(requires permissions.assign)'}</legend>${state.permissionCatalog.map((permission) => `<label><input type="checkbox" data-user-permission="${esc(permission.key)}" ${user.permission_grants?.[permission.key] ? 'checked' : ''} ${canAssignPermissions ? '' : 'disabled'} /> ${esc(permission.label ?? permission.key)}</label>`).join('')}</fieldset><div class="form-actions"><button type="submit" class="button button--primary">${state.userEditingId ? 'Update user' : 'Create user'}</button><button type="button" class="button button--ghost" id="cancelUser">Cancel</button></div><div id="userMessage" aria-live="polite"></div></form>` : '';
+    const userForm = state.userFormOpen ? `<form id="userForm" class="premium-form-grid fleet-form"><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.userEditingId ? 'Update user access' : 'Create user'}</strong><span>Assign roles, then set direct permission overrides only where needed.</span></div></div><label><span>Name</span><input name="name" required maxlength="150" value="${esc(user.name)}" /></label><label><span>Email</span><input name="email" type="email" required maxlength="190" value="${esc(user.email)}" /></label><label><span>Phone</span><input name="phone" maxlength="40" value="${esc(user.phone ?? '')}" /></label><label><span>Legacy access role</span><select name="role" ${canManageRoles ? '' : 'disabled'}>${roleOptions.map((role) => `<option value="${esc(role.name)}" ${user.role === role.name ? 'selected' : ''}>${esc(role.label ?? role.name)}</option>`).join('')}</select></label><label><span>Password ${state.userEditingId ? '(leave blank to keep)' : ''}</span><input name="password" type="password" ${state.userEditingId ? '' : 'required'} minlength="8" /></label><label><span>Status</span><select name="active"><option value="1" ${user.active !== false ? 'selected' : ''}>Active</option><option value="0" ${user.active === false ? 'selected' : ''}>Disabled</option></select></label><fieldset class="access-list"><legend>Assigned roles ${canManageRoles ? '' : '(requires roles.manage)'}</legend>${accessRoleList(state.roles, user.role_ids, !canManageRoles)}</fieldset><fieldset class="access-list"><legend>Direct permission overrides ${canAssignPermissions ? '' : '(requires permissions.assign)'}</legend><p class="access-list__help">Inherit follows assigned roles. Use Allow or Deny only to override that result.</p>${directPermissionList(state.permissionCatalog, user.permission_grants, user.role_ids, state.roles, !canAssignPermissions)}</fieldset><div class="form-actions"><button type="submit" class="button button--primary">${state.userEditingId ? 'Update user' : 'Create user'}</button><button type="button" class="button button--ghost" id="cancelUser">Cancel</button></div><div id="userMessage" aria-live="polite"></div></form>` : '';
     return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Access control</div><h2>Users</h2></div><button class="button button--primary" id="addUser" type="button">Add user</button></div>${userForm}</section>${table('Users', ['Name', 'Email', 'Roles', 'Effective permissions', 'Status', 'Actions'], state.users.map((item) => [item.name, item.email, (item.roles ?? []).map((role) => role.label ?? role.name).join(', ') || item.role, (item.permissions ?? []).length, item.active ? 'Active' : 'Disabled', { html: `<div class="table-actions"><button class="button button--icon" data-edit-user="${esc(item.id)}" type="button" aria-label="Edit user">${icon('edit')}</button><button class="button button--icon" data-disable-user="${esc(item.id)}" type="button" aria-label="Disable user" ${item.active ? '' : 'disabled'}>${icon('archive')}</button></div>` }]))}`;
+  }
+  if (state.module === 'customers') {
+    const customers = state.users.filter((user) => user.role === 'passenger' || (user.roles ?? []).some((role) => role.name === 'passenger'));
+    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Customer service</div><h2>Customers</h2><p class="module-subtitle">Registered passenger accounts and their linked bookings. Guest bookings remain visible in Bookings.</p></div><span class="badge badge--neutral">${customers.length} accounts</span></div>${table('Registered Customers', ['Name', 'Email', 'Phone', 'Bookings', 'Account status', 'Joined'], customers.map((user) => [user.name, user.email, user.phone || '—', user.booking_count ?? 0, user.active ? 'Active' : 'Disabled', String(user.created_at ?? '').slice(0, 10) || '—']))}`;
   }
   if (state.module === 'roles') {
     const editing = state.roles.find((role) => String(role.id) === String(state.roleEditingId));
-    const roleForm = editing ? `<form id="roleForm" class="premium-form-grid fleet-form"><label><span>Role label</span><input name="label" required maxlength="120" value="${esc(editing.label)}" /></label><fieldset class="access-checks"><legend>Permissions</legend>${state.permissionCatalog.map((permission) => `<label><input type="checkbox" data-role-permission="${esc(permission.key)}" ${(editing.permissions ?? []).some((item) => item.key === permission.key) ? 'checked' : ''} /> ${esc(permission.label ?? permission.key)}</label>`).join('')}</fieldset><div class="form-actions"><button class="button button--primary" type="submit">Save role</button><button class="button button--ghost" id="cancelRole" type="button">Cancel</button></div><div id="roleMessage" aria-live="polite"></div></form>` : '';
+    const roleForm = editing ? `<form id="roleForm" class="premium-form-grid fleet-form"><label><span>Role label</span><input name="label" required maxlength="120" value="${esc(editing.label)}" /></label><fieldset class="access-list"><legend>Permissions enabled for this role</legend>${rolePermissionList(state.permissionCatalog, (editing.permissions ?? []).map((item) => item.key))}</fieldset><div class="form-actions"><button class="button button--primary" type="submit">Save role</button><button class="button button--ghost" id="cancelRole" type="button">Cancel</button></div><div id="roleMessage" aria-live="polite"></div></form>` : '';
     return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Access control</div><h2>Roles</h2></div></div>${roleForm}</section>${table('Roles', ['Name', 'Label', 'System', 'Permissions', 'Actions'], state.roles.map((role) => [role.name, role.label, role.system ? 'Yes' : 'No', (role.permissions ?? []).length, { html: `<button class="button button--icon" data-edit-role="${esc(role.id)}" type="button" aria-label="Edit role" ${role.system && state.user?.role !== 'superadmin' ? 'disabled' : ''}>${icon('edit')}</button>` }]))}`;
   }
   if (state.module === 'permissions') return table('Permissions', ['Key', 'Label', 'Resource'], state.permissionCatalog.map((permission) => [permission.key, permission.label, permission.resource]));
@@ -807,8 +837,10 @@ async function loadModule() {
       state.reportData = await api.report(state.reportType, { from: state.reportFrom, to: state.reportTo });
     }
 
-    if (state.module === 'users') {
-      [state.users, state.roles, state.permissionCatalog] = await Promise.all([api.users(), api.roles(), api.permissions()]);
+    if (state.module === 'users' || state.module === 'customers') {
+      state.users = await api.users();
+      if (state.module === 'users' && (state.permissions.includes('roles.view') || state.permissions.includes('roles.manage'))) state.roles = await api.roles();
+      if (state.module === 'users' && (state.permissions.includes('permissions.view') || state.permissions.includes('permissions.assign'))) state.permissionCatalog = await api.permissions();
     }
     if (state.module === 'roles') {
       [state.roles, state.permissionCatalog] = await Promise.all([api.roles(), api.permissions()]);
@@ -831,6 +863,27 @@ function wire() {
     const fallback = photo.parentElement?.querySelector('[data-profile-avatar-fallback]');
     if (fallback) fallback.hidden = false;
   }, { once: true }));
+
+  document.querySelector('[data-profile-photo-input]')?.addEventListener('change', async (event) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    const message = document.querySelector('[data-profile-photo-message]');
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      input.value = '';
+      if (message) message.textContent = 'Choose a JPG, PNG or WebP image under 5 MB.';
+      return;
+    }
+    if (message) message.textContent = 'Uploading photo…';
+    try {
+      const photo = await optimizeImageForUpload(file);
+      const user = await api.uploadProfilePhoto(photo);
+      state.user = { ...state.user, ...user };
+      render();
+    } catch (error) {
+      if (message) message.textContent = error.message;
+    }
+  });
 
   document.querySelector('#exportReportCsv')?.addEventListener('click', () => downloadReport('csv'));
   document.querySelector('#exportReportJson')?.addEventListener('click', () => downloadReport('json'));
@@ -1080,18 +1133,33 @@ function wire() {
     if (!user) return;
     state.userFormOpen = true;
     state.userEditingId = user.id;
-    state.userForm = { ...user, role_ids: (user.roles ?? []).map((role) => role.id), permission_grants: Object.fromEntries((user.direct_permissions ?? []).map((permission) => [permission.key, permission.pivot?.granted !== false])) };
+    state.userForm = { ...user, role_ids: (user.roles ?? []).map((role) => role.id), permission_grants: Object.fromEntries((user.direct_permissions ?? []).map((permission) => [permission.key, permission.pivot?.granted === true || permission.pivot?.granted === 1 || permission.pivot?.granted === '1'])) };
     render();
   }));
   document.querySelectorAll('[data-disable-user]').forEach((button) => button.addEventListener('click', async () => {
     if (!confirm('Disable this user account?')) return;
     try { await api.disableUser(button.dataset.disableUser); state.users = await api.users(); render(); } catch (error) { state.error = error.message; render(); }
   }));
+  document.querySelectorAll('[data-user-role], [data-role-permission]').forEach((button) => button.addEventListener('click', () => {
+    const enabled = button.getAttribute('aria-pressed') !== 'true';
+    button.setAttribute('aria-pressed', String(enabled));
+    button.classList.toggle('is-on', enabled);
+    button.textContent = button.hasAttribute('data-user-role')
+      ? (enabled ? 'Assigned' : 'Not assigned')
+      : (enabled ? 'Enabled' : 'Disabled');
+  }));
+  document.querySelectorAll('[data-access-filter]').forEach((input) => input.addEventListener('input', () => {
+    const list = document.querySelector(`[data-access-list="${CSS.escape(input.dataset.accessFilter)}"]`);
+    const query = input.value.trim().toLowerCase();
+    list?.querySelectorAll('[data-access-item]').forEach((item) => {
+      item.hidden = query.length > 0 && !item.dataset.accessItem.includes(query);
+    });
+  }));
   document.querySelector('#userForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const roleIds = [...document.querySelectorAll('[data-user-role]:checked')].map((input) => Number(input.dataset.userRole));
-    const grants = Object.fromEntries([...document.querySelectorAll('[data-user-permission]')].map((input) => [input.dataset.userPermission, input.checked]));
+    const roleIds = [...document.querySelectorAll('[data-user-role][aria-pressed="true"]')].map((button) => Number(button.dataset.userRole));
+    const grants = Object.fromEntries([...document.querySelectorAll('[data-user-permission]')].map((input) => [input.dataset.userPermission, input.value === 'inherit' ? null : input.value === 'allow']));
     const data = { name: form.get('name'), email: form.get('email'), phone: form.get('phone'), active: form.get('active') === '1' };
     if (state.permissions.includes('roles.manage')) {
       data.role = form.get('role');
@@ -1106,7 +1174,7 @@ function wire() {
   document.querySelector('#roleForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const permissionKeys = [...document.querySelectorAll('[data-role-permission]:checked')].map((input) => input.dataset.rolePermission);
+    const permissionKeys = [...document.querySelectorAll('[data-role-permission][aria-pressed="true"]')].map((button) => button.dataset.rolePermission);
     try { await api.updateRole(state.roleEditingId, { label: form.get('label'), permission_keys: permissionKeys }); state.roles = await api.roles(); state.roleEditingId = null; render(); } catch (error) { const message = document.querySelector('#roleMessage'); if (message) message.textContent = error.message; }
   });
 

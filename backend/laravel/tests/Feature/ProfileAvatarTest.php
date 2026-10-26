@@ -9,6 +9,7 @@ use Database\Seeders\Demo\EncoreTransportDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class ProfileAvatarTest extends TestCase
@@ -41,6 +42,21 @@ class ProfileAvatarTest extends TestCase
             ->getJson('/api/v1/auth/me')
             ->assertOk()
             ->assertJsonPath('user.avatar_url', null);
+    }
+
+    public function test_authenticated_user_can_upload_a_profile_photo(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+
+        $response = $this->withToken($this->tokenFor($admin))
+            ->postJson('/api/v1/auth/profile/photo', ['photo' => UploadedFile::fake()->image('profile.png')])
+            ->assertOk()
+            ->assertJsonPath('data.user.name', 'Admin Demo');
+
+        $path = $admin->fresh()->profile_photo_path;
+        $this->assertNotEmpty($path);
+        Storage::disk('public')->assertExists($path);
+        $this->assertSame(Storage::disk('public')->url($path), $response->json('data.user.avatar_url'));
     }
 
     private function tokenFor(User $user): string

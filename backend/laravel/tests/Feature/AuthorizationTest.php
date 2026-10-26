@@ -116,6 +116,61 @@ class AuthorizationTest extends TestCase
             ->assertJsonPath('data.direct_permissions.0.key', 'routes.view');
     }
 
+    public function test_inherit_permission_removes_direct_override_and_restores_role_permission(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+        $passenger = User::query()->where('email', 'passenger@example.test')->firstOrFail();
+        $permission = Permission::query()->create(['key' => 'test.saved_trip', 'label' => 'Saved trip', 'resource' => 'trips']);
+        $role = Role::query()->create(['name' => 'test_saved_trip_reader', 'label' => 'Saved trip reader', 'system' => false]);
+        $role->permissions()->attach($permission->id);
+        $passenger->roles()->sync([$role->id]);
+        $passenger->permissions()->sync([$permission->id => ['granted' => false, 'assigned_by_user_id' => $admin->id]]);
+
+        $response = $this->withToken($this->tokenFor($admin))->putJson('/api/v1/admin/users/'.$passenger->id, [
+            'name' => $passenger->name,
+            'email' => $passenger->email,
+            'role' => 'passenger',
+            'permission_grants' => ['test.saved_trip' => null],
+            'password' => null,
+        ])->assertOk();
+
+        $this->assertContains('test.saved_trip', $response->json('data.permissions'));
+        $this->assertSame([], $response->json('data.direct_permissions'));
+    }
+
+    public function test_role_assignment_cannot_grant_permissions_actor_does_not_hold(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+        $passenger = User::query()->where('email', 'passenger@example.test')->firstOrFail();
+        $admin->roles()->detach();
+        $rolesManage = Permission::query()->where('key', 'roles.manage')->firstOrFail();
+        $financeView = Permission::query()->where('key', 'payments.view')->firstOrFail();
+        $admin->permissions()->sync([$rolesManage->id => ['granted' => true, 'assigned_by_user_id' => $admin->id]]);
+        $financeRole = Role::query()->create(['name' => 'test_finance_reader', 'label' => 'Finance reader', 'system' => false]);
+        $financeRole->permissions()->attach($financeView->id);
+
+        $this->withToken($this->tokenFor($admin))->putJson('/api/v1/admin/users/'.$passenger->id, [
+            'name' => $passenger->name,
+            'email' => $passenger->email,
+            'role' => 'passenger',
+            'role_ids' => [$financeRole->id],
+            'password' => null,
+        ])->assertForbidden();
+    }
+
+    public function test_access_editors_can_load_lists_when_they_have_manage_or_assign_permissions(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+        $admin->roles()->detach();
+        $grants = Permission::query()->whereIn('key', ['users.view', 'roles.manage', 'permissions.assign'])->pluck('id')
+            ->mapWithKeys(fn ($id) => [$id => ['granted' => true, 'assigned_by_user_id' => $admin->id]])
+            ->all();
+        $admin->permissions()->sync($grants);
+
+        $this->withToken($this->tokenFor($admin))->getJson('/api/v1/admin/roles')->assertOk();
+        $this->withToken($this->tokenFor($admin))->getJson('/api/v1/admin/permissions')->assertOk();
+    }
+
     private function tokenFor(User $user): string
     {
         $plain = Str::random(80);

@@ -67,6 +67,14 @@ type Quote = {
   total: number;
 };
 
+type RegistrationDetails = {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  password_confirmation: string;
+};
+
 const API = '/api/v1';
 const TOKEN = 'encore_api_token';
 const GUEST_TOKEN = 'encore_guest_booking_token';
@@ -126,6 +134,7 @@ export function PassengerApp() {
   const [quote, setQuote] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [accountUser, setAccountUser] = useState<{ name: string; email?: string } | null>(null);
 
   const go = (next: Screen) => {
     setHistory((value) => [...value, screen]);
@@ -220,13 +229,27 @@ export function PassengerApp() {
     );
   };
 
-  const reserve = async () => {
+  const reserve = async (registration?: RegistrationDetails) => {
     if (!selectedTrip) return;
 
     setLoading(true);
     setError('');
 
     try {
+      let bookingPassengers = passengers;
+      if (registration) {
+        const registered = await requestJson<any>(API, '/auth/register', {
+          method: 'POST',
+          body: JSON.stringify(registration),
+        }, {});
+        sessionStorage.setItem(TOKEN, registered.token);
+        sessionStorage.removeItem(GUEST_TOKEN);
+        setAccountUser(registered.user ?? { name: registration.name, email: registration.email });
+        bookingPassengers = passengers.map((passenger, index) => index === 0
+          ? { ...passenger, full_name: registration.name, email: registration.email, phone: registration.phone || passenger.phone }
+          : passenger);
+        setPassengers(bookingPassengers);
+      }
       const payload = await api('/bookings', {
         method: 'POST',
         body: JSON.stringify({
@@ -234,7 +257,7 @@ export function PassengerApp() {
           seat_ids: selected,
           origin: filters.origin,
           destination: filters.destination,
-          passengers,
+          passengers: bookingPassengers,
         }),
       });
 
@@ -253,6 +276,11 @@ export function PassengerApp() {
 
   useEffect(() => {
     void api('/routes').then((payload) => setRoutes(payload.data ?? payload ?? [])).catch((caught) => setError((caught as Error).message));
+    if (sessionStorage.getItem(TOKEN)) {
+      void api('/auth/me').then((payload) => setAccountUser(payload.user ?? null)).catch(() => {
+        sessionStorage.removeItem(TOKEN);
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -382,6 +410,7 @@ export function PassengerApp() {
               passengers={passengers}
               quote={quote}
               loading={loading}
+              accountUser={accountUser}
               onBack={back}
               onReserve={reserve}
             />
@@ -994,6 +1023,7 @@ function Review({
   passengers,
   quote,
   loading,
+  accountUser,
   onBack,
   onReserve,
 }: {
@@ -1002,12 +1032,32 @@ function Review({
   passengers: Passenger[];
   quote: Quote | null;
   loading: boolean;
+  accountUser: { name: string; email?: string } | null;
   onBack: () => void;
-  onReserve: () => void;
+  onReserve: (registration?: RegistrationDetails) => void;
 }) {
-  const signed = Boolean(
-    sessionStorage.getItem(TOKEN),
-  );
+  const signed = Boolean(sessionStorage.getItem(TOKEN));
+  const [checkoutMode, setCheckoutMode] = useState<'guest' | 'register'>('guest');
+  const [registrationError, setRegistrationError] = useState('');
+
+  const submitRegistration = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const password = String(form.get('password') ?? '');
+    const confirmation = String(form.get('password_confirmation') ?? '');
+    if (password !== confirmation) {
+      setRegistrationError('Passwords do not match.');
+      return;
+    }
+    setRegistrationError('');
+    onReserve({
+      name: String(form.get('name') ?? '').trim(),
+      email: String(form.get('email') ?? '').trim(),
+      phone: String(form.get('phone') ?? '').trim(),
+      password,
+      password_confirmation: confirmation,
+    });
+  };
 
   return (
     <>
@@ -1030,14 +1080,29 @@ function Review({
             value={trip.busCode ?? `Bus ${trip.busId ?? ''}`}
           />
 
-          {!signed && (
-            <div className="smart-banner">
-              <b>Guest checkout available</b>
-              <span>
-                You can continue without creating an account. We will keep your booking linked to this session.
-              </span>
-            </div>
-          )}
+          <section className="checkout-account" aria-label="Checkout account options">
+            <h3>{signed ? 'Booking with your account' : 'Choose how to continue'}</h3>
+            {signed ? (
+              <div className="smart-banner"><b>{accountUser?.name ?? 'Signed in'}</b><span>{accountUser?.email ?? 'This booking will be saved in your account.'}</span></div>
+            ) : (
+              <div className="checkout-choice" role="radiogroup" aria-label="Account choice">
+                <button type="button" role="radio" aria-checked={checkoutMode === 'guest'} className={checkoutMode === 'guest' ? 'is-selected' : ''} onClick={() => setCheckoutMode('guest')}><strong>Continue as guest</strong><span>Reserve without creating a password.</span></button>
+                <button type="button" role="radio" aria-checked={checkoutMode === 'register'} className={checkoutMode === 'register' ? 'is-selected' : ''} onClick={() => setCheckoutMode('register')}><strong>Create an account</strong><span>Save your name and view future bookings.</span></button>
+              </div>
+            )}
+            {!signed && checkoutMode === 'guest' && <p className="checkout-note">Your booking will be linked to a private access code for this session.</p>}
+            {!signed && checkoutMode === 'register' && (
+              <form className="checkout-register" onSubmit={submitRegistration}>
+                <label><span>Full name</span><input name="name" required maxLength={150} defaultValue={passengers[0]?.full_name ?? ''} autoComplete="name" /></label>
+                <label><span>Email</span><input name="email" type="email" required maxLength={190} defaultValue={passengers[0]?.email ?? ''} autoComplete="email" /></label>
+                <label><span>Phone (optional)</span><input name="phone" maxLength={40} defaultValue={passengers[0]?.phone ?? ''} autoComplete="tel" /></label>
+                <label><span>Password</span><input name="password" type="password" required minLength={8} autoComplete="new-password" /></label>
+                <label><span>Confirm password</span><input name="password_confirmation" type="password" required minLength={8} autoComplete="new-password" /></label>
+                {registrationError && <p className="checkout-register__error" role="alert">{registrationError}</p>}
+                <button className="primary wide" disabled={loading}>{loading ? 'CREATING ACCOUNT…' : 'CREATE ACCOUNT & RESERVE →'}</button>
+              </form>
+            )}
+          </section>
         </div>
 
         <aside className="total-panel">
@@ -1052,15 +1117,7 @@ function Review({
             Calculated and validated before the reservation is created.
           </small>
 
-          <button
-            className="primary"
-            disabled={loading}
-            onClick={onReserve}
-          >
-            {loading
-              ? 'RESERVING…'
-              : 'HOLD SEATS & CONTINUE →'}
-          </button>
+          {(signed || checkoutMode === 'guest') && <button className="primary" disabled={loading} onClick={() => onReserve()}>{loading ? 'RESERVING…' : signed ? 'RESERVE WITH ACCOUNT →' : 'CONTINUE AS GUEST →'}</button>}
         </aside>
       </div>
     </>

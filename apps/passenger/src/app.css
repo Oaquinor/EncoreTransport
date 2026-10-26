@@ -16,6 +16,21 @@
 @import url("./layout-alignment.css");
 @import url("../../../packages/shared/design-system.css");
 
+.checkout-account { display: grid; gap: 12px; grid-column: 1 / -1; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: #f8fbfc; }
+.checkout-account h3 { margin: 0; font-size: 1rem; }
+.checkout-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.checkout-choice button { display: grid; gap: 5px; min-height: 78px; padding: 13px; text-align: left; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); cursor: pointer; }
+.checkout-choice button.is-selected { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(45, 169, 223, .12); }
+.checkout-choice strong { font-size: .87rem; }
+.checkout-choice span, .checkout-note { color: var(--muted); font-size: .77rem; }
+.checkout-note { margin: 0; }
+.checkout-register { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.checkout-register label { display: grid; gap: 5px; color: var(--muted); font-size: .73rem; font-weight: 750; }
+.checkout-register input { min-width: 0; min-height: 42px; padding: 0 11px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--ink); }
+.checkout-register .wide, .checkout-register__error { grid-column: 1 / -1; }
+.checkout-register__error { margin: 0; color: #aa3030; font-size: .78rem; }
+@media (max-width: 650px) { .checkout-choice, .checkout-register { grid-template-columns: 1fr; }.checkout-register .wide, .checkout-register__error { grid-column: auto; } }
+
 /* Keep route and passenger selectors consistent across every flow. */
 .search-console select,
 .passenger-card select,

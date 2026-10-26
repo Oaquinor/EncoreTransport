@@ -88,6 +88,26 @@ class AuthController extends Controller
         return response()->json(['user' => $this->userPayload($user), 'permissions' => $this->permissions->effective($user)]);
     }
 
+    public function uploadProfilePhoto(Request $request)
+    {
+        $data = $request->validate([
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+
+        $user = $request->user();
+        $oldPath = $user->profile_photo_path;
+        $newPath = $data['photo']->store('profiles', 'public');
+        $user->forceFill(['profile_photo_path' => $newPath])->save();
+
+        if ($oldPath && $oldPath !== $user->driver?->photo_path) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        $this->audit->record($user, 'profile.photo.updated', $user);
+
+        return response()->json(['data' => ['user' => $this->userPayload($user->fresh())]]);
+    }
+
     public function logout(Request $request)
     {
         $token = $request->attributes->get('api_token');
@@ -124,7 +144,7 @@ class AuthController extends Controller
     private function userPayload(User $user): array
     {
         $payload = $user->toArray();
-        $photoPath = $user->driver?->photo_path;
+        $photoPath = $user->profile_photo_path ?: $user->driver?->photo_path;
         $payload['avatar_url'] = $photoPath
             ? Storage::disk('public')->url($photoPath)
             : null;

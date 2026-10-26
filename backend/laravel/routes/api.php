@@ -77,6 +77,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('api.token')->group(function () {
         Route::get('auth/me', [AuthController::class, 'me']);
+        Route::post('auth/profile/photo', [AuthController::class, 'uploadProfilePhoto'])->middleware('throttle:10,1');
         Route::post('auth/logout', [AuthController::class, 'logout']);
 
         Route::get('bookings', [BookingController::class, 'index']);
@@ -166,7 +167,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['api.token', 'permission:users.create'])->post('admin/users', [AdminAccessController::class, 'storeUser']);
     Route::middleware(['api.token', 'permission:users.update'])->put('admin/users/{user}', [AdminAccessController::class, 'updateUser']);
     Route::middleware(['api.token', 'permission:users.disable'])->post('admin/users/{user}/disable', [AdminAccessController::class, 'disableUser']);
-    Route::middleware(['api.token', 'permission:roles.view'])->get('admin/roles', [AdminAccessController::class, 'roles']);
+    Route::middleware(['api.token', 'permission:roles.view,roles.manage'])->get('admin/roles', [AdminAccessController::class, 'roles']);
     Route::middleware(['api.token', 'permission:roles.manage'])->put('admin/roles/{role}', [AdminAccessController::class, 'updateRole']);
-    Route::middleware(['api.token', 'permission:permissions.view'])->get('admin/permissions', [AdminAccessController::class, 'permissions']);
+    Route::middleware(['api.token', 'permission:permissions.view,permissions.assign'])->get('admin/permissions', [AdminAccessController::class, 'permissions']);
 });

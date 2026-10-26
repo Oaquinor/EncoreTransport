@@ -20,7 +20,7 @@ class AdminAccessController extends Controller
 
     public function users()
     {
-        return response()->json(['data' => User::query()->with(['roles','permissions'])->orderBy('name')->get()->map(fn ($user) => $this->userPayload($user))]);
+        return response()->json(['data' => User::query()->with(['roles','permissions'])->withCount('bookings')->orderBy('name')->get()->map(fn ($user) => $this->userPayload($user))]);
     }
 
     public function storeUser(Request $request, AuditService $audit)
@@ -89,7 +89,7 @@ class AdminAccessController extends Controller
             'active' => ['sometimes','boolean'],
             'password' => [$user ? 'nullable' : 'required', Password::min(8)->letters()->numbers()],
             'role_ids' => ['sometimes','array'], 'role_ids.*' => ['integer','exists:roles,id'],
-            'permission_grants' => ['sometimes','array'], 'permission_grants.*' => ['boolean'],
+            'permission_grants' => ['sometimes','array'], 'permission_grants.*' => ['nullable','boolean'],
         ];
     }
 
@@ -100,6 +100,18 @@ class AdminAccessController extends Controller
 
         if (array_key_exists('role_ids', $data) && !$this->permissions->allows($actor, 'roles.manage')) {
             abort(403, 'Role assignment requires roles.manage.');
+        }
+
+        if (array_key_exists('role_ids', $data) && !$this->isSystemAdministrator($actor)) {
+            $assignedRoles = Role::query()->with('permissions')->whereIn('id', $data['role_ids'])->get();
+            if ($assignedRoles->contains(fn ($role) => $role->name === 'superadmin')) {
+                abort(403, 'Only a system administrator can assign system administrator access.');
+            }
+            foreach ($assignedRoles->flatMap(fn ($role) => $role->permissions)->unique('key') as $permission) {
+                if (!$this->permissions->allows($actor, $permission->key)) {
+                    abort(403, 'You cannot assign a role that grants permissions you do not hold.');
+                }
+            }
         }
 
         if (($data['role'] ?? null) === 'superadmin' && !$this->isSystemAdministrator($actor)) {
@@ -113,7 +125,11 @@ class AdminAccessController extends Controller
 
         if ($this->isSystemAdministrator($actor)) return;
 
+        $knownKeys = Permission::query()->whereIn('key', array_keys($data['permission_grants']))->pluck('key')->all();
         foreach ($data['permission_grants'] as $key => $granted) {
+            if (!in_array($key, $knownKeys, true)) {
+                abort(422, 'Unknown permission key.');
+            }
             if ($granted && !$this->permissions->allows($actor, (string) $key)) {
                 abort(403, 'You cannot grant a permission you do not hold.');
             }
@@ -125,8 +141,10 @@ class AdminAccessController extends Controller
         if (array_key_exists('role_ids', $data)) $user->roles()->sync($data['role_ids']);
         if (array_key_exists('permission_grants', $data)) {
             $rows = [];
+            $permissions = Permission::query()->whereIn('key', array_keys($data['permission_grants']))->get()->keyBy('key');
             foreach ($data['permission_grants'] as $key => $granted) {
-                $permission = Permission::query()->where('key', $key)->first();
+                if ($granted === null) continue;
+                $permission = $permissions->get($key);
                 if ($permission) $rows[$permission->id] = ['granted' => (bool) $granted];
             }
             $user->permissions()->sync($rows);
@@ -143,6 +161,6 @@ class AdminAccessController extends Controller
 
     private function userPayload(User $user): array
     {
-        return ['id'=>$user->id,'name'=>$user->name,'email'=>$user->email,'phone'=>$user->phone,'role'=>$user->role,'active'=>(bool)$user->active,'roles'=>$user->roles,'direct_permissions'=>$user->permissions,'permissions'=>app(\App\Services\Auth\PermissionService::class)->effective($user)];
+        return ['id'=>$user->id,'name'=>$user->name,'email'=>$user->email,'phone'=>$user->phone,'role'=>$user->role,'active'=>(bool)$user->active,'created_at'=>$user->created_at,'booking_count'=>$user->bookings_count ?? $user->bookings()->count(),'roles'=>$user->roles,'direct_permissions'=>$user->permissions,'permissions'=>app(\App\Services\Auth\PermissionService::class)->effective($user)];
     }
 }
