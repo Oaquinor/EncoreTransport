@@ -270,15 +270,108 @@ function reportWidget(id, title, body, className = '') {
   return `<article class="report-widget ${className}" draggable="true" data-report-widget="${esc(id)}"><header><div><span class="eyebrow">${esc(title)}</span><span class="report-drag-hint" aria-label="Drag to reorder">⋮⋮</span></div></header>${body}</article>`;
 }
 
+const reportColors = ['#078cbd', '#22a06b', '#f2ae38', '#e45c62', '#596bd8'];
+
+function activityChart(days = []) {
+  const points = days.slice(-14);
+  if (!points.length) return '<p class="report-empty">No activity in this period.</p>';
+  const width = 760;
+  const height = 250;
+  const left = 42;
+  const right = 16;
+  const top = 18;
+  const bottom = 38;
+  const chartWidth = width - left - right;
+  const chartHeight = height - top - bottom;
+  const max = Math.max(1, ...points.flatMap((point) => [Number(point.trips ?? 0), Number(point.bookings ?? 0)]));
+  const x = (index) => left + (points.length === 1 ? chartWidth / 2 : (index / (points.length - 1)) * chartWidth);
+  const y = (value) => top + chartHeight - (Number(value ?? 0) / max) * chartHeight;
+  const grids = Array.from({ length: 4 }, (_, index) => {
+    const value = Math.round(max * (index / 3));
+    const lineY = y(value);
+    return `<g class="chart-grid"><line x1="${left}" y1="${lineY}" x2="${width - right}" y2="${lineY}"/><text x="${left - 9}" y="${lineY + 4}" text-anchor="end">${value}</text></g>`;
+  }).join('');
+  const series = [
+    { key: 'trips', color: reportColors[0], name: 'Trips' },
+    { key: 'bookings', color: reportColors[1], name: 'Bookings' },
+  ];
+  const lines = series.map(({ key, color, name }) => {
+    const path = points.map((point, index) => `${index ? 'L' : 'M'} ${x(index)} ${y(point[key])}`).join(' ');
+    const dots = points.map((point, index) => `<circle cx="${x(index)}" cy="${y(point[key])}" r="3.5"><title>${esc(name)}: ${Number(point[key] ?? 0)} · ${esc(point.date)}</title></circle>`).join('');
+    return `<g class="chart-series" style="--series-color:${color}"><path d="${path}"/>${dots}</g>`;
+  }).join('');
+  const labelStride = Math.ceil(points.length / 7);
+  const labels = points.map((point, index) => index % labelStride === 0 || index === points.length - 1 ? `<text class="chart-x-label" x="${x(index)}" y="${height - 10}" text-anchor="middle">${esc(String(point.date ?? '').slice(5))}</text>` : '').join('');
+  const legend = series.map(({ color, name }) => `<span><i style="--series-color:${color}"></i>${name}</span>`).join('');
+  return `<div class="report-chart"><div class="report-chart-legend">${legend}</div><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Trips and bookings by date">${grids}${lines}${labels}</svg></div>`;
+}
+
+function revenueChart(days = []) {
+  const points = days.slice(-14);
+  if (!points.length) return '<p class="report-empty">No revenue recorded in this period.</p>';
+  const width = 760;
+  const height = 220;
+  const left = 48;
+  const right = 16;
+  const top = 14;
+  const bottom = 34;
+  const chartHeight = height - top - bottom;
+  const max = Math.max(1, ...points.map((point) => Number(point.revenue_minor ?? 0)));
+  const slot = (width - left - right) / points.length;
+  const bars = points.map((point, index) => {
+    const value = Number(point.revenue_minor ?? 0);
+    const barHeight = (value / max) * chartHeight;
+    const barWidth = Math.max(4, slot * .55);
+    const barX = left + index * slot + (slot - barWidth) / 2;
+    const barY = top + chartHeight - barHeight;
+    const labelStride = Math.ceil(points.length / 7);
+    const label = index % labelStride === 0 || index === points.length - 1 ? `<text class="chart-x-label" x="${barX + barWidth / 2}" y="${height - 8}" text-anchor="middle">${esc(String(point.date ?? '').slice(5))}</text>` : '';
+    return `<g class="revenue-bar"><rect x="${barX}" y="${barY}" width="${barWidth}" height="${Math.max(2, barHeight)}" rx="4"><title>${esc(point.date)} · ${esc(money(value / 100))}</title></rect>${label}</g>`;
+  }).join('');
+  const guide = [0, .5, 1].map((ratio) => {
+    const guideY = top + chartHeight * (1 - ratio);
+    return `<g class="chart-grid"><line x1="${left}" y1="${guideY}" x2="${width - right}" y2="${guideY}"/><text x="${left - 7}" y="${guideY + 4}" text-anchor="end">${esc(money(max * ratio / 100))}</text></g>`;
+  }).join('');
+  return `<div class="report-chart"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Daily paid revenue">${guide}${bars}</svg></div>`;
+}
+
+function breakdownDonut(title, entries = []) {
+  const usable = entries.map(([label, value], index) => ({ label, value: Math.max(0, Number(value ?? 0)), color: reportColors[index % reportColors.length] })).filter((entry) => entry.value > 0);
+  const total = usable.reduce((sum, entry) => sum + entry.value, 0);
+  if (!total) return `<p class="report-empty">No ${esc(title.toLowerCase())} recorded in this period.</p>`;
+  const circumference = 2 * Math.PI * 42;
+  let offset = 0;
+  const segments = usable.map((entry) => {
+    const length = circumference * entry.value / total;
+    const markup = `<circle class="chart-donut-segment" cx="60" cy="60" r="42" stroke="${entry.color}" stroke-dasharray="${length} ${circumference - length}" stroke-dashoffset="${-offset}"><title>${esc(entry.label)}: ${entry.value}</title></circle>`;
+    offset += length;
+    return markup;
+  }).join('');
+  const legend = usable.map((entry) => `<li><i style="--series-color:${entry.color}"></i><span>${esc(entry.label)}</span><b>${entry.value}</b></li>`).join('');
+  return `<div class="report-donut-layout"><svg class="report-donut" viewBox="0 0 120 120" role="img" aria-label="${esc(title)}"><circle class="chart-donut-track" cx="60" cy="60" r="42"/>${segments}<text x="60" y="57" text-anchor="middle">${total}</text><text class="chart-donut-caption" x="60" y="72" text-anchor="middle">total</text></svg><ul class="report-donut-legend">${legend}</ul></div>`;
+}
+
+function severityBars(breakdown = {}) {
+  const order = ['high', 'medium', 'low'];
+  const values = order.map((key) => [key, Number(breakdown[key] ?? 0)]);
+  const max = Math.max(1, ...values.map(([, count]) => count));
+  return `<div class="report-severity-bars">${values.map(([severity, count]) => `<div><span>${esc(severity)}</span><i style="--bar:${(count / max) * 100}%;--severity-color:${severity === 'high' ? '#e45c62' : severity === 'medium' ? '#f2ae38' : '#22a06b'}"></i><b>${count}</b></div>`).join('')}</div>`;
+}
+
 function executiveReport(data, widgetOrder = []) {
   const widgets = {
     kpis: reportWidget('kpis', 'At a glance', `<div class="report-kpi-grid"><div><span>Trips</span><strong>${data.trips?.total ?? 0}</strong><small>${data.trips?.completed ?? 0} completed</small></div><div><span>Bookings</span><strong>${data.bookings?.confirmed ?? 0}</strong><small>${data.bookings?.pending ?? 0} pending</small></div><div><span>Revenue</span><strong>${money((data.payments?.revenue_minor ?? 0) / 100)}</strong><small>${data.payments?.paid ?? 0} paid transactions</small></div><div><span>Incidents</span><strong>${data.incidents ?? 0}</strong><small>${data.fleet?.active ?? 0} active vehicles</small></div></div>`, 'report-widget--wide'),
     occupancy: reportWidget('occupancy', 'Seat performance', `<div class="report-occupancy"><div class="report-ring" style="--report-rate:${Number(data.occupancy?.rate ?? 0)}%"><strong>${data.occupancy?.rate == null ? '—' : `${data.occupancy.rate}%`}</strong><span>occupancy</span></div><div class="report-side-stats"><div><span>Occupied</span><strong>${data.occupancy?.occupied ?? 0}</strong></div><div><span>Available</span><strong>${data.occupancy?.available ?? 0}</strong></div><div><span>Capacity</span><strong>${data.occupancy?.capacity ?? 0}</strong></div></div></div>`),
-    trend: reportWidget('trend', 'Activity trend', `<div class="report-trend">${(data.daily ?? []).map((day) => `<div class="report-trend-row"><span>${esc(String(day.date).slice(5))}</span><i style="--bar:${Math.min(100, Number(day.bookings ?? 0) * 10)}%" title="${esc(day.bookings)} bookings"></i><b>${day.bookings ?? 0}</b></div>`).join('') || '<p class="report-empty">No activity in this period.</p>'}</div>`, 'report-widget--wide'),
+    trend: reportWidget('trend', 'Trips and bookings by day', activityChart(data.daily), 'report-widget--wide'),
+    revenue: reportWidget('revenue', 'Paid revenue by day', revenueChart(data.daily), 'report-widget--wide'),
+    bookingMix: reportWidget('booking-mix', 'Booking status mix', breakdownDonut('Booking status', [
+      ['Confirmed', data.bookings?.confirmed], ['Pending', data.bookings?.pending], ['Cancelled', data.bookings?.cancelled],
+    ])),
+    incidentMix: reportWidget('incident-mix', 'Incident risk and status', `<div class="report-incident-mix"><div><span class="eyebrow">By severity</span>${severityBars(data.incident_breakdown?.severity)}</div><div><span class="eyebrow">By status</span>${breakdownDonut('Incident status', Object.entries(data.incident_breakdown?.status ?? {}).map(([status, count]) => [status, count]))}</div></div>`),
     upcoming: reportWidget('upcoming', 'Next departures', `<div class="report-departures">${(data.upcoming ?? []).map((trip) => `<div class="report-departure"><div><strong>${esc(trip.route || 'Route unavailable')}</strong><span>${esc(trip.date)} · ${esc(trip.time)} · ${esc(trip.vehicle || 'Vehicle pending')}</span></div><b>${trip.available_seats ?? 0} seats</b></div>`).join('') || '<p class="report-empty">No upcoming departures found.</p>'}</div>`, 'report-widget--wide'),
     cargo: reportWidget('cargo', 'Cargo activity', `<div class="report-mini-grid"><div><span>Received</span><strong>${data.cargo?.received ?? 0}</strong></div><div><span>In transit</span><strong>${data.cargo?.in_transit ?? 0}</strong></div><div><span>Delivered</span><strong>${data.cargo?.delivered ?? 0}</strong></div><div><span>Cancelled trips</span><strong>${data.trips?.cancelled ?? 0}</strong></div></div>`),
   };
-  const order = [...new Set([...(widgetOrder ?? []), 'kpis', 'occupancy', 'trend', 'upcoming', 'cargo'])];
+  const order = [...new Set([...(widgetOrder ?? []), 'kpis', 'occupancy', 'trend', 'revenue', 'bookingMix', 'incidentMix', 'upcoming', 'cargo'])];
   return `<div class="report-dashboard"><div class="report-dashboard__hint">Drag the panels to arrange your workspace. Your layout is saved on this device.</div><div class="report-widget-grid">${order.map((id) => widgets[id]).filter(Boolean).join('')}</div></div>`;
 }
 

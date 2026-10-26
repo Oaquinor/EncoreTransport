@@ -53,6 +53,12 @@ class AdminReportController extends Controller
         $occupiedSeats = max(0, $capacity - $availableSeats);
         $confirmedBookings = (clone $bookings)->where('status', 'confirmed')->count();
         $activeFleet = Bus::query()->where('status', 'operational')->count();
+        $incidentSeverity = Incident::query()->selectRaw('severity, COUNT(*) as total')
+            ->whereBetween('created_at', [$from, $to])->groupBy('severity')->pluck('total', 'severity')
+            ->map(fn ($total) => (int) $total);
+        $incidentStatus = Incident::query()->selectRaw('status, COUNT(*) as total')
+            ->whereBetween('created_at', [$from, $to])->groupBy('status')->pluck('total', 'status')
+            ->map(fn ($total) => (int) $total);
 
         $dailyTrips = Trip::query()->selectRaw('DATE(departure_date) as report_date, COUNT(*) as total')
             ->whereBetween('departure_date', [$from->toDateString(), $to->toDateString()])
@@ -117,6 +123,10 @@ class AdminReportController extends Controller
                 'delivered' => TransportPackage::query()->whereBetween('delivered_at', [$from, $to])->count(),
             ],
             'incidents' => Incident::query()->whereBetween('created_at', [$from, $to])->count(),
+            'incident_breakdown' => [
+                'severity' => $incidentSeverity,
+                'status' => $incidentStatus,
+            ],
             'daily' => $daily,
             'upcoming' => $upcoming,
         ]]);
