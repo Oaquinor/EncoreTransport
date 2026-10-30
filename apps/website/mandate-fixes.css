@@ -71,10 +71,10 @@
 
 html.motion-ready [data-reveal] {
   opacity: 0;
-  transform: translateY(24px);
+  transform: translateY(8px);
   transition:
-    opacity .62s cubic-bezier(.2,.8,.2,1),
-    transform .62s cubic-bezier(.2,.8,.2,1);
+    opacity .22s ease-out,
+    transform .22s ease-out;
 }
 
 html.motion-ready [data-reveal].is-visible {

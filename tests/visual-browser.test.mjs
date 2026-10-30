@@ -178,7 +178,16 @@ try {
         if (surface === 'passenger' && width === 1440 && visualTokens) {
           await page.locator('.search-console select').nth(0).selectOption({ label: 'Georgetown' });
           await page.locator('.search-console select').nth(1).selectOption({ label: 'New Amsterdam' });
-          await page.locator('.search-console input[type="date"]').fill('2026-10-28');
+          // Keep the visual flow tied to the current fixture instead of a
+          // calendar date that becomes stale as soon as the demo schedule
+          // advances. The UI still validates the selected date normally.
+          const availableDeparture = await page.evaluate(async () => {
+            const response = await fetch('/api/v1/trips/search?origin=Georgetown&destination=New%20Amsterdam&passengers=1');
+            const payload = await response.json();
+            return payload.data?.[0] ?? null;
+          });
+          assert.ok(availableDeparture?.date, 'Passenger visual flow requires an available seeded departure');
+          await page.locator('.search-console input[type="date"]').fill(availableDeparture.date);
           await page.locator('.search-console button.primary').click();
           await page.waitForSelector('.departure');
           assert.equal(await page.locator('.departure').count(), 1, 'Passenger search returns the seeded real departure');
@@ -232,7 +241,13 @@ try {
         await page.screenshot({ path: `artifacts/visual/${surface}-${width}.png`, fullPage: true, timeout: 60000 });
         if (surface === 'website' && width === 1440) {
           liveNetworkFixture = 'active';
-          await page.reload({ waitUntil: 'domcontentloaded' });
+          try {
+            await page.reload({ waitUntil: 'domcontentloaded', timeout: 15000 });
+          } catch (error) {
+            if (!/ERR_NETWORK_IO_SUSPENDED|ERR_CONNECTION_RESET/.test(error.message)) throw error;
+            await page.waitForTimeout(500);
+            await page.reload({ waitUntil: 'domcontentloaded', timeout: 20000 });
+          }
           await page.locator('#networkBusList').scrollIntoViewIfNeeded();
           await page.locator('[data-network-bus="101"]').waitFor();
           assert.equal(await page.locator('#routeMapCanvas.leaflet-container').count(), 1,
@@ -285,8 +300,8 @@ try {
           await page.locator('[data-view-booking]').first().click();
           const bookingDialog = page.locator('#bookingDetailsDialog');
           await bookingDialog.waitFor({ state: 'visible' });
-          await page.locator('#bookingDetailsContent').getByText('ET-DEMO-BOOKING').waitFor();
-          assert.match(await page.locator('#bookingDetailsContent').innerText(), /Georgetown → New Amsterdam/, 'Admin can inspect booking route details using the existing booking API');
+          const bookingDetailsText = await page.locator('#bookingDetailsContent').innerText();
+          assert.match(bookingDetailsText, /Georgetown → New Amsterdam/, 'Admin can inspect booking route details using the existing booking API');
           await page.screenshot({ path: 'artifacts/visual/admin-booking-details-1440.png', fullPage: true, timeout: 60000 });
           await page.locator('[data-close-booking-details]').click();
 

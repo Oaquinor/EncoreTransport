@@ -54,6 +54,8 @@ async function track(token) {
     const packageInfo =
       await publicTrackPackage(token);
 
+    const events = Array.isArray(packageInfo.events) ? packageInfo.events : [];
+    const shareUrl = `${location.origin}/track-package/?token=${encodeURIComponent(token)}`;
     result.innerHTML = `
       <section class="track-result">
         <div>
@@ -76,8 +78,13 @@ async function track(token) {
             : ''
         }
 
+        <div class="track-actions" aria-label="Tracking actions">
+          <button type="button" data-copy-tracking="${esc(shareUrl)}">Copy tracking link</button>
+          <button type="button" data-refresh-tracking="${esc(token)}">Refresh status</button>
+        </div>
+
         <div class="track-events">
-          ${(packageInfo.events ?? [])
+          ${events.length ? events
             .map(
               (event) => `
                 <div class="track-event">
@@ -90,7 +97,7 @@ async function track(token) {
                   <small>${esc(event.occurred_at ?? '')}</small>
                 </div>`,
             )
-            .join('')}
+            .join('') : '<p class="track-empty">No movement events have been recorded yet. Check again after the next operational update.</p>'}
         </div>
       </section>`;
   } catch {
@@ -101,6 +108,22 @@ async function track(token) {
       </div>`;
   }
 }
+
+result?.addEventListener('click', async (event) => {
+  const copyButton = event.target.closest('[data-copy-tracking]');
+  if (copyButton) {
+    try {
+      await navigator.clipboard.writeText(copyButton.dataset.copyTracking);
+      copyButton.textContent = 'Link copied';
+      setTimeout(() => { copyButton.textContent = 'Copy tracking link'; }, 1800);
+    } catch {
+      copyButton.textContent = 'Copy unavailable';
+    }
+    return;
+  }
+  const refreshButton = event.target.closest('[data-refresh-tracking]');
+  if (refreshButton) void track(refreshButton.dataset.refreshTracking);
+});
 
 form?.addEventListener(
   'submit',

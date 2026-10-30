@@ -1,0 +1,114 @@
+/* Align the standalone tracking page with the public Encore product surface. */
+.premium-tracking-intro {
+  position: relative;
+  gap: 32px;
+  padding: clamp(26px, 5vw, 68px);
+  background:
+    radial-gradient(circle at 18% 86%, rgba(27, 167, 220, .2), transparent 20rem),
+    linear-gradient(180deg, rgba(7,23,34,.78), rgba(7,23,34,.97)),
+    url("/assets/media/Autobus.png") center 44% / 116% auto no-repeat,
+    var(--et-navy-950);
+}
+
+.premium-tracking-brand .et-brand-lockup__logo {
+  width: 48px;
+  height: 48px;
+}
+
+.premium-tracking-back {
+  position: absolute;
+  top: clamp(28px, 5vw, 68px);
+  right: clamp(26px, 5vw, 68px);
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  padding: 0 13px;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px;
+  color: #dceef5;
+  font-size: .7rem;
+  font-weight: 800;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.premium-tracking-back:hover,
+.premium-tracking-back:focus-visible {
+  background: rgba(255,255,255,.1);
+  border-color: rgba(157,223,247,.7);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.premium-tracking-intro h1 {
+  max-width: 560px;
+  font-size: clamp(3.2rem, 5.6vw, 6rem);
+}
+
+.premium-tracking-panel {
+  width: min(720px, calc(100% - 48px));
+  padding: 42px 0;
+}
+
+.premium-tracking-form {
+  gap: 14px;
+  padding: 22px;
+  border-color: #bfd3de;
+  border-radius: 20px;
+  box-shadow: 0 22px 58px rgba(14, 43, 61, .12);
+}
+
+.premium-tracking-form input {
+  border-color: #b8ccd8;
+  background: #fbfdfe;
+}
+
+.premium-tracking-form button {
+  min-width: 158px;
+  background: linear-gradient(135deg, #18a3dc, #087fac);
+  box-shadow: 0 12px 26px rgba(20, 150, 208, .2);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.premium-tracking-form button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(20, 150, 208, .26);
+}
+
+.track-result {
+  border-color: #bfd3de;
+  border-radius: 20px;
+}
+
+@media (max-width: 880px) {
+  .premium-tracking-back {
+    top: 24px;
+    right: 24px;
+  }
+}
+
+@media (max-width: 560px) {
+  .premium-tracking-intro {
+    min-height: 390px;
+  }
+
+  .premium-tracking-back {
+    position: static;
+    align-self: flex-start;
+    order: 3;
+  }
+
+  .premium-tracking-panel {
+    padding-block: 28px 42px;
+  }
+
+  .premium-tracking-form {
+    padding: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-tracking-back,
+  .premium-tracking-form button {
+    transition: none;
+  }
+}

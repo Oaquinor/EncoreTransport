@@ -138,11 +138,14 @@
 }
 
 .admin-controls .button {
-  min-height: 40px;
-  border-radius: 11px;
+  min-height: 34px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 9px;
   background: #fff;
   border-color: #d7e4eb;
   box-shadow: 0 8px 18px rgba(16,62,87,.04);
+  font-size: .72rem;
 }
 
 .admin-panel {
@@ -454,4 +457,17 @@
   .premium-table-toolbar {
     grid-template-columns: 1fr;
   }
+}
+.admin-layout,
+.admin-main,
+.admin-panel,
+.admin-table,
+.report-widget {
+  animation-duration: .12s;
+}
+
+/* Dashboard state changes replace the view in one pass; avoid replaying
+   decorative chart entrance effects on every refresh/module switch. */
+.chart-bar {
+  animation: none !important;
 }

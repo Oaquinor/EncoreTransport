@@ -6,3 +6,23 @@
 @import url("./gap-close.css");
 @import url("./mandate-motion.css");
 @import url("../../packages/shared/design-system.css");
+.ui-icon { width: 17px; height: 17px; flex: 0 0 auto; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.button--with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+
+/* Operational hierarchy inspired by mature driver tools: identity first,
+   trip context second, and only then the detailed actions. */
+.driver-header__actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+.driver-avatar { display:grid; place-items:center; width:48px; height:48px; flex:0 0 48px; border-radius:13px; overflow:hidden; background:linear-gradient(135deg,#168fc1,#08283a); color:#fff; font-size:.9rem; font-weight:900; letter-spacing:.04em; }
+.driver-avatar img { width:100%; height:100%; object-fit:cover; }
+.driver-brand strong { display:block; }
+.driver-quick-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.driver-quick-grid>div { display:grid; gap:5px; padding:14px; border:1px solid var(--et-line); border-radius:15px; background:#fff; box-shadow:0 10px 28px rgba(7,23,34,.05); }
+.driver-quick-grid span { display:flex; align-items:center; gap:6px; color:var(--et-muted); font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+.driver-quick-grid .ui-icon { width:14px; height:14px; color:var(--et-blue-600); }
+.driver-quick-grid strong { color:var(--et-navy-900); font-size:1.2rem; }
+.driver-quick-grid small { color:var(--et-muted); font-size:.72rem; }
+.driver-section-heading { display:flex; align-items:start; justify-content:space-between; gap:14px; margin-bottom:14px; }
+.driver-section-heading h3 { margin-bottom:4px; }
+.driver-section-heading p { margin:0; }
+.driver-section-heading .button { white-space:nowrap; }
+@media(max-width:560px){.driver-quick-grid{grid-template-columns:1fr}.driver-section-heading{align-items:stretch; flex-direction:column}.driver-section-heading .button{width:100%}.driver-header__actions{gap:6px}.driver-header__actions .badge{font-size:.64rem}}

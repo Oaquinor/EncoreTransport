@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
-    protected $fillable=['name','email','role','phone','active','password','profile_photo_path'];
+    protected $fillable=['name','email','role','phone','active','password','profile_photo_path','google_subject'];
     protected $hidden=['password','remember_token'];
     protected function casts(): array { return ['email_verified_at'=>'datetime','password'=>'hashed','active'=>'boolean']; }
     public function driver(): HasOne { return $this->hasOne(Driver::class); }

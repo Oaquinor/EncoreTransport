@@ -181,8 +181,11 @@ async function probeTileProxy({ force = false } = {}) {
 
   tileProbePromise = (async () => {
     let response;
+    let timeoutId = null;
 
     try {
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 8000);
       response = await fetch(
         `${appConfig.apiBaseUrl}/maps/tiles/0/0/0.png?style=street-light`,
         {
@@ -191,9 +194,13 @@ async function probeTileProxy({ force = false } = {}) {
           headers: {
             Accept: 'image/png,application/json;q=0.9,*/*;q=0.8',
           },
+          signal: controller.signal,
         },
       );
+      clearTimeout(timeoutId);
+      timeoutId = null;
     } catch (error) {
+      if (timeoutId) clearTimeout(timeoutId);
       throw new Error(
         `Unable to reach the Encore map tile proxy. ${String(error?.message ?? '')}`.trim()
       );
@@ -563,7 +570,10 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
     const map = L.map(container, {
       zoomControl: options.zoomControl !== false,
       attributionControl: true,
-    }).setView([0, 0], 2);
+      fadeAnimation: false,
+      zoomAnimation: false,
+      markerZoomAnimation: false,
+    }).setView([6.8013, -58.1551], 8);
     const tileLayer = L.tileLayer(tileLayerUrl(), tileLayerOptions).addTo(map);
     tileLayer.on('tileerror', () => runtimeStatus(container, 'Map tiles unavailable.', 'Live vehicle data will continue updating when the map service recovers.'));
     tileLayer.on('load', () => clearRuntimeStatus(container));

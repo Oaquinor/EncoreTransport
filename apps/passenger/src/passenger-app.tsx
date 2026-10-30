@@ -13,7 +13,7 @@ import {
 import { formatMoney } from '../../../packages/shared/formatters.mjs';
 import { requestJson } from '@encore/api-client';
 
-type Screen = 'home' | 'results' | 'trip' | 'seats' | 'passengers' | 'review' | 'status';
+type Screen = 'home' | 'results' | 'trip' | 'seats' | 'passengers' | 'review' | 'status' | 'account';
 
 type ApiTrip = {
   id: number | string;
@@ -75,6 +75,19 @@ type RegistrationDetails = {
   password_confirmation: string;
 };
 
+function ActionIcon({ name }: { name: 'arrow' | 'back' | 'search' | 'swap' | 'account' | 'route' | 'settings' }) {
+  const paths = {
+    arrow: <><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></>,
+    back: <><path d="M19 12H5" /><path d="m11 6-6 6 6 6" /></>,
+    search: <><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></>,
+    swap: <><path d="M7 7h11l-3-3M17 17H6l3 3" /><path d="M18 4v5M6 15v5" /></>,
+    account: <><circle cx="12" cy="8" r="3.5" /><path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></>,
+    route: <><circle cx="6" cy="18" r="2" /><circle cx="18" cy="6" r="2" /><path d="M8 18h3a4 4 0 0 0 4-4V10a4 4 0 0 1 4-4" /></>,
+    settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 1.7-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-2.4v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L8 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6.7v-2.4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L8 8.6l1.7-1.7.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h2.4v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.7 1.7-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2V14h-.2a1.7 1.7 0 0 0-1.5 1Z" /></>,
+  };
+  return <svg className="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
+}
+
 const API = '/api/v1';
 const TOKEN = 'encore_api_token';
 const GUEST_TOKEN = 'encore_guest_booking_token';
@@ -134,12 +147,15 @@ export function PassengerApp() {
   const [quote, setQuote] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [accountUser, setAccountUser] = useState<{ name: string; email?: string } | null>(null);
+  const [accountUser, setAccountUser] = useState<{ name: string; email?: string; avatar_url?: string | null } | null>(null);
+  const [accountBookings, setAccountBookings] = useState<any[]>([]);
 
   const go = (next: Screen) => {
     setHistory((value) => [...value, screen]);
     setScreen(next);
-    scrollTo({ top: 0, behavior: 'smooth' });
+    // Keep step changes immediate; smooth scrolling made each API response
+    // feel like a second page reload on slower devices.
+    scrollTo({ top: 0, behavior: 'auto' });
   };
 
   const back = () => {
@@ -184,6 +200,38 @@ export function PassengerApp() {
       setTrips([]);
 
       if (screen !== 'results') go('results');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInWithGoogle = async (credential: string) => {
+    setLoading(true);
+    setError('');
+    try {
+      const result = await requestJson<any>(API, '/auth/google', { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify({ credential }) });
+      sessionStorage.setItem(TOKEN, result.token);
+      setAccountUser(result.user ?? null);
+    } catch (caught) {
+      setError((caught as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openAccount = async () => {
+    if (!sessionStorage.getItem(TOKEN)) {
+      location.href = '/login/?return=/passenger/';
+      return;
+    }
+    setLoading(true);
+    try {
+      const payload = await api('/bookings');
+      setAccountBookings(payload.data ?? payload ?? []);
+      setScreen('account');
+      scrollTo({ top: 0, behavior: 'auto' });
+    } catch (caught) {
+      setError((caught as Error).message);
     } finally {
       setLoading(false);
     }
@@ -286,6 +334,11 @@ export function PassengerApp() {
   useEffect(() => {
     const query = new URLSearchParams(location.search);
 
+    if (query.get('screen') === 'account' && sessionStorage.getItem(TOKEN)) {
+      void openAccount();
+      return;
+    }
+
     if (query.get('resume') === '1') {
       const raw = sessionStorage.getItem(DRAFT);
 
@@ -342,10 +395,10 @@ export function PassengerApp() {
 
   return (
     <div className="app-shell">
-      <Topbar />
+      <Topbar user={accountUser} onAccount={openAccount} />
 
       <div className="passenger-wrap">
-        <Journey step={step} />
+        {screen !== 'account' && <Journey step={step} />}
 
         {error && (
           <div className="smart-banner smart-banner--error">
@@ -413,6 +466,7 @@ export function PassengerApp() {
               accountUser={accountUser}
               onBack={back}
               onReserve={reserve}
+              onGoogleSignIn={signInWithGoogle}
             />
           )}
 
@@ -421,6 +475,32 @@ export function PassengerApp() {
               booking={booking}
               trip={selectedTrip}
               seats={selectedLabels}
+              loading={loading}
+              onCancel={async () => {
+                if (!booking) return;
+                setLoading(true);
+                setError('');
+                try {
+                  const guestToken = sessionStorage.getItem(GUEST_TOKEN);
+                  const headers: Record<string, string> = { accept: 'application/json' };
+                  if (guestToken) {
+                    headers['X-Guest-Booking-Token'] = guestToken;
+                  }
+                  await api(`/bookings/${booking.id}/cancel`, {
+                    method: 'POST',
+                    headers,
+                  });
+                  setBooking(null);
+                  setSelected([]);
+                  sessionStorage.removeItem(GUEST_TOKEN);
+                  sessionStorage.removeItem(DRAFT);
+                  go('home');
+                } catch (caught) {
+                  setError((caught as Error).message);
+                } finally {
+                  setLoading(false);
+                }
+              }}
               onNew={() => {
                 setBooking(null);
                 setSelected([]);
@@ -428,13 +508,24 @@ export function PassengerApp() {
               }}
             />
           )}
+
+          {screen === 'account' && (
+            <AccountScreen user={accountUser} bookings={accountBookings} loading={loading} onBack={() => setScreen('home')} onNewTrip={() => setScreen('home')} onProfileUpdated={(next) => setAccountUser((current) => ({ ...current, ...next }))} />
+          )}
         </main>
       </div>
     </div>
   );
 }
 
-function Topbar() {
+function Topbar({ user, onAccount }: { user: { name: string; avatar_url?: string | null } | null; onAccount: () => void }) {
+  const initials = (user?.name ?? 'Passenger')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'P';
+
   return (
     <header className="topbar">
       <a className="brand passenger-brand" href="/website/" aria-label="Encore Transport">
@@ -447,18 +538,131 @@ function Topbar() {
 
       <nav>
         <button onClick={() => { location.href = '/website/'; }}>
-          Website
+          <ActionIcon name="route" />Website
         </button>
-        <button onClick={() => { location.href = '/login/'; }}>
-          Account
+        <button onClick={onAccount} aria-label={user?.name ? 'Open account for ' + user.name : 'Open passenger account'}>
+          <ActionIcon name="account" />Account
         </button>
       </nav>
 
-      <div className="user">
-        <span>Passenger</span>
-        <b>ET</b>
+      <div className="user user--account" aria-label={user?.name ? `Signed in as ${user.name}` : 'Passenger account'}>
+        <span className="user__avatar">{user?.avatar_url ? <img src={user.avatar_url} alt="" className="user__photo" onLoad={(event) => { event.currentTarget.style.opacity = '1'; const fallback = event.currentTarget.nextElementSibling as HTMLElement | null; if (fallback) fallback.hidden = true; }} onError={(event) => { event.currentTarget.hidden = true; const fallback = event.currentTarget.nextElementSibling as HTMLElement | null; if (fallback) fallback.hidden = false; }} /> : null}<b aria-hidden="true">{initials}</b></span>
+        {user?.name && <strong>{user.name}</strong>}
       </div>
     </header>
+  );
+}
+
+function AccountScreen({ user, bookings, loading, onBack, onNewTrip, onProfileUpdated }: { user: { name: string; email?: string; phone?: string | null; avatar_url?: string | null } | null; bookings: any[]; loading: boolean; onBack: () => void; onNewTrip: () => void; onProfileUpdated: (user: any) => void }) {
+  const [tripTab, setTripTab] = useState<'upcoming' | 'used' | 'expired' | 'cancelled'>(() => {
+    const tab = new URLSearchParams(location.search).get('tab');
+    return tab === 'used' || tab === 'expired' || tab === 'cancelled' ? tab : 'upcoming';
+  });
+  const [name, setName] = useState(user?.name ?? '');
+  const [phone, setPhone] = useState(user?.phone ?? '');
+  const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [accountAction, setAccountAction] = useState('');
+  const [bookingAction, setBookingAction] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsDialogRef = useRef<HTMLDialogElement | null>(null);
+  useEffect(() => {
+    const dialog = settingsDialogRef.current;
+    if (!dialog) return;
+    if (settingsOpen && !dialog.open) dialog.showModal();
+    if (!settingsOpen && dialog.open) dialog.close();
+  }, [settingsOpen]);
+  const saveProfile = async (event: FormEvent) => {
+    event.preventDefault();
+    setSaving(true); setMessage('Saving profile…');
+    try {
+      const payload = await api('/auth/profile', { method: 'PATCH', body: JSON.stringify({ name, phone }) });
+      const next = payload.user ?? payload.data?.user ?? payload;
+      onProfileUpdated(next); setMessage('Profile saved.');
+    } catch (caught) { setMessage((caught as Error).message); } finally { setSaving(false); }
+  };
+  const uploadPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const photo = event.target.files?.[0]; if (!photo) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(photo.type) || photo.size > 5 * 1024 * 1024) { setMessage('Choose a JPG, PNG or WebP image under 5 MB.'); return; }
+    setSaving(true); setMessage('Uploading photo…');
+    try { const form = new FormData(); form.append('photo', photo); const payload = await api('/auth/profile/photo', { method: 'POST', body: form }); onProfileUpdated(payload.data?.user ?? payload.user ?? payload); setMessage('Photo saved.'); }
+    catch (caught) { setMessage((caught as Error).message); } finally { setSaving(false); }
+  };
+  const signOut = () => {
+    sessionStorage.removeItem(TOKEN);
+    sessionStorage.removeItem(GUEST_TOKEN);
+    location.href = '/website/';
+  };
+  const deleteAccount = async () => {
+    if (!window.confirm('Delete your Encore Transport account? This cannot be undone.')) return;
+    setAccountAction('Deleting account…');
+    try {
+      await api('/auth/profile', { method: 'DELETE' });
+      sessionStorage.removeItem(TOKEN);
+      location.href = '/website/';
+    } catch (caught) {
+      setAccountAction((caught as Error).message || 'Unable to delete the account.');
+    }
+  };
+  return (
+    <div className="account-screen">
+      <PageHead eyebrow="MY TRIP" title="Your bookings in one place." onBack={onBack} />
+      <section className="account-hero">
+        <div className="account-identity">
+          <span className="account-avatar">{user?.avatar_url ? <img src={user.avatar_url} alt="" onLoad={(event) => { event.currentTarget.style.opacity = '1'; const fallback = event.currentTarget.nextElementSibling as HTMLElement | null; if (fallback) fallback.hidden = true; }} onError={(event) => { event.currentTarget.hidden = true; const fallback = event.currentTarget.nextElementSibling as HTMLElement | null; if (fallback) fallback.hidden = false; }} /> : null}<b>{(user?.name ?? 'Passenger').split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}</b></span>
+          <div><span>Signed in as</span><strong>{user?.name ?? 'Passenger'}</strong><small>{user?.email ?? 'Verified account'}</small></div>
+        </div>
+        <p>Review tickets you have bought, trips already used and reservations still waiting for travel.</p>
+        <button type="button" className="account-settings-trigger" onClick={() => { const update = () => setSettingsOpen(true); if ('startViewTransition' in document) (document as Document & { startViewTransition?: (callback: () => void) => unknown }).startViewTransition?.(update); else update(); }} aria-label="Open account settings" aria-haspopup="dialog"><ActionIcon name="settings" /><span>Settings</span></button>
+      </section>
+      {<dialog ref={settingsDialogRef} className="account-settings-dialog" aria-labelledby="profileSettingsTitle" onClose={() => setSettingsOpen(false)} onCancel={() => setSettingsOpen(false)}>
+          <div className="account-settings-dialog__head"><div><span className="account-panel-label">ACCOUNT SETTINGS</span><h2 id="profileSettingsTitle">Make your account yours.</h2></div><button type="button" className="account-settings-close" onClick={() => setSettingsOpen(false)} aria-label="Close account settings">×</button></div>
+          <section className="account-profile-panel" aria-label="Profile settings">
+        <div><span className="account-panel-label">PROFILE</span><h2>Make your account yours.</h2><p>Keep your contact details and profile photo ready for future bookings.</p></div>
+        <form onSubmit={saveProfile} className="account-profile-form"><div className="profile-photo-control"><span className="account-panel-label">PROFILE PHOTO</span><label htmlFor="profilePhotoInput" className="profile-photo-button">{user?.avatar_url ? 'Change photo' : 'Add photo'}</label><input id="profilePhotoInput" type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadPhoto} /></div><div className="profile-fields"><label><span>Name</span><input value={name} onChange={(event) => setName(event.target.value)} required maxLength={150} /></label><label><span>Phone</span><input value={phone} onChange={(event) => setPhone(event.target.value)} maxLength={40} /></label><button type="submit" className="button button--primary" disabled={saving}>Save profile</button><small aria-live="polite">{message}</small></div></form>
+          </section>
+          <section className="account-security-panel" aria-label="Account actions">
+        <div><span className="account-panel-label">ACCOUNT ACCESS</span><h2>Keep control of your account.</h2><p>Sign out on shared devices or permanently remove your profile when you no longer need it.</p></div>
+        <div className="account-security-actions"><button type="button" className="button button--ghost" onClick={signOut}>Sign out</button><button type="button" className="button button--danger" onClick={deleteAccount}>Delete account</button></div>
+        <small aria-live="polite">{accountAction}</small>
+          </section>
+      </dialog>}
+      <div className="account-section-heading"><span className="account-panel-label">MY TRIPS</span><h2>Tickets and journey history</h2></div>
+      <div className="account-trip-tabs" role="tablist" aria-label="Trip history"><button className={tripTab === 'upcoming' ? 'is-active' : ''} onClick={() => setTripTab('upcoming')} role="tab">Upcoming</button><button className={tripTab === 'used' ? 'is-active' : ''} onClick={() => setTripTab('used')} role="tab">Used</button><button className={tripTab === 'expired' ? 'is-active' : ''} onClick={() => setTripTab('expired')} role="tab">Expired</button><button className={tripTab === 'cancelled' ? 'is-active' : ''} onClick={() => setTripTab('cancelled')} role="tab">Cancelled</button></div>
+      {loading ? <div className="smart-banner"><b>Loading your bookings…</b></div> : !bookings.length ? (
+        <div className="smart-banner"><b>No bookings yet.</b><span>Search a departure to create your first ticket.</span><button type="button" className="button button--primary" onClick={onNewTrip}>Find a trip</button></div>
+      ) : (
+        <div className="account-bookings">
+          {bookings.filter((booking) => {
+            const status = String(booking.status ?? '').toLowerCase();
+            const used = ['completed', 'used', 'boarded'].includes(status);
+            const expired = ['expired', 'no_show'].includes(status) || (!used && booking.trip?.departure_date && new Date(`${booking.trip.departure_date}T${booking.trip.departure_time ?? '23:59'}`) < new Date());
+            const cancelled = ['cancelled', 'refunded'].includes(status);
+            return tripTab === 'used' ? used : tripTab === 'expired' ? expired && !cancelled : tripTab === 'cancelled' ? cancelled : !used && !expired && !cancelled;
+          }).map((booking) => {
+            const status = String(booking.status ?? '').toLowerCase();
+            const used = ['completed', 'used', 'boarded'].includes(status);
+            const route = typeof booking.route === 'string' ? booking.route : booking.route?.origin && booking.route?.destination ? `${booking.route.origin} → ${booking.route.destination}` : typeof booking.trip?.route === 'string' ? booking.trip.route : booking.trip?.route?.origin && booking.trip?.route?.destination ? `${booking.trip.route.origin} → ${booking.trip.route.destination}` : 'Encore Transport journey';
+            const reference = booking.reference ?? 'Booking #' + booking.id;
+            const shareBooking = async () => {
+              const text = `${reference} · ${route}`;
+              try {
+                if (navigator.share) await navigator.share({ title: 'Encore Transport journey', text });
+                else await navigator.clipboard.writeText(text);
+                setBookingAction('Journey details ready to share.');
+              } catch { /* user cancelled the native share sheet */ }
+            };
+            const copyReference = async () => {
+              try { await navigator.clipboard.writeText(reference); setBookingAction('Booking reference copied.'); }
+              catch { setBookingAction('Copy is unavailable in this browser.'); }
+            };
+            return <article key={booking.id} className="account-booking"><div><span>{used ? 'USED TICKET' : 'RESERVATION'}</span><h3>{reference}</h3><p>{route}</p><div className="account-booking__actions"><button type="button" onClick={copyReference}>Copy reference</button><button type="button" onClick={shareBooking}>Share journey</button></div></div><strong className={'account-booking__status account-booking__status--' + (used ? 'used' : status)}>{used ? 'Travel completed' : booking.status ?? 'Active'}</strong></article>;
+          })}
+          {!bookings.some((booking) => { const status = String(booking.status ?? '').toLowerCase(); return tripTab === 'used' ? ['completed', 'used', 'boarded'].includes(status) : tripTab === 'cancelled' ? ['cancelled', 'refunded'].includes(status) : tripTab === 'expired' ? ['expired', 'no_show'].includes(status) : !['completed', 'used', 'boarded', 'expired', 'no_show', 'cancelled', 'refunded'].includes(status); }) && <div className="smart-banner"><b>No {tripTab} trips.</b><span>Choose another section or plan a new journey.</span><button type="button" className="button button--primary" onClick={onNewTrip}>Find a trip</button></div>}
+        </div>
+      )}
+      <small className="account-action-message" aria-live="polite">{bookingAction}</small>
+    </div>
   );
 }
 
@@ -559,7 +763,7 @@ function Home({
             destination: filters.origin,
           })}
         >
-          ⇄
+          <ActionIcon name="swap" />
         </button>
 
         <PointField
@@ -594,7 +798,7 @@ function Home({
         />
 
         <button className="primary" disabled={loading}>
-          {loading ? 'SEARCHING…' : 'SEARCH DEPARTURES →'}
+          <ActionIcon name="search" />{loading ? 'SEARCHING…' : 'SEARCH DEPARTURES'}
         </button>
       </form>
     </>
@@ -662,7 +866,7 @@ function PageHead({
         <h1>{title}</h1>
       </div>
       <button className="ghost" onClick={onBack}>
-        ← BACK
+        <ActionIcon name="back" />BACK
       </button>
     </div>
   );
@@ -679,6 +883,13 @@ function Results({
   onBack: () => void;
   onSelect: (trip: ApiTrip) => void;
 }) {
+  const [sort, setSort] = useState<'departure' | 'price' | 'availability'>('departure');
+  const orderedTrips = useMemo(() => [...trips].sort((left, right) => {
+    if (sort === 'price') return Number(left.baseFare ?? 0) - Number(right.baseFare ?? 0);
+    if (sort === 'availability') return Number(right.availableSeats ?? 0) - Number(left.availableSeats ?? 0);
+    return String(left.departureTime ?? '').localeCompare(String(right.departureTime ?? ''));
+  }), [sort, trips]);
+
   return (
     <>
       <PageHead
@@ -695,8 +906,19 @@ function Results({
           <span>Change route, date or passenger count.</span>
         </div>
       ) : (
-        <div className="departures">
-          {trips.map((trip) => (
+        <>
+          <div className="results-toolbar" aria-label="Departure result controls">
+            <span><strong>{trips.length}</strong> departure{trips.length === 1 ? '' : 's'} found</span>
+            <label>Sort by
+              <select value={sort} onChange={(event) => setSort(event.target.value as typeof sort)}>
+                <option value="departure">Earliest departure</option>
+                <option value="price">Lowest fare</option>
+                <option value="availability">Most seats available</option>
+              </select>
+            </label>
+          </div>
+          <div className="departures">
+          {orderedTrips.map((trip) => (
             <article key={trip.id} className="departure">
               <div>
                 <span>TRIP {trip.id}</span>
@@ -719,12 +941,13 @@ function Results({
                   className="primary"
                   onClick={() => onSelect(trip)}
                 >
-                  SELECT →
+                  <ActionIcon name="arrow" />SELECT
                 </button>
               </aside>
             </article>
           ))}
-        </div>
+          </div>
+        </>
       )}
     </>
   );
@@ -791,7 +1014,11 @@ function JourneyMap({ trip }: { trip: ApiTrip }) {
         </div>
       )}
 
-      <div ref={ref} className="passenger-real-map" />
+      <div ref={ref} className="passenger-real-map">
+        <div className="encore-map-fallback" aria-live="polite">
+          <div><strong>Loading route map…</strong><span>Preparing the current route.</span></div>
+        </div>
+      </div>
     </section>
   );
 }
@@ -1026,6 +1253,7 @@ function Review({
   accountUser,
   onBack,
   onReserve,
+  onGoogleSignIn,
 }: {
   trip: ApiTrip;
   seatLabels: string[];
@@ -1035,10 +1263,28 @@ function Review({
   accountUser: { name: string; email?: string } | null;
   onBack: () => void;
   onReserve: (registration?: RegistrationDetails) => void;
+  onGoogleSignIn: (credential: string) => void;
 }) {
   const signed = Boolean(sessionStorage.getItem(TOKEN));
   const [checkoutMode, setCheckoutMode] = useState<'guest' | 'register'>('guest');
   const [registrationError, setRegistrationError] = useState('');
+
+  useEffect(() => {
+    const target = document.querySelector('#checkoutGoogleSignIn');
+    const clientId = document.querySelector('meta[name="google-client-id"]')?.getAttribute('content');
+    if (!target || !clientId || signed) return;
+    const render = () => {
+      const google = (window as any).google;
+      if (!google?.accounts?.id) return false;
+      google.accounts.id.initialize({ client_id: clientId, callback: ({ credential }: { credential: string }) => onGoogleSignIn(credential) });
+      google.accounts.id.renderButton(target, { theme: 'outline', size: 'large', width: 360, text: 'continue_with' });
+      return true;
+    };
+    if (!render()) {
+      const timer = window.setInterval(() => { if (render()) window.clearInterval(timer); }, 250);
+      return () => window.clearInterval(timer);
+    }
+  }, [signed, onGoogleSignIn]);
 
   const submitRegistration = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1090,6 +1336,7 @@ function Review({
                 <button type="button" role="radio" aria-checked={checkoutMode === 'register'} className={checkoutMode === 'register' ? 'is-selected' : ''} onClick={() => setCheckoutMode('register')}><strong>Create an account</strong><span>Save your name and view future bookings.</span></button>
               </div>
             )}
+            {!signed && <div className="checkout-google"><span>Save this booking securely</span><div id="checkoutGoogleSignIn" aria-label="Continue with Google"></div></div>}
             {!signed && checkoutMode === 'guest' && <p className="checkout-note">Your booking will be linked to a private access code for this session.</p>}
             {!signed && checkoutMode === 'register' && (
               <form className="checkout-register" onSubmit={submitRegistration}>
@@ -1128,19 +1375,25 @@ function Status({
   booking,
   trip,
   seats,
+  loading = false,
+  onCancel,
   onNew,
 }: {
   booking: Booking | null;
   trip: ApiTrip | null;
   seats: string[];
+  loading?: boolean;
+  onCancel?: () => void;
   onNew: () => void;
 }) {
+  const isHeld = booking?.status === 'pending_payment' || booking?.status === 'held';
+
   return (
     <>
       <div className="confirmation">
         <div>✓</div>
         <h2>
-          {booking?.status === 'pending_payment'
+          {isHeld
             ? 'Your seats are being held.'
             : 'Booking status updated.'}
         </h2>
@@ -1168,9 +1421,21 @@ function Status({
           <span>TRIP TOTAL</span>
           <strong>{money(Number(booking?.total_amount ?? 0))}</strong>
         </div>
-        <button className="primary" onClick={onNew}>
-          NEW SEARCH
-        </button>
+        <div className="action-band__actions">
+          {isHeld && onCancel && (
+            <button
+              type="button"
+              className="ghost danger"
+              disabled={loading}
+              onClick={onCancel}
+            >
+              {loading ? 'CANCELLING…' : 'CANCEL HOLD'}
+            </button>
+          )}
+          <button className="primary" onClick={onNew}>
+            NEW SEARCH
+          </button>
+        </div>
       </div>
     </>
   );

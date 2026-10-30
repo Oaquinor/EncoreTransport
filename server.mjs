@@ -33,6 +33,7 @@ const appAliases = new Map([
   ['/admin', 'apps/admin-dashboard'],
   ['/login', 'apps/auth'],
   ['/track-package', 'apps/package-tracking'],
+  ['/package-register', 'apps/package-register'],
 ]);
 
 const publicRoots = ['assets', 'packages/shared'];
@@ -183,7 +184,14 @@ function proxyApi(request, response, apiTarget) {
     },
   );
 
+  const timeoutId = setTimeout(() => {
+    proxy.destroy(new Error('API upstream timeout'));
+  }, 15000);
+
+  proxy.on('response', () => clearTimeout(timeoutId));
+
   proxy.on('error', () => {
+    clearTimeout(timeoutId);
     if (!response.headersSent) {
       response.writeHead(502, {
         'Content-Type': 'application/json; charset=utf-8',
@@ -212,6 +220,14 @@ export function createEncoreServer({
     );
 
     if (parsedUrl.pathname.startsWith('/api/')) {
+      proxyApi(request, response, apiTarget);
+      return;
+    }
+
+    // Laravel's public disk is exposed through the same origin as the apps.
+    // Without this proxy, /storage/* is incorrectly resolved by the frontend
+    // server and every uploaded CMS/profile image appears broken in local dev.
+    if (parsedUrl.pathname.startsWith('/storage/')) {
       proxyApi(request, response, apiTarget);
       return;
     }
@@ -274,6 +290,7 @@ export async function startEncoreServer({
     console.log(`Admin:     http://${host}:${actualPort}/admin/`);
     console.log(`Login:     http://${host}:${actualPort}/login/`);
     console.log(`Tracking:  http://${host}:${actualPort}/track-package/`);
+    console.log(`Packages:  http://${host}:${actualPort}/package-register/`);
     console.log(`API proxy: ${apiTargetUrl}/api/*`);
   }
 

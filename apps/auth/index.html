@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#071722" />
   <meta name="application-name" content="Encore Transport" />
-  <meta name="description" content="Encore Transport staff sign in." />
+  <meta name="description" content="Encore Transport account sign in." />
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <link rel="icon" href="/logo.svg" type="image/svg+xml" />
   <title>Staff Sign In | Encore Transport</title>
+  <meta name="google-client-id" content="1094552615273-asqmom1d3tq9t382umtjpng7g7pd8h67.apps.googleusercontent.com" />
 
   <link rel="stylesheet" href="./app.css" />
 </head>
@@ -33,9 +34,9 @@
       </a>
 
       <div class="premium-auth-copy">
-        <span class="et-kicker">Staff sign in</span>
+        <span class="et-kicker">Account sign in</span>
         <h1 id="authTitle">Welcome back.</h1>
-        <p>Sign in with your Encore account to continue to your workspace.</p>
+        <p>Sign in with your Encore account to continue to your passenger or operations workspace.</p>
       </div>
 
       <div id="authMessage" class="auth-message" aria-live="polite" hidden></div>
@@ -52,17 +53,20 @@
         </label>
 
         <button class="premium-auth-submit" type="submit">
-          Sign in <span>→</span>
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5H5v14h5M14 8l4 4-4 4M18 12H9"/></svg> Sign in
         </button>
       </form>
+      <div class="social-divider"><span>or continue as a passenger</span></div>
+      <div id="googleSignIn" class="google-sign-in" aria-label="Continue with Google"></div>
 
       <div class="premium-auth-footer">
-        <a href="/website/">← Back to website</a>
+        <a href="/website/"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg> Back to website</a>
         <span>Need help signing in? Contact your Encore administrator.</span>
       </div>
     </section>
   </main>
 
   <script type="module" src="./app.mjs"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
 </html>

@@ -33,6 +33,7 @@ Route::prefix('v1')->group(function () {
 
     Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
     Route::post('auth/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+    Route::post('auth/google', [AuthController::class, 'google'])->middleware('throttle:10,1');
 
     Route::get('routes', [RouteController::class, 'index']);
     Route::get('website-content', [WebsiteContentController::class, 'published']);
@@ -77,6 +78,8 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('api.token')->group(function () {
         Route::get('auth/me', [AuthController::class, 'me']);
+        Route::patch('auth/profile', [AuthController::class, 'updateProfile']);
+        Route::delete('auth/profile', [AuthController::class, 'deleteProfile']);
         Route::post('auth/profile/photo', [AuthController::class, 'uploadProfilePhoto'])->middleware('throttle:10,1');
         Route::post('auth/logout', [AuthController::class, 'logout']);
 

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Package intake | Encore Operations</title>
+  <link rel="stylesheet" href="/package-register/app.css" />
+</head>
+<body>
+  <main class="intake-shell">
+    <header class="intake-header">
+      <a class="brand" href="/admin/" aria-label="Back to Encore Operations"><img src="/logo.svg" alt="" /><span><strong>encore</strong><small>transport · operations</small></span></a>
+      <a class="back-link" href="/admin/">← Operations</a>
+    </header>
+    <section class="intake-hero">
+      <div>
+        <p class="eyebrow">Cargo operations</p>
+        <h1>Register a package for tracking.</h1>
+        <p class="lede">Create a secure tracking reference for a package travelling on your assigned trip. The driver can then update its status from the road.</p>
+      </div>
+      <div class="hero-badge"><span aria-hidden="true">□</span><strong>Driver-linked</strong><small>Only your active trip can receive this package.</small></div>
+    </section>
+    <section class="intake-grid">
+      <form id="packageForm" class="card intake-form" novalidate>
+        <div class="card-heading"><div><p class="eyebrow">New shipment</p><h2>Package details</h2></div><span class="required-note">* Required</span></div>
+        <div id="tripStatus" class="trip-status" role="status">Loading your active trip…</div>
+        <input id="tripId" type="hidden" name="trip_id" />
+        <div class="field-grid">
+          <label>Recipient name *<input id="recipientName" name="recipient_name" required maxlength="150" autocomplete="name" placeholder="Full name" /></label>
+          <label>Recipient phone<input id="recipientPhone" name="recipient_phone" maxlength="40" autocomplete="tel" placeholder="+592 …" /></label>
+          <label class="field-span">Recipient email<input id="recipientEmail" name="recipient_email" type="email" maxlength="150" autocomplete="email" placeholder="recipient@example.com" /></label>
+          <label class="field-span">Package description<input id="description" name="description" maxlength="3000" placeholder="What is inside? (optional)" /></label>
+        </div>
+        <p id="formError" class="form-message error" role="alert" hidden></p>
+        <button id="submitButton" class="primary-button" type="submit" disabled><span aria-hidden="true">＋</span> Register package</button>
+      </form>
+      <aside class="card process-card">
+        <p class="eyebrow">What happens next</p><h2>Ready for the road.</h2>
+        <ol><li><b>01</b><span><strong>Reference created</strong><small>A unique PK reference is generated instantly.</small></span></li><li><b>02</b><span><strong>Share the reference</strong><small>Give the recipient the secure tracking link.</small></span></li><li><b>03</b><span><strong>Update from Driver</strong><small>Move received → in progress → delivered.</small></span></li></ol>
+        <div id="successCard" class="success-card" hidden><span class="success-icon">✓</span><div><p class="eyebrow">Package registered</p><h3 id="successReference">PK-</h3><p>Save this reference or open the tracking page.</p><div class="success-actions"><a id="trackingLink" class="secondary-button" href="/track-package/">Open tracking ↗</a><button id="copyTrackingLink" class="secondary-button" type="button">Copy link</button></div></div></div>
+      </aside>
+    </section>
+  </main>
+  <script type="module" src="/package-register/app.mjs"></script>
+</body>
+</html>

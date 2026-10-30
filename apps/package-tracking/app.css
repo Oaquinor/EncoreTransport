@@ -3,3 +3,15 @@
 @import url("./styles.css");
 @import url("./premium.css");
 @import url("../../packages/shared/design-system.css");
+@import url("./tracking-polish.css");
+/* Keep action hierarchy recognizable without oversized decorative symbols. */
+.ui-icon { width: 17px; height: 17px; flex: 0 0 auto; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.premium-tracking-back, .premium-tracking-form button { display: inline-flex; align-items: center; gap: 8px; }
+.premium-tracking-form label:focus-within span { color: #087fab; }
+.track-result { animation: track-result-in .24s ease both; }
+.track-actions { display:flex; flex-wrap:wrap; gap:10px; margin:18px 0; }
+.track-actions button { border:1px solid rgba(8,127,171,.25); background:#fff; color:#0b2a3c; border-radius:999px; padding:10px 14px; font:inherit; font-weight:700; cursor:pointer; }
+.track-actions button:hover { border-color:#087fab; color:#087fab; }
+.track-empty { margin:18px 0 0; color:#5d7482; }
+@keyframes track-result-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .track-result { animation: none; } }

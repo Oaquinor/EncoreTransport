@@ -1725,3 +1725,15 @@ body {
     padding: 6px;
   }
 }
+
+/* Public rework visual adjustments: social links & legal nav */
+.public-footer__socials a[aria-disabled="true"] {
+  pointer-events: none;
+  opacity: .5;
+  filter: grayscale(1);
+}
+
+.public-footer__socials a[aria-disabled="true"]:focus,
+.public-footer__socials a[aria-disabled="true"]:active {
+  outline: none;
+}

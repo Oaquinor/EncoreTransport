@@ -1,5 +1,5 @@
 .screen-animate {
-  animation: passengerViewIn .28s cubic-bezier(.2,.8,.2,1);
+  animation: passengerViewIn .14s ease-out;
 }
 
 .departure,

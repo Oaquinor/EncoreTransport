@@ -3,3 +3,13 @@
 @import url("./styles.css");
 @import url("./premium.css");
 @import url("../../packages/shared/design-system.css");
+/* Consistent action icon treatment across auth and tracking surfaces. */
+.ui-icon { width: 17px; height: 17px; flex: 0 0 auto; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.premium-auth-submit, .premium-auth-footer a { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.premium-auth-submit { transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
+.premium-auth-submit:hover, .premium-auth-submit:focus-visible { background: linear-gradient(135deg, #0c3850, #0b6c90); box-shadow: 0 14px 28px rgba(7, 60, 84, .2); transform: translateY(-1px); outline: none; }
+.premium-auth-form label:focus-within span { color: #087fab; }
+@media (prefers-reduced-motion: reduce) { .premium-auth-submit { transition: none; } }
+.social-divider { display:flex; align-items:center; gap:10px; margin:18px 0 10px; color:#78909d; font-size:.72rem; }
+.social-divider::before,.social-divider::after { content:""; height:1px; flex:1; background:#d9e4eb; }
+.google-sign-in { min-height:40px; display:flex; justify-content:center; }

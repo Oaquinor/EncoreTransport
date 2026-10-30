@@ -96,6 +96,12 @@ export const uploadProfilePhoto = async (photo) => {
   const payload = await requestJson('/auth/profile/photo', { method: 'POST', body: form });
   return payload.data?.user ?? payload.user ?? null;
 };
+export const updateProfile = async (data) => (await requestJson('/auth/profile', {
+  method: 'PATCH', body: JSON.stringify(data),
+})).user ?? {};
+export const deleteProfile = async () => (await requestJson('/auth/profile', {
+  method: 'DELETE', body: JSON.stringify({ confirmation: 'DELETE' }),
+}));
 export const saveEmailSettings = async (data) => (await requestJson('/admin/settings/email', {
   method: 'PUT', body: JSON.stringify(data),
 })).data ?? {};

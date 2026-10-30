@@ -82,28 +82,44 @@ export async function requestJson(
   const controller = options.signal ? null : new AbortController();
   const timeout = Number(options.timeoutMs ?? 10000);
   const timeoutId = controller ? setTimeout(() => controller.abort(), timeout) : null;
+  const method = String(options.method ?? 'GET').toUpperCase();
+  const retryableMethod = ['GET', 'HEAD', 'OPTIONS'].includes(method);
+  const attempts = retryableMethod ? 2 : 1;
+  let lastError;
 
-  try {
-    response = await fetch(
-      `${appConfig.apiBaseUrl}${path}`,
-      {
-        ...options,
-        headers,
-        signal: options.signal ?? controller?.signal,
-      },
-    );
-  } catch (error) {
-    if (timeoutId) clearTimeout(timeoutId);
-    throw new ApiError(
-      'Unable to reach Encore Transport. Check your connection and try again.',
-      0,
-      {
-        cause: error?.message,
-      },
-    );
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      response = await fetch(
+        `${appConfig.apiBaseUrl}${path}`,
+        {
+          ...options,
+          headers,
+          signal: options.signal ?? controller?.signal,
+        },
+      );
+      if (retryableMethod && attempt === 0 && [408, 429, 502, 503, 504].includes(response.status)) {
+        response.body?.cancel?.();
+        await new Promise((resolve) => setTimeout(resolve, 180));
+        continue;
+      }
+      break;
+    } catch (error) {
+      lastError = error;
+      if (attempt + 1 >= attempts || options.signal?.aborted || controller?.signal.aborted) break;
+      await new Promise((resolve) => setTimeout(resolve, 180));
+    }
   }
 
   if (timeoutId) clearTimeout(timeoutId);
+  if (!response) {
+    throw new ApiError(
+      lastError?.name === 'AbortError'
+        ? 'The request took too long. Please try again.'
+        : 'Unable to reach Encore Transport. Check your connection and try again.',
+      0,
+      { cause: lastError?.message },
+    );
+  }
 
   let payload = null;
 

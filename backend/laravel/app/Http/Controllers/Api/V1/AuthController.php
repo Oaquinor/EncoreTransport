@@ -11,6 +11,7 @@ use App\Services\Audit\AuditService;
 use App\Services\Auth\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -81,11 +82,77 @@ class AuthController extends Controller
         return response()->json($this->authPayload($user, $plain, $token));
     }
 
+    public function google(Request $request)
+    {
+        $data = $request->validate(['credential' => ['required', 'string', 'max:12000']]);
+        $clientId = (string) config('services.google.auth_client_id');
+        if ($clientId === '') return response()->json(['message' => 'Google sign-in is not configured on this server.'], 503);
+        $response = Http::timeout(8)->acceptJson()->get('https://oauth2.googleapis.com/tokeninfo', ['id_token' => $data['credential']]);
+        if (!$response->successful()) return response()->json(['message' => 'Google could not verify this sign-in.'], 422);
+        $claims = $response->json();
+        if (($claims['aud'] ?? '') !== $clientId
+            || !in_array(($claims['iss'] ?? ''), ['accounts.google.com', 'https://accounts.google.com'], true)
+            || filter_var($claims['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN) !== true
+            || empty($claims['sub']) || empty($claims['email'])) {
+            return response()->json(['message' => 'The Google identity token is not valid for Encore Transport.'], 422);
+        }
+        $email = mb_strtolower($claims['email']);
+        $user = User::query()->where('google_subject', $claims['sub'])->orWhere('email', $email)->first();
+        if ($user && !$user->google_subject) $user->forceFill(['google_subject' => $claims['sub'], 'email_verified_at' => now()])->save();
+        if (!$user) {
+            $user = User::query()->create(['name' => $claims['name'] ?? $email, 'email' => $email, 'role' => 'passenger', 'active' => true, 'google_subject' => $claims['sub'], 'email_verified_at' => now()]);
+            Role::query()->where('name', 'passenger')->first()?->users()->syncWithoutDetaching([$user->id]);
+            $this->audit->record($user, 'auth.google.register', $user);
+        } else {
+            if (!$user->active) return response()->json(['message' => 'This account is disabled.'], 403);
+            $this->audit->record($user, 'auth.google.login', $user);
+        }
+        [$plain, $token] = $this->createToken($user);
+        return response()->json($this->authPayload($user, $plain, $token));
+    }
+
     public function me(Request $request)
     {
         $user = $request->user();
 
         return response()->json(['user' => $this->userPayload($user), 'permissions' => $this->permissions->effective($user)]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:150'],
+            'phone' => ['nullable', 'string', 'max:40'],
+        ]);
+        $user->forceFill(['name' => trim($data['name']), 'phone' => $data['phone'] ?? null])->save();
+        $this->audit->record($user, 'profile.updated', $user);
+        return response()->json(['user' => $this->userPayload($user->fresh()), 'permissions' => $this->permissions->effective($user)]);
+    }
+
+    public function deleteProfile(Request $request)
+    {
+        $data = $request->validate(['confirmation' => ['required', 'in:DELETE']]);
+        unset($data);
+        $user = $request->user();
+        $hasBookings = $user->bookings()->exists();
+        $this->audit->record($user, 'profile.deleted', ['preserved_history' => $hasBookings]);
+        if ($hasBookings) {
+            $user->forceFill([
+                'name' => 'Deleted user',
+                'email' => 'deleted+' . $user->id . '@encore.invalid',
+                'phone' => null,
+                'active' => false,
+                'profile_photo_path' => null,
+                'google_subject' => null,
+            ])->save();
+        } else {
+            $user->roles()->detach();
+            $user->permissions()->detach();
+            $user->delete();
+        }
+        ApiToken::query()->where('user_id', $user->id)->delete();
+        return response()->json(['message' => $hasBookings ? 'Account deactivated and personal data anonymized.' : 'Account deleted.']);
     }
 
     public function uploadProfilePhoto(Request $request)
@@ -145,7 +212,7 @@ class AuthController extends Controller
     {
         $payload = $user->toArray();
         $photoPath = $user->profile_photo_path ?: $user->driver?->photo_path;
-        $payload['avatar_url'] = $photoPath
+        $payload['avatar_url'] = $photoPath && Storage::disk('public')->exists($photoPath)
             ? Storage::disk('public')->url($photoPath)
             : null;
 

@@ -16,6 +16,7 @@ import {
   requestJson,
 } from '../../packages/shared/api.mjs';
 import { badge, progressBar, statCard } from '../../packages/shared/ui.mjs';
+import { icon } from '../../packages/shared/icons.mjs';
 import { renderJourneyMapWithLoader, destroyRealMap } from '../../packages/shared/real-map.mjs';
 
 const appRoot = document.querySelector('#app');
@@ -45,6 +46,17 @@ function esc(value = '') {
   }[character]));
 }
 
+function initials(value = 'Driver') {
+  return String(value).trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('') || 'DR';
+}
+
+function driverPhotoUrl(driver) {
+  const path = driver?.photo_path;
+  if (!path) return '';
+  if (/^https?:\/\//i.test(String(path))) return String(path);
+  return String(path).startsWith('/') ? String(path) : `/storage/${String(path).replace(/^storage\//, '')}`;
+}
+
 function render() {
   appRoot.innerHTML = `
     <div class="driver-screen">
@@ -62,20 +74,22 @@ function render() {
 function renderDashboard() {
   const trip = state.currentTrip;
   const status = trip?.status ?? 'no_trip';
+  const driverName = state.driver?.name ?? state.driver?.user?.name ?? 'Driver';
+  const photoUrl = driverPhotoUrl(state.driver);
 
   return `
-    <section class="driver-dashboard motion-enter">
+    <section class="driver-dashboard">
       <header class="driver-card driver-header">
         <div class="driver-brand">
-          <img class="driver-badge" src="/logo.svg" alt="" aria-hidden="true">
+          <div class="driver-avatar" aria-hidden="true">${photoUrl ? `<img src="${esc(photoUrl)}" alt="">` : initials(driverName)}</div>
           <div>
-            <strong>encore</strong>
-            <small>transport · driver</small>
+            <strong>${esc(driverName)}</strong>
+            <small>Encore Drive · operations</small>
           </div>
         </div>
-        <div>
+        <div class="driver-header__actions">
           <span class="badge badge--primary">${esc(status.replaceAll('_', ' ').toUpperCase())}</span>
-          <button class="button button--ghost" id="logout">Logout</button>
+          <button class="button button--ghost button--with-icon" id="logout">${icon('logout')}Logout</button>
         </div>
       </header>
 
@@ -89,7 +103,7 @@ function renderDashboard() {
         ? `<section class="driver-card">
             <h2>No active or upcoming trip assigned.</h2>
             <p class="driver-copy">Refresh after Operations assigns a trip.</p>
-            <button id="refresh" class="button button--primary">Refresh</button>
+            <button id="refresh" class="button button--primary button--with-icon">${icon('refresh')}Refresh</button>
           </section>`
         : renderTrip(trip)}
     </section>`;
@@ -142,6 +156,12 @@ function renderTrip(trip) {
       ${progressBar(status === 'scheduled' ? 20 : status === 'boarding' ? 40 : status === 'in_progress' ? 72 : 100)}
     </section>
 
+    <section class="driver-quick-grid" aria-label="Trip overview">
+      <div><span>${icon('clock')} Departure</span><strong>${esc((trip.departureTime ?? '').slice(0, 5) || '—')}</strong><small>${esc(trip.departureDate ?? 'Today')}</small></div>
+      <div><span>${icon('bus')} Vehicle</span><strong>${esc(trip.busCode ?? `Bus ${trip.busId ?? '—'}`)}</strong><small>Assigned for this trip</small></div>
+      <div><span>${icon('seat')} Capacity</span><strong>${Number(trip.availableSeats ?? 0)}</strong><small>Seats available</small></div>
+    </section>
+
     <section class="driver-grid driver-grid--2">
       ${statCard('Passengers', String(state.passengers.length), 'Confirmed boarding list')}
       ${statCard('Status', status.replaceAll('_', ' ').toUpperCase(), 'Server state')}
@@ -161,7 +181,7 @@ function renderTrip(trip) {
                   class="button button--ghost"
                   data-board="${passenger.id}"
                   ${passenger.boarded_at ? 'disabled' : ''}>
-                  ${passenger.boarded_at ? 'Boarded' : 'Mark boarded'}
+                  ${icon(passenger.boarded_at ? 'user' : 'seat')}${passenger.boarded_at ? 'Boarded' : 'Mark boarded'}
                 </button>
               </div>`).join('')
           : '<p class="driver-copy">No confirmed passengers registered for this trip.</p>'}
@@ -195,18 +215,18 @@ function renderTrip(trip) {
           </select>
         </label>
       </div>
-      <button class="button button--ghost" id="saveVehicleStatus">Save vehicle status</button>
+      <button class="button button--ghost button--with-icon" id="saveVehicleStatus">${icon('refresh')}Save vehicle status</button>
     </section>
 
     <section class="driver-card">
-      <h3>Package</h3>
+      <div class="driver-section-heading"><div><h3>Package intake</h3><p class="driver-copy">Register cargo before the vehicle leaves.</p></div><a class="button button--ghost button--with-icon" href="/package-register/">${icon('package')}Full intake</a></div>
       <div class="driver-grid">
         <label><span class="muted-copy">Recipient</span><input class="field" id="pkgRecipient"></label>
         <label><span class="muted-copy">Phone</span><input class="field" id="pkgPhone"></label>
         <label><span class="muted-copy">Email</span><input class="field" id="pkgEmail" type="email"></label>
         <label><span class="muted-copy">Description</span><textarea class="field" id="pkgDescription"></textarea></label>
       </div>
-      <button class="button button--ghost" id="createPackage">Register package</button>
+      <button class="button button--ghost button--with-icon" id="createPackage">${icon('package')}Register package</button>
       <div id="packageResult"></div>
     </section>
 
@@ -216,13 +236,13 @@ function renderTrip(trip) {
       <textarea class="field" id="incidentNotes" placeholder="Describe the incident"></textarea>
 
       <div class="driver-actions">
-        <button class="button button--ghost" id="sendGps">Send current GPS</button>
-        <button class="button button--ghost" id="reportIncident">Report incident</button>
+        <button class="button button--ghost button--with-icon" id="sendGps">${icon('route')}Send current GPS</button>
+        <button class="button button--ghost button--with-icon" id="reportIncident">${icon('info')}Report incident</button>
         <button
           class="button button--primary"
           id="tripAction"
           ${!['scheduled', 'boarding', 'in_progress'].includes(status) ? 'disabled' : ''}>
-          ${status === 'in_progress' ? 'Complete trip' : 'Start trip'}
+          ${icon(status === 'in_progress' ? 'route' : 'arrowRight')}${status === 'in_progress' ? 'Complete trip' : 'Start trip'}
         </button>
       </div>
     </section>`;

@@ -69,6 +69,11 @@ const state = {
   userEditingId: null,
   userForm: null,
   roleEditingId: null,
+  profilePhotoMessage: '',
+  sidebarCollapsed: localStorage.getItem('encore_admin_sidebar_collapsed') === '1',
+  // v2 resets the old all-collapsed preference that could leave the menu
+  // looking empty after the sidebar redesign.
+  navGroups: JSON.parse(localStorage.getItem('encore_admin_nav_groups_v2') || '{}'),
 };
 
 function esc(value = '') {
@@ -80,6 +85,31 @@ function esc(value = '') {
     '"': '&quot;',
   }[character]));
 }
+
+function adminDisplayName(user) {
+  const name = String(user?.name ?? '').trim();
+  return name && name.toLowerCase() !== 'admin demo' ? name : 'Operations Admin';
+}
+
+const navIconByModule = {
+  dashboard: 'dashboard',
+  trips: 'route',
+  bookings: 'archive',
+  vehicles: 'archive',
+  drivers: 'user',
+  routes: 'route',
+  website: 'view',
+  schedules: 'calendar',
+  packages: 'archive',
+  incidents: 'close',
+  customers: 'user',
+  reports: 'report',
+  users: 'user',
+  roles: 'user',
+  permissions: 'save',
+  settings: 'settings',
+  profile: 'user',
+};
 
 async function optimizeImageForUpload(file) {
   if (typeof createImageBitmap !== 'function' || typeof File !== 'function') return file;
@@ -139,12 +169,12 @@ const cmsSections = ['hero', 'tracking', 'routes', 'faq', 'about', 'contact', 'f
 function blankWebsiteContent() {
   const source = {
     hero: ['Travel with confidence.','Every step of the way.','Find a trip, choose your route and select your seat.','',''],
-    tracking: ['Your package, easier to follow.','','Enter your tracking reference to see the latest update recorded for your shipment.','Track my package','/track-package/'],
+    tracking: ['Every shipment has a clear next step.','','Use the tracking reference from your team to see the latest recorded update, from receipt to delivery.','Track my package','/track-package/'],
     routes: ['See where Encore can take you.','','Browse the routes currently available and continue straight to matching departures.','',''],
     faq: ['A few things you may want to know.','','Quick answers for planning a trip, choosing seats and tracking a package.','',''],
     about: ['A clearer way to move people and packages.','','Encore Transport is building a connected travel experience for passengers, operations teams and future cargo services.','',''],
-    contact: ['Need help planning a trip.','','Need help with a booking? Start with the trip and package tools, or review the answers to common questions.','Visit travel help','#faq'],
-    final_cta: ['Find your next trip with Encore Transport.','','Search current departures and continue when you find the trip that works for you.','Book your trip','/passenger/'],
+    contact: ['Need a hand before you travel?','','Use the help answers first, then return to Passenger when you are ready to review your trip.','Read travel help','#faq'],
+    final_cta: ['Your next journey, clearly planned.','','Find a departure, choose your seat and keep every trip detail close at hand.','Book a trip','#book'],
   };
   return {
     sections: Object.fromEntries(cmsSections.map((key, order) => [key, { title: source[key][0], subtitle: source[key][1], description: source[key][2], button_label: source[key][3], button_url: source[key][4], enabled: true, order }])),
@@ -162,16 +192,28 @@ function cmsImageEditor(content, selectedKey, writable) {
   const item = content.sections?.[selectedKey] ?? {};
   const media = state.websiteMedia ?? [];
   const library = media.length
-    ? `<div class="cms-library">${media.map((asset) => `<article class="cms-library-item"><img src="${esc(asset.image_url)}" alt="Stored website image" /><small>${esc(asset.image_path.split('/').pop())} · ${(Number(asset.size || 0) / 1024 / 1024).toFixed(1)} MB</small><div class="cms-library-actions">${writable ? `<button type="button" class="button button--ghost" data-cms-use-media="${esc(asset.image_path)}">Use in ${esc(selectedKey.replaceAll('_',' '))}</button><button type="button" class="button button--icon" data-cms-delete-media="${esc(asset.image_path)}" aria-label="Delete image">×</button>` : ''}</div></article>`).join('')}</div>`
+    ? `<div class="cms-library">${media.map((asset) => `<article class="cms-library-item"><img src="${esc(publicAssetUrl(asset.image_url))}" alt="Stored website image" /><small>${esc(asset.image_path.split('/').pop())} · ${(Number(asset.size || 0) / 1024 / 1024).toFixed(1)} MB</small><div class="cms-library-actions">${writable ? `<button type="button" class="button button--ghost" data-cms-use-media="${esc(asset.image_path)}">Use in ${esc(selectedKey.replaceAll('_',' '))}</button><button type="button" class="button button--icon" data-cms-delete-media="${esc(asset.image_path)}" aria-label="Delete image">×</button>` : ''}</div></article>`).join('')}</div>`
     : '<p class="cms-library-empty">Uploaded images will appear here so you can reuse them in other sections.</p>';
-  return `<article class="cms-card cms-media"><h3>Section image</h3><label>Website section<select id="cmsImageSection" ${writable?'':'disabled'}>${sections.map((key)=>`<option value="${esc(key)}" ${key===selectedKey?'selected':''}>${esc(key.replaceAll('_',' '))}</option>`).join('')}</select></label><label>Upload image<input id="cmsImageInput" type="file" accept="image/jpeg,image/png,image/webp" ${writable?'':'disabled'} /><small>JPG, PNG or WebP · maximum 5 MB · saved to the reusable image library</small></label><div id="cmsImagePreview" class="cms-image-preview">${item.image_url?`<img src="${esc(item.image_url)}" alt="Website section preview" />`:'No image selected for this section.'}</div>${item.image_path?'<button class="button button--ghost" id="cmsRemoveImage" type="button">Remove image from this section</button>':''}<h3>Image library</h3>${library}</article>`;
+  return `<article class="cms-card cms-media"><h3>Section image</h3><label>Website section<select id="cmsImageSection" ${writable?'':'disabled'}>${sections.map((key)=>`<option value="${esc(key)}" ${key===selectedKey?'selected':''}>${esc(key.replaceAll('_',' '))}</option>`).join('')}</select></label><label>Upload image<input id="cmsImageInput" type="file" accept="image/jpeg,image/png,image/webp" ${writable?'':'disabled'} /><small>JPG, PNG or WebP · maximum 5 MB · saved to the reusable image library</small></label><div id="cmsImagePreview" class="cms-image-preview">${item.image_url?`<img src="${esc(publicAssetUrl(item.image_url))}" alt="Website section preview" />`:'No image selected for this section.'}</div>${item.image_path?'<button class="button button--ghost" id="cmsRemoveImage" type="button">Remove image from this section</button>':''}<h3>Image library</h3>${library}</article>`;
 }
 
 function websiteEditor() {
   const editable = state.websiteContent?.draft ?? blankWebsiteContent();
   const sections = Object.entries(editable.sections ?? {}).sort((a,b)=>Number(a[1].order??0)-Number(b[1].order??0));
   const writable = state.permissions.includes('settings.update');
-  return `<section class="admin-panel admin-panel--pad cms-editor"><div class="eyebrow">Website editor</div><h2>Public website content</h2><p class="module-subtitle">Change approved text and destinations while keeping the site layout safe.</p><div class="cms-grid">${sections.map(([key, item], index)=>`<article class="cms-card"><header><strong>${esc(key.replaceAll('_',' ').replace(/^./, c=>c.toUpperCase()))}</strong><label><input type="checkbox" data-cms-enabled="${esc(key)}" ${item.enabled===false?'':'checked'} ${writable?'':'disabled'} /> Visible</label><div><button type="button" class="button button--icon" data-cms-move="${esc(key)}" data-direction="-1" ${index===0||!writable?'disabled':''} aria-label="Move up">↑</button><button type="button" class="button button--icon" data-cms-move="${esc(key)}" data-direction="1" ${index===sections.length-1||!writable?'disabled':''} aria-label="Move down">↓</button></div></header><label>Title<input data-cms-key="${esc(key)}" data-cms-field="title" maxlength="180" value="${esc(item.title??'')}" ${writable?'':'disabled'} /></label><label>Subtitle<input data-cms-key="${esc(key)}" data-cms-field="subtitle" maxlength="240" value="${esc(item.subtitle??'')}" ${writable?'':'disabled'} /></label><label>Description<textarea data-cms-key="${esc(key)}" data-cms-field="description" maxlength="1200" rows="2" ${writable?'':'disabled'}>${esc(item.description??'')}</textarea></label><label>Button text<input data-cms-key="${esc(key)}" data-cms-field="button_label" maxlength="80" value="${esc(item.button_label??'')}" ${writable?'':'disabled'} /></label><label>Button destination<input data-cms-key="${esc(key)}" data-cms-field="button_url" maxlength="500" value="${esc(item.button_url??'')}" placeholder="/passenger/ or #destinations" ${writable?'':'disabled'} /></label></article>`).join('')}</div>${cmsImageEditor(editable,state.cmsImageSection,writable)}<article class="cms-card"><h3>Frequently asked questions</h3>${(editable.faqs??[]).map((faq,index)=>`<div class="cms-faq"><label>Question<input data-cms-faq="question" data-index="${index}" maxlength="240" value="${esc(faq.question)}" ${writable?'':'disabled'} /></label><label>Answer<textarea data-cms-faq="answer" data-index="${index}" maxlength="1200" rows="2" ${writable?'':'disabled'}>${esc(faq.answer)}</textarea></label><label><input data-cms-faq-visible="${index}" type="checkbox" ${faq.enabled===false?'':'checked'} ${writable?'':'disabled'} /> Visible</label></div>`).join('')}<button type="button" class="button button--ghost" id="cmsAddFaq" ${writable?'':'disabled'}>Add a question</button></article><div class="cms-preview"><strong>Preview</strong><h3>${esc(sections[0]?.[1]?.title || 'Section title')}</h3><p>${esc(sections[0]?.[1]?.description || 'Your published content will keep the current website design.')}</p></div><div class="form-actions">${writable?'<button class="button button--ghost" id="cmsDiscard" type="button">Discard changes</button><button class="button button--ghost" id="cmsSave" type="button">Save draft</button><button class="button button--primary" id="cmsPublish" type="button">Publish</button>':''}<span id="cmsMessage" aria-live="polite">${writable?'Draft and publishing access enabled.':'Read only; settings.update is required to edit.'}</span></div></section>`;
+  const visibleCount = sections.filter(([, item]) => item.enabled !== false).length;
+  return `<section class="admin-panel admin-panel--pad cms-editor">
+    <div class="cms-editor__top">
+      <div><div class="eyebrow">Website editor</div><h2>Public website content</h2><p class="module-subtitle">Manage every public section, call-to-action, FAQ, image and publication state from one workspace.</p></div>
+      <div class="cms-editor__tools"><a class="button button--ghost button--with-icon" href="/website/" target="_blank" rel="noreferrer">${icon('route')}Open website</a><button class="button button--ghost button--with-icon" id="cmsReload" type="button">${icon('refresh')}Reload content</button></div>
+    </div>
+    <div class="cms-editor__summary"><strong>${sections.length} sections</strong><span>${visibleCount} visible on the public website</span><span>${(editable.faqs ?? []).length} FAQ entries</span><span>Draft changes are private until published.</span></div>
+    <div class="cms-grid">${sections.map(([key, item], index)=>`<article class="cms-card cms-section-card"><header><div><span class="cms-section-order">${String(index + 1).padStart(2, '0')}</span><strong>${esc(key.replaceAll('_',' ').replace(/^./, c=>c.toUpperCase()))}</strong><small class="cms-image-state ${item.image_path ? 'is-set' : ''}">${item.image_path ? 'Image assigned' : 'No image assigned'}</small></div><div class="cms-card-actions"><label><input type="checkbox" data-cms-enabled="${esc(key)}" ${item.enabled===false?'':'checked'} ${writable?'':'disabled'} /> Visible</label><button type="button" class="button button--ghost cms-image-select" data-cms-image-section="${esc(key)}" ${writable?'':'disabled'}>Manage image</button><button type="button" class="button button--icon" data-cms-move="${esc(key)}" data-direction="-1" ${index===0||!writable?'disabled':''} aria-label="Move up">↑</button><button type="button" class="button button--icon" data-cms-move="${esc(key)}" data-direction="1" ${index===sections.length-1||!writable?'disabled':''} aria-label="Move down">↓</button></div></header><label>Title<input data-cms-key="${esc(key)}" data-cms-field="title" maxlength="180" value="${esc(item.title??'')}" ${writable?'':'disabled'} /></label><label>Subtitle<input data-cms-key="${esc(key)}" data-cms-field="subtitle" maxlength="240" value="${esc(item.subtitle??'')}" ${writable?'':'disabled'} /></label><label>Description<textarea data-cms-key="${esc(key)}" data-cms-field="description" maxlength="1200" rows="3" ${writable?'':'disabled'}>${esc(item.description??'')}</textarea></label><div class="cms-field-grid"><label>Button text<input data-cms-key="${esc(key)}" data-cms-field="button_label" maxlength="80" value="${esc(item.button_label??'')}" ${writable?'':'disabled'} /></label><label>Button destination<input data-cms-key="${esc(key)}" data-cms-field="button_url" maxlength="500" value="${esc(item.button_url??'')}" placeholder="/passenger/ or #destinations" ${writable?'':'disabled'} /></label></div></article>`).join('')}</div>
+    ${cmsImageEditor(editable,state.cmsImageSection,writable)}
+    <article class="cms-card cms-faq-editor"><header><div><h3>Frequently asked questions</h3><p>These answers appear in the public FAQ section.</p></div><button type="button" class="button button--ghost button--with-icon" id="cmsAddFaq" ${writable?'':'disabled'}>${icon('route')}Add question</button></header>${(editable.faqs??[]).map((faq,index)=>`<div class="cms-faq"><div class="cms-faq__number">${String(index + 1).padStart(2, '0')}</div><label>Question<input data-cms-faq="question" data-index="${index}" maxlength="240" value="${esc(faq.question)}" ${writable?'':'disabled'} /></label><label>Answer<textarea data-cms-faq="answer" data-index="${index}" maxlength="1200" rows="2" ${writable?'':'disabled'}>${esc(faq.answer)}</textarea></label><label class="cms-faq__visible"><input data-cms-faq-visible="${index}" type="checkbox" ${faq.enabled===false?'':'checked'} ${writable?'':'disabled'} /> Visible</label><button type="button" class="button button--icon" data-cms-faq-remove="${index}" ${writable?'':'disabled'} aria-label="Remove question">${icon('close')}</button></div>`).join('')}</article>
+    <div class="cms-preview"><div class="cms-preview__heading"><strong>Content preview</strong><span>Preview of the current draft order and visibility</span></div><div class="cms-preview-grid">${sections.map(([key,item])=>`<article class="cms-preview-card ${item.enabled===false?'is-hidden':''}"><span>${esc(key.replaceAll('_',' '))}</span><h3>${esc(item.title || 'Untitled section')}</h3><p>${esc(item.description || 'No description added yet.')}</p>${item.button_label?`<b>${esc(item.button_label)} →</b>`:''}</article>`).join('')}</div></div>
+    <div class="form-actions">${writable?'<button class="button button--ghost" id="cmsDiscard" type="button">Discard changes</button><button class="button button--ghost" id="cmsSave" type="button">Save draft</button><button class="button button--primary" id="cmsPublish" type="button">Publish website</button>':''}<span id="cmsMessage" aria-live="polite">${writable?'Draft and publishing access enabled.':'Read only; settings.update is required to edit.'}</span></div>
+  </section>`;
 }
 
 function segmentKey(origin, destination) {
@@ -347,10 +389,16 @@ async function ensureAdmin() {
 }
 
 function sidebar() {
-  let lastGroup = '';
+  const grouped = new Map();
+  modules
+    .filter((module) => state.permissions.includes(module.permission))
+    .forEach((module) => {
+      if (!grouped.has(module.group)) grouped.set(module.group, []);
+      grouped.get(module.group).push(module);
+    });
 
   return `
-    <aside class="admin-sidebar">
+    <aside class="admin-sidebar ${state.sidebarCollapsed ? 'is-collapsed' : ''}">
       <a class="admin-brand" href="/website/" aria-label="Encore Transport home">
         <img class="admin-brand__logo" src="/logo.svg" alt="" aria-hidden="true">
         <div>
@@ -358,50 +406,65 @@ function sidebar() {
           <small>transport · operations</small>
         </div>
       </a>
+      <button class="admin-sidebar-toggle" type="button" data-sidebar-toggle aria-expanded="${!state.sidebarCollapsed}" aria-label="${state.sidebarCollapsed ? 'Show navigation menu' : 'Hide navigation menu'}">
+        <span aria-hidden="true">${state.sidebarCollapsed ? '→' : '←'}</span><b>${state.sidebarCollapsed ? 'Show menu' : 'Hide menu'}</b>
+      </button>
+      <div class="admin-nav-tools" role="group" aria-label="Navigation section controls">
+        <button type="button" data-nav-expand-all>${icon('arrowRight')}Expand all</button>
+        <button type="button" data-nav-collapse-all>${icon('close')}Collapse all</button>
+      </div>
 
       <nav class="admin-nav" aria-label="Operations modules">
-        ${modules.filter((module) => state.permissions.includes(module.permission)).map((module) => {
-          const group = module.group !== lastGroup
-            ? `<div class="eyebrow" style="margin:16px 12px 6px">${esc(module.group)}</div>`
-            : '';
-
-          lastGroup = module.group;
-
-          return `${group}
-            <button
-              class="admin-nav__item ${state.module === module.id ? 'admin-nav__item--active' : ''}"
-              data-module="${module.id}"
-              ${state.accessDenied ? 'disabled' : ''}>
-              ${esc(module.label)}
-            </button>`;
+        ${[...grouped.entries()].map(([group, items]) => {
+          const open = state.navGroups[group] !== false || items.some((item) => item.id === state.module);
+          return `<section class="admin-nav-group ${open ? 'is-open' : ''}" data-nav-group="${esc(group)}">
+            <button class="admin-nav-group__toggle" type="button" data-nav-toggle="${esc(group)}" aria-expanded="${open}"><span>${esc(group)}</span><b aria-hidden="true">${open ? '−' : '+'}</b></button>
+            <div class="admin-nav-group__items" ${open ? '' : 'hidden'}>
+              ${items.map((module) => `<button class="admin-nav__item ${state.module === module.id ? 'admin-nav__item--active' : ''}" data-module="${esc(module.id)}" title="${esc(module.label)}" aria-label="${esc(module.label)}" ${state.accessDenied ? 'disabled' : ''}>${icon(navIconByModule[module.id] ?? 'view')}<span class="admin-nav__label">${esc(module.label)}</span></button>`).join('')}
+            </div>
+          </section>`;
         }).join('')}
       </nav>
 
-      <div class="admin-access-profile" aria-label="Current access profile">
+      <button class="admin-access-profile" data-module="profile" type="button" aria-label="Open profile and settings">
         <span class="admin-access-profile__avatar">
           ${profileImageSource(state.user) ? `<img src="${esc(profileImageSource(state.user))}" alt="" class="admin-access-profile__photo" data-profile-avatar-photo>` : ''}
           <span class="admin-access-profile__icon" data-profile-avatar-fallback ${profileImageSource(state.user) ? 'hidden' : ''}>${icon('user')}</span>
         </span>
         <div>
           <small>Account profile</small>
-          <strong>${esc(state.user?.name ?? state.user?.role ?? 'Staff account')}</strong>
+          <strong>${esc(adminDisplayName(state.user) || state.user?.role || 'Staff account')}</strong>
           <span>${esc(state.user?.role ?? 'Staff account')} · ${state.permissions.length} permissions</span>
-          <label class="admin-profile-photo-action"><input type="file" accept="image/jpeg,image/png,image/webp" data-profile-photo-input /><span>${profileImageSource(state.user) ? 'Change photo' : 'Add photo'}</span></label>
+          <span class="admin-profile-photo-action">Open profile settings</span>
         </div>
-        <span class="admin-profile-photo-message" data-profile-photo-message aria-live="polite"></span>
-      </div>
+        <span class="admin-profile-photo-message" data-profile-photo-message aria-live="polite">${esc(state.profilePhotoMessage)}</span>
+      </button>
     </aside>`;
 }
 
 function profileImageSource(user) {
   const candidate = user?.avatar_url ?? user?.profile_photo_url ?? user?.photo_url ?? user?.avatar ?? user?.photo_path ?? user?.driver?.photo_url ?? user?.driver?.photo_path;
+  return publicAssetUrl(candidate);
+}
+
+function publicAssetUrl(candidate) {
   if (typeof candidate !== 'string' || !candidate.trim()) return '';
   const value = candidate.trim();
-  if (/^https:\/\//i.test(value) || (/^http:\/\//i.test(value) && location.protocol === 'http:') || (value.startsWith('/') && !value.startsWith('//'))) return value;
-  if (/^(storage\/)?(avatars|profiles|users|drivers)\//i.test(value)) {
-    return `/storage/${value.replace(/^storage\//i, '')}`;
+  if (/^(storage\/)?(avatars|profiles|users|drivers|website-media|routes)\//i.test(value)) {
+    return `/storage/${value.replace(/^\/?storage\//i, '')}`;
   }
-  return '';
+  try {
+    const parsed = new URL(value, location.origin);
+    // Laravel's local APP_URL is often http://localhost while the frontend is
+    // opened at 127.0.0.1:4173. Keep the path but use the current origin so
+    // the Node storage proxy can serve the file.
+    if (['localhost', '127.0.0.1', '::1'].includes(parsed.hostname)) {
+      return `${parsed.pathname}${parsed.search}`;
+    }
+    return parsed.href;
+  } catch {
+    return value.startsWith('/') ? value : '';
+  }
 }
 
 function accessRoleList(roles, selectedIds = [], disabled = false) {
@@ -593,7 +656,7 @@ function content() {
 
   if (state.module === 'routes') {
     const selectedRoute = state.routes.find((route) => String(route.id) === String(state.routeEditingId));
-    const routeImage = state.routeFormOpen && state.routeEditingId ? `<label class="file-field"><span>Website card image</span><input name="route_image" id="routeImageInput" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG or WebP · maximum 5 MB</small></label><div class="route-image-preview" id="routeImagePreview">${selectedRoute?.image_url ? `<img src="${esc(selectedRoute.image_url)}" alt="Current image for ${esc(selectedRoute.origin)} to ${esc(selectedRoute.destination)}" />` : '<span>Public route card graphic fallback</span>'}</div>${selectedRoute?.image_url ? '<button type="button" class="button button--ghost" id="removeRouteImage">Remove route image</button>' : ''}` : '';
+    const routeImage = state.routeFormOpen && state.routeEditingId ? `<label class="file-field"><span>Website card image</span><input name="route_image" id="routeImageInput" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG or WebP · maximum 5 MB</small></label><div class="route-image-preview" id="routeImagePreview">${selectedRoute?.image_url ? `<img src="${esc(publicAssetUrl(selectedRoute.image_url))}" alt="Current image for ${esc(selectedRoute.origin)} to ${esc(selectedRoute.destination)}" />` : '<span>Public route card graphic fallback</span>'}</div>${selectedRoute?.image_url ? '<button type="button" class="button button--ghost" id="removeRouteImage">Remove route image</button>' : ''}` : '';
     const form = state.routeFormOpen ? `<form id="routeForm" class="premium-form-grid fleet-form"><input type="hidden" name="id" value="${esc(state.routeEditingId ?? '')}" /><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.routeEditingId ? 'Update route' : 'Create a route'}</strong><span>Define the service corridor, ordered stops and commercial fares.</span></div></div><label><span>Origin terminal</span><input name="origin" required maxlength="150" placeholder="Starting terminal" /></label><label><span>Destination terminal</span><input name="destination" required maxlength="150" placeholder="Destination terminal" /></label><label><span>Distance (km)</span><input name="distance_km" type="number" min="0" required placeholder="0" /></label>${routeEditorFields()}${routeImage}<label><span>Published</span><select name="active"><option value="1">Active</option><option value="0">Inactive</option></select></label><div class="form-actions"><button type="submit" class="button button--primary button--with-icon">${icon('save')}${state.routeEditingId ? 'Update route' : 'Save route'}</button> <button type="button" class="button button--ghost button--with-icon" id="cancelRoute">${icon('close')}Cancel</button></div><div id="routeMessage" aria-live="polite"></div></form>` : '';
     return `
       <section class="admin-panel admin-panel--pad">
@@ -712,6 +775,17 @@ function content() {
   }
   if (state.module === 'permissions') return table('Permissions', ['Key', 'Label', 'Resource'], state.permissionCatalog.map((permission) => [permission.key, permission.label, permission.resource]));
 
+  if (state.module === 'profile') {
+    const user = state.user ?? {};
+    const avatar = profileImageSource(user);
+    return `<section class="admin-panel admin-panel--pad profile-module">
+      <div class="module-view__header"><div><div class="eyebrow">Account</div><h2>Profile & settings</h2><p class="module-subtitle">Update your identity, photo and account preferences without leaving operations.</p></div></div>
+      <div class="profile-module__identity"><div class="profile-module__avatar">${avatar ? `<img src="${esc(avatar)}" alt="" />` : icon('user')}</div><div><strong>${esc(adminDisplayName(user))}</strong><span>${esc(user.email ?? '')}</span><small>${esc(user.role ?? 'Staff account')} · ${state.permissions.length} permissions</small></div></div>
+      <form id="profileForm" class="premium-form-grid fleet-form"><label><span>Display name</span><input name="name" required maxlength="150" value="${esc(user.name ?? '')}" /></label><label><span>Email</span><input value="${esc(user.email ?? '')}" disabled /></label><label><span>Phone</span><input name="phone" maxlength="40" value="${esc(user.phone ?? '')}" /></label><label class="file-field"><span>Profile photo</span><input name="photo" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG or WebP · maximum 5 MB</small></label><div class="form-actions"><button class="button button--primary button--with-icon" type="submit">${icon('save')}Save profile</button></div><div id="profileMessage" aria-live="polite"></div></form>
+      <div class="profile-danger"><div><strong>Delete account</strong><span>Type DELETE to deactivate or remove this account. Existing bookings are preserved anonymously.</span></div><button class="button button--danger" type="button" id="deleteProfile">Delete account</button></div>
+    </section>`;
+  }
+
   if (state.module === 'settings') {
     const settings = state.generalSettings ?? {};
     const canUpdate = state.permissions.includes('settings.update');
@@ -742,7 +816,7 @@ function downloadReport(format) {
 
 function render() {
   root.innerHTML = `
-    <div class="admin-layout motion-enter">
+    <div class="admin-layout ${state.sidebarCollapsed ? 'is-sidebar-collapsed' : ''}">
       ${sidebar()}
 
       <section class="admin-main">
@@ -753,9 +827,9 @@ function render() {
           </div>
 
           <div class="admin-controls">
-            <span>${esc(state.user?.name ?? '')}</span>
-            ${state.accessDenied ? '' : '<button class="button button--ghost" id="refresh">Refresh</button>'}
-            <button class="button button--ghost" id="logout">Logout</button>
+            <span>${esc(adminDisplayName(state.user))}</span>
+            ${state.accessDenied ? '' : `<button class="button button--ghost button--with-icon" id="refresh">${icon('refresh')}Refresh</button>`}
+            <button class="button button--ghost button--with-icon" id="logout">${icon('logout')}Logout</button>
           </div>
         </header>
 
@@ -858,31 +932,90 @@ async function loadModule() {
 }
 
 function wire() {
+  document.querySelector('[data-sidebar-toggle]')?.addEventListener('click', () => {
+    state.sidebarCollapsed = !state.sidebarCollapsed;
+    localStorage.setItem('encore_admin_sidebar_collapsed', state.sidebarCollapsed ? '1' : '0');
+    render();
+  });
+
+  document.querySelectorAll('[data-nav-toggle]').forEach((button) => button.addEventListener('click', () => {
+    const group = button.dataset.navToggle;
+    if (!group) return;
+    state.navGroups[group] = state.navGroups[group] === false;
+    localStorage.setItem('encore_admin_nav_groups_v2', JSON.stringify(state.navGroups));
+    render();
+  }));
+
+  document.querySelector('[data-nav-expand-all]')?.addEventListener('click', () => {
+    document.querySelectorAll('[data-nav-toggle]').forEach((button) => { state.navGroups[button.dataset.navToggle] = true; });
+    localStorage.setItem('encore_admin_nav_groups_v2', JSON.stringify(state.navGroups));
+    render();
+  });
+
+  document.querySelector('[data-nav-collapse-all]')?.addEventListener('click', () => {
+    document.querySelectorAll('[data-nav-toggle]').forEach((button) => { state.navGroups[button.dataset.navToggle] = false; });
+    localStorage.setItem('encore_admin_nav_groups_v2', JSON.stringify(state.navGroups));
+    render();
+  });
+
+  document.querySelectorAll('.cms-library-item img, .cms-image-preview img, .route-image-preview img, .admin-driver-photo').forEach((image) => image.addEventListener('error', () => {
+    image.hidden = true;
+    image.parentElement?.classList.add('image-fallback');
+  }, { once: true }));
+
   document.querySelectorAll('[data-profile-avatar-photo]').forEach((photo) => photo.addEventListener('error', () => {
     photo.hidden = true;
     const fallback = photo.parentElement?.querySelector('[data-profile-avatar-fallback]');
     if (fallback) fallback.hidden = false;
+    state.profilePhotoMessage = 'The saved profile image could not be loaded.';
   }, { once: true }));
 
   document.querySelector('[data-profile-photo-input]')?.addEventListener('change', async (event) => {
     const input = event.currentTarget;
     const file = input.files?.[0];
     if (!file) return;
-    const message = document.querySelector('[data-profile-photo-message]');
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
       input.value = '';
-      if (message) message.textContent = 'Choose a JPG, PNG or WebP image under 5 MB.';
+      state.profilePhotoMessage = 'Choose a JPG, PNG or WebP image under 5 MB.';
+      render();
       return;
     }
-    if (message) message.textContent = 'Uploading photo…';
+    // Show the selected image immediately so the action is visibly working
+    // even while the authenticated upload request is in flight.
+    state.profilePhotoMessage = 'Uploading photo…';
+    const localPreview = URL.createObjectURL(file);
+    state.user = { ...state.user, avatar_url: localPreview };
+    render();
     try {
       const photo = await optimizeImageForUpload(file);
       const user = await api.uploadProfilePhoto(photo);
-      state.user = { ...state.user, ...user };
+      state.user = { ...state.user, ...(user ?? {}) };
+      URL.revokeObjectURL(localPreview);
+      state.profilePhotoMessage = 'Photo saved.';
       render();
     } catch (error) {
-      if (message) message.textContent = error.message;
+      state.profilePhotoMessage = error?.message ?? 'Photo upload failed. Please try again.';
+      render();
     }
+  });
+
+  document.querySelector('#profileForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const message = document.querySelector('#profileMessage');
+    if (message) message.textContent = 'Saving profile…';
+    try {
+      state.user = { ...state.user, ...(await api.updateProfile({ name: form.get('name'), phone: form.get('phone') })) };
+      const photo = form.get('photo');
+      if (photo instanceof File && photo.size) state.user = { ...state.user, ...(await api.uploadProfilePhoto(await optimizeImageForUpload(photo))) };
+      if (message) message.textContent = 'Profile saved.';
+      render();
+    } catch (error) { if (message) message.textContent = error?.message ?? 'Profile could not be saved.'; }
+  });
+  document.querySelector('#deleteProfile')?.addEventListener('click', async () => {
+    if (window.prompt('Type DELETE to confirm account deletion') !== 'DELETE') return;
+    try { await api.deleteProfile(); sessionStorage.removeItem('encore_api_token'); location.href = '/login/'; }
+    catch (error) { window.alert(error?.message ?? 'Account could not be deleted.'); }
   });
 
   document.querySelector('#exportReportCsv')?.addEventListener('click', () => downloadReport('csv'));
@@ -1315,6 +1448,11 @@ function wire() {
     if (message) message.textContent = 'Unsaved changes · preview the wording here before publishing.';
   }));
   document.querySelector('#cmsImageSection')?.addEventListener('change', (event) => { state.cmsImageSection = event.target.value; render(); });
+  document.querySelectorAll('[data-cms-image-section]').forEach((button) => button.addEventListener('click', () => {
+    state.cmsImageSection = button.dataset.cmsImageSection;
+    render();
+    document.querySelector('.cms-media')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }));
   document.querySelector('#cmsImageInput')?.addEventListener('change', async (event) => {
     const file = event.target.files?.[0];
     const message = document.querySelector('#cmsMessage');
@@ -1333,7 +1471,7 @@ function wire() {
       section.image_url = uploaded.image_url;
       state.websiteMedia = [uploaded, ...state.websiteMedia.filter((asset) => asset.image_path !== uploaded.image_path)];
       const preview = document.querySelector('#cmsImagePreview');
-      if (preview) preview.innerHTML = `<img src="${esc(uploaded.image_url)}" alt="Website section preview" />`;
+      if (preview) preview.innerHTML = `<img src="${esc(publicAssetUrl(uploaded.image_url))}" alt="Website section preview" />`;
       render();
       const status = document.querySelector('#cmsMessage');
       if (status) status.textContent = 'Image uploaded. Save the draft or publish the section to use it on the website.';
@@ -1351,7 +1489,7 @@ function wire() {
     if (!asset || !section) return;
     if (section.image_path && section.image_path !== asset.image_path) state.cmsPendingMediaDeletes.push(section.image_path);
     section.image_path = asset.image_path;
-    section.image_url = asset.image_url;
+    section.image_url = publicAssetUrl(asset.image_url);
     render();
     const message = document.querySelector('#cmsMessage');
     if (message) message.textContent = 'Library image selected. Save the draft or publish to apply it.';
@@ -1386,6 +1524,20 @@ function wire() {
   }));
   document.querySelector('#cmsAddFaq')?.addEventListener('click', () => { state.websiteContent.draft.faqs.push({ question: '', answer: '', enabled: true }); render(); });
   document.querySelectorAll('[data-cms-faq-remove]').forEach((button) => button.addEventListener('click', () => { state.websiteContent.draft.faqs.splice(Number(button.dataset.cmsFaqRemove), 1); render(); }));
+  document.querySelector('#cmsReload')?.addEventListener('click', async () => {
+    const button = document.querySelector('#cmsReload');
+    if (button) { button.disabled = true; button.textContent = 'Loading…'; }
+    try {
+      state.websiteContent = await api.websiteContent();
+      state.websiteMedia = await api.websiteMedia();
+      state.cmsPendingMediaDeletes = [];
+      render();
+    } catch (error) {
+      const message = document.querySelector('#cmsMessage');
+      if (message) message.textContent = error.message;
+      if (button) { button.disabled = false; button.textContent = 'Reload content'; }
+    }
+  });
   document.querySelector('#cmsDiscard')?.addEventListener('click', async () => { state.websiteContent = await api.websiteContent(); state.cmsPendingMediaDeletes = []; render(); });
   const saveCms = async (publish) => {
     const message = document.querySelector('#cmsMessage');

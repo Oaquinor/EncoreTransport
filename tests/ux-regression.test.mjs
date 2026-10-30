@@ -13,7 +13,7 @@ const accessController = read('backend/laravel/app/Http/Controllers/Api/V1/Admin
 const seatController = read('backend/laravel/app/Http/Controllers/Api/V1/SeatController.php');
 
 assert.match(websiteHtml, /Staff access/);
-assert.doesNotMatch(websiteHtml, />Sign in\s*</);
+assert.match(websiteHtml, /href="\/login\/\?return=\/passenger\/"[^>]*>.*Sign in/);
 assert.doesNotMatch(websiteHtml, /Open Operations/);
 assert.match(websiteHtml, /id="mobileMenuToggle"/);
 assert.match(websiteHtml, /id="mobileNavigation"/);

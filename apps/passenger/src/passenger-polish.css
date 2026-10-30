@@ -1,0 +1,344 @@
+/* Passenger flow polish: compact framing, clearer states and consistent density. */
+
+/* The flow should feel immediate when a step or API response replaces its
+   content; keep only a short visual cue instead of a full-screen entrance. */
+.screen-animate,
+.stage {
+  animation-duration: .14s !important;
+}
+:root {
+  --passenger-gutter: 24px;
+  --passenger-flow-line: #c4d6df;
+}
+
+body {
+  background:
+    radial-gradient(circle at 92% 0, rgba(45,169,223,.08), transparent 28rem),
+    linear-gradient(180deg, #f8fbfc 0%, #edf4f7 100%);
+}
+
+.ui-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+.topbar nav button,
+.search-console > button,
+.primary,
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.app-shell {
+  padding-bottom: 56px !important;
+}
+
+.app-shell > .topbar {
+  width: min(1320px, calc(100% - 48px)) !important;
+  margin: 12px auto 18px !important;
+  min-height: 68px;
+  padding: 8px 12px 8px 16px !important;
+  border-color: #c8d9e1;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(7,23,34,.07);
+}
+
+.app-shell > .topbar nav {
+  border: 1px solid #d0dfe7;
+  background: #f3f7f9;
+}
+
+.app-shell > .topbar nav button:focus-visible,
+.app-shell > .topbar .user b:focus-visible,
+.ghost:focus-visible,
+.primary:focus-visible,
+.search-console select:focus-visible,
+.search-console input:focus-visible {
+  outline: 3px solid rgba(20,158,215,.3);
+  outline-offset: 3px;
+}
+
+.passenger-wrap {
+  width: min(1320px, calc(100% - 48px)) !important;
+  padding: 4px 0 72px !important;
+}
+
+.journey {
+  margin-bottom: 18px !important;
+  padding: 11px 14px 0 !important;
+  border-color: #c4d6df;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(18,65,91,.04);
+}
+
+.journey-top {
+  min-height: 15px;
+}
+
+.journey-bar {
+  margin: 7px 0 9px;
+}
+
+.journey-steps button {
+  min-height: 38px;
+  color: #7d919d;
+}
+
+.journey-steps button.active {
+  background: #e9f6fa;
+}
+
+.screen-animate {
+  min-height: 0;
+}
+
+.screen-animate > .hero {
+  min-height: 370px;
+  margin-bottom: 0;
+  padding: 46px 52px;
+  border-radius: 26px;
+  box-shadow: 0 24px 58px rgba(7,23,34,.16);
+}
+
+.screen-animate > .hero h1 {
+  max-width: 760px;
+  font-size: clamp(3.2rem, 5.2vw, 5.6rem);
+  line-height: .92;
+}
+
+.screen-animate > .hero p {
+  max-width: 610px;
+  line-height: 1.6;
+}
+
+.search-console {
+  width: calc(100% - 64px);
+  max-width: none;
+  margin: -28px auto 30px !important;
+  padding: 12px;
+  gap: 8px;
+  border-color: #b9ced9;
+  border-radius: 16px;
+  box-shadow: 0 18px 42px rgba(16,49,70,.13);
+}
+
+.search-console label {
+  min-width: 0;
+  padding: 12px 14px;
+  border-color: #d5e2e8;
+  border-radius: 11px;
+  background: #fbfdfe;
+}
+
+.search-console > button:not(.primary) {
+  border: 1px solid #d5e2e8;
+  border-radius: 50%;
+  background: #f3f8fa;
+  color: var(--blue2);
+}
+
+.search-console .primary {
+  min-height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #149ed7, #087fac);
+}
+
+.page-head {
+  margin: 26px 0 18px;
+}
+
+.user--account {
+  gap: 9px;
+  min-width: 0;
+}
+
+.user--account strong {
+  max-width: 180px;
+  overflow: hidden;
+  color: #102130;
+  font-size: .76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user__photo,
+.user--account b {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 50%;
+}
+
+.user__photo {
+  display: block;
+  object-fit: cover;
+  border: 2px solid #d5eaf2;
+}
+
+.user--account b {
+  border-radius: 50%;
+}
+
+.page-head h1 {
+  max-width: 850px;
+  margin-top: 8px;
+  font-size: clamp(2.8rem, 5vw, 5.1rem);
+}
+
+.departure,
+.facts,
+.trip-map-card,
+.action-band,
+.seat-layout,
+.passenger-card,
+.review-card,
+.total-panel,
+.confirmation,
+.ticket {
+  border-color: #c4d6df;
+  box-shadow: 0 10px 28px rgba(16,49,70,.055);
+}
+
+.departure {
+  padding: 18px;
+}
+
+.departure aside {
+  gap: 10px;
+}
+
+.trip-map-card {
+  margin-block: 16px;
+  padding: 16px;
+}
+
+.passenger-real-map {
+  min-height: 340px;
+  height: 340px;
+}
+
+.passenger-real-map > .encore-map-fallback {
+  font-size: .78rem;
+}
+
+.facts article,
+.review-card article,
+.ticket-body article {
+  background: #fff;
+}
+
+.seat-summary,
+.total-panel {
+  border-color: #c4d6df;
+  box-shadow: 0 14px 34px rgba(13,62,88,.08);
+}
+
+/* Keep the dark trip-total card visually centered against the review details. */
+.review-grid {
+  align-items: center;
+}
+
+.review-grid > .total-panel {
+  align-self: center;
+  justify-self: center;
+  width: 100%;
+  max-width: 340px;
+}
+
+.passenger-card label,
+.payment-form label {
+  background: #fbfdfe;
+}
+
+.checkout-account {
+  border-color: #bfd3de;
+  background: #f7fbfd;
+}
+
+.checkout-choice button {
+  border-color: #c4d6df;
+}
+
+.checkout-choice button.is-selected {
+  border-color: #149ed7;
+  background: #f0faff;
+  box-shadow: 0 0 0 3px rgba(20,158,215,.12);
+}
+
+.confirmation {
+  padding: 38px 28px;
+}
+
+@media (max-width: 1100px) {
+  .app-shell > .topbar,
+  .passenger-wrap {
+    width: min(100% - 40px, 1000px) !important;
+  }
+
+  .screen-animate > .hero {
+    min-height: 350px;
+    padding: 40px;
+  }
+
+  .search-console {
+    width: calc(100% - 44px);
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell > .topbar,
+  .passenger-wrap {
+    width: calc(100% - 20px) !important;
+  }
+
+  .app-shell > .topbar {
+    min-height: 62px;
+    margin: 8px auto 14px !important;
+  }
+
+  .passenger-wrap {
+    padding-bottom: 42px !important;
+  }
+
+  .journey {
+    margin-bottom: 12px !important;
+  }
+
+  .screen-animate > .hero {
+    min-height: 330px;
+    padding: 30px 24px;
+    border-radius: 20px;
+  }
+
+  .screen-animate > .hero h1 {
+    font-size: clamp(2.8rem, 13vw, 4.5rem);
+  }
+
+  .search-console {
+    width: calc(100% - 20px);
+    margin: -16px auto 22px !important;
+    padding: 10px;
+  }
+
+  .page-head {
+    margin: 20px 0 14px;
+  }
+
+  .page-head h1 {
+    font-size: clamp(2.7rem, 12vw, 4.1rem);
+  }
+
+  .passenger-real-map {
+    min-height: 290px;
+    height: 290px;
+  }
+
+  .review-grid > .total-panel {
+    align-self: stretch;
+    max-width: none;
+  }
+}

@@ -127,6 +127,18 @@ body {
 .admin-access-profile small { color: #7896a6; font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 850; }
 .admin-access-profile strong { color: #fff; font-size: .76rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .admin-access-profile div > span { color: #8fa8b6; font-size: .62rem; }
+.admin-access-profile { border: 0; width: 100%; text-align: left; cursor: pointer; font: inherit; }
+.admin-profile-photo-action { color: #7dd3fc; font-size: .62rem; }
+.profile-module__identity { display:flex; align-items:center; gap:16px; margin: 18px 0 24px; padding:16px; border:1px solid #d7e5ec; border-radius:16px; background:#f7fbfd; }
+.profile-module__avatar { width:64px; height:64px; border-radius:50%; display:grid; place-items:center; overflow:hidden; background:#0b3043; color:#fff; }
+.profile-module__avatar img { width:100%; height:100%; object-fit:cover; }
+.profile-module__identity div:last-child { display:grid; gap:3px; }
+.profile-module__identity strong { font-size:1.1rem; }
+.profile-module__identity span,.profile-module__identity small { color:#648095; }
+.profile-danger { display:flex; justify-content:space-between; align-items:center; gap:20px; margin-top:24px; padding:16px; border:1px solid #f2c5c5; border-radius:14px; background:#fff8f8; }
+.profile-danger div { display:grid; gap:4px; }
+.profile-danger span { color:#7b6b6b; font-size:.85rem; }
+.button--danger { background:#b42318; color:#fff; border-color:#b42318; }
 
 .admin-main {
   max-width: 1680px;
