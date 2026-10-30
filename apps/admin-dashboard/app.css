@@ -18,6 +18,12 @@
 .button--icon { min-width: 38px; width: 38px; min-height: 38px; padding: 0; display: inline-grid; place-items: center; border-radius: 10px; background: #f5fafc; border: 1px solid var(--line); color: var(--ink); }
 .button--icon:hover { color: #087eaf; background: #e8f7fc; }
 .button--icon:disabled { opacity: .4; cursor: not-allowed; }
+.admin-user-chip { display:inline-flex; align-items:center; gap:7px; min-height:38px; padding:0 10px; border:1px solid transparent; border-radius:10px; background:transparent; color:var(--ink); font:inherit; font-size:.74rem; font-weight:850; cursor:pointer; }
+.admin-user-chip:hover { border-color:var(--line); background:#fff; }
+.admin-user-chip .ui-icon { width:16px; height:16px; color:#1682b2; }
+.admin-main { overflow-x:hidden; }
+.admin-topbar { min-width:0; max-width:100%; box-sizing:border-box; }
+.admin-controls { min-width:0; flex-wrap:wrap; justify-content:flex-end; }
 .fleet-module { background: linear-gradient(145deg, #ffffff 0%, #f4fbfd 100%); }
 .module-subtitle { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
 .settings-status { margin: 16px 0; padding: 12px 14px; border-radius: 12px; font-size: 13px; }

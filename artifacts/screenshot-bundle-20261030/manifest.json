@@ -1,0 +1,493 @@
+{
+  "generatedAt": "2026-10-30T20:25:59.296Z",
+  "base": "http://127.0.0.1:4173",
+  "resolutions": [
+    "320x568",
+    "375x812",
+    "390x844",
+    "430x932",
+    "768x1024",
+    "1024x768",
+    "1280x800",
+    "1440x900",
+    "1920x1080"
+  ],
+  "captures": [
+    {
+      "file": "website-initial-320x568.png",
+      "surface": "website",
+      "width": 320,
+      "height": 568,
+      "state": "initial"
+    },
+    {
+      "file": "website-initial-375x812.png",
+      "surface": "website",
+      "width": 375,
+      "height": 812,
+      "state": "initial"
+    },
+    {
+      "file": "website-initial-390x844.png",
+      "surface": "website",
+      "width": 390,
+      "height": 844,
+      "state": "initial"
+    },
+    {
+      "file": "website-initial-430x932.png",
+      "surface": "website",
+      "width": 430,
+      "height": 932,
+      "state": "initial"
+    },
+    {
+      "file": "website-initial-768x1024.png",
+      "surface": "website",
+      "width": 768,
+      "height": 1024,
+      "state": "initial"
+    },
+    {
+      "file": "website-initial-1024x768.png",
+      "surface": "website",
+      "width": 1024,
+      "height": 768,
+      "state": "initial"
+    },
+    {
+      "file": "website-initial-1280x800.png",
+      "surface": "website",
+      "width": 1280,
+      "height": 800,
+      "state": "initial"
+    },
+    {
+      "file": "website-initial-1440x900.png",
+      "surface": "website",
+      "width": 1440,
+      "height": 900,
+      "state": "initial"
+    },
+    {
+      "file": "website-initial-1920x1080.png",
+      "surface": "website",
+      "width": 1920,
+      "height": 1080,
+      "state": "initial"
+    },
+    {
+      "file": "passenger-initial-320x568.png",
+      "surface": "passenger",
+      "width": 320,
+      "height": 568,
+      "state": "authenticated-initial"
+    },
+    {
+      "file": "passenger-initial-375x812.png",
+      "surface": "passenger",
+      "width": 375,
+      "height": 812,
+      "state": "authenticated-initial"
+    },
+    {
+      "file": "passenger-initial-390x844.png",
+      "surface": "passenger",
+      "width": 390,
+      "height": 844,
+      "state": "authenticated-initial"
+    },
+    {
+      "file": "passenger-account-profile-390x844.png",
+      "surface": "passenger",
+      "width": 390,
+      "height": 844,
+      "state": "account-profile-mobile"
+    },
+    {
+      "file": "passenger-initial-430x932.png",
+      "surface": "passenger",
+      "width": 430,
+      "height": 932,
+      "state": "authenticated-initial"
+    },
+    {
+      "file": "passenger-initial-768x1024.png",
+      "surface": "passenger",
+      "width": 768,
+      "height": 1024,
+      "state": "authenticated-initial"
+    },
+    {
+      "file": "passenger-initial-1024x768.png",
+      "surface": "passenger",
+      "width": 1024,
+      "height": 768,
+      "state": "authenticated-initial"
+    },
+    {
+      "file": "passenger-initial-1280x800.png",
+      "surface": "passenger",
+      "width": 1280,
+      "height": 800,
+      "state": "authenticated-initial"
+    },
+    {
+      "file": "passenger-initial-1440x900.png",
+      "surface": "passenger",
+      "width": 1440,
+      "height": 900,
+      "state": "authenticated-initial"
+    },
+    {
+      "file": "passenger-account-profile-1440x900.png",
+      "surface": "passenger",
+      "width": 1440,
+      "height": 900,
+      "state": "account-profile"
+    },
+    {
+      "file": "passenger-initial-1920x1080.png",
+      "surface": "passenger",
+      "width": 1920,
+      "height": 1080,
+      "state": "authenticated-initial"
+    },
+    {
+      "file": "driver-initial-320x568.png",
+      "surface": "driver",
+      "width": 320,
+      "height": 568,
+      "state": "initial"
+    },
+    {
+      "file": "driver-initial-375x812.png",
+      "surface": "driver",
+      "width": 375,
+      "height": 812,
+      "state": "initial"
+    },
+    {
+      "file": "driver-initial-390x844.png",
+      "surface": "driver",
+      "width": 390,
+      "height": 844,
+      "state": "initial"
+    },
+    {
+      "file": "driver-initial-430x932.png",
+      "surface": "driver",
+      "width": 430,
+      "height": 932,
+      "state": "initial"
+    },
+    {
+      "file": "driver-initial-768x1024.png",
+      "surface": "driver",
+      "width": 768,
+      "height": 1024,
+      "state": "initial"
+    },
+    {
+      "file": "driver-initial-1024x768.png",
+      "surface": "driver",
+      "width": 1024,
+      "height": 768,
+      "state": "initial"
+    },
+    {
+      "file": "driver-initial-1280x800.png",
+      "surface": "driver",
+      "width": 1280,
+      "height": 800,
+      "state": "initial"
+    },
+    {
+      "file": "driver-initial-1440x900.png",
+      "surface": "driver",
+      "width": 1440,
+      "height": 900,
+      "state": "initial"
+    },
+    {
+      "file": "driver-initial-1920x1080.png",
+      "surface": "driver",
+      "width": 1920,
+      "height": 1080,
+      "state": "initial"
+    },
+    {
+      "file": "admin-initial-320x568.png",
+      "surface": "admin",
+      "width": 320,
+      "height": 568,
+      "state": "initial"
+    },
+    {
+      "file": "admin-initial-375x812.png",
+      "surface": "admin",
+      "width": 375,
+      "height": 812,
+      "state": "initial"
+    },
+    {
+      "file": "admin-initial-390x844.png",
+      "surface": "admin",
+      "width": 390,
+      "height": 844,
+      "state": "initial"
+    },
+    {
+      "file": "admin-menu-open-390x844.png",
+      "surface": "admin",
+      "width": 390,
+      "height": 844,
+      "state": "menu-open"
+    },
+    {
+      "file": "admin-initial-430x932.png",
+      "surface": "admin",
+      "width": 430,
+      "height": 932,
+      "state": "initial"
+    },
+    {
+      "file": "admin-initial-768x1024.png",
+      "surface": "admin",
+      "width": 768,
+      "height": 1024,
+      "state": "initial"
+    },
+    {
+      "file": "admin-initial-1024x768.png",
+      "surface": "admin",
+      "width": 1024,
+      "height": 768,
+      "state": "initial"
+    },
+    {
+      "file": "admin-initial-1280x800.png",
+      "surface": "admin",
+      "width": 1280,
+      "height": 800,
+      "state": "initial"
+    },
+    {
+      "file": "admin-initial-1440x900.png",
+      "surface": "admin",
+      "width": 1440,
+      "height": 900,
+      "state": "initial"
+    },
+    {
+      "file": "admin-settings-1440x900.png",
+      "surface": "admin",
+      "width": 1440,
+      "height": 900,
+      "state": "settings-module"
+    },
+    {
+      "file": "admin-initial-1920x1080.png",
+      "surface": "admin",
+      "width": 1920,
+      "height": 1080,
+      "state": "initial"
+    },
+    {
+      "file": "login-initial-320x568.png",
+      "surface": "login",
+      "width": 320,
+      "height": 568,
+      "state": "initial"
+    },
+    {
+      "file": "login-initial-375x812.png",
+      "surface": "login",
+      "width": 375,
+      "height": 812,
+      "state": "initial"
+    },
+    {
+      "file": "login-initial-390x844.png",
+      "surface": "login",
+      "width": 390,
+      "height": 844,
+      "state": "initial"
+    },
+    {
+      "file": "login-initial-430x932.png",
+      "surface": "login",
+      "width": 430,
+      "height": 932,
+      "state": "initial"
+    },
+    {
+      "file": "login-initial-768x1024.png",
+      "surface": "login",
+      "width": 768,
+      "height": 1024,
+      "state": "initial"
+    },
+    {
+      "file": "login-initial-1024x768.png",
+      "surface": "login",
+      "width": 1024,
+      "height": 768,
+      "state": "initial"
+    },
+    {
+      "file": "login-initial-1280x800.png",
+      "surface": "login",
+      "width": 1280,
+      "height": 800,
+      "state": "initial"
+    },
+    {
+      "file": "login-initial-1440x900.png",
+      "surface": "login",
+      "width": 1440,
+      "height": 900,
+      "state": "initial"
+    },
+    {
+      "file": "login-initial-1920x1080.png",
+      "surface": "login",
+      "width": 1920,
+      "height": 1080,
+      "state": "initial"
+    },
+    {
+      "file": "tracking-initial-320x568.png",
+      "surface": "tracking",
+      "width": 320,
+      "height": 568,
+      "state": "initial"
+    },
+    {
+      "file": "tracking-initial-375x812.png",
+      "surface": "tracking",
+      "width": 375,
+      "height": 812,
+      "state": "initial"
+    },
+    {
+      "file": "tracking-initial-390x844.png",
+      "surface": "tracking",
+      "width": 390,
+      "height": 844,
+      "state": "initial"
+    },
+    {
+      "file": "tracking-initial-430x932.png",
+      "surface": "tracking",
+      "width": 430,
+      "height": 932,
+      "state": "initial"
+    },
+    {
+      "file": "tracking-initial-768x1024.png",
+      "surface": "tracking",
+      "width": 768,
+      "height": 1024,
+      "state": "initial"
+    },
+    {
+      "file": "tracking-initial-1024x768.png",
+      "surface": "tracking",
+      "width": 1024,
+      "height": 768,
+      "state": "initial"
+    },
+    {
+      "file": "tracking-initial-1280x800.png",
+      "surface": "tracking",
+      "width": 1280,
+      "height": 800,
+      "state": "initial"
+    },
+    {
+      "file": "tracking-initial-1440x900.png",
+      "surface": "tracking",
+      "width": 1440,
+      "height": 900,
+      "state": "initial"
+    },
+    {
+      "file": "tracking-initial-1920x1080.png",
+      "surface": "tracking",
+      "width": 1920,
+      "height": 1080,
+      "state": "initial"
+    },
+    {
+      "file": "package-register-initial-320x568.png",
+      "surface": "package-register",
+      "width": 320,
+      "height": 568,
+      "state": "initial"
+    },
+    {
+      "file": "package-register-initial-375x812.png",
+      "surface": "package-register",
+      "width": 375,
+      "height": 812,
+      "state": "initial"
+    },
+    {
+      "file": "package-register-initial-390x844.png",
+      "surface": "package-register",
+      "width": 390,
+      "height": 844,
+      "state": "initial"
+    },
+    {
+      "file": "package-register-initial-430x932.png",
+      "surface": "package-register",
+      "width": 430,
+      "height": 932,
+      "state": "initial"
+    },
+    {
+      "file": "package-register-initial-768x1024.png",
+      "surface": "package-register",
+      "width": 768,
+      "height": 1024,
+      "state": "initial"
+    },
+    {
+      "file": "package-register-initial-1024x768.png",
+      "surface": "package-register",
+      "width": 1024,
+      "height": 768,
+      "state": "initial"
+    },
+    {
+      "file": "package-register-initial-1280x800.png",
+      "surface": "package-register",
+      "width": 1280,
+      "height": 800,
+      "state": "initial"
+    },
+    {
+      "file": "package-register-initial-1440x900.png",
+      "surface": "package-register",
+      "width": 1440,
+      "height": 900,
+      "state": "initial"
+    },
+    {
+      "file": "package-register-initial-1920x1080.png",
+      "surface": "package-register",
+      "width": 1920,
+      "height": 1080,
+      "state": "initial"
+    }
+  ],
+  "failures": [],
+  "notes": [
+    "Capturas generadas con Chromium/Playwright contra el servidor local real.",
+    "Las capturas autenticadas usan cuentas demo locales; no se incluyen tokens en archivos.",
+    "Passenger cuenta y Admin configuración se capturan como estados adicionales en 1440px y 390px.",
+    "Las aplicaciones nativas Passenger Mobile y Driver Mobile no exponen una URL web en este servidor; se documentan como pendientes de captura nativa."
+  ]
+}

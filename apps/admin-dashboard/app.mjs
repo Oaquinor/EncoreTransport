@@ -827,7 +827,8 @@ function render() {
           </div>
 
           <div class="admin-controls">
-            <span>${esc(adminDisplayName(state.user))}</span>
+            <button class="admin-user-chip" type="button" data-module="profile" aria-label="Open profile settings">${icon('user')}<span>${esc(adminDisplayName(state.user))}</span></button>
+            ${state.accessDenied ? '' : `<button class="button button--icon" id="openSettings" type="button" aria-label="Open settings" title="Settings">${icon('settings')}</button>`}
             ${state.accessDenied ? '' : `<button class="button button--ghost button--with-icon" id="refresh">${icon('refresh')}Refresh</button>`}
             <button class="button button--ghost button--with-icon" id="logout">${icon('logout')}Logout</button>
           </div>
@@ -1037,6 +1038,13 @@ function wire() {
 
   document.querySelector('#refresh')?.addEventListener('click', () => {
     state.dashboard = null;
+    void loadModule();
+  });
+
+  document.querySelector('#openSettings')?.addEventListener('click', () => {
+    if (state.accessDenied) return;
+    state.module = 'settings';
+    state.reportData = null;
     void loadModule();
   });
 

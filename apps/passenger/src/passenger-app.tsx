@@ -90,6 +90,7 @@ function ActionIcon({ name }: { name: 'arrow' | 'back' | 'search' | 'swap' | 'ac
 
 const API = '/api/v1';
 const TOKEN = 'encore_api_token';
+const AUTH_USER = 'encore_auth_user';
 const GUEST_TOKEN = 'encore_guest_booking_token';
 const DRAFT = 'encore_booking_draft';
 
@@ -147,8 +148,11 @@ export function PassengerApp() {
   const [quote, setQuote] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [accountUser, setAccountUser] = useState<{ name: string; email?: string; avatar_url?: string | null } | null>(null);
+  const [accountUser, setAccountUser] = useState<{ name: string; email?: string; phone?: string | null; role?: string | null; avatar_url?: string | null } | null>(() => {
+    try { return JSON.parse(sessionStorage.getItem(AUTH_USER) || 'null'); } catch { return null; }
+  });
   const [accountBookings, setAccountBookings] = useState<any[]>([]);
+  const [booting, setBooting] = useState(true);
 
   const go = (next: Screen) => {
     setHistory((value) => [...value, screen]);
@@ -211,6 +215,7 @@ export function PassengerApp() {
     try {
       const result = await requestJson<any>(API, '/auth/google', { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify({ credential }) });
       sessionStorage.setItem(TOKEN, result.token);
+      sessionStorage.setItem(AUTH_USER, JSON.stringify(result.user ?? null));
       setAccountUser(result.user ?? null);
     } catch (caught) {
       setError((caught as Error).message);
@@ -291,6 +296,7 @@ export function PassengerApp() {
           body: JSON.stringify(registration),
         }, {});
         sessionStorage.setItem(TOKEN, registered.token);
+        sessionStorage.setItem(AUTH_USER, JSON.stringify(registered.user ?? null));
         sessionStorage.removeItem(GUEST_TOKEN);
         setAccountUser(registered.user ?? { name: registration.name, email: registration.email });
         bookingPassengers = passengers.map((passenger, index) => index === 0
@@ -323,56 +329,53 @@ export function PassengerApp() {
   };
 
   useEffect(() => {
-    void api('/routes').then((payload) => setRoutes(payload.data ?? payload ?? [])).catch((caught) => setError((caught as Error).message));
-    if (sessionStorage.getItem(TOKEN)) {
-      void api('/auth/me').then((payload) => setAccountUser(payload.user ?? null)).catch(() => {
+    let active = true;
+    void (async () => {
+      const query = new URLSearchParams(location.search);
+      const token = sessionStorage.getItem(TOKEN);
+      const routeRequest = api('/routes');
+      const sessionRequest = token ? api('/auth/me') : Promise.resolve(null);
+      const [routeResult, sessionResult] = await Promise.allSettled([routeRequest, sessionRequest]);
+      if (!active) return;
+      if (routeResult.status === 'fulfilled') setRoutes(routeResult.value.data ?? routeResult.value ?? []);
+      else setError((routeResult.reason as Error).message);
+      if (token && sessionResult.status === 'fulfilled' && sessionResult.value) {
+        const user = sessionResult.value.user ?? null;
+        setAccountUser(user);
+        sessionStorage.setItem(AUTH_USER, JSON.stringify(user));
+      } else if (token && sessionResult.status === 'rejected') {
         sessionStorage.removeItem(TOKEN);
-      });
-    }
-  }, []);
+        sessionStorage.removeItem(AUTH_USER);
+      }
 
-  useEffect(() => {
-    const query = new URLSearchParams(location.search);
-
-    if (query.get('screen') === 'account' && sessionStorage.getItem(TOKEN)) {
-      void openAccount();
-      return;
-    }
-
-    if (query.get('resume') === '1') {
-      const raw = sessionStorage.getItem(DRAFT);
-
-      if (raw) {
-        void (async () => {
+      if (query.get('screen') === 'account' && token && sessionResult.status === 'fulfilled') {
+        setLoading(true);
+        try {
+          const payload = await api('/bookings');
+          if (active) { setAccountBookings(payload.data ?? payload ?? []); setScreen('account'); }
+        } catch (caught) { if (active) setError((caught as Error).message); }
+        finally { if (active) setLoading(false); }
+      } else if (query.get('resume') === '1') {
+        const raw = sessionStorage.getItem(DRAFT);
+        if (raw) {
           try {
             const draft = JSON.parse(raw);
-
-            setFilters(draft.filters);
-            setPassengers(draft.passengers);
-
+            setFilters(draft.filters); setPassengers(draft.passengers);
             const [tripPayload, seatPayload, quotePayload] = await Promise.all([
               api(`/trips/${draft.tripId}`),
               api(`/trips/${draft.tripId}/seats?origin=${encodeURIComponent(draft.filters.origin)}&destination=${encodeURIComponent(draft.filters.destination)}`),
               api(`/trips/${draft.tripId}/quote?passengers=${draft.filters.passengers}&origin=${encodeURIComponent(draft.filters.origin)}&destination=${encodeURIComponent(draft.filters.destination)}`),
             ]);
-
-            setSelectedTrip(tripPayload.data ?? tripPayload);
-            setSeats(seatPayload.data ?? []);
-            setQuote(quotePayload.data ?? quotePayload);
-            setSelected(draft.selected);
-            setScreen('review');
-          } catch (caught) {
-            setError((caught as Error).message);
-          }
-        })();
-
-        return;
+            if (active) { setSelectedTrip(tripPayload.data ?? tripPayload); setSeats(seatPayload.data ?? []); setQuote(quotePayload.data ?? quotePayload); setSelected(draft.selected); setScreen('review'); }
+          } catch (caught) { if (active) setError((caught as Error).message); }
+        }
+      } else if (start.origin || start.destination) {
+        setBooting(false);
+        void search(start);
       }
-    }
-
-    if (start.origin || start.destination) {
-      void search(start);
-    }
+      if (active) setBooting(false);
+    })();
+    return () => { active = false; };
   }, []);
 
   const selectedLabels = useMemo(
@@ -392,6 +395,8 @@ export function PassengerApp() {
     'review',
     'status',
   ].indexOf(screen);
+
+  if (booting) return <div className="passenger-boot-screen" role="status" aria-live="polite"><span className="passenger-boot-screen__spinner" aria-hidden="true" /><strong>Preparing your journey…</strong><span>Checking your session and available routes.</span></div>;
 
   return (
     <div className="app-shell">
@@ -553,7 +558,7 @@ function Topbar({ user, onAccount }: { user: { name: string; avatar_url?: string
   );
 }
 
-function AccountScreen({ user, bookings, loading, onBack, onNewTrip, onProfileUpdated }: { user: { name: string; email?: string; phone?: string | null; avatar_url?: string | null } | null; bookings: any[]; loading: boolean; onBack: () => void; onNewTrip: () => void; onProfileUpdated: (user: any) => void }) {
+function AccountScreen({ user, bookings, loading, onBack, onNewTrip, onProfileUpdated }: { user: { name: string; email?: string; phone?: string | null; role?: string | null; avatar_url?: string | null } | null; bookings: any[]; loading: boolean; onBack: () => void; onNewTrip: () => void; onProfileUpdated: (user: any) => void }) {
   const [tripTab, setTripTab] = useState<'upcoming' | 'used' | 'expired' | 'cancelled'>(() => {
     const tab = new URLSearchParams(location.search).get('tab');
     return tab === 'used' || tab === 'expired' || tab === 'cancelled' ? tab : 'upcoming';
@@ -572,8 +577,12 @@ function AccountScreen({ user, bookings, loading, onBack, onNewTrip, onProfileUp
     if (settingsOpen && !dialog.open) dialog.showModal();
     if (!settingsOpen && dialog.open) dialog.close();
   }, [settingsOpen]);
+  const profileDirty = name.trim() !== (user?.name ?? '') || phone !== (user?.phone ?? '');
   const saveProfile = async (event: FormEvent) => {
     event.preventDefault();
+    if (!name.trim()) { setMessage('Enter your full name.'); return; }
+    if (phone && !/^[+\d\s().-]{7,40}$/.test(phone)) { setMessage('Enter a valid phone number.'); return; }
+    if (!profileDirty) return;
     setSaving(true); setMessage('Saving profile…');
     try {
       const payload = await api('/auth/profile', { method: 'PATCH', body: JSON.stringify({ name, phone }) });
@@ -590,6 +599,7 @@ function AccountScreen({ user, bookings, loading, onBack, onNewTrip, onProfileUp
   };
   const signOut = () => {
     sessionStorage.removeItem(TOKEN);
+    sessionStorage.removeItem(AUTH_USER);
     sessionStorage.removeItem(GUEST_TOKEN);
     location.href = '/website/';
   };
@@ -599,6 +609,7 @@ function AccountScreen({ user, bookings, loading, onBack, onNewTrip, onProfileUp
     try {
       await api('/auth/profile', { method: 'DELETE' });
       sessionStorage.removeItem(TOKEN);
+      sessionStorage.removeItem(AUTH_USER);
       location.href = '/website/';
     } catch (caught) {
       setAccountAction((caught as Error).message || 'Unable to delete the account.');
@@ -618,8 +629,12 @@ function AccountScreen({ user, bookings, loading, onBack, onNewTrip, onProfileUp
       {<dialog ref={settingsDialogRef} className="account-settings-dialog" aria-labelledby="profileSettingsTitle" onClose={() => setSettingsOpen(false)} onCancel={() => setSettingsOpen(false)}>
           <div className="account-settings-dialog__head"><div><span className="account-panel-label">ACCOUNT SETTINGS</span><h2 id="profileSettingsTitle">Make your account yours.</h2></div><button type="button" className="account-settings-close" onClick={() => setSettingsOpen(false)} aria-label="Close account settings">×</button></div>
           <section className="account-profile-panel" aria-label="Profile settings">
-        <div><span className="account-panel-label">PROFILE</span><h2>Make your account yours.</h2><p>Keep your contact details and profile photo ready for future bookings.</p></div>
-        <form onSubmit={saveProfile} className="account-profile-form"><div className="profile-photo-control"><span className="account-panel-label">PROFILE PHOTO</span><label htmlFor="profilePhotoInput" className="profile-photo-button">{user?.avatar_url ? 'Change photo' : 'Add photo'}</label><input id="profilePhotoInput" type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadPhoto} /></div><div className="profile-fields"><label><span>Name</span><input value={name} onChange={(event) => setName(event.target.value)} required maxLength={150} /></label><label><span>Phone</span><input value={phone} onChange={(event) => setPhone(event.target.value)} maxLength={40} /></label><button type="submit" className="button button--primary" disabled={saving}>Save profile</button><small aria-live="polite">{message}</small></div></form>
+            <div className="settings-photo-card">
+              <div className="settings-card-heading"><span className="account-panel-label">PROFILE PHOTO</span><strong>Make it yours</strong><small>JPG, PNG or WebP · max 5 MB</small></div>
+              <div className="settings-avatar">{user?.avatar_url ? <img src={user.avatar_url} alt="" onError={(event) => { event.currentTarget.hidden = true; const fallback = event.currentTarget.nextElementSibling as HTMLElement | null; if (fallback) fallback.hidden = false; }} /> : null}<b hidden={Boolean(user?.avatar_url)}>{(user?.name ?? 'Passenger').split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}</b><label htmlFor="profilePhotoInput" className="settings-avatar-camera" aria-label="Change profile photo"><ActionIcon name="settings" /></label></div>
+              <label htmlFor="profilePhotoInput" className="profile-photo-button">{user?.avatar_url ? 'Change photo' : 'Add photo'}</label><input id="profilePhotoInput" type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadPhoto} />
+            </div>
+            <form onSubmit={saveProfile} className="account-profile-form"><div className="profile-fields"><label><span>Full name</span><input value={name} onChange={(event) => setName(event.target.value)} required maxLength={150} /></label><label><span>Phone number</span><input value={phone} onChange={(event) => setPhone(event.target.value)} inputMode="tel" maxLength={40} /></label>{user?.email && <label><span>Email</span><input value={user.email} readOnly /></label>}{user?.role && <label><span>Account role</span><input value={user.role} readOnly /></label>}<div className="profile-form-actions"><button type="submit" className="button button--primary" disabled={saving || !profileDirty}>{saving ? 'Saving…' : 'Save changes'}</button><small aria-live="polite">{message || (profileDirty ? 'Unsaved changes' : 'All changes saved')}</small></div></div></form>
           </section>
           <section className="account-security-panel" aria-label="Account actions">
         <div><span className="account-panel-label">ACCOUNT ACCESS</span><h2>Keep control of your account.</h2><p>Sign out on shared devices or permanently remove your profile when you no longer need it.</p></div>

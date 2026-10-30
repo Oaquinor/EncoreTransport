@@ -714,6 +714,22 @@ async function initializePublicSession() {
     account.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg><span>Sign in</span>';
   };
   if (!token) { setSignedOut(); return; }
+  const applyUser = (user) => {
+    if (!user) throw new Error('session');
+    const name = String(user.name || user.email || 'My account').trim();
+    const initials = name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+    const avatar = user.avatar_url ? `<img class="public-account-avatar" src="${esc(publicAssetUrl(user.avatar_url))}" alt="" />` : `<span class="public-account-initials" aria-hidden="true">${esc(initials)}</span>`;
+    account.href = '/passenger/?screen=account&tab=profile';
+    account.innerHTML = `${avatar}<span>${esc(name)}</span>`;
+    myTrips.href = '/passenger/?screen=account&tab=tickets';
+    myTrips.hidden = false;
+    mobileTrips?.removeAttribute('hidden');
+    mobileAccount?.setAttribute('hidden', '');
+  };
+  try {
+    const cached = JSON.parse(sessionStorage.getItem('encore_auth_user') || 'null');
+    if (cached) applyUser(cached);
+  } catch { /* A stale cache is replaced by the authoritative request below. */ }
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
@@ -726,18 +742,11 @@ async function initializePublicSession() {
     if (!response.ok) throw new Error('session');
     const payload = await response.json();
     const user = payload.user ?? payload.data?.user;
-    if (!user) throw new Error('session');
-    const name = String(user.name || user.email || 'My account').trim();
-    const initials = name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase();
-    const avatar = user.avatar_url ? `<img class="public-account-avatar" src="${esc(publicAssetUrl(user.avatar_url))}" alt="" />` : `<span class="public-account-initials" aria-hidden="true">${esc(initials)}</span>`;
-    account.href = '/passenger/?screen=account&tab=profile';
-    account.innerHTML = `${avatar}<span>${esc(name)}</span>`;
-    myTrips.href = '/passenger/?screen=account&tab=tickets';
-    myTrips.hidden = false;
-    mobileTrips?.removeAttribute('hidden');
-    mobileAccount?.setAttribute('hidden', '');
+    applyUser(user);
+    sessionStorage.setItem('encore_auth_user', JSON.stringify(user));
   } catch {
     sessionStorage.removeItem('encore_api_token');
+    sessionStorage.removeItem('encore_auth_user');
     setSignedOut();
   }
 }

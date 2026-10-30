@@ -1,0 +1,903 @@
+# MANDATO PARA CODEX — ENCORE TRANSPORT
+## Auditoría visual, UX/UI, responsive y arquitectónica exhaustiva — Sin omitir ningún apartado
+
+**Repositorio:** `Oaquinor/EncoreTransport`  
+**Objetivo:** elaborar un diagnóstico visual y funcional completo del estado actual de todas las interfaces de EncoreTransport, acompañado de evidencias, inventarios, hallazgos y documentación estructurada para una posterior intervención.
+
+### INSTRUCCIÓN PRINCIPAL
+
+Necesito que realices una auditoría visual extremadamente exhaustiva de todo el repositorio EncoreTransport.
+
+No quiero que solamente revises el Website, las pantallas principales o las rutas que aparecen en el README.
+
+Debes descubrir absolutamente todas las aplicaciones, rutas, pantallas, subpantallas, formularios, modales, pestañas, menús, tablas, tarjetas, componentes, estados interactivos y flujos de navegación existentes.
+
+**Tu misión en esta ejecución es investigar, documentar y mostrar evidencias. No rediseñar ni refactorizar todavía.**
+
+Posteriormente entregaré el informe a otro revisor para que determine las correcciones precisas. Por tanto, la información debe ser suficiente para comprender el estado actual sin necesidad de adivinar cómo funciona o se presenta cada apartado.
+
+---
+
+# FASE 1 — DESCUBRIMIENTO DEL REPOSITORIO
+
+Inspecciona exhaustivamente la estructura del proyecto.
+
+Como mínimo, considera:
+
+- `apps/website`
+- `apps/passenger`
+- `apps/passenger-mobile`
+- `apps/driver-pwa`
+- `apps/driver-mobile`
+- `apps/auth`
+- `apps/admin-dashboard`
+- `apps/package-tracking`
+- `apps/package-register`
+- `packages/*`
+- `backend/laravel`
+- `server.mjs`
+- Componentes compartidos.
+- Recursos gráficos.
+- Hojas CSS.
+- Configuraciones de compilación.
+- Pruebas visuales existentes.
+
+Estos nombres son una guía inicial, no una lista cerrada.
+
+Descubre cualquier aplicación o módulo adicional que exista realmente en el repositorio.
+
+Identifica también interfaces antiguas, rutas heredadas, componentes aparentemente abandonados y elementos que puedan seguir teniendo referencias activas.
+
+### Entregable
+
+`docs/visual-audit/01_REPOSITORY_INVENTORY.md`
+
+Debe contener:
+
+- Estructura real.
+- Tecnologías y dependencias.
+- Aplicaciones existentes.
+- Puntos de entrada.
+- Rutas.
+- Sistemas de estilos.
+- Bibliotecas de componentes.
+- Recursos visuales.
+- Dependencias compartidas.
+- Módulos y submódulos.
+
+---
+
+# FASE 2 — INVENTARIO ABSOLUTO DE PANTALLAS
+
+Construye un inventario de todas las interfaces accesibles.
+
+No te limites a las rutas URL. Muchas pantallas se presentan como estados internos de una sola aplicación.
+
+Para cada interfaz documenta:
+
+1. Identificador único.
+2. Aplicación a la que pertenece.
+3. Nombre de pantalla.
+4. Ruta URL o mecanismo de acceso.
+5. Componente o archivo responsable.
+6. Función de negocio.
+7. Permisos necesarios.
+8. Estado inicial.
+9. Elementos interactivos.
+10. Formularios asociados.
+11. Modales y diálogos.
+12. Pestañas.
+13. Tablas y filtros.
+14. Menús desplegables.
+15. Acciones disponibles.
+16. Estados alternativos.
+17. Integraciones API.
+18. Dependencias de otras pantallas.
+19. Observaciones visuales.
+20. Estado de verificación.
+
+Registra también las pantallas inaccesibles y explica el motivo.
+
+No consideres una pantalla auditada únicamente porque su componente existe en el código.
+
+### Cobertura obligatoria
+
+**Website**
+- Inicio.
+- Navegación.
+- Búsqueda.
+- Resultados.
+- Rutas.
+- Destinos.
+- Servicios.
+- Mapas.
+- Seguimiento.
+- Información institucional.
+- Preguntas frecuentes.
+- Contacto.
+- Footer.
+- Todos los módulos adicionales.
+
+**Passenger**
+- Inicio de sesión.
+- Registro.
+- Recuperación de acceso.
+- Perfil.
+- Búsqueda.
+- Reservas.
+- Selección de asientos.
+- Pasajeros.
+- Pagos.
+- Confirmaciones.
+- Boletos.
+- Viajes.
+- Seguimiento.
+- Historial.
+- Cancelaciones.
+- Configuraciones.
+- Todos los estados y formularios adicionales.
+
+**Driver**
+- Autenticación.
+- Panel principal.
+- Viajes asignados.
+- Inspecciones.
+- Manifiestos.
+- Abordaje.
+- QR.
+- GPS.
+- Navegación.
+- Incidencias.
+- Finalización.
+- Perfil.
+- Configuraciones.
+- Cualquier módulo adicional.
+
+**Admin**
+- Dashboard.
+- Usuarios.
+- Roles y permisos.
+- Conductores.
+- Vehículos.
+- Rutas.
+- Paradas.
+- Horarios.
+- Despachos.
+- Reservas.
+- Boletos.
+- Pagos.
+- Clientes.
+- Paquetes.
+- Incidencias.
+- Mantenimiento.
+- Reportes.
+- Gráficos.
+- Configuración general.
+- Perfil.
+- Auditoría.
+- Todas las ventanas, herramientas y apartados adicionales.
+
+**Aplicaciones móviles**
+Audita separadamente Passenger Mobile y Driver Mobile. No presupongas que sus interfaces son idénticas a las versiones web.
+
+**Otros módulos**
+Incluye seguimiento de paquetes, registro de paquetes, autenticación centralizada y cualquier herramienta adicional localizada.
+
+### Entregable
+
+`docs/visual-audit/02_COMPLETE_SCREEN_INVENTORY.md`
+
+Adicionalmente genera:
+
+`docs/visual-audit/data/screens.json`
+
+Este JSON debe contener el inventario completo en formato estructurado.
+
+---
+
+# FASE 3 — EJECUCIÓN REAL DE LAS INTERFACES
+
+Levanta las aplicaciones necesarias utilizando las instrucciones del repositorio.
+
+Inspecciona las pantallas mediante navegador real, preferiblemente Playwright.
+
+Para aplicaciones móviles utiliza emuladores o dispositivos cuando estén disponibles.
+
+No declares que una pantalla funciona porque el HTML compila.
+
+Debes interactuar con ella.
+
+Para cada pantalla:
+
+- Abrir.
+- Esperar la carga real.
+- Verificar componentes.
+- Inspeccionar consola.
+- Revisar peticiones fallidas.
+- Interactuar con botones.
+- Abrir menús.
+- Cambiar pestañas.
+- Abrir modales.
+- Probar formularios.
+- Revisar estados de error.
+- Verificar desplazamiento.
+- Comprobar navegación.
+- Validar retorno a la pantalla anterior.
+
+Utiliza un entorno local de pruebas seguro.
+
+No ejecutes operaciones destructivas sobre información productiva.
+
+Si una pantalla requiere datos no disponibles, documenta el bloqueo e identifica cómo reproducirla mediante fixtures de pruebas aisladas.
+
+No presentes un estado simulado como evidencia de funcionamiento real.
+
+### Entregable
+
+`docs/visual-audit/03_RUNTIME_INSPECTION.md`
+
+---
+
+# FASE 4 — CAPTURAS DE ABSOLUTAMENTE TODAS LAS INTERFACES
+
+Genera capturas reales, no imágenes generadas artificialmente.
+
+Cada pantalla debe tener una evidencia visual asociada o una explicación expresa de por qué no pudo capturarse.
+
+### Resoluciones mínimas
+
+- 320 × 568.
+- 375 × 812.
+- 390 × 844.
+- 430 × 932.
+- 768 × 1024.
+- 1024 × 768.
+- 1280 × 800.
+- 1440 × 900.
+- 1920 × 1080.
+
+Utiliza capturas completas cuando sea necesario mostrar toda la página.
+
+Para pantallas extensas captura también las secciones inferiores.
+
+### Estados que deben capturarse
+
+- Pantalla inicial.
+- Menú abierto.
+- Modal abierto.
+- Pestañas relevantes.
+- Formulario vacío.
+- Formulario con errores.
+- Formulario con datos válidos.
+- Estado de carga.
+- Estado vacío.
+- Error de servidor.
+- Error de conexión.
+- Notificación.
+- Diálogo de confirmación.
+- Tabla con datos.
+- Tabla sin datos.
+- Filtros abiertos.
+- Desplegables abiertos.
+- Estados de pago, reserva y seguimiento cuando sean accesibles.
+
+No es necesario duplicar capturas idénticas sin valor, pero cada estado visualmente distinto debe estar representado.
+
+### Organización de imágenes
+
+Usa una estructura semejante a:
+
+`docs/visual-audit/screenshots/website/`
+
+`docs/visual-audit/screenshots/passenger/`
+
+`docs/visual-audit/screenshots/driver/`
+
+`docs/visual-audit/screenshots/admin/`
+
+`docs/visual-audit/screenshots/auth/`
+
+`docs/visual-audit/screenshots/package-tracking/`
+
+`docs/visual-audit/screenshots/package-register/`
+
+`docs/visual-audit/screenshots/mobile/`
+
+Cada imagen debe tener nombre descriptivo, identificador de pantalla y resolución.
+
+No incluyas credenciales, tokens ni datos personales reales en las capturas.
+
+---
+
+# FASE 5 — AUDITORÍA VISUAL MINUCIOSA
+
+Analiza cada pantalla según estos criterios.
+
+### A. Estructura y composición
+
+- Jerarquía.
+- Distribución.
+- Proporciones.
+- Contenedores.
+- Espacio útil.
+- Equilibrio.
+- Densidad visual.
+- Agrupación.
+- Alineación.
+- Consistencia entre secciones.
+
+### B. Márgenes y dimensiones
+
+- Márgenes incorrectos.
+- Padding inconsistente.
+- Elementos pegados a los bordes.
+- Contenedores demasiado grandes.
+- Campos demasiado pequeños.
+- Espacios vacíos excesivos.
+- Anchos rígidos.
+- Alturas fijas.
+- Elementos desbordados.
+- Scroll horizontal.
+- Componentes superpuestos.
+- Contenido cortado.
+- Diálogos fuera del viewport.
+
+### C. Tipografía
+
+- Familias utilizadas.
+- Tamaños.
+- Jerarquía.
+- Pesos.
+- Interlineado.
+- Longitud de líneas.
+- Contraste.
+- Truncamientos.
+- Inconsistencia entre títulos y etiquetas.
+
+### D. Colores y superficies
+
+- Paleta.
+- Contraste.
+- Fondos.
+- Bordes.
+- Sombras.
+- Estados hover.
+- Estados focus.
+- Estados disabled.
+- Coherencia de marca.
+- Uso excesivo de degradados.
+- Combinaciones visualmente deficientes.
+
+### E. Componentes
+
+- Botones.
+- Inputs.
+- Selectores.
+- Checkboxes.
+- Radios.
+- Date pickers.
+- Tablas.
+- Paginadores.
+- Tarjetas.
+- Modales.
+- Popovers.
+- Tooltips.
+- Menús.
+- Sidebars.
+- Headers.
+- Footers.
+- Alertas.
+- Skeletons.
+- Mapas.
+- Gráficos.
+- Visores de documentos.
+- Selectores de asientos.
+
+### F. Experiencia de usuario
+
+- Claridad de acciones.
+- Navegación intuitiva.
+- Información contextual.
+- Retroalimentación.
+- Mensajes de error.
+- Flujo de tareas.
+- Acciones duplicadas.
+- Funciones escondidas.
+- Pasos innecesarios.
+- Confirmaciones.
+- Recuperación de errores.
+- Continuidad entre aplicaciones.
+
+### G. Accesibilidad
+
+Evalúa con referencia a WCAG 2.2 AA:
+
+- Navegación por teclado.
+- Focus visible.
+- Etiquetas.
+- Contraste.
+- Tamaño de objetivos táctiles.
+- Orden de lectura.
+- Semántica.
+- Soporte para lectores de pantalla.
+- Zoom.
+- Reducción de movimiento.
+- Estados anunciados.
+- Formularios accesibles.
+
+### H. Animaciones
+
+- Duración.
+- Fluidez.
+- Necesidad.
+- Rendimiento.
+- Interrupciones.
+- Respeto a `prefers-reduced-motion`.
+
+### I. Contenido e idioma
+
+- Textos genéricos.
+- Traducciones incorrectas.
+- Idiomas mezclados.
+- Mensajes técnicos expuestos.
+- Etiquetas ambiguas.
+- Contenido ficticio.
+- Inconsistencia en formatos de moneda y fechas.
+
+---
+
+# FASE 6 — AUDITORÍA EXHAUSTIVA DEL CSS
+
+Este apartado es prioritario.
+
+Examina todas las hojas CSS, importaciones, estilos inline y sistemas de estilos del repositorio.
+
+Identifica:
+
+1. Reglas duplicadas.
+2. Selectores repetidos.
+3. Sobrescrituras.
+4. Conflictos de especificidad.
+5. Uso de `!important`.
+6. Estilos globales peligrosos.
+7. Variables duplicadas.
+8. Tokens inconsistentes.
+9. Breakpoints repetidos.
+10. Valores hardcodeados.
+11. Estilos no utilizados.
+12. Componentes con estilos redundantes.
+13. Archivos correctivos acumulados.
+14. Dependencias de orden de importación.
+15. Problemas de mantenimiento.
+16. Riesgos de regresión.
+
+Presta especial atención a los archivos `premium`, `mandate`, `gap-close`, `visual-polish`, `visual-refresh`, `public-rework` y sus equivalentes.
+
+Para cada problema importante presenta:
+
+- Archivo.
+- Selector.
+- Línea o rango.
+- Evidencia.
+- Causa.
+- Reglas implicadas.
+- Componentes afectados.
+- Recomendación.
+
+No propongas simplemente otro archivo CSS correctivo.
+
+### Entregable
+
+`docs/visual-audit/04_CSS_ARCHITECTURE_AUDIT.md`
+
+---
+
+# FASE 7 — AUDITORÍA DE TECNOLOGÍAS VISUALES
+
+Analiza las tecnologías actuales y alternativas modernas.
+
+Considera, cuando corresponda:
+
+- React.
+- TypeScript.
+- Tailwind CSS.
+- shadcn/ui.
+- Radix UI.
+- Lucide.
+- Motion.
+- TanStack Query.
+- React Hook Form.
+- Zod.
+- Recharts.
+- Leaflet.
+- TomTom.
+- Soluciones actuales de tablas y componentes.
+
+No asumas que la opción más moderna es necesariamente la mejor.
+
+Compara las alternativas con las implementaciones actuales.
+
+Indica:
+
+- Qué conservar.
+- Qué mejorar.
+- Qué consolidar.
+- Qué sustituir.
+- Qué no incorporar.
+- Qué requeriría una migración.
+- Riesgos y beneficios.
+
+No agregues dependencias todavía.
+
+### Entregable
+
+`docs/visual-audit/05_TECHNOLOGY_EVALUATION.md`
+
+---
+
+# FASE 8 — AUDITORÍA DE COMPONENTES COMPARTIDOS
+
+Localiza componentes visualmente equivalentes que estén implementados varias veces.
+
+Ejemplos:
+
+- Botones.
+- Formularios.
+- Encabezados.
+- Tablas.
+- Menús.
+- Modales.
+- Tarjetas.
+- Selectores.
+- Notificaciones.
+- Navegación.
+- Indicadores.
+
+Determina si tienen comportamientos diferentes que justifiquen implementaciones separadas.
+
+No recomiendes unificar componentes que tienen responsabilidades incompatibles únicamente porque se parecen visualmente.
+
+### Entregable
+
+`docs/visual-audit/06_COMPONENT_REUSE_AUDIT.md`
+
+---
+
+# FASE 9 — AUDITORÍA DE FLUJOS COMPLETOS
+
+No basta con observar pantallas aisladas.
+
+Recorre los flujos principales:
+
+**Reserva**
+Búsqueda → Resultados → Selección → Asientos → Datos → Pago → Confirmación → Boleto.
+
+**Pasajero**
+Acceso → Perfil → Mis viajes → Boleto → Seguimiento → Historial.
+
+**Conductor**
+Acceso → Asignación → Inspección → Inicio → Abordaje → Recorrido → Finalización.
+
+**Administración**
+Acceso → Dashboard → Configuración → Operaciones → Consulta → Edición → Guardado → Reportes.
+
+**Paquetes**
+Registro → Identificación → Consulta → Seguimiento → Entrega.
+
+Documenta cualquier paso que no pueda completarse y explica la causa.
+
+Diferencia problemas visuales de errores funcionales y bloqueos externos.
+
+### Entregable
+
+`docs/visual-audit/07_USER_JOURNEY_AUDIT.md`
+
+---
+
+# FASE 10 — DESIGNER.md OBLIGATORIO
+
+Genera el archivo:
+
+`DESIGNER.md`
+
+en la raíz del repositorio.
+
+Este será el documento maestro de diseño y experiencia de usuario de EncoreTransport.
+
+Debe contener:
+
+1. Visión de diseño.
+2. Identidad visual actual.
+3. Paleta y tokens encontrados.
+4. Tipografías.
+5. Espaciado.
+6. Reglas de composición.
+7. Layouts.
+8. Breakpoints.
+9. Componentes reutilizables.
+10. Estados interactivos.
+11. Patrones de formularios.
+12. Tablas.
+13. Mapas.
+14. Gráficos.
+15. Navegación.
+16. Responsive.
+17. Accesibilidad.
+18. Animación.
+19. Inconsistencias actuales.
+20. Deuda visual.
+21. Componentes candidatos a consolidación.
+22. Tecnologías actuales.
+23. Tecnologías recomendadas.
+24. Referencias a capturas.
+25. Reglas para futuras intervenciones.
+
+**Importante:** distingue explícitamente entre:
+
+- Estándar existente.
+- Inconsistencia encontrada.
+- Recomendación propuesta.
+- Decisión pendiente de aprobación.
+
+No conviertas automáticamente las inconsistencias actuales en estándares definitivos.
+
+No afirmes que el diseño está aprobado.
+
+Este documento servirá posteriormente para definir la dirección visual final.
+
+---
+
+# FASE 11 — INFORME MAESTRO DE HALLAZGOS
+
+Genera:
+
+`docs/visual-audit/08_MASTER_FINDINGS.md`
+
+Y:
+
+`docs/visual-audit/data/findings.json`
+
+Cada hallazgo debe contener:
+
+- ID.
+- Aplicación.
+- Pantalla.
+- Componente.
+- Categoría.
+- Descripción.
+- Comportamiento observado.
+- Comportamiento esperado.
+- Evidencia visual.
+- Archivo relacionado.
+- Severidad.
+- Impacto.
+- Frecuencia.
+- Causa probable.
+- Confianza del diagnóstico.
+- Solución recomendada.
+- Riesgos de modificación.
+- Dependencias.
+- Estado de verificación.
+
+Clasifica la severidad:
+
+- **Crítica:** impide utilizar una función esencial o afecta gravemente la experiencia.
+- **Alta:** problema significativo de diseño, accesibilidad o navegación.
+- **Media:** inconsistencia visible o dificultad moderada.
+- **Baja:** mejora estética o refinamiento menor.
+
+No mezcles hallazgos confirmados con sospechas sin identificarlos.
+
+---
+
+# FASE 12 — MATRIZ DE COBERTURA
+
+Genera:
+
+`docs/visual-audit/09_COVERAGE_MATRIX.md`
+
+La matriz debe permitir responder:
+
+- ¿Cuántas aplicaciones existen?
+- ¿Cuántas rutas se localizaron?
+- ¿Cuántas pantallas internas existen?
+- ¿Cuántos modales?
+- ¿Cuántos componentes relevantes?
+- ¿Cuántos estados fueron auditados?
+- ¿Cuántas capturas se generaron?
+- ¿Cuántos problemas se detectaron?
+- ¿Cuántos apartados no pudieron verificarse?
+- ¿Qué parte del proyecto permanece sin evidencia?
+
+Utiliza estados explícitos:
+
+`AUDITED`, `PARTIAL`, `BLOCKED`, `NOT_AUDITED`, `NOT_APPLICABLE`.
+
+La cobertura debe calcularse sobre el inventario descubierto.
+
+No declares 100 % de cobertura cuando existan rutas o componentes sin inspeccionar.
+
+---
+
+# FASE 13 — INFORME HTML NAVEGABLE
+
+Además de Markdown, genera un informe local:
+
+`docs/visual-audit/report/index.html`
+
+Debe permitir:
+
+- Navegar entre aplicaciones.
+- Consultar pantallas.
+- Ver capturas.
+- Filtrar hallazgos.
+- Consultar severidad.
+- Comparar resoluciones.
+- Abrir archivos relacionados.
+- Revisar estado de cobertura.
+- Consultar recomendaciones.
+
+Este informe debe funcionar localmente sin servicios externos adicionales, utilizando rutas relativas.
+
+No necesita convertirse en una nueva aplicación del producto.
+
+Su finalidad es facilitar la revisión humana.
+
+---
+
+# FASE 14 — PAQUETE FINAL PARA REVISIÓN EXTERNA
+
+Genera un ZIP:
+
+`EncoreTransport_Complete_Visual_Audit.zip`
+
+Debe incluir:
+
+- `DESIGNER.md`.
+- Inventario de repositorio.
+- Inventario de pantallas.
+- Hallazgos.
+- Auditoría CSS.
+- Evaluación tecnológica.
+- Análisis de componentes.
+- Flujos de usuario.
+- Matriz de cobertura.
+- Capturas.
+- Informe HTML.
+- Archivos JSON.
+- Instrucciones de lectura.
+- Resumen ejecutivo.
+
+Incluye un archivo:
+
+`START_HERE.md`
+
+Explica la estructura del paquete y señala los archivos principales que deberá leer una IA externa.
+
+El ZIP debe contener rutas relativas válidas y no depender de archivos que se encuentren fuera del paquete.
+
+No incluyas secretos, archivos `.env`, contraseñas, tokens, datos privados ni dependencias instaladas.
+
+---
+
+# FASE 15 — DOCUMENTO ESPECIAL PARA SEGUNDA AUDITORÍA CON IA
+
+Genera:
+
+`docs/visual-audit/10_AI_REVIEW_HANDOFF.md`
+
+Debe explicar a otro modelo de IA:
+
+- Qué es EncoreTransport.
+- Cómo está organizado.
+- Qué aplicaciones existen.
+- Qué tecnologías utiliza.
+- Qué problemas se encontraron.
+- Dónde están las evidencias.
+- Qué capturas corresponden a cada módulo.
+- Qué partes están verificadas.
+- Qué partes están bloqueadas.
+- Qué decisiones todavía no se han tomado.
+- Qué riesgos tiene una refactorización.
+- Qué archivos deben analizarse primero.
+- Qué información faltaría para autorizar un rediseño.
+
+Incluye un índice navegable con las rutas relativas de todos los documentos.
+
+No generes un resumen superficial que obligue a repetir la auditoría.
+
+---
+
+# FASE 16 — VALIDACIÓN FINAL DEL INFORME
+
+Antes de entregar:
+
+1. Confirma que todas las aplicaciones descubiertas están en el inventario.
+2. Confirma que todas las rutas están registradas.
+3. Comprueba que cada pantalla tiene estado de auditoría.
+4. Comprueba que cada captura corresponde a una interfaz real.
+5. Comprueba que no haya capturas duplicadas innecesarias.
+6. Verifica que los enlaces del informe funcionan.
+7. Valida los JSON.
+8. Comprueba que `DESIGNER.md` está completo.
+9. Comprueba que los hallazgos tienen evidencias.
+10. Comprueba que las limitaciones están documentadas.
+11. Revisa la matriz de cobertura.
+12. Valida el ZIP.
+13. Confirma que no se incluyeron secretos.
+14. Confirma que no se modificó la lógica funcional.
+15. Confirma que no se hicieron rediseños no autorizados.
+16. Comprueba que la documentación permite realizar una segunda revisión sin repetir el descubrimiento inicial.
+
+Si el entorno no permite ejecutar una aplicación, no inventes capturas ni resultados.
+
+Documenta el bloqueo, el requisito necesario y el comando de reproducción.
+
+---
+
+# RESTRICCIÓN CRÍTICA
+
+Esta fase es de **auditoría, no de implementación**.
+
+No debes:
+
+- Rediseñar pantallas.
+- Reemplazar frameworks.
+- Instalar tecnologías innecesarias.
+- Cambiar funcionalidades.
+- Eliminar CSS.
+- Alterar rutas.
+- Modificar el backend.
+- Cambiar la base de datos.
+- Aplicar parches de presentación.
+- Inventar datos.
+- Declarar pruebas aprobadas sin ejecutarlas.
+
+Se permiten exclusivamente los archivos de documentación, evidencias y utilidades de auditoría necesarias, sin modificar el comportamiento productivo.
+
+---
+
+# RESULTADO FINAL ESPERADO
+
+Al finalizar debes entregar una respuesta con:
+
+**1. Resumen cuantitativo**
+Aplicaciones, rutas, pantallas, componentes, capturas, hallazgos y cobertura.
+
+**2. Problemas principales**
+Los problemas visuales, UX y arquitectónicos más importantes, con referencias.
+
+**3. Estado por aplicación**
+Qué está bien, qué está mal, qué requiere rediseño y qué no pudo verificarse.
+
+**4. Diagnóstico del CSS**
+Capas redundantes, conflictos, deuda técnica y oportunidades de consolidación.
+
+**5. Evaluación tecnológica**
+Qué tecnologías conviene conservar o considerar, sin incorporarlas todavía.
+
+**6. Archivos generados**
+Ruta de `DESIGNER.md`, informe HTML, capturas, documentos y JSON.
+
+**7. ZIP completo**
+Ubicación exacta del paquete verificable.
+
+**8. Limitaciones**
+Todo aquello que no pudo comprobarse.
+
+**9. Preparación para la siguiente fase**
+Información suficiente para que otra IA evalúe las evidencias y prepare un mandato definitivo de implementación.
+
+### INSTRUCCIÓN DEFINITIVA
+
+No quiero una auditoría parcial concentrada en las pantallas principales.
+
+Quiero una radiografía visual completa de EncoreTransport.
+
+Descubre todos los apartados, inspecciona todos los estados accesibles, registra cada inconsistencia importante y conserva evidencias reales.
+
+**No cierres la auditoría simplemente porque hayas revisado el Website, Passenger, Driver y Admin de forma superficial.**
+
+La auditoría terminará cuando exista trazabilidad explícita de cada interfaz descubierta y cuando cualquier elemento no verificado aparezca identificado en la matriz de cobertura.
+
+El objetivo es que, al entregar este paquete a otro revisor, pueda comprender exactamente cómo se encuentra el proyecto y determinar con precisión qué debe corregirse, mejorarse, conservarse o rediseñarse, sin depender de suposiciones.
