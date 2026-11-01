@@ -1276,9 +1276,10 @@ function wire() {
       description: field('description')?.value,
     };
     try {
-      await api.updateIncident(id, changes);
-      state.incidents = await api.incidents();
+      const updated = await api.updateIncident(id, changes);
+      state.incidents = state.incidents.map((item) => String(item.id) === String(id) ? updated : item);
       render();
+      void api.incidents().then((items) => { state.incidents = items; render(); }).catch(() => {});
     } catch (error) {
       state.error = error.message;
       render();
@@ -1394,11 +1395,11 @@ function wire() {
     };
     try {
       await api.saveSchedule(data, state.scheduleEditingId);
-      state.schedules = await api.schedules();
       state.scheduleFormOpen = false;
       state.scheduleEditingId = null;
       state.scheduleForm = null;
       render();
+      void api.schedules().then((items) => { state.schedules = items; render(); }).catch(() => {});
     } catch (error) {
       const message = document.querySelector('#scheduleMessage');
       if (message) message.textContent = error.message;

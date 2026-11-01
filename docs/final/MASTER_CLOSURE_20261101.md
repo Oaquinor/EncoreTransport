@@ -2,7 +2,7 @@
 
 Fecha: 2026-11-01  
 Rama: `main`  
-Commit de referencia: `2bfa9665ca643fac974079bddfd84cbfacd7728f`
+Commit de referencia: `0174468fdcdb71a5e28f7bcb9ed51e1f7bfed184`
 Commit final: no creado; los cambios de esta revisión permanecen sin confirmar.
 
 ## Clasificación
@@ -31,6 +31,10 @@ La plataforma tiene una base funcional demostrable para Website, reservas, asien
 - Se eliminó la vinculación/notificación automática basada únicamente en `recipient_email`; el registro de paquetes no convierte al destinatario en cuenta sin confirmación.
 - La custodia avanzada añade QR opaco, manifiestos por viaje con reconciliación, escaneo idempotente y transferencia con aceptación del conductor receptor.
 - Driver PWA y Driver Mobile ya consumen los flujos de escaneo, carga, manifiesto, discrepancia y transferencia; las respuestas y errores provienen del backend.
+- Encore Live incorpora polling adaptativo, recuperación al volver online/visible, interpolación de posiciones reales, marcadores stale y cleanup de animaciones; no se introduce WebSocket/SSE sin contrato backend.
+- Driver Mobile incorpora permisos y tarea de GPS background, cámara QR, fotografía privada y validación explícita del destinatario; Passenger Mobile falla de forma segura sin red.
+- El Website público fue reescrito con copy comercial en español, sin nombres internos en el texto visible; el CMS rechaza términos técnicos antes de guardar o publicar.
+- El servidor admite convertir canonical y `og:url` relativos en URLs absolutas cuando se configura `PUBLIC_SITE_URL` con un dominio público no local; no convierte el dominio de desarrollo en canonical de producción.
 
 ## Funcionalidad preservada
 
@@ -38,8 +42,8 @@ Reservas y cotización por tramo, selección de asientos, rutas y mapas TomTom/L
 
 ## Pendientes que impiden el lanzamiento
 
-Proveedor y credenciales de pago, evidencia nativa de foto/cámara para completar la entrega desde dispositivos, terminal/vehículo/ubicación por evento, GPS background, aceptación en dispositivos reales, proveedores Gmail/WhatsApp/push, dominio SEO final y E2E autenticado contra un entorno sembrado. La gestión administrativa de autorizaciones de paquetes y la cobertura exhaustiva de cada transición de boleto todavía requieren una iteración específica.
+Proveedor y credenciales de pago, aceptación de evidencia/cámara y GPS background en dispositivos reales, terminal/vehículo/ubicación por evento, proveedores Gmail/WhatsApp/push, dominio SEO final y E2E autenticado por cada rol. La gestión administrativa de autorizaciones de paquetes y la cobertura exhaustiva de cada transición de boleto todavía requieren una iteración específica.
 
 ## Evidencia
 
-`npm test` pasa; los typechecks de API, Passenger web, Passenger Mobile y Driver Mobile pasan; el build de Passenger pasa; browser visual pasa con 36 checks y capturas en 360, 390, 768, 1024, 1440 y 1920 px; el flujo Admin autenticado focalizado pasa a 1440 px. `php artisan test` pasa con 82 pruebas y 541 aserciones usando PHP 8.3.30 y MySQL de Laragon, incluyendo `AdminUserSearchTest` y `AdminTicketLifecycleTest`. Las pruebas en dispositivos reales y las integraciones externas siguen bloqueadas.
+`npm test` pasa; los typechecks de API, Passenger web, Passenger Mobile y Driver Mobile pasan; el build de Passenger pasa; browser visual pasa con 36 checks y capturas en 360, 390, 768, 1024, 1440 y 1920 px; los flujos Admin y Driver autenticados focalizados pasan a 1440 px. `php artisan test` pasa con 83 pruebas y 545 aserciones usando PHP 8.3.30 y MySQL de Laragon, incluyendo `WebsiteContentAndRouteImageTest`, `AdminUserSearchTest` y `AdminTicketLifecycleTest`. Las pruebas en dispositivos reales y las integraciones externas siguen bloqueadas.

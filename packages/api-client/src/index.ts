@@ -20,7 +20,7 @@ export async function requestJson<T>(
   const timeoutId = controller ? setTimeout(() => controller.abort(), 10000) : null;
   const headers = new Headers(init.headers);
   headers.set('Accept', 'application/json');
-  if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  if (init.body && !(init.body instanceof FormData) && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
   if (credentials.token) headers.set('Authorization', `Bearer ${credentials.token}`);
   if (credentials.guestToken) headers.set('X-Guest-Booking-Token', credentials.guestToken);
 

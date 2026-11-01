@@ -7,7 +7,9 @@ const map = await readFile('packages/shared/real-map.mjs', 'utf8');
 
 assert.doesNotMatch(homepage, /Promise\.allSettled\([\s\S]*fetchTripSeats/);
 assert.match(homepage, /IntersectionObserver/);
-assert.match(homepage, /setInterval\(refreshLiveNetwork, 25000\)/);
+assert.match(homepage, /LIVE_NETWORK_BASE_DELAY\s*=\s*25000/);
+assert.match(homepage, /LIVE_NETWORK_MAX_DELAY\s*=\s*120000/);
+assert.match(homepage, /scheduleLiveNetworkRefresh/);
 assert.match(homepage, /visibilitychange/);
 assert.match(api, /\/network\/live/);
 assert.match(map, /renderLiveNetworkMap/);

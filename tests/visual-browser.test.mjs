@@ -178,13 +178,13 @@ try {
           await page.keyboard.press('Escape');
           assert.notEqual(await page.locator('#travelMenu').getAttribute('hidden'), null, 'Escape must close the desktop dropdown');
           await page.locator('#networkBusList').scrollIntoViewIfNeeded();
-          await page.waitForFunction(() => document.querySelector('#networkBusList .public-network-empty')?.innerText.includes('No buses are sharing a live location right now'), null, { timeout: 10000 }).catch(async (error) => {
+          await page.waitForFunction(() => document.querySelector('#networkBusList .public-network-empty')?.innerText.includes('No hay autobuses compartiendo una ubicación reciente'), null, { timeout: 10000 }).catch(async (error) => {
             const state = await page.evaluate(() => ({ status: document.querySelector('#mapStatus')?.textContent, listing: document.querySelector('#networkBusList')?.innerText }));
             throw new Error(`Public map empty state failed: ${JSON.stringify(state)} (${error.message})`);
           });
-          assert.match(await page.locator('#networkBusList').innerText(), /No buses are sharing a live location right now/,
+          assert.match(await page.locator('#networkBusList').innerText(), /No hay autobuses compartiendo una ubicación reciente/,
             'The public map explains when there are no current authorized positions');
-          assert.match(await page.locator('#mapStatus').innerText(), /0 buses live/,
+          assert.match(await page.locator('#mapStatus').innerText(), /0 autobuses en movimiento/,
             'Scheduled trips without live GPS are not presented as live buses');
           await page.locator('#routeMapCanvas.leaflet-container').waitFor({ timeout: 10000 });
           assert.equal(await page.locator('#routeMapCanvas.leaflet-container').count(), 1,
@@ -277,12 +277,12 @@ try {
             'Refreshing live data reuses the existing map instance');
           assert.equal(await page.locator('[data-network-bus]').count(), 3, 'The public map lists multiple live buses and keeps stale buses identifiable');
           await page.waitForFunction(
-            () => document.querySelector('#mapStatus')?.textContent.includes('2 buses live · 1 GPS not current'),
+            () => document.querySelector('#mapStatus')?.textContent.includes('2 autobuses en movimiento · 1 sin señal reciente'),
             null,
             { timeout: 10000 },
           );
           const mapStatus = await page.locator('#mapStatus').textContent();
-          assert.match(mapStatus, /2\s+buses live\s+·\s+1 GPS not current/, `The map distinguishes current GPS from stale data: ${JSON.stringify(mapStatus)}`);
+          assert.match(mapStatus, /2\s+autobuses en movimiento\s+·\s+1 sin señal reciente/, `The map distinguishes current GPS from stale data: ${JSON.stringify(mapStatus)}`);
           await page.locator('#networkRouteSelect').selectOption('10');
           assert.equal(await page.locator('[data-network-bus]').count(), 2, 'Route filter keeps both buses operating on the selected route');
           await page.locator('[data-network-trip="102"]').click();
@@ -611,7 +611,15 @@ try {
           await page.locator('#scheduleForm [name="driver_id"]').selectOption(driverOption);
           const busOption = await page.locator('#scheduleForm [name="bus_id"] option:not([value=""])').first().getAttribute('value');
           if (busOption) await page.locator('#scheduleForm [name="bus_id"]').selectOption(busOption);
-          const scheduleDay = new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10);
+          const scheduleDay = await page.evaluate(async () => {
+            const payload = await fetch('/api/v1/admin/driver-schedules', { headers: { authorization: `Bearer ${sessionStorage.getItem('encore_api_token')}` } }).then((response) => response.json());
+            const occupiedDays = new Set((payload.data ?? []).map((item) => String(item.work_date ?? '').slice(0, 10)));
+            for (let offset = 365; offset < 3650; offset += 1) {
+              const candidate = new Date(Date.now() + offset * 86400000).toISOString().slice(0, 10);
+              if (!occupiedDays.has(candidate)) return candidate;
+            }
+            throw new Error('Could not find a free schedule date for visual verification');
+          });
           const scheduleNotes = `Visual interface verification ${Date.now()}`;
           await page.locator('#scheduleForm [name="work_date"]').fill(scheduleDay);
           await page.locator('#scheduleForm [name="starts_at"]').fill('03:00');
@@ -656,13 +664,16 @@ try {
           await page.locator(`[data-incident-description="${createdVisualIncident.id}"]`).fill('Reviewed, escalated and resolved in the admin workflow.');
           await page.locator(`[data-incident-severity="${createdVisualIncident.id}"]`).selectOption('high');
           for (const status of ['in_progress', 'resolved', 'dismissed', 'open']) {
-            await page.locator(`[data-incident-status="${createdVisualIncident.id}"]`).selectOption(status);
+            const statusSelect = page.locator(`[data-incident-status="${createdVisualIncident.id}"]`);
+            await statusSelect.waitFor({ state: 'visible' });
+            await statusSelect.selectOption(status);
             await page.locator(`[data-save-incident="${createdVisualIncident.id}"]`).click();
             await page.waitForFunction(async ({ incidentId, expectedStatus }) => {
               const payload = await fetch('/api/v1/admin/incidents', { headers: { authorization: `Bearer ${sessionStorage.getItem('encore_api_token')}` } }).then((response) => response.json());
               const incident = payload.data?.find((item) => String(item.id) === String(incidentId));
               return incident?.status === expectedStatus && incident?.severity === 'high' && incident?.title === 'Visual incident reviewed';
             }, { incidentId: createdVisualIncident.id, expectedStatus: status });
+            await statusSelect.waitFor({ state: 'visible' });
           }
         }
         console.log(`${surface} ${width}px OK width=${metrics.documentWidth} title=${JSON.stringify(metrics.title)}`);

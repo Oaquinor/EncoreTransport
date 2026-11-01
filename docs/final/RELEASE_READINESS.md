@@ -2,8 +2,8 @@
 
 Actualizado: 2026-11-01. Clasificación actual: `PARTIALLY_COMPLETE`.
 
-Cumplido: reglas de reservas, permisos, perfil Admin, directorio de cuentas con búsqueda server-side, ficha administrativa por pestañas, lifecycle administrativo inicial de boletos, persistencia de notificaciones, contratos frontend, suites automatizadas, navegación pública simplificada y pruebas Laravel locales.
+Cumplido: reglas de reservas, permisos, perfil Admin, directorio de cuentas con búsqueda server-side, ficha administrativa por pestañas, lifecycle administrativo inicial de boletos, persistencia de notificaciones, navegación pública simplificada, polling Live adaptativo, controles móviles nativos implementados en código, suites automatizadas y pruebas Laravel locales.
 
-No cumplido: cobertura exhaustiva del lifecycle de boletos, proveedor de pagos con sandbox, integración externa con credenciales reales, evidencia nativa de custodia, metadatos operativos avanzados, pruebas en dispositivo móvil y E2E autenticado contra un entorno sembrado.
+No cumplido: cobertura exhaustiva del lifecycle de boletos, proveedor de pagos con sandbox, integración externa con credenciales reales, aceptación de cámara/GPS en dispositivo móvil, push y E2E autenticado por cada rol.
 
-La navegación Admin tiene ahora una estructura por dominios y contrato automatizado, pero la aceptación visual posterior y el inventario runtime por rol siguen pendientes.
+La navegación Admin tiene ahora una estructura por dominios y contrato automatizado; el flujo focal autenticado pasa con el entorno local sembrado. La aceptación por rol y en dispositivo real siguen pendientes, por lo que no se declara `READY_FOR_RELEASE`.

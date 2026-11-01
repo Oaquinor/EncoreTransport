@@ -24,5 +24,6 @@
 
 - `npm run test:admin-navigation`: PASS.
 - `npm test`: PASS posterior a esta iteración.
-- Browser focal Admin después de este cambio: bloqueado contra el servidor local (`422 Invalid credentials`); requiere credenciales/fixtures autorizados.
-- Roles y permisos Laravel: cubiertos por los contratos existentes; falta una matriz E2E por rol.
+- Browser focal Admin después de este cambio: PASS a 1440 px contra Laravel local sembrado con `EncoreTransportDemoSeeder`; cubre CMS, rutas, horarios, cuentas, clientes paginados, ficha por pestañas, lifecycle de boletos, roles, reportes y paquetería.
+- La aceptación visual de todos los roles sigue pendiente: el escenario usa un administrador autorizado y no sustituye pruebas con cada matriz de permisos.
+- El bloqueo anterior `422 Invalid credentials` quedó resuelto usando el seeder de demo existente; no se relajó la autenticación.

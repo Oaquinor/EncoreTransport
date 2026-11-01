@@ -12,6 +12,7 @@ const {
   host: '127.0.0.1',
   apiTargetUrl:
     'http://127.0.0.1:65534',
+  publicSiteUrl: 'https://www.encoretransport.test',
   quiet: true,
 });
 
@@ -104,6 +105,10 @@ try {
     await website.text(),
     /Encore Transport/i,
   );
+
+  const websiteHtml = await (await fetch(`${base}/website/`)).text();
+  assert.match(websiteHtml, /rel="canonical" href="https:\/\/www\.encoretransport\.test\/website\/"/);
+  assert.match(websiteHtml, /property="og:url" content="https:\/\/www\.encoretransport\.test\/website\/"/);
 
   await expectOk(
     '/website/styles.css',

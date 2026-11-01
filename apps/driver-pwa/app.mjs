@@ -43,6 +43,7 @@ const state = {
     network_status: 'unknown',
   },
   package: null,
+  packageTrackingUrl: '',
   manifest: null,
   packageQrToken: '',
   discrepancyType: 'missing_item',
@@ -243,7 +244,7 @@ function renderTrip(trip) {
         <label><span class="muted-copy">Description</span><textarea class="field" id="pkgDescription"></textarea></label>
       </div>
       <button class="button button--ghost button--with-icon" id="createPackage">${icon('package')}Register package</button>
-      <div id="packageResult"></div>
+      <div id="packageResult">${state.packageTrackingUrl ? `<div class="feed-item"><strong>${esc(state.package?.reference ?? 'Package registered')}</strong><div>Tracking link: <a href="${esc(state.packageTrackingUrl)}" target="_blank" rel="noopener">${esc(state.packageTrackingUrl)}</a></div></div>` : ''}</div>
       <div class="driver-custody-tools">
         <h4>Custody controls</h4>
         <label><span class="muted-copy">Package QR token</span><input class="field" id="packageQrToken" value="${esc(state.packageQrToken)}" placeholder="Paste or scan the opaque QR token"></label>
@@ -411,19 +412,9 @@ function wire() {
 
       const result = document.querySelector('#packageResult');
       state.package = response.package;
+      state.packageTrackingUrl = response.tracking_url ?? '';
       state.packageQrToken = response.qr_payload?.token ?? state.packageQrToken;
-      if (result) {
-        result.innerHTML = `
-          <div class="feed-item">
-            <strong>${esc(response.package?.reference ?? 'Package registered')}</strong>
-            <div>
-              Tracking link:
-              <a href="${esc(response.tracking_url)}" target="_blank" rel="noopener">
-                ${esc(response.tracking_url)}
-              </a>
-            </div>
-          </div>`;
-      }
+      if (result) result.innerHTML = '';
       render();
     } catch (error) {
       state.error = error.message;

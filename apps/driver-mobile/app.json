@@ -12,7 +12,16 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow Encore Driver to share your location while you are working an assigned trip."
+          "locationWhenInUsePermission": "Allow Encore Driver to share your location while you are working an assigned trip.",
+          "locationAlwaysAndWhenInUsePermission": "Allow Encore Driver to share your location in the background while an assigned trip is active.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Encore Driver to scan package QR codes and capture delivery evidence."
         }
       ]
     ]

@@ -115,9 +115,9 @@ function populateSegmentSelectors(routes) {
     `<option value="">${label}</option>`,
     ...values.map((value) => `<option value="${esc(value)}">${esc(value)}</option>`),
   ].join('');
-  originSelect.innerHTML = renderOptions(origins, 'Select departure point');
+  originSelect.innerHTML = renderOptions(origins, 'Elige el punto de salida');
   const destinations = [...new Set(publishedSegments.map((segment) => segment.destination))].sort();
-  destinationSelect.innerHTML = renderOptions(destinations, 'Select destination point');
+  destinationSelect.innerHTML = renderOptions(destinations, 'Elige el destino');
   originSelect.disabled = origins.length === 0;
   destinationSelect.disabled = destinations.length === 0;
 
@@ -143,19 +143,19 @@ function filterDestinationSelector(origin) {
     .map((segment) => segment.destination))].sort();
   const selected = destinationSelect.value;
   destinationSelect.innerHTML = [
-    '<option value="">Select destination point</option>',
+    '<option value="">Elige el destino</option>',
     ...destinations.map((value) => `<option value="${esc(value)}">${esc(value)}</option>`),
   ].join('');
   if (destinations.includes(selected)) destinationSelect.value = selected;
   destinationSelect.disabled = destinations.length === 0;
 }
 
-function renderMapFallback(message = 'Route map is temporarily unavailable. Please try again.') {
+function renderMapFallback(message = 'El mapa de la ruta no está disponible por el momento. Intenta de nuevo.') {
   if (!routeMapCanvas) return;
   routeMapCanvas.innerHTML = `
     <div class="encore-map-fallback">
       <div>
-        <strong>Route preview unavailable</strong>
+        <strong>Vista de ruta no disponible</strong>
         <span>${esc(message)}</span>
       </div>
     </div>`;
@@ -200,9 +200,9 @@ async function applyPublishedWebsiteContent() {
       final_cta: { section: '.public-final-cta', title: '.public-final-cta h2', subtitle: '.public-final-cta p', button: '.public-final-cta a' },
     };
     const legacyCopy = {
-      tracking: { title: 'Your package, easier to follow.', description: 'Enter your tracking reference to see the latest update recorded for your shipment.', button_label: 'Track my package' },
-      contact: { title: 'Need help planning a trip.', description: 'Need help with a booking? Start with the trip and package tools, or review the answers to common questions.', button_label: 'Visit travel help' },
-      final_cta: { title: 'Find your next trip with Encore Transport.', description: 'Search current departures and continue when you find the trip that works for you.', button_label: 'Book your trip', button_url: '/passenger/' },
+      tracking: { title: 'Tu encomienda, fácil de seguir.', description: 'Escribe tu referencia para consultar la última actualización de tu envío.', button_label: 'Rastrear mi paquete' },
+      contact: { title: '¿Necesitas ayuda para planificar?', description: 'Encuentra la opción correcta para reservar, rastrear un envío o resolver una duda.', button_label: 'Visitar ayuda' },
+      final_cta: { title: 'Encuentra tu próximo viaje.', description: 'Busca una salida disponible y continúa cuando encuentres la opción que te conviene.', button_label: 'Buscar viajes', button_url: '/passenger/' },
     };
     for (const [key, values] of Object.entries(data.sections ?? {})) {
       const target = selectors[key];
@@ -366,12 +366,12 @@ function renderFeatured(trip) {
   if (!card) return;
 
   if (!trip) {
-    card.innerHTML = '<div class="trip-status"><i></i>No scheduled departures are currently available.</div>';
+    card.innerHTML = '<div class="trip-status"><i></i>No hay salidas disponibles en este momento.</div>';
     return;
   }
 
   card.innerHTML = `
-    <div class="trip-status"><i></i>${esc(String(trip.status ?? 'scheduled').replaceAll('_', ' '))}</div>
+    <div class="trip-status"><i></i>${esc({ scheduled: 'Salida programada', boarding: 'Abordaje', in_progress: 'En recorrido', completed: 'Finalizado' }[trip.status] ?? 'Salida disponible')}</div>
     <div class="trip-points">
       <div>
         <small>FROM</small>
@@ -381,7 +381,7 @@ function renderFeatured(trip) {
 
       <div class="trip-track">
         <i></i><b></b>
-        <span>${esc(trip.busCode ?? 'Vehicle assigned')}</span>
+        <span>${esc(trip.busCode ?? 'Vehículo asignado')}</span>
         <b></b><i></i>
       </div>
 
@@ -393,7 +393,7 @@ function renderFeatured(trip) {
     </div>
 
     <div class="trip-card-meta">
-      <span>${Number(trip.availableSeats ?? 0)} seats</span>
+      <span>${Number(trip.availableSeats ?? 0)} asientos</span>
       <span>${Number(trip.durationMinutes ?? 0)} min</span>
       <span>${formatMoney(trip.baseFare)}</span>
     </div>`;
@@ -427,7 +427,7 @@ function renderSeats(seats) {
         <span>This preview is not the assigned vehicle. Choose a departure to see its actual seat plan and live availability.</span>
       </div>`;
 
-    setText('#seatState', 'Illustrative layout · the selected departure shows its own seat plan and live availability.');
+    setText('#seatState', 'La disponibilidad se muestra para la salida seleccionada.');
     return;
   }
 
@@ -445,7 +445,7 @@ function renderSeats(seats) {
           .join('')}
       </div>`;
 
-    setText('#seatState', `${seats.length} seats loaded. Vehicle row positions are not fully configured.`);
+    setText('#seatState', `${seats.length} asientos disponibles. La distribución puede variar según el vehículo.`);
     return;
   }
 
@@ -495,30 +495,30 @@ function renderSeats(seats) {
 
   setText(
     '#seatState',
-    `${available} seats available${accessible ? ` · ${accessible} accessible` : ''}.`,
+    `${available} asientos disponibles${accessible ? ` · ${accessible} accesibles` : ''}.`,
   );
 }
 
 async function loadRoutes() {
-  setText('#routesState', 'Loading current routes…');
+  setText('#routesState', 'Cargando rutas disponibles…');
 
   try {
     const routes = await fetchRoutes();
     populateSegmentSelectors(routes);
 
     setText('#routeCount', routes.length);
-    setText('#serviceStatus', 'Online');
+    setText('#serviceStatus', 'Servicio disponible');
 
     if (!routes.length) {
       if (destinationGrid) destinationGrid.innerHTML = `
         <article class="destination-card">
           <div class="destination-body">
-            <small>Availability</small>
-            <h3>No active routes are currently available.</h3>
+            <small>Disponibilidad</small>
+            <h3>No hay rutas disponibles en este momento.</h3>
           </div>
         </article>`;
 
-      setText('#routesState', 'No active routes are currently available.');
+      setText('#routesState', 'No hay rutas disponibles en este momento.');
       return;
     }
 
@@ -533,31 +533,31 @@ async function loadRoutes() {
         </div>
 
         <div class="destination-body">
-          <small>From ${esc(route.origin ?? '')}</small>
+          <small>Salida desde ${esc(route.origin ?? '')}</small>
           <h3>${esc(route.destination ?? '')}</h3>
-          <p>View current departures and seat availability.</p>
+          <p>Consulta salidas y asientos disponibles.</p>
 
           <div class="destination-meta">
-            <span>${route.distance_km ? `${Number(route.distance_km).toLocaleString('en-US')} km` : 'Distance pending'}</span>
-            <strong>View trips →</strong>
+            <span>${route.distance_km ? `${Number(route.distance_km).toLocaleString('es-DO')} km` : 'Distancia por confirmar'}</span>
+            <strong>Ver salidas →</strong>
           </div>
         </div>
       </a>`).join('');
 
     observeDynamicReveal(destinationGrid);
-    setText('#routesState', `${routes.length} active route${routes.length === 1 ? '' : 's'}.`);
+    setText('#routesState', `${routes.length} ruta${routes.length === 1 ? '' : 's'} disponible${routes.length === 1 ? '' : 's'}.`);
   } catch (error) {
     setText('#routeCount', '—');
-    setText('#serviceStatus', 'Unavailable');
-    setText('#routesState', 'Unable to load routes.');
+    setText('#serviceStatus', 'Información temporalmente no disponible');
+    setText('#routesState', 'No pudimos cargar las rutas.');
 
     if (destinationGrid) destinationGrid.innerHTML = `
       <article class="destination-card">
         <div class="destination-body">
-          <small>Connection issue</small>
-          <h3>Routes could not be loaded.</h3>
-          <p>We could not reach the live route service. Please try again in a moment.</p>
-          <button class="btn btn-secondary btn-with-icon" id="retryRoutes" type="button">${icon('refresh')}Retry</button>
+          <small>Información temporalmente no disponible</small>
+          <h3>No pudimos cargar las rutas.</h3>
+          <p>Intenta de nuevo en unos minutos.</p>
+          <button class="btn btn-secondary btn-with-icon" id="retryRoutes" type="button">${icon('refresh')}Intentar de nuevo</button>
         </div>
       </article>`;
 
@@ -593,6 +593,10 @@ async function loadFeaturedTrip() {
 let liveNetworkTimer = null;
 let liveNetworkObserver = null;
 let liveNetworkStarted = false;
+let liveNetworkFailureCount = 0;
+let liveNetworkScheduleGeneration = 0;
+const LIVE_NETWORK_BASE_DELAY = 25000;
+const LIVE_NETWORK_MAX_DELAY = 120000;
 let latestNetwork = null;
 let selectedNetworkTripId = null;
 
@@ -627,13 +631,13 @@ function renderNetworkSelection() {
   if (list) {
     list.innerHTML = tripsForList.length ? tripsForList.map((trip) => {
       const isLive = !trip.is_stale && Number.isFinite(Number(trip.latitude)) && Number.isFinite(Number(trip.longitude));
-      const timestamp = trip.last_location_at ? new Date(trip.last_location_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'No position recorded';
+      const timestamp = trip.last_location_at ? new Date(trip.last_location_at).toLocaleString('es-DO', { dateStyle: 'medium', timeStyle: 'short' }) : 'Sin señal registrada';
       const selected = String(trip.trip_id) === String(selectedNetworkTripId);
-      return `<article class="public-network-bus${selected ? ' is-selected' : ''}" data-network-bus="${esc(trip.trip_id)}"><div class="public-network-bus__identity"><span class="public-network-bus__icon" aria-hidden="true">${icon('route')}</span><div><strong>${esc(trip.bus_code || 'Encore bus')}</strong><span>${esc(trip.origin || '')} → ${esc(trip.destination || '')}</span></div></div><div class="public-network-bus__meta"><span class="public-network-bus__status${isLive ? ' is-live' : ' is-stale'}"><i></i>${isLive ? 'Sharing location' : 'GPS not current'}</span><small>${esc(timestamp)}</small></div><button type="button" class="btn-with-icon" data-network-trip="${esc(trip.trip_id)}" aria-pressed="${selected}" ${isLive ? '' : 'disabled'}>${icon(isLive ? 'route' : 'info')}${selected ? 'Selected on map' : isLive ? 'Show on map' : 'Location unavailable'}</button></article>`;
-    }).join('') : '<div class="public-network-empty"><strong>No buses are sharing a live location right now.</strong><span>Check again later for current, authorized GPS updates.</span></div>';
+      return `<article class="public-network-bus${selected ? ' is-selected' : ''}" data-network-bus="${esc(trip.trip_id)}"><div class="public-network-bus__identity"><span class="public-network-bus__icon" aria-hidden="true">${icon('route')}</span><div><strong>${esc(trip.bus_code || 'Autobús Encore')}</strong><span>${esc(trip.origin || '')} → ${esc(trip.destination || '')}</span></div></div><div class="public-network-bus__meta"><span class="public-network-bus__status${isLive ? ' is-live' : ' is-stale'}"><i></i>${isLive ? 'Ubicación reciente' : 'Sin señal reciente'}</span><small>${esc(timestamp)}</small></div><button type="button" class="btn-with-icon" data-network-trip="${esc(trip.trip_id)}" aria-pressed="${selected}" ${isLive ? '' : 'disabled'}>${icon(isLive ? 'route' : 'info')}${selected ? 'Visible en el mapa' : isLive ? 'Ver en el mapa' : 'Ubicación no disponible'}</button></article>`;
+    }).join('') : '<div class="public-network-empty"><strong>No hay autobuses compartiendo una ubicación reciente.</strong><span>Vuelve a consultar para ver nuevas actualizaciones.</span></div>';
   }
   void renderLiveNetworkMap(routeMapCanvas, filtered, { selectedTripId: selectedNetworkTripId })
-    .catch((error) => renderMapFallback(`Live map could not be drawn: ${String(error?.message ?? 'map service unavailable')}`));
+    .catch(() => renderMapFallback('El mapa no está disponible por el momento.'));
 }
 
 async function refreshLiveNetwork() {
@@ -644,34 +648,64 @@ async function refreshLiveNetwork() {
     const tripCount = trips.filter((trip) => !trip.is_stale && Number.isFinite(Number(trip.latitude)) && Number.isFinite(Number(trip.longitude))).length;
     const staleCount = trips.length - tripCount;
     const routeCount = Array.isArray(network.routes) ? network.routes.length : 0;
-    setText('#mapStatus', `${tripCount} bus${tripCount === 1 ? '' : 'es'} live${staleCount ? ` · ${staleCount} GPS not current` : ''}`);
+    setText('#mapStatus', `${tripCount} ${tripCount === 1 ? 'autobús' : 'autobuses'} en movimiento${staleCount ? ` · ${staleCount} sin señal reciente` : ''}`);
     const latestLocation = trips.map((trip) => trip.last_location_at).filter(Boolean).sort().at(-1);
-    setText('#mapEta', latestLocation ? new Date(latestLocation).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'No recent GPS');
+    setText('#mapEta', latestLocation ? new Date(latestLocation).toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' }) : 'Sin señal reciente');
     setText('#routeCount', routeCount || '—');
+    liveNetworkFailureCount = 0;
+    return true;
   } catch {
-    setText('#mapStatus', 'Live network unavailable');
-    setText('#mapEta', 'Update unavailable');
+    liveNetworkFailureCount = Math.min(liveNetworkFailureCount + 1, 3);
+    setText('#mapStatus', 'La vista no está disponible');
+    setText('#mapEta', 'Actualización pendiente');
     const list = document.querySelector('#networkBusList');
-    if (list) list.innerHTML = `<div class="public-network-empty"><strong>We could not refresh live vehicle locations.</strong><span>Live markers are cleared until the connection returns.</span><button type="button" class="btn-with-icon" data-network-retry>${icon('refresh')}Try again</button></div>`;
+    if (list) list.innerHTML = `<div class="public-network-empty"><strong>No pudimos actualizar las ubicaciones.</strong><span>La vista se actualizará cuando vuelva la conexión.</span><button type="button" class="btn-with-icon" data-network-retry>${icon('refresh')}Intentar de nuevo</button></div>`;
     if (routeMapCanvas) {
       void renderLiveNetworkMap(routeMapCanvas, { routes: [], trips: [] })
         .catch(() => renderMapFallback('Live vehicle positions are temporarily unavailable.'));
     }
+    return false;
   }
+}
+
+function scheduleLiveNetworkRefresh(delay = null) {
+  if (liveNetworkTimer) window.clearTimeout(liveNetworkTimer);
+  liveNetworkTimer = null;
+  if (document.visibilityState !== 'visible') return;
+
+  const backoffDelay = Math.min(
+    LIVE_NETWORK_MAX_DELAY,
+    LIVE_NETWORK_BASE_DELAY * (2 ** liveNetworkFailureCount),
+  );
+  const wait = delay == null ? backoffDelay : delay;
+  const generation = ++liveNetworkScheduleGeneration;
+  liveNetworkTimer = window.setTimeout(async () => {
+    if (generation !== liveNetworkScheduleGeneration) return;
+    await refreshLiveNetwork();
+    scheduleLiveNetworkRefresh();
+  }, wait);
 }
 
 function startLiveNetwork() {
   if (liveNetworkStarted) return;
   liveNetworkStarted = true;
-  void refreshLiveNetwork();
-  const schedule = () => {
-    if (liveNetworkTimer) window.clearInterval(liveNetworkTimer);
-    liveNetworkTimer = document.visibilityState === 'visible'
-      ? window.setInterval(refreshLiveNetwork, 25000)
-      : null;
+  void refreshLiveNetwork().finally(() => scheduleLiveNetworkRefresh(LIVE_NETWORK_BASE_DELAY));
+  const rescheduleForVisibility = () => {
+    if (document.visibilityState === 'visible') scheduleLiveNetworkRefresh(0);
+    else if (liveNetworkTimer) {
+      window.clearTimeout(liveNetworkTimer);
+      liveNetworkTimer = null;
+      liveNetworkScheduleGeneration += 1;
+    }
   };
-  schedule();
-  document.addEventListener('visibilitychange', schedule, { passive: true });
+  document.addEventListener('visibilitychange', rescheduleForVisibility, { passive: true });
+  window.addEventListener('online', () => scheduleLiveNetworkRefresh(0), { passive: true });
+  window.addEventListener('pagehide', () => {
+    if (liveNetworkTimer) window.clearTimeout(liveNetworkTimer);
+    liveNetworkTimer = null;
+    liveNetworkScheduleGeneration += 1;
+    liveNetworkObserver?.disconnect();
+  }, { once: true, passive: true });
 }
 
 function initializeLiveNetwork() {
@@ -713,7 +747,7 @@ async function initializePublicSession() {
     mobileTrips?.setAttribute('hidden', '');
     mobileAccount?.removeAttribute('hidden');
     account.href = '/login/?return=/passenger/';
-    account.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg><span>Sign in</span>';
+    account.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg><span>Iniciar sesión</span>';
   };
   if (!token) { setSignedOut(); return; }
   const applyUser = (user) => {
@@ -776,24 +810,24 @@ bookingForm?.addEventListener('submit', (event) => {
   const submit = bookingForm.querySelector('button[type="submit"]');
 
   if (!origin || !destination) {
-    setText('#searchMessage', 'Origin and destination are required.');
+    setText('#searchMessage', 'Elige origen y destino para continuar.');
     return;
   }
 
   if (!publishedSegments.some((segment) => segment.origin === origin && segment.destination === destination)) {
-    setText('#searchMessage', 'Select a published route segment from the available route data.');
+    setText('#searchMessage', 'Elige una ruta disponible para continuar.');
     return;
   }
 
   if (origin.localeCompare(destination, undefined, { sensitivity: 'accent' }) === 0) {
-    setText('#searchMessage', 'Origin and destination must be different.');
+    setText('#searchMessage', 'El origen y el destino deben ser diferentes.');
     return;
   }
 
   if (submit) {
     submit.disabled = true;
     submit.setAttribute('aria-busy', 'true');
-    submit.lastChild.textContent = 'Opening trips…';
+    submit.lastChild.textContent = 'Abriendo salidas…';
   }
   rememberSearch({ origin, destination, date, passengers });
 
@@ -837,7 +871,7 @@ recentSearches?.addEventListener('click', (event) => {
     if (destination) destination.value = saved.destination;
     if (date && saved.date) date.value = saved.date;
     if (passengers && saved.passengers) passengers.value = saved.passengers;
-    setText('#searchMessage', 'Search restored. Review the details and find trips.');
+    setText('#searchMessage', 'Búsqueda recuperada. Revisa los datos y encuentra tu salida.');
   } catch {}
 });
 
@@ -849,5 +883,5 @@ initializeBusinessFooter();
 void initializePublicSession();
 initializeLiveNetwork();
 void applyPublishedWebsiteContent();
-void health().then(() => setText('#serviceStatus', 'Online')).catch(() => setText('#serviceStatus', 'Unavailable'));
+void health().then(() => setText('#serviceStatus', 'Servicio disponible')).catch(() => setText('#serviceStatus', 'Información temporalmente no disponible'));
 void Promise.allSettled([loadRoutes(), loadFeaturedTrip()]);

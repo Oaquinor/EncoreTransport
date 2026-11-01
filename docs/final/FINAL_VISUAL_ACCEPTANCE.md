@@ -18,4 +18,4 @@ El flujo Admin autenticado focalizado también pasó a 1440 px, cubriendo CMS, e
 
 `PARTIAL`: la revisión visual automatizada pasa, pero no se declara aceptación de lanzamiento mientras no existan pruebas en dispositivos reales, E2E autenticado configurado y proveedores externos disponibles.
 
-La reorganización del sidebar Admin fue aplicada después de la captura de línea base. La nueva captura autenticada quedó bloqueada porque el entorno local respondió `422 Invalid credentials` para el usuario demo; no se considera aceptada visualmente hasta repetirla con credenciales autorizadas.
+La reorganización del sidebar Admin fue aplicada después de la captura de línea base. La captura autenticada posterior pasó a 1440 px contra Laravel local sembrado con credenciales autorizadas. La aceptación visual móvil nativa y la cobertura por rol siguen pendientes.

@@ -52,6 +52,20 @@ class WebsiteContentAndRouteImageTest extends TestCase
         ])->assertUnprocessable();
     }
 
+    public function test_public_website_copy_rejects_internal_terms(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+        $this->withToken($this->tokenFor($admin))->putJson('/api/v1/admin/website-content/publish', [
+            'sections' => ['hero' => ['title' => 'Reserva desde el backend']],
+            'faqs' => [],
+        ])->assertUnprocessable()->assertJsonValidationErrors(['sections.hero.title']);
+
+        $this->withToken($this->tokenFor($admin))->putJson('/api/v1/admin/website-content/publish', [
+            'sections' => ['hero' => ['title' => 'Viaja con confianza']],
+            'faqs' => [['question' => '¿Dónde está mi boleto?', 'answer' => 'Entra a Mis viajes para consultarlo.']],
+        ])->assertOk();
+    }
+
     public function test_route_image_upload_is_persisted_and_visible_in_public_resource(): void
     {
         $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();

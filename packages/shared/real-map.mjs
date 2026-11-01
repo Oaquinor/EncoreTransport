@@ -52,6 +52,7 @@ function ensureSharedStyles() {
     .encore-map-marker span{font-size:13px;font-weight:900;transform:rotate(45deg)}
     .encore-map-marker--destination{background:#1f9d74}
     .encore-map-marker--vehicle{background:#2da9df;border-radius:50%;transform:none}
+    .encore-map-marker--vehicle-stale{background:#8397a3;border-radius:50%;transform:none;opacity:.82}
     .encore-map-marker--vehicle span{transform:none}
     .encore-map-fallback{box-sizing:border-box;width:100%;height:100%;min-height:inherit;display:grid;place-items:center;padding:24px;text-align:center;background:linear-gradient(145deg,#dbeef5,#f4f9fb);color:#536c7c}
     .encore-map-fallback strong{display:block;color:#102130;margin-bottom:6px}
@@ -322,12 +323,53 @@ function clearRuntimeStatus(container) {
   container.querySelector('.encore-map-runtime-status')?.remove();
 }
 
+function stopLiveMarkerAnimations(state) {
+  for (const frame of state?.vehicleAnimations?.values?.() ?? []) {
+    cancelAnimationFrame(frame);
+  }
+  state?.vehicleAnimations?.clear?.();
+}
+
+function animateLiveMarker(state, key, marker, from, to) {
+  const existingFrame = state.vehicleAnimations.get(key);
+  if (existingFrame != null) cancelAnimationFrame(existingFrame);
+
+  const distance = Math.abs(from[0] - to[0]) + Math.abs(from[1] - to[1]);
+  if (distance < 0.000001) {
+    marker.setLatLng(to);
+    state.vehicleAnimations.delete(key);
+    return;
+  }
+
+  const startedAt = performance.now();
+  const duration = 900;
+  const step = (now) => {
+    const progress = Math.min(1, (now - startedAt) / duration);
+    const eased = progress < 0.5
+      ? 2 * progress * progress
+      : 1 - ((-2 * progress + 2) ** 2) / 2;
+    marker.setLatLng([
+      from[0] + (to[0] - from[0]) * eased,
+      from[1] + (to[1] - from[1]) * eased,
+    ]);
+    if (progress < 1 && state.vehicleMarkers.get(key) === marker) {
+      state.vehicleAnimations.set(key, requestAnimationFrame(step));
+    } else {
+      state.vehicleAnimations.delete(key);
+    }
+  };
+
+  state.vehicleAnimations.set(key, requestAnimationFrame(step));
+}
+
 export function destroyRealMap(container) {
   if (!container) return;
 
   liveMapRequests.set(container, (liveMapRequests.get(container) ?? 0) + 1);
 
   const existing = mapRegistry.get(container);
+
+  stopLiveMarkerAnimations(liveMapRegistry.get(container));
 
   if (existing) {
     existing.remove();
@@ -577,7 +619,13 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
     const tileLayer = L.tileLayer(tileLayerUrl(), tileLayerOptions).addTo(map);
     tileLayer.on('tileerror', () => runtimeStatus(container, 'Map tiles unavailable.', 'Live vehicle data will continue updating when the map service recovers.'));
     tileLayer.on('load', () => clearRuntimeStatus(container));
-    state = { map, vehicleMarkers: new Map(), nodeMarkers: new Map() };
+    state = {
+      map,
+      vehicleMarkers: new Map(),
+      nodeMarkers: new Map(),
+      vehiclePositions: new Map(),
+      vehicleAnimations: new Map(),
+    };
     liveMapRegistry.set(container, state);
     mapRegistry.set(container, map);
   }
@@ -612,18 +660,29 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
     if (!validCoordinate(trip)) continue;
     const key = String(trip.trip_id);
     seen.add(key);
-    const popup = `<strong>${escapePopup(trip.bus_code || 'Encore bus')}</strong><br>${escapePopup(trip.origin || '')} → ${escapePopup(trip.destination || '')}<br>Status: ${escapePopup(trip.status || '')}<br>Updated: ${escapePopup(trip.last_location_at || '—')}`;
+    const gpsState = trip.is_stale ? 'GPS not current' : 'GPS current';
+    const popup = `<strong>${escapePopup(trip.bus_code || 'Encore bus')}</strong><br>${escapePopup(trip.origin || '')} → ${escapePopup(trip.destination || '')}<br>Status: ${escapePopup(trip.status || '')}<br>${gpsState}<br>Updated: ${escapePopup(trip.last_location_at || '—')}`;
     const coordinates = [Number(trip.latitude), Number(trip.longitude)];
     let marker = state.vehicleMarkers.get(key);
     if (!marker) {
       marker = L.marker(coordinates, {
-        icon: markerIcon(L, 'vehicle', '🚌'),
+        icon: markerIcon(L, trip.is_stale ? 'vehicle-stale' : 'vehicle', '•'),
         title: trip.bus_code || 'Encore bus',
       }).addTo(state.map);
       state.vehicleMarkers.set(key, marker);
+      state.vehiclePositions.set(key, coordinates);
     } else {
-      marker.setLatLng(coordinates);
+      const current = marker.getLatLng?.();
+      animateLiveMarker(
+        state,
+        key,
+        marker,
+        current ? [current.lat, current.lng] : (state.vehiclePositions.get(key) ?? coordinates),
+        coordinates,
+      );
+      state.vehiclePositions.set(key, coordinates);
     }
+    if (marker.setIcon) marker.setIcon(markerIcon(L, trip.is_stale ? 'vehicle-stale' : 'vehicle', '•'));
     marker.setPopupContent?.(popup);
     if (!marker.getPopup()) marker.bindPopup(popup);
     else marker.getPopup().setContent(popup);
@@ -633,6 +692,10 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
     if (!seen.has(key)) {
       marker.remove();
       state.vehicleMarkers.delete(key);
+      state.vehiclePositions.delete(key);
+      const frame = state.vehicleAnimations.get(key);
+      if (frame != null) cancelAnimationFrame(frame);
+      state.vehicleAnimations.delete(key);
     }
   }
 

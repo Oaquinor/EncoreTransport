@@ -51,3 +51,9 @@ Desktop usa dos columnas; tablet apila tarjetas manteniendo densidad intermedia;
 ## Estados
 
 Implementados: vacío, con datos, foto seleccionada, zoom, guardado, error de archivo, confirmación destructiva, dispositivo no disponible y cierre de sesión. No se inventan preferencias, dispositivos, actividad ni notificaciones sin endpoints reales.
+
+## Live y móvil operativo
+
+Encore Live usa posiciones recibidas del backend, polling adaptativo con recuperación al volver online o visible, interpolación breve entre puntos recientes y marcador stale cuando el GPS queda obsoleto. Las animaciones se cancelan al desmontar para no dejar timers ni frames activos; WebSocket/SSE queda fuera hasta que exista un contrato autenticado.
+
+Driver Mobile incorpora cámara QR, captura de evidencia privada, verificación explícita del destinatario y GPS foreground/background con permisos nativos. Passenger Mobile falla de forma segura cuando no hay red para no crear reservas o pagos locales ficticios. Estas capacidades requieren aceptación en emulador o dispositivo real antes de producción.

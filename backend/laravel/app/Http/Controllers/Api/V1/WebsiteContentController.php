@@ -13,6 +13,7 @@ class WebsiteContentController extends Controller
 {
     private const SECTIONS = ['hero', 'tracking', 'routes', 'faq', 'about', 'contact', 'final_cta'];
     private const FIELDS = ['title', 'subtitle', 'description', 'button_label', 'button_url', 'image_url', 'image_path', 'enabled', 'order'];
+    private const INTERNAL_COPY_PATTERN = '/\\b(backend|frontend|endpoint|api|arquitectura|architecture|implementaci[oó]n|par[aá]metros?|contratos?|passenger)\\b/i';
 
     public function published()
     {
@@ -121,6 +122,7 @@ class WebsiteContentController extends Controller
         }
         foreach ($data['sections'] as $key => $fields) {
             $data['sections'][$key] = array_intersect_key($fields, array_flip(self::FIELDS));
+            $this->rejectInternalCopy($data['sections'][$key], "sections.$key");
             foreach (['button_url', 'image_url'] as $urlField) {
                 $url = $data['sections'][$key][$urlField] ?? null;
                 $localPath = $url && str_starts_with($url, '/') && !str_starts_with($url, '//');
@@ -136,7 +138,22 @@ class WebsiteContentController extends Controller
         $data['faqs'] = array_values(array_map(fn ($faq) => [
             'question' => $faq['question'], 'answer' => $faq['answer'], 'enabled' => (bool) ($faq['enabled'] ?? true),
         ], $data['faqs'] ?? []));
+        foreach ($data['faqs'] as $index => $faq) {
+            $this->rejectInternalCopy($faq, "faqs.$index");
+        }
         return $data;
+    }
+
+    private function rejectInternalCopy(array $fields, string $path): void
+    {
+        foreach (['title', 'subtitle', 'description', 'button_label', 'question', 'answer'] as $field) {
+            $value = $fields[$field] ?? null;
+            if (is_string($value) && preg_match(self::INTERNAL_COPY_PATTERN, $value)) {
+                throw ValidationException::withMessages([
+                    "$path.$field" => 'Usa lenguaje orientado al cliente; no incluyas nombres internos ni términos técnicos.',
+                ]);
+            }
+        }
     }
 
     private function store(string $key, array $value): void

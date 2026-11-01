@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   FlatList,
   Linking,
   SafeAreaView,
@@ -13,6 +14,7 @@ import {
 } from 'react-native';
 import MapView, { Marker, Polyline, UrlTile } from 'react-native-maps';
 import * as SecureStore from 'expo-secure-store';
+import * as Network from 'expo-network';
 import { formatCurrency } from '@encore/domain';
 import { requestJson } from '@encore/api-client';
 
@@ -133,9 +135,23 @@ export default function App() {
   const [ticket, setTicket] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [networkState, setNetworkState] = useState<Network.NetworkState | null>(null);
 
   useEffect(() => {
     void request('/routes').then((payload) => setRoutes(payload.data ?? payload ?? [])).catch(() => setError('No se pudieron cargar las rutas.'));
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const refreshNetwork = async () => {
+      const next = await Network.getNetworkStateAsync().catch(() => null);
+      if (mounted && next) setNetworkState(next);
+    };
+    void refreshNetwork();
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') void refreshNetwork();
+    });
+    return () => { mounted = false; subscription.remove(); };
   }, []);
 
   useEffect(() => {
@@ -168,7 +184,18 @@ export default function App() {
     [seats, selected],
   );
 
+  const ensureOnline = async () => {
+    const next = await Network.getNetworkStateAsync().catch(() => null);
+    if (next) setNetworkState(next);
+    if (next?.isConnected === false || next?.isInternetReachable === false) {
+      setError('Sin conexión. La búsqueda y el pago requieren comunicación con Encore; no se creó ninguna operación local.');
+      return false;
+    }
+    return true;
+  };
+
   const search = async () => {
+    if (!(await ensureOnline())) return;
     setLoading(true);
     setError('');
     setHasSearched(true);
@@ -249,6 +276,7 @@ export default function App() {
 
   const createBooking = async () => {
     if (!trip || selected.length !== passengerCount || passengers.some((passenger) => !passenger.full_name.trim())) return;
+    if (!(await ensureOnline())) return;
 
     setLoading(true);
     setError('');
@@ -323,6 +351,7 @@ export default function App() {
 
   const initiateBookingPayment = async () => {
     if (!booking?.id || !token || booking.status !== 'pending_payment') return;
+    if (!(await ensureOnline())) return;
     setLoading(true);
     setError('');
     try {
@@ -417,6 +446,8 @@ export default function App() {
           </View>
           {!!token && <TouchableOpacity onPress={openBookings}><Text style={styles.link}>Mis reservas</Text></TouchableOpacity>}
         </View>
+
+        {networkState && (networkState.isConnected === false || networkState.isInternetReachable === false) && <Text style={styles.offlineNotice}>Sin conexión · Las operaciones críticas esperan a que vuelva Internet.</Text>}
 
         <ScrollView contentContainerStyle={styles.wrap}>
           <Text style={styles.eyebrow}>BUSCA TU VIAJE</Text>
@@ -886,6 +917,18 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 14,
     fontWeight: '700',
+    fontSize: 13,
+  },
+  offlineNotice: {
+    marginHorizontal: 20,
+    marginBottom: 6,
+    color: '#ffd38a',
+    backgroundColor: 'rgba(211, 154, 59, 0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(211, 154, 59, 0.34)',
+    borderRadius: 14,
+    padding: 12,
+    fontWeight: '800',
     fontSize: 13,
   },
   card: {

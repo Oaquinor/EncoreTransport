@@ -13,9 +13,13 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Image,
 } from 'react-native';
 
 import * as Location from 'expo-location';
+import * as SecureStore from 'expo-secure-store';
+import * as TaskManager from 'expo-task-manager';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { requestJson } from '@encore/api-client';
 
 import MapView, {
@@ -33,6 +37,9 @@ const API_ORIGIN =
 
 const TILE_TEMPLATE =
   `${API_ORIGIN}/api/v1/maps/tiles/{z}/{x}/{y}.png?style=street-light`;
+const AUTH_TOKEN_KEY = 'encore_driver_api_token';
+const ACTIVE_TRIP_KEY = 'encore_driver_active_trip';
+const BACKGROUND_LOCATION_TASK = 'encore-driver-background-location';
 
 async function rawRequest(
   path: string,
@@ -41,6 +48,27 @@ async function rawRequest(
 ) {
   return requestJson<any>(API, path, options, { token });
 }
+
+TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async (taskData) => {
+  if (taskData.error) return;
+  const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+  const tripId = await SecureStore.getItemAsync(ACTIVE_TRIP_KEY);
+  const locations = (taskData.data as { locations?: Location.LocationObject[] } | undefined)?.locations ?? [];
+  const location = locations.at(-1);
+  if (!token || !tripId || !location) return;
+
+  await rawRequest('/driver/locations', {
+    method: 'POST',
+    body: JSON.stringify({
+      trip_id: Number(tripId),
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      heading: Number.isFinite(location.coords.heading ?? NaN) && Number(location.coords.heading) >= 0 ? Number(location.coords.heading) : null,
+      speed_kph: Number.isFinite(location.coords.speed ?? NaN) && Number(location.coords.speed) >= 0 ? Number(location.coords.speed) * 3.6 : null,
+      recorded_at: new Date(location.timestamp).toISOString(),
+    }),
+  }, token);
+});
 
 function validCoordinate(value: unknown) {
   const number = Number(value);
@@ -89,8 +117,14 @@ export default function App() {
 
   const [loading, setLoading] = useState(false);
   const [tracking, setTracking] = useState(false);
+  const [backgroundTracking, setBackgroundTracking] = useState(false);
   const [locationMessage, setLocationMessage] = useState('');
   const [error, setError] = useState('');
+  const [cameraMode, setCameraMode] = useState<'qr' | 'delivery' | null>(null);
+  const [deliveryPhotoUri, setDeliveryPhotoUri] = useState('');
+  const [recipientVerified, setRecipientVerified] = useState(false);
+  const cameraRef = useRef<CameraView | null>(null);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
   const locationSubscription =
     useRef<Location.LocationSubscription | null>(null);
@@ -108,6 +142,10 @@ export default function App() {
   const stopLocationTracking = () => {
     locationSubscription.current?.remove();
     locationSubscription.current = null;
+    void Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK)
+      .then((started) => started ? Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK) : null)
+      .catch(() => {});
+    setBackgroundTracking(false);
     setTracking(false);
   };
 
@@ -199,6 +237,7 @@ export default function App() {
 
       const activeToken = auth.token;
       setToken(activeToken);
+      await SecureStore.setItemAsync(AUTH_TOKEN_KEY, activeToken);
 
       const [
         driverPayload,
@@ -227,6 +266,8 @@ export default function App() {
         tripPayload.data ??
         null,
       );
+      if (tripPayload.data?.id) await SecureStore.setItemAsync(ACTIVE_TRIP_KEY, String(tripPayload.data.id));
+      else await SecureStore.deleteItemAsync(ACTIVE_TRIP_KEY);
       setSchedule(
         schedulePayload.data ??
         [],
@@ -268,6 +309,8 @@ export default function App() {
         null;
 
       setTrip(activeTrip);
+      if (activeTrip?.id) await SecureStore.setItemAsync(ACTIVE_TRIP_KEY, String(activeTrip.id));
+      else await SecureStore.deleteItemAsync(ACTIVE_TRIP_KEY);
 
       setSchedule(
         schedulePayload.data ??
@@ -533,10 +576,29 @@ export default function App() {
       locationSubscription.current =
         subscription;
 
+      const backgroundPermission = await Location.requestBackgroundPermissionsAsync();
+      if (backgroundPermission.status === Location.PermissionStatus.GRANTED) {
+        await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
+          accuracy: Location.Accuracy.BestForNavigation,
+          timeInterval: 10000,
+          distanceInterval: 25,
+          pausesUpdatesAutomatically: false,
+          showsBackgroundLocationIndicator: true,
+          foregroundService: {
+            notificationTitle: 'Encore Driver GPS activo',
+            notificationBody: 'Encore está compartiendo la ubicación del viaje activo.',
+            notificationColor: '#168dcc',
+          },
+        });
+        setBackgroundTracking(true);
+      }
+
       setTracking(true);
 
       setLocationMessage(
-        'El GPS en vivo está activo mientras la aplicación permanece abierta en primer plano.',
+        backgroundPermission.status === Location.PermissionStatus.GRANTED
+          ? 'GPS foreground y background activos para el viaje actual.'
+          : 'GPS foreground activo. El permiso background no fue concedido; no se enviará ubicación con la app cerrada.',
       );
     } catch (caught) {
       setLocationMessage('');
@@ -558,9 +620,53 @@ export default function App() {
     } catch (caught) { setError(userFacingError(caught, 'No se pudo registrar la encomienda.')); }
   };
 
-  const scanPackage = async () => {
-    if (!packageQrToken.trim()) return;
-    try { const payload = await request('/driver/packages/scan', { method: 'POST', body: JSON.stringify({ qr_token: packageQrToken.trim() }) }); setSelectedPackage(payload.data ?? payload); setCustodyMessage('Custodia consultada desde el backend.'); } catch (caught) { setError(userFacingError(caught, 'No se pudo escanear el QR de la encomienda.')); }
+  const scanPackage = async (tokenOverride = packageQrToken) => {
+    if (!tokenOverride.trim()) return;
+    try { const payload = await request('/driver/packages/scan', { method: 'POST', body: JSON.stringify({ qr_token: tokenOverride.trim() }) }); setSelectedPackage(payload.data ?? payload); setCustodyMessage('Custodia consultada desde el backend.'); } catch (caught) { setError(userFacingError(caught, 'No se pudo escanear el QR de la encomienda.')); }
+  };
+
+  const openCamera = async (mode: 'qr' | 'delivery') => {
+    const permission = cameraPermission?.granted ? cameraPermission : await requestCameraPermission();
+    if (!permission.granted) {
+      setError('Se necesita permiso de cámara para escanear QR o capturar evidencia.');
+      return;
+    }
+    setError('');
+    setCameraMode(mode);
+  };
+
+  const handleBarcodeScanned = ({ data }: { data: string }) => {
+    if (cameraMode !== 'qr' || !data) return;
+    setPackageQrToken(data);
+    setCameraMode(null);
+    void scanPackage(data);
+  };
+
+  const captureDeliveryPhoto = async () => {
+    const picture = await cameraRef.current?.takePictureAsync({ quality: 0.7, skipProcessing: true });
+    if (picture?.uri) {
+      setDeliveryPhotoUri(picture.uri);
+      setCameraMode(null);
+      setCustodyMessage('Evidencia fotográfica preparada para la validación de entrega.');
+    }
+  };
+
+  const deliverPackage = async () => {
+    if (!selectedPackage?.id || !deliveryPhotoUri || !recipientVerified) {
+      setError('La entrega requiere verificar al destinatario y capturar una fotografía privada.');
+      return;
+    }
+    try {
+      const form = new FormData();
+      form.append('status', 'delivered');
+      form.append('recipient_verified', '1');
+      form.append('delivery_photo', { uri: deliveryPhotoUri, name: 'delivery-evidence.jpg', type: 'image/jpeg' } as any);
+      const payload = await request(`/driver/packages/${selectedPackage.id}/status`, { method: 'POST', body: form as any });
+      setSelectedPackage(payload.data ?? payload);
+      setCustodyMessage('Entrega validada por el backend con evidencia privada.');
+    } catch (caught) {
+      setError(userFacingError(caught, 'El backend rechazó la entrega o la evidencia.'));
+    }
   };
 
   const advancePackage = async (status: string) => {
@@ -647,6 +753,26 @@ export default function App() {
               {error}
             </Text>
           )}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (cameraMode) {
+    return (
+      <SafeAreaView style={styles.cameraScreen}>
+        <CameraView
+          ref={cameraRef}
+          style={StyleSheet.absoluteFill}
+          facing="back"
+          onBarcodeScanned={cameraMode === 'qr' ? handleBarcodeScanned : undefined}
+          barcodeScannerSettings={cameraMode === 'qr' ? { barcodeTypes: ['qr'] } : undefined}
+        />
+        <View style={styles.cameraOverlay}>
+          <Text style={styles.cameraTitle}>{cameraMode === 'qr' ? 'Escanear QR de encomienda' : 'Capturar evidencia de entrega'}</Text>
+          <Text style={styles.cameraCopy}>{cameraMode === 'qr' ? 'Apunta al QR opaco del paquete.' : 'La fotografía se enviará de forma privada al validar la entrega.'}</Text>
+          {cameraMode === 'delivery' && <TouchableOpacity style={styles.button} onPress={captureDeliveryPhoto}><Text style={styles.buttonText}>Capturar fotografía</Text></TouchableOpacity>}
+          <TouchableOpacity style={styles.secondaryButton} onPress={() => setCameraMode(null)}><Text style={styles.secondaryButtonText}>Cancelar</Text></TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -851,6 +977,7 @@ export default function App() {
               <Text style={styles.copy}>
                 La ubicación se comparte solo después de conceder el permiso del dispositivo y mientras el viaje asignado esté en abordaje o en curso.
               </Text>
+              <Text style={styles.status}>{backgroundTracking ? 'Background GPS activo' : tracking ? 'Foreground GPS activo' : 'GPS detenido'}</Text>
 
               {!!locationMessage && (
                 <Text style={styles.locationMessage}>
@@ -946,7 +1073,11 @@ export default function App() {
               <TextInput style={styles.input} placeholder="Descripción" value={packageDescription} onChangeText={setPackageDescription} />
               <TouchableOpacity style={styles.secondaryButton} onPress={registerPackage}><Text style={styles.secondaryButtonText}>Registrar encomienda</Text></TouchableOpacity>
               <TextInput style={styles.input} placeholder="Token QR opaco" value={packageQrToken} onChangeText={setPackageQrToken} autoCapitalize="none" />
-              <View style={styles.gpsButtons}><TouchableOpacity style={styles.secondaryButton} onPress={scanPackage}><Text style={styles.secondaryButtonText}>Escanear / consultar</Text></TouchableOpacity><TouchableOpacity style={styles.secondaryButton} onPress={() => advancePackage('in_progress')} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Cargar</Text></TouchableOpacity><TouchableOpacity style={styles.secondaryButton} onPress={() => advancePackage('delivered')} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Validar entrega</Text></TouchableOpacity></View>
+              <View style={styles.gpsButtons}><TouchableOpacity style={styles.secondaryButton} onPress={() => openCamera('qr')}><Text style={styles.secondaryButtonText}>Escanear QR</Text></TouchableOpacity><TouchableOpacity style={styles.secondaryButton} onPress={() => scanPackage()}><Text style={styles.secondaryButtonText}>Consultar token</Text></TouchableOpacity><TouchableOpacity style={styles.secondaryButton} onPress={() => advancePackage('in_progress')} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Cargar</Text></TouchableOpacity></View>
+              <TouchableOpacity style={styles.secondaryButton} onPress={() => openCamera('delivery')} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Tomar evidencia de entrega</Text></TouchableOpacity>
+              {deliveryPhotoUri ? <Image source={{ uri: deliveryPhotoUri }} style={styles.evidencePreview} /> : null}
+              <TouchableOpacity style={[styles.secondaryButton, recipientVerified && styles.selectedButton]} onPress={() => setRecipientVerified((value) => !value)} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>{recipientVerified ? 'Destinatario verificado' : 'Verificar destinatario'}</Text></TouchableOpacity>
+              <TouchableOpacity style={styles.secondaryButton} onPress={deliverPackage} disabled={!selectedPackage || !deliveryPhotoUri || !recipientVerified}><Text style={styles.secondaryButtonText}>Validar entrega</Text></TouchableOpacity>
               {selectedPackage && <Text style={styles.status}>Paquete {selectedPackage.reference ?? selectedPackage.public_id} · {statusLabel(selectedPackage.status)}</Text>}
               <TouchableOpacity style={styles.secondaryButton} onPress={createManifestForPackage} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Crear manifiesto</Text></TouchableOpacity>
               {manifest && <><Text style={styles.status}>Manifiesto {manifest.reference} · {manifest.scanned_count ?? 0}/{manifest.expected_count ?? 0} · {statusLabel(manifest.status)}</Text><TouchableOpacity style={styles.secondaryButton} onPress={reconcileManifest}><Text style={styles.secondaryButtonText}>Consultar y reconciliar manifiesto</Text></TouchableOpacity></>}
@@ -1025,6 +1156,8 @@ export default function App() {
           style={styles.secondaryButton}
           onPress={() => {
             stopLocationTracking();
+            void SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
+            void SecureStore.deleteItemAsync(ACTIVE_TRIP_KEY);
             setToken('');
             setDriver(null);
             setTrip(null);
@@ -1259,5 +1392,37 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  cameraScreen: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  cameraOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    gap: 12,
+    padding: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.22)',
+  },
+  cameraTitle: {
+    color: '#ffffff',
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  cameraCopy: {
+    color: '#e5f4fa',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  evidencePreview: {
+    width: 96,
+    height: 96,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  selectedButton: {
+    borderColor: '#34d399',
+    backgroundColor: 'rgba(31, 157, 116, 0.22)',
   },
 });

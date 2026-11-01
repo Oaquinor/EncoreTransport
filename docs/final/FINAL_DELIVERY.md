@@ -10,11 +10,11 @@ El alcance funcional auditado está parcialmente implementado. Las áreas críti
 
 Completadas: disponibilidad por tramo, reservas concurrentes, bloqueos, conflictos de viajes, permisos, perfil/foto, directorio de cuentas con búsqueda server-side y paginación, ficha administrativa con pestañas y endpoints autorizados, registro y tracking por token de paquetes, transacciones de custodia inicial, evidencia privada de entrega, consulta/historial/transiciones administrativas de boletos y notificaciones internas.
 
-Parciales o pendientes: evidencia nativa de entrega desde cámara/fotos, terminal/vehículo/ubicación por evento, proveedor de pagos, preferencias por canal, dashboard E2E completo, pruebas en dispositivos y cobertura completa de autorización operativa de encomiendas.
+Parciales o pendientes: aceptación en dispositivo de la evidencia nativa de entrega y GPS background, terminal/vehículo/ubicación por evento, proveedor de pagos, preferencias por canal, dashboard E2E por rol y cobertura completa de autorización operativa de encomiendas.
 
 ## C. Aplicaciones
 
-Website y Passenger cargan y pasan contratos frontend; Admin tiene perfil y notificaciones conectadas; Driver tiene GPS foreground; Auth y Package Register mantienen sus rutas; Mobile requiere validación en dispositivo.
+Website y Passenger cargan y pasan contratos frontend; Admin tiene perfil, navegación por dominios y notificaciones conectadas; Driver PWA tiene GPS foreground y Driver Mobile incorpora GPS background, QR y evidencia; Auth y Package Register mantienen sus rutas; Mobile requiere validación en dispositivo.
 
 ## D. Código
 
@@ -38,7 +38,7 @@ No activar producción hasta completar custodia de paquetes, credenciales extern
 
 ## I. Preparación
 
-`PARTIALLY_COMPLETE`: apto para revisión técnica local, no autorizado todavía como producción. La reorganización premium del sidebar Admin está implementada y documentada, pero su captura browser posterior queda pendiente.
+`PARTIALLY_COMPLETE`: apto para revisión técnica local, no autorizado todavía como producción. La reorganización premium del sidebar Admin tiene captura browser autenticada posterior; los dispositivos e integraciones externas siguen bloqueando el lanzamiento.
 
 ## J. Conclusión
 

@@ -100,7 +100,28 @@ function resolveVendorPath(rootDirectory, pathname) {
   return relativePath ? safeJoin(rootDirectory, relativePath) : null;
 }
 
-async function serveFile(response, filePath, request) {
+function normalizePublicSiteUrl(value) {
+  if (!value) return '';
+  try {
+    const url = new URL(value);
+    if (!['http:', 'https:'].includes(url.protocol)) return '';
+    if (['localhost', '127.0.0.1', '::1'].includes(url.hostname)) return '';
+    return url.origin + url.pathname.replace(/\/+$/, '');
+  } catch {
+    return '';
+  }
+}
+
+function applyPublicSeoOrigin(filePath, contents, publicSiteUrl) {
+  if (!publicSiteUrl || !filePath.includes(path.join('apps', 'website'))) return contents;
+  const source = contents.toString('utf8');
+  const rewritten = source
+    .replace(/(rel="canonical"\s+href=")\/([^"]*)/i, `$1${publicSiteUrl}/$2`)
+    .replace(/(property="og:url"\s+content=")\/([^"]*)/i, `$1${publicSiteUrl}/$2`);
+  return Buffer.from(rewritten, 'utf8');
+}
+
+async function serveFile(response, filePath, request, publicSiteUrl = '') {
   if (!filePath) {
     response.writeHead(404, {
       'Content-Type': 'text/plain; charset=utf-8',
@@ -113,11 +134,11 @@ async function serveFile(response, filePath, request) {
   try {
     const fileStat = await stat(filePath);
     if (fileStat.isDirectory()) {
-      return serveFile(response, path.join(filePath, 'index.html'), request);
+      return serveFile(response, path.join(filePath, 'index.html'), request, publicSiteUrl);
     }
 
     const extension = path.extname(filePath).toLowerCase();
-    const fileContents = await readFile(filePath);
+    const fileContents = applyPublicSeoOrigin(filePath, await readFile(filePath), publicSiteUrl);
     const etag = `"${createHash('sha1').update(fileContents).digest('hex')}"`;
     if (request?.headers?.['if-none-match'] === etag) {
       response.writeHead(304, { ETag: etag });
@@ -210,6 +231,7 @@ function proxyApi(request, response, apiTarget) {
 export function createEncoreServer({
   rootDirectory = moduleDirectory,
   apiTargetUrl = process.env.LARAVEL_API_URL ?? 'http://127.0.0.1:8000',
+  publicSiteUrl = normalizePublicSiteUrl(process.env.PUBLIC_SITE_URL),
 } = {}) {
   const apiTarget = new URL(apiTargetUrl);
 
@@ -258,7 +280,7 @@ export function createEncoreServer({
       resolveVendorPath(rootDirectory, parsedUrl.pathname) ??
       resolvePublicPath(rootDirectory, parsedUrl.pathname);
 
-    await serveFile(response, requestPath, request);
+    await serveFile(response, requestPath, request, publicSiteUrl);
   });
 }
 
@@ -267,9 +289,10 @@ export async function startEncoreServer({
   host = process.env.HOST ?? '127.0.0.1',
   rootDirectory = moduleDirectory,
   apiTargetUrl = process.env.LARAVEL_API_URL ?? 'http://127.0.0.1:8000',
+  publicSiteUrl = process.env.PUBLIC_SITE_URL,
   quiet = false,
 } = {}) {
-  const server = createEncoreServer({ rootDirectory, apiTargetUrl });
+  const server = createEncoreServer({ rootDirectory, apiTargetUrl, publicSiteUrl });
 
   await new Promise((resolve, reject) => {
     server.once('error', reject);
