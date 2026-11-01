@@ -2,12 +2,15 @@
 
 | Recorrido | Resultado | Evidencia | Pendiente |
 |---|---|---|---|
-| Buscar → comparar → viaje → asiento | PASS contractual/browser | `npm test`, browser visual | aceptación con Laravel |
-| Pasajero autenticado → reserva/boleto | PARCIAL | Passenger typecheck/browser | QR y backend Laravel |
+| Buscar → comparar → viaje → asiento | PASS contractual/browser | `npm test`, browser visual | aceptación con entorno sembrado |
+| Pasajero autenticado → reserva/boleto | PARCIAL | Passenger typecheck/browser | QR y E2E autenticado |
 | Driver → viaje → GPS foreground → incidencia | PARCIAL | GPS contract/browser | dispositivo y background |
-| Registrar paquete → tracking | PASS contractual | `PackageController`, browser existente | Laravel no ejecutado aquí |
-| Tracking → estado/historial/próxima acción | PASS contractual | nueva prueba de custodia | prueba HTTP Laravel |
-| Entrega → verificación + foto privada | IMPLEMENTADO, no ejecutado | controller/migration | prueba Feature Laravel |
+| Registrar paquete → tracking | PASS | `PackageCustodyTest`, `PackageController`, browser existente | E2E autenticado |
+| Tracking → estado/historial/próxima acción | PASS | `PackageCustodyTest`, tracking público | ampliar cadena de custodia |
+| Entrega → verificación + foto privada | PASS Feature | `PackageCustodyTest`, almacenamiento `local` privado | transferencias/manifiesto/QR |
+| Website → Passenger | PASS de contrato | nav simplificada, flujo de búsqueda y rutas existentes | E2E autenticado completo |
+| Driver PWA → registro/estado de paquete | PASS local | API multipart y browser/contratos Driver | aceptación en dispositivo |
+| Driver Mobile → paquete | NO DISPONIBLE | no hay pantalla de paquete equivalente | implementar recorrido Mobile |
 | Admin → usuarios/roles/reportes | PARCIAL | dashboard/report contracts | E2E autenticado sembrado |
 | Pago válido/rechazado/pendiente | BLOQUEADO | gateway unconfigured | sandbox y webhook |
 | Sesión expirada/offline | PARCIAL | API client/contracts | prueba integrada |

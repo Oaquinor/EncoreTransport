@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\TransportPackage;
 use App\Models\Trip;
-use App\Services\Notifications\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -18,8 +17,6 @@ class PackageController extends Controller
         'in_progress' => ['delivered'],
         'delivered' => [],
     ];
-
-    public function __construct(private readonly NotificationService $notifications) {}
 
     public function store(Request $request)
     {
@@ -62,8 +59,6 @@ class PackageController extends Controller
             return $package;
         });
 
-        $this->notifyRecipient($package, 'received', 'Package registered');
-
         return response()->json([
             'data' => [
                 'package' => $package->load('trip.route', 'trip.bus'),
@@ -93,7 +88,7 @@ class PackageController extends Controller
             $nextStatus = $data['status'];
 
             if ($nextStatus === $locked->status) {
-                return [$locked->fresh(['trip.route', 'events']), false];
+                return [$locked->fresh(['trip.route', 'events'])];
             }
 
             if (!in_array($nextStatus, self::STATUS_TRANSITIONS[$locked->status] ?? [], true)) {
@@ -127,14 +122,10 @@ class PackageController extends Controller
                 'occurred_at' => now(),
             ]);
 
-            return [$locked->fresh(['trip.route', 'events']), true];
+            return [$locked->fresh(['trip.route', 'events'])];
         });
 
-        [$package, $changed] = $updated;
-        if ($changed) {
-            $this->notifyRecipient($package, $package->status, 'Package update');
-        }
-
+        [$package] = $updated;
         return response()->json(['data' => $package]);
     }
 
@@ -181,21 +172,6 @@ class PackageController extends Controller
         }
 
         return response()->json(['data' => $query->limit(300)->get()]);
-    }
-
-    private function notifyRecipient(TransportPackage $package, string $status, string $title): void
-    {
-        $recipient = $package->recipient_email
-            ? \App\Models\User::query()->where('email', $package->recipient_email)->first()
-            : null;
-
-        $this->notifications->database(
-            $recipient,
-            'package.' . $status,
-            $title,
-            "Package {$package->reference} is now {$status}.",
-            ['package_id' => $package->id, 'reference' => $package->reference],
-        );
     }
 
     private function nextAction(string $status): string

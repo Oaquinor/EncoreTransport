@@ -169,17 +169,6 @@ html.motion-ready [data-reveal].is-visible {
 .recent-searches__label { color:#5d7482; font-size:.72rem; font-weight:800; letter-spacing:.04em; }
 .recent-searches button { border:1px solid #c7dce5; border-radius:999px; background:#fff; color:#123246; padding:7px 11px; font:inherit; font-size:.72rem; font-weight:700; cursor:pointer; }
 .recent-searches button:hover { border-color:#0a91bd; color:#087ba7; background:#f1fbfe; }
-.public-quick-rail { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:-6px; margin-bottom:24px; position:relative; z-index:2; }
-.public-quick-card { display:flex; align-items:center; gap:12px; min-height:102px; padding:16px 18px; border:1px solid #c8dce5; border-radius:18px; background:rgba(255,255,255,.94); color:#0b2435; box-shadow:0 12px 30px rgba(8,35,53,.08); transition:transform .2s,box-shadow .2s,border-color .2s; }
-.public-quick-card:hover { transform:translateY(-4px); border-color:#63bddd; box-shadow:0 18px 34px rgba(8,35,53,.12); }
-.public-quick-card__icon { display:grid; place-items:center; flex:0 0 34px; width:34px; height:34px; border-radius:11px; background:#e7f6fb; color:#087fab; font-size:1.1rem; font-weight:900; }
-.public-quick-card div { min-width:0; flex:1; }
-.public-quick-card small { display:block; color:#087fab; font-size:.58rem; font-weight:900; letter-spacing:.09em; }
-.public-quick-card strong { display:block; margin-top:4px; font-size:.94rem; }
-.public-quick-card p { margin:3px 0 0; color:#637d8c; font-size:.72rem; line-height:1.35; }
-.public-quick-card b { color:#087fab; font-size:1.1rem; }
-@media(max-width:900px){.public-quick-rail{grid-template-columns:1fr;margin-top:16px}.public-quick-card{min-height:84px}}
-
 @media (max-width:760px) {
   .public-hero { margin-top:12px; padding:42px 22px 28px; border-radius:26px; }
   .public-hero__copy h1 { font-size:clamp(3.05rem, 15vw, 4.6rem); }
@@ -322,23 +311,6 @@ html.motion-ready [data-reveal].is-visible {
   padding: 22px;
 }
 
-.public-platform-section { padding-top: 42px; background: linear-gradient(180deg,#f4f9fb,#edf5f8); border-block: 1px solid #d5e3e9; }
-.public-platform-head { display:flex; align-items:end; justify-content:space-between; gap:36px; }
-.public-platform-head h2 { max-width:760px; }
-.public-platform-head > p { max-width:390px; margin:0 0 8px; color:var(--pub-muted); line-height:1.7; }
-.public-platform-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
-.public-platform-card { min-height:270px; display:grid; align-content:space-between; gap:20px; padding:24px; border:1px solid #bdd3de; border-radius:20px; color:#102130; background:#fff; box-shadow:0 14px 30px rgba(12,52,75,.06); transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease; }
-.public-platform-card:hover,.public-platform-card:focus-visible { transform:translateY(-3px); border-color:#71bad6; box-shadow:0 20px 42px rgba(12,52,75,.12); }
-.public-platform-card__icon { width:38px; height:38px; display:grid; place-items:center; border-radius:12px; background:#e5f5fa; color:#08749e; font-size:.68rem; font-weight:900; letter-spacing:.08em; }
-.public-platform-card__icon svg { width:21px; height:21px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
-.public-platform-card small { color:#08749e; font-size:.65rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
-.public-platform-card h3 { margin:9px 0; font-size:1.32rem; line-height:1.08; }
-.public-platform-card p { margin:0; color:var(--pub-muted); line-height:1.6; }
-.public-platform-card strong { display:flex; justify-content:space-between; color:#08749e; font-size:.75rem; }
-.public-platform-proof { display:flex; flex-wrap:wrap; gap:10px 24px; margin-top:22px; color:#536c7c; font-size:.72rem; font-weight:750; }
-.public-platform-proof b { display:inline-grid; width:20px; height:20px; place-items:center; margin-right:5px; border-radius:50%; background:#dff5ea; color:#16815d; }
-@media (max-width:900px) { .public-platform-head { display:grid; gap:8px; } .public-platform-grid { grid-template-columns:1fr; } }
-@media (max-width:640px) { .public-platform-card { min-height:220px; } .public-platform-proof { display:grid; } }
 @media (max-width:760px) { .public-account-link { display:none; } }
 
 .public-faq-copy {

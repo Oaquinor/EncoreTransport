@@ -16,6 +16,16 @@ Este documento define el lenguaje visual aplicado a Website, Passenger, Driver, 
 
 La pantalla usa breadcrumb, encabezado, pestañas, tarjeta de avatar, información personal, acceso y estado de dispositivos. Las pestañas sin API no se presentan como funcionales: muestran `Unavailable` y explican el bloqueo. La carga de foto usa selección real, previsualización, recorte cuadrado centrado con zoom, validación de tipo/tamaño y persistencia en Laravel. La eliminación usa confirmación explícita `DELETE` y conserva la regla de anonimización del backend.
 
+## Arquitectura del Website
+
+La navegación pública principal expone únicamente `Home`, `Trips`, `Packages`, `Tracking` y `Help`. Cuenta y reservas son superficies separadas: el acceso a cuenta aparece como acción secundaria y no compite con la búsqueda principal. El acceso de Staff permanece en el pie como entrada operativa secundaria.
+
+El recorrido comercial primario es hero/búsqueda → resultados → detalle → Passenger. `Platform`, `Journey Control` y la barra rápida no son superficies públicas; sus destinos válidos se conservan mediante enlaces contextuales en las áreas correspondientes. Se evita repetir botones que llevan al mismo `#book` sin aportar contexto.
+
+## Estados de privacidad de paquetería
+
+`recipient_email` se trata como dato de contacto: registrar un paquete no busca automáticamente una cuenta ni vincula o notifica a un pasajero. La vinculación requiere confirmación explícita. La evidencia fotográfica de entrega se guarda en almacenamiento privado y el tracking público solo expone el estado operativo mínimo, sin correo, teléfono ni notas internas.
+
 ## Responsive
 
 Desktop usa dos columnas; tablet apila tarjetas manteniendo densidad intermedia; móvil convierte el formulario en una columna y mantiene botones táctiles. Las capturas se validaron a 390, 1024 y 1440 px sin overflow horizontal.

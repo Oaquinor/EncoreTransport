@@ -142,6 +142,9 @@ try {
               .filter((id) => id && !document.getElementById(id)));
           assert.deepEqual(missingAnchors, [], 'Website in-page navigation must point to existing sections');
           assert.equal(await page.locator('.public-quick-links').count(), 0, 'Redundant quick links must be removed');
+          assert.equal(await page.locator('.public-quick-rail').count(), 0, 'The public quick rail must be removed');
+          assert.equal(await page.locator('#primaryNav a').count(), 5, 'The primary navigation must contain five commercial destinations');
+          assert.equal(await page.locator('#journey-control, #platform').count(), 0, 'Internal workspace sections must stay out of the commercial homepage');
           assert.equal(await page.locator('#package-tracking a[href="/track-package/"]').count(), 1, 'Package tracking must have a clear destination');
           assert.equal(await page.locator('#networkRouteSelect').count(), 1, 'The live map must offer route selection');
           assert.equal(await page.locator('[data-open-map]').count(), 0, 'The generic current-route CTA must not show without a selected trip');

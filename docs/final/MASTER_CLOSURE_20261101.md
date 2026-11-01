@@ -2,14 +2,14 @@
 
 Fecha: 2026-11-01  
 Rama: `main`  
-Commit inicial: `182bd3b0a18868eb2f27e56c7ae1a32670989738`  
+Commit de referencia: `d91c2b87d8cbfdec2c1796e431f7d35390e6a1e6`
 Commit final: no creado; los cambios de esta revisión permanecen sin confirmar.
 
 ## Clasificación
 
 `PARTIALLY_COMPLETE`
 
-La plataforma tiene una base funcional demostrable para website, reservas, asientos, Passenger web, Driver PWA, Admin, mapas, tracking y contratos de seguridad. No se declara lista para producción porque pagos externos, PHP/Laravel en este entorno, dispositivos móviles reales, notificaciones externas y custodia avanzada siguen sin aceptación completa.
+La plataforma tiene una base funcional demostrable para Website, reservas, asientos, Passenger web, Driver PWA, Admin, mapas, tracking y contratos de seguridad. No se declara lista para producción porque pagos externos, dispositivos móviles reales, notificaciones externas y custodia avanzada siguen sin aceptación completa.
 
 ## Trabajo realizado en esta revisión
 
@@ -22,6 +22,9 @@ La plataforma tiene una base funcional demostrable para website, reservas, asien
 - Tracking público devuelve `last_updated_at` y `next_action`, sin teléfono, correo ni notas operativas privadas.
 - La API compartida del Driver soporta evidencia multipart.
 - Website ya no permite que el fallo de viajes destacados sobrescriba el estado de Encore Live; el browser test espera explícitamente la inicialización asíncrona del mapa.
+- La navegación pública del Website quedó reducida a `Home | Trips | Packages | Tracking | Help`; se retiraron `Platform`, `Journey Control` y la barra rápida pública.
+- `ALL_ACTIONS_AUDIT.md` ahora contiene una fila por control/listener detectado en 38 archivos, 452 filas, con pantalla, propósito, destino, permisos, estado y evidencia.
+- Se eliminó la vinculación/notificación automática basada únicamente en `recipient_email`; el registro de paquetes no convierte al destinatario en cuenta sin confirmación.
 
 ## Funcionalidad preservada
 
@@ -29,8 +32,8 @@ Reservas y cotización por tramo, selección de asientos, rutas y mapas TomTom/L
 
 ## Pendientes que impiden el lanzamiento
 
-Proveedor y credenciales de pago, ejecución de Laravel con PHP disponible, transferencias y manifiesto conciliable de paquetes, QR operativo, GPS background en dispositivo, aceptación nativa, proveedores Gmail/WhatsApp/push, dominio SEO final y E2E autenticado contra un entorno sembrado.
+Proveedor y credenciales de pago, transferencias y manifiesto conciliable de paquetes, QR operativo, GPS background en dispositivo, aceptación nativa, proveedores Gmail/WhatsApp/push, dominio SEO final y E2E autenticado contra un entorno sembrado.
 
 ## Evidencia
 
-`npm test` pasa; typechecks de Passenger web, Passenger Mobile y Driver Mobile pasan; build de Passenger pasa; browser visual pasa con 36 checks y capturas en 360, 390, 768, 1024, 1440 y 1920 px. PHP no está disponible en el entorno actual, por lo que Laravel no fue ejecutado.
+`npm test` pasa; los typechecks de API, Passenger web, Passenger Mobile y Driver Mobile pasan; el build de Passenger pasa; browser visual pasa con 36 checks y capturas en 360, 390, 768, 1024, 1440 y 1920 px. `php artisan test` pasa con 75 pruebas y 469 aserciones usando PHP 8.3.30 y MySQL de Laragon. Las pruebas en dispositivos reales y las integraciones externas siguen bloqueadas.

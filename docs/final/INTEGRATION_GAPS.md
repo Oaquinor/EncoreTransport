@@ -2,7 +2,7 @@
 
 | Integración | Estado | Motivo | Criterio de cierre |
 |---|---|---|---|
-| Laravel/MySQL | Código presente; no verificado aquí | PHP no está en PATH | `php artisan test`, rutas, migraciones y rollback |
+| Laravel/MySQL | PASS local | 75 pruebas y 469 aserciones con PHP 8.3.30/MySQL Laragon; producción aún no verificada | entorno semejante a producción, migraciones y rollback |
 | Pagos | BLOQUEADO | gateway `unconfigured` | sandbox, webhook firmado, idempotencia y conciliación |
 | TomTom | Contrato implementado | falta clave de entorno | geocodificación/ruta con cuota y dominio final |
 | Gmail API | PARCIAL | falta OAuth refresh token | entrega confirmada y reintentos |

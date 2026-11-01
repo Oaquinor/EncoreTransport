@@ -17,6 +17,20 @@ assert.match(websiteHtml, /href="\/login\/\?return=\/passenger\/"[^>]*>.*Sign in
 assert.doesNotMatch(websiteHtml, /Open Operations/);
 assert.match(websiteHtml, /id="mobileMenuToggle"/);
 assert.match(websiteHtml, /id="mobileNavigation"/);
+const primaryNav = websiteHtml.match(/<nav class="nav public-nav"[\s\S]*?<\/nav>/)?.[0] ?? '';
+assert.deepEqual(
+  [...primaryNav.matchAll(/<a href="([^"]+)">([^<]+)<\/a>/g)].map(([, href, label]) => ({ href, label })),
+  [
+    { href: '#home', label: 'Home' },
+    { href: '#book', label: 'Trips' },
+    { href: '#package-tracking', label: 'Packages' },
+    { href: '/track-package/', label: 'Tracking' },
+    { href: '#faq', label: 'Help' },
+  ],
+  'Website primary navigation must expose only the five commercial destinations.',
+);
+assert.doesNotMatch(websiteHtml, /public-quick-rail|id="journey-control"|id="platform"/);
+assert.doesNotMatch(websiteHtml, />\s*(?:Platform|Journey control|Journey Control)\s*</, 'Internal platform language must not appear in the public website navigation surface.');
 
 assert.match(websiteApp, /prefers-reduced-motion/);
 assert.match(websiteApp, /IntersectionObserver/);

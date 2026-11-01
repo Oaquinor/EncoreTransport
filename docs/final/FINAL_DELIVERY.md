@@ -26,7 +26,7 @@ Se ajustó el Website al lenguaje navy/blue del tablero, se compactó el registr
 
 ## F. Pruebas
 
-`npm test` pasó completo después de la corrección de custodia; también pasaron los typechecks web/móviles, build de Passenger y browser visual. Laravel no se ejecutó: PHP no está disponible en el entorno actual.
+`npm test` pasó completo después de la corrección de custodia; también pasaron los typechecks web/móviles, build de Passenger y browser visual. Laravel pasó con 75 pruebas y 469 aserciones usando PHP 8.3.30 y MySQL de Laragon. Las pruebas en dispositivos reales siguen pendientes.
 
 ## G. Integraciones
 
