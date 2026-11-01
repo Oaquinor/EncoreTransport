@@ -38,7 +38,7 @@ No activar producción hasta completar custodia de paquetes, credenciales extern
 
 ## I. Preparación
 
-`PARTIALLY_COMPLETE`: apto para revisión técnica local, no autorizado todavía como producción.
+`PARTIALLY_COMPLETE`: apto para revisión técnica local, no autorizado todavía como producción. La reorganización premium del sidebar Admin está implementada y documentada, pero su captura browser posterior queda pendiente.
 
 ## J. Conclusión
 

@@ -116,14 +116,14 @@ function adminDisplayName(user) {
 const navIconByModule = {
   dashboard: 'dashboard',
   trips: 'route',
-  bookings: 'archive',
-  tickets: 'archive',
-  vehicles: 'archive',
+  bookings: 'calendar',
+  tickets: 'ticket',
+  vehicles: 'bus',
   drivers: 'user',
   routes: 'route',
   website: 'view',
   schedules: 'calendar',
-  packages: 'archive',
+  packages: 'package',
   incidents: 'close',
   customers: 'user',
   reports: 'report',
@@ -459,13 +459,15 @@ function sidebar() {
         <button type="button" data-nav-collapse-all>${icon('close')}Collapse all</button>
       </div>
 
-      <nav class="admin-nav" aria-label="Operations modules">
+      <nav class="admin-nav" aria-label="Admin operations navigation">
         ${[...grouped.entries()].map(([group, items]) => {
           const open = state.navGroups[group] !== false || items.some((item) => item.id === state.module);
+          const groupId = navGroupId(group);
+          const groupShort = group.trim().slice(0, 1).toUpperCase();
           return `<section class="admin-nav-group ${open ? 'is-open' : ''}" data-nav-group="${esc(group)}">
-            <button class="admin-nav-group__toggle" type="button" data-nav-toggle="${esc(group)}" aria-expanded="${open}"><span>${esc(group)}</span><b aria-hidden="true">${open ? '−' : '+'}</b></button>
-            <div class="admin-nav-group__items" ${open ? '' : 'hidden'}>
-              ${items.map((module) => `<button class="admin-nav__item ${state.module === module.id ? 'admin-nav__item--active' : ''}" data-module="${esc(module.id)}" title="${esc(module.label)}" aria-label="${esc(module.label)}" ${state.accessDenied ? 'disabled' : ''}>${icon(navIconByModule[module.id] ?? 'view')}<span class="admin-nav__label">${esc(module.label)}</span></button>`).join('')}
+            <button class="admin-nav-group__toggle" type="button" data-nav-toggle="${esc(group)}" aria-controls="${groupId}" aria-expanded="${open}" aria-label="${open ? 'Collapse' : 'Expand'} ${esc(group)}" title="${esc(group)}"><span class="admin-nav-group__label">${esc(group)}</span><span class="admin-nav-group__short" aria-hidden="true">${esc(groupShort)}</span><b aria-hidden="true">${open ? '−' : '+'}</b></button>
+            <div class="admin-nav-group__items" id="${groupId}" ${open ? '' : 'hidden'}>
+              ${items.map((module) => `<button class="admin-nav__item ${state.module === module.id ? 'admin-nav__item--active' : ''}" type="button" data-module="${esc(module.id)}" title="${esc(module.label)}" aria-label="${esc(module.label)}" ${state.module === module.id ? 'aria-current="page"' : ''} ${state.accessDenied ? 'disabled' : ''}>${icon(navIconByModule[module.id] ?? 'view')}<span class="admin-nav__label">${esc(module.label)}</span></button>`).join('')}
             </div>
           </section>`;
         }).join('')}
@@ -485,6 +487,10 @@ function sidebar() {
         <span class="admin-profile-photo-message" data-profile-photo-message aria-live="polite">${esc(state.profilePhotoMessage)}</span>
       </button>
     </aside>`;
+}
+
+function navGroupId(group) {
+  return `admin-nav-group-${String(group).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase()}`;
 }
 
 function profileImageSource(user) {

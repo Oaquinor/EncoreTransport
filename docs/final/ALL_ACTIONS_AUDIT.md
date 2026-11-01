@@ -118,6 +118,7 @@ Generado desde controles declarados y listeners detectables en 41 archivos de ap
 | 104 | admin-dashboard | apps/admin-dashboard/app.mjs | input photo | Introducir datos | runtime/inline | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:686 |
 | 105 | admin-dashboard | apps/admin-dashboard/app.mjs | button ${icon('save')}${state.driverEditingId ? 'Update driver' : 'Save driver'} | Ejecutar operación o enviar datos | runtime/inline | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:686 |
 | 106 | admin-dashboard | apps/admin-dashboard/app.mjs | button ${icon('close')}Cancel | Abrir, cerrar o cambiar una superficie contextual | cancelDriverForm | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:686 |
+
 | 107 | admin-dashboard | apps/admin-dashboard/app.mjs | button ${icon('plus')}Add driver | Acción interactiva | addDriver | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:687 |
 | 108 | admin-dashboard | apps/admin-dashboard/app.mjs | button ${icon('edit')} | Acción interactiva | runtime/inline | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:695 |
 | 109 | admin-dashboard | apps/admin-dashboard/app.mjs | button ${icon('archive')} | Acción interactiva | runtime/inline | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:695 |
@@ -502,6 +503,12 @@ Generado desde controles declarados y listeners detectables en 41 archivos de ap
 | 488 | driver-mobile | apps/driver-mobile/App.tsx | button Registrar discrepancia | Registrar discrepancia de custodia | `driver/packages/{package}/discrepancy` | packages.update | DINÁMICO; backend conectado | fuente:apps/driver-mobile/App.tsx:953 |
 | 489 | driver-mobile | apps/driver-mobile/App.tsx | button Transferir | Solicitar transferencia | `driver/packages/{package}/transfer` | packages.update | DINÁMICO; backend conectado | fuente:apps/driver-mobile/App.tsx:956 |
 | 490 | driver-mobile | apps/driver-mobile/App.tsx | button Aceptar transferencia | Aceptar transferencia asignada | `driver/transfers/{transfer}/accept` | packages.update | DINÁMICO; backend conectado | fuente:apps/driver-mobile/App.tsx:958 |
+
+## Addendum de cierre premium
+
+La auditoría existente es un inventario estático amplio (490 filas) y no equivale por sí sola a una aceptación de cada control en pantallas autenticadas. En esta iteración se añadió la navegación Admin como controles explícitos: toggle de sidebar, expansión/colapso global, seis grupos por dominio, controles de módulo con permiso, `aria-current`, `title` y destinos internos. El contrato dedicado es `tests/admin-navigation-contract.test.mjs` y pasa localmente.
+
+Pendiente real: recorrer cada fila dinámica en browser autenticado por rol, incluir modales/dropdowns creados tras cada carga y adjuntar evidencia por pantalla. No se marca esta auditoría como exhaustivamente aceptada sólo por expresiones regulares.
 
 ## Cierre de auditoría
 

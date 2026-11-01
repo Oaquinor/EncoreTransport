@@ -36,6 +36,10 @@ El recorrido comercial primario es inicio/búsqueda → resultados → detalle �
 - **Driver:** operación primero: viaje activo, pasajeros, paquetes, vehículo, GPS e incidencias; cada acción debe ser rápida, reversible cuando corresponda y autorizada por Laravel.
 - **Paquetería:** la referencia, estado actual, próxima acción y línea temporal son el eje; los detalles administrativos y la evidencia privada no se mezclan con el tracking público.
 
+## Navegación Admin premium
+
+El sidebar organiza únicamente módulos existentes y autorizados en `Operations`, `Fleet`, `Clients`, `Paquetería`, `Control` y `System`. Cada grupo es expandible, persistente y navegable por teclado; el módulo activo expone `aria-current="page"`. En modo colapsado se conservan el tooltip/nombre accesible, el icono y una abreviatura visual del grupo. La especificación de aceptación está en `docs/final/ADMIN_NAVIGATION_ACCEPTANCE.md`.
+
 ## Componentes compartidos
 
 Se reutilizan los patrones de `packages/shared`: botones con foco visible, badges semánticos, tablas con búsqueda/paginación, tarjetas de viaje, mensajes de estado, mapas con fallback explícito y controles táctiles. No se crea una hoja correctiva nueva para ocultar problemas; las reglas específicas permanecen junto a la aplicación responsable y los contratos de comportamiento se prueban en frontend o Laravel.

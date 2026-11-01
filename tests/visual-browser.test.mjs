@@ -325,6 +325,23 @@ try {
           assert.equal(completed, 'completed', 'Driver can complete the assigned trip');
         }
         if (visualTokens && surface === 'admin' && width === 1440) {
+          const adminGroups = await page.locator('[data-nav-group]').evaluateAll((groups) => groups.map((group) => group.dataset.navGroup));
+          assert.deepEqual(adminGroups, ['Operations', 'Fleet', 'Clients', 'Paquetería', 'Control', 'System'], 'Admin sidebar exposes only the approved operational groups');
+          const clientsToggle = page.locator('[data-nav-toggle="Clients"]');
+          await clientsToggle.focus();
+          await page.keyboard.press('Enter');
+          assert.notEqual(await page.locator('#admin-nav-group-clients').getAttribute('hidden'), null, 'Admin group toggles work from the keyboard');
+          await clientsToggle.click();
+          assert.equal(await page.locator('#admin-nav-group-clients').getAttribute('hidden'), null, 'Admin group toggles work by click');
+          await page.locator('[data-sidebar-toggle]').click();
+          assert.equal(await page.locator('.admin-sidebar').evaluate((sidebar) => sidebar.classList.contains('is-collapsed')), true, 'Admin sidebar can collapse');
+          assert.ok(await page.locator('.admin-nav-group__short').count() >= 6, 'Collapsed Admin sidebar keeps group landmarks visible');
+          await page.screenshot({ path: 'artifacts/visual/admin-sidebar-navigation-1440.png', fullPage: true, timeout: 60000 });
+          await page.locator('[data-sidebar-toggle]').click();
+          await page.locator('[data-nav-collapse-all]').click();
+          assert.ok(await page.locator('.admin-nav-group__items[hidden]').count() >= 5, 'Collapse all closes non-active Admin groups');
+          await page.locator('[data-nav-expand-all]').click();
+          assert.equal(await page.locator('.admin-nav-group__items[hidden]').count(), 0, 'Expand all restores every Admin group');
           await page.locator('[data-module="bookings"]').click();
           await page.locator('[data-view-booking]').first().click();
           const bookingDialog = page.locator('#bookingDetailsDialog');

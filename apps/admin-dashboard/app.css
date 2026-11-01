@@ -281,6 +281,7 @@
 }
 .admin-nav-group__toggle:hover { color: #fff; }
 .admin-nav-group__toggle b { font-size: .9rem; font-weight: 500; }
+.admin-nav-group__short { display: none; }
 .admin-nav-group__items { display: grid; gap: 3px; }
 .admin-nav-group__items[hidden] { display: none; }
 .admin-nav__item { position: relative; display: flex !important; align-items: center; gap: 10px; }
@@ -302,6 +303,7 @@
 .admin-sidebar.is-collapsed .admin-sidebar-toggle { justify-content: center; padding: 0; }
 .admin-sidebar.is-collapsed .admin-nav-tools { display: none; }
 .admin-sidebar.is-collapsed .admin-nav-group__toggle { justify-content: center; padding-inline: 0; }
+.admin-sidebar.is-collapsed .admin-nav-group__toggle .admin-nav-group__short { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 1px solid rgba(142,224,255,.28); border-radius: 8px; color: #d9f5ff; font-size: .68rem; letter-spacing: 0; }
 .admin-sidebar.is-collapsed .admin-nav-group__items { gap: 5px; }
 .admin-sidebar.is-collapsed .admin-nav__item { display: grid !important; place-items: center; min-height: 38px; padding: 0; }
 .admin-sidebar.is-collapsed .admin-nav__item::after { display: none; }
@@ -319,6 +321,7 @@
   .admin-sidebar.is-collapsed .admin-nav-group__toggle span,
   .admin-sidebar.is-collapsed .admin-nav-group__toggle b,
   .admin-sidebar.is-collapsed .admin-nav-group__items .admin-nav__label { display: inline; }
+  .admin-sidebar.is-collapsed .admin-nav-group__toggle .admin-nav-group__short { display: none; }
   .admin-sidebar.is-collapsed .admin-nav__item::after { display: none; }
 }
 @media (max-width: 900px) { .route-stop-row, .route-segment-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }.route-stop-index { grid-column: 1 / -1; }.route-segment-row strong { grid-column: 1 / -1; }.access-list__items { grid-template-columns: 1fr; } }
