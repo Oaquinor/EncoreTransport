@@ -2,6 +2,13 @@ node_modules/
 dist/
 coverage/
 artifacts/visual/
+artifacts/EncoreTransport-implementation-package-20261030/
+artifacts/EncoreTransport_Implementation_20261030.zip
+artifacts/mandate-unico-20261030/
+artifacts/reference-implementation-20261030/
+artifacts/reference-mandate-20261030/
+artifacts/*-1440.png
+artifacts/website-*.png
 .env
 .DS_Store
 Thumbs.db
