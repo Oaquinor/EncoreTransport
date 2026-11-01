@@ -8,5 +8,5 @@
 | Admin/notificaciones | Parcial | bandeja persistida y endpoints leído/no leído |
 | Driver/GPS foreground | Parcial | contratos GPS y pruebas backend |
 | Paquetería básica | Implementada | registro y tracking existentes |
-| Custodia/transferencias/QR/fotos de entrega | Pendiente | requiere contrato de dominio y permisos |
+| Custodia inicial/fotos de entrega | Parcialmente implementada | transacciones, eventos y disco privado; transferencias/QR/manifiesto pendientes |
 | Mobile nativo/background GPS | Bloqueada | requiere emulador/dispositivo |

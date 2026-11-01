@@ -164,6 +164,7 @@ try {
             'The public map explains when there are no current authorized positions');
           assert.match(await page.locator('#mapStatus').innerText(), /0 buses live/,
             'Scheduled trips without live GPS are not presented as live buses');
+          await page.locator('#routeMapCanvas.leaflet-container').waitFor({ timeout: 10000 });
           assert.equal(await page.locator('#routeMapCanvas.leaflet-container').count(), 1,
             'The public map initializes once and remains visible without live vehicle positions');
         }
@@ -253,7 +254,13 @@ try {
           assert.equal(await page.locator('#routeMapCanvas.leaflet-container').count(), 1,
             'Refreshing live data reuses the existing map instance');
           assert.equal(await page.locator('[data-network-bus]').count(), 3, 'The public map lists multiple live buses and keeps stale buses identifiable');
-          assert.match(await page.locator('#mapStatus').innerText(), /2 buses live · 1 GPS not current/, 'The map distinguishes current GPS from stale data');
+          await page.waitForFunction(
+            () => document.querySelector('#mapStatus')?.textContent.includes('2 buses live · 1 GPS not current'),
+            null,
+            { timeout: 10000 },
+          );
+          const mapStatus = await page.locator('#mapStatus').textContent();
+          assert.match(mapStatus, /2\s+buses live\s+·\s+1 GPS not current/, `The map distinguishes current GPS from stale data: ${JSON.stringify(mapStatus)}`);
           await page.locator('#networkRouteSelect').selectOption('10');
           assert.equal(await page.locator('[data-network-bus]').count(), 2, 'Route filter keeps both buses operating on the selected route');
           await page.locator('[data-network-trip="102"]').click();

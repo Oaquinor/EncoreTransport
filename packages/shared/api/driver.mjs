@@ -139,16 +139,20 @@ export async function updatePackageStatus(
   id,
   status,
   notes = '',
+  { recipientVerified = false, deliveryPhoto = null } = {},
 ) {
+  const body = new FormData();
+  body.set('status', status);
+  body.set('notes', notes);
+  if (recipientVerified) body.set('recipient_verified', '1');
+  if (deliveryPhoto) body.set('delivery_photo', deliveryPhoto);
+
   const payload =
     await requestJson(
       `/driver/packages/${id}/status`,
       {
         method: 'POST',
-        body: JSON.stringify({
-          status,
-          notes,
-        }),
+        body,
       },
     );
 

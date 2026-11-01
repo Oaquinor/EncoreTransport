@@ -562,9 +562,6 @@ async function loadFeaturedTrip() {
       featuredTrip = null;
       renderFeatured(null);
       renderSeats([]);
-      setText('#mapStatus', 'No trip available');
-      setText('#mapEta', '—');
-      renderMapFallback('No scheduled trip is available to preview right now.');
       return;
     }
 
@@ -574,8 +571,6 @@ async function loadFeaturedTrip() {
   } catch (error) {
     featuredTrip = null;
     setText('#tripCount', '—');
-    setText('#mapStatus', 'Unavailable');
-    setText('#mapEta', '—');
     renderFeatured(null);
     renderSeats([]);
   }

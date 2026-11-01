@@ -1,14 +1,16 @@
 # Entrega final de EncoreTransport
 
+Actualizado: 2026-11-01. Ver `MASTER_CLOSURE_20261101.md` para el cierre ampliado.
+
 ## A. Estado general
 
 El alcance funcional auditado está parcialmente implementado. Las áreas críticas de reservas, asientos, rutas, permisos, perfil y disponibilidad tienen pruebas backend exitosas. El tablero visual nuevo no está reproducido de forma idéntica en todas las pantallas.
 
 ## B. Funcionalidades
 
-Completadas: disponibilidad por tramo, reservas concurrentes, bloqueos, conflictos de viajes, permisos, perfil/foto, registro y tracking básico de paquetes, notificaciones internas.
+Completadas: disponibilidad por tramo, reservas concurrentes, bloqueos, conflictos de viajes, permisos, perfil/foto, registro y tracking por token de paquetes, transacciones de custodia inicial, evidencia privada de entrega y notificaciones internas.
 
-Parciales o pendientes: custodia avanzada, transferencias, QR operativo, entrega fotográfica, preferencias por canal, dashboard visual completo y Mobile nativo.
+Parciales o pendientes: custodia avanzada, transferencias, QR operativo, proveedor de pagos, preferencias por canal, dashboard E2E completo y Mobile nativo.
 
 ## C. Aplicaciones
 
@@ -24,7 +26,7 @@ Se ajustó el Website al lenguaje navy/blue del tablero, se compactó el registr
 
 ## F. Pruebas
 
-`npm test` pasó completo. Laravel pasó 72 pruebas y 434 aserciones. Las capturas autenticadas del Admin están bloqueadas por credenciales del servidor persistente.
+`npm test` pasó completo después de la corrección de custodia; también pasaron los typechecks web/móviles, build de Passenger y browser visual. Laravel no se ejecutó: PHP no está disponible en el entorno actual.
 
 ## G. Integraciones
 
