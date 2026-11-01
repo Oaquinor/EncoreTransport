@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\V1\LiveNetworkController;
 use App\Http\Controllers\Api\V1\MapController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PackageController;
+use App\Http\Controllers\Api\V1\PackageCustodyController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PricingController;
 use App\Http\Controllers\Api\V1\RouteController;
@@ -110,7 +111,15 @@ Route::prefix('v1')->group(function () {
         Route::get('driver/schedule', [DriverScheduleController::class, 'mine']);
         Route::post('driver/vehicle-status', [VehicleStatusController::class, 'store']);
         Route::post('driver/packages', [PackageController::class, 'store']);
+        Route::post('driver/packages/scan', [PackageCustodyController::class, 'scan']);
+        Route::get('driver/packages/{package}/qr', [PackageCustodyController::class, 'qr']);
         Route::post('driver/packages/{package}/status', [PackageController::class, 'updateStatus']);
+        Route::post('driver/packages/{package}/transfer', [PackageCustodyController::class, 'requestTransfer']);
+        Route::post('driver/package-transfers/{transfer}/accept', [PackageCustodyController::class, 'acceptTransfer']);
+        Route::post('driver/manifests', [PackageCustodyController::class, 'createManifest']);
+        Route::get('driver/manifests/{manifest}', [PackageCustodyController::class, 'showManifest']);
+        Route::post('driver/manifests/{manifest}/scan', [PackageCustodyController::class, 'scanManifest']);
+        Route::post('driver/manifests/{manifest}/reconcile', [PackageCustodyController::class, 'reconcileManifest']);
 
     });
 

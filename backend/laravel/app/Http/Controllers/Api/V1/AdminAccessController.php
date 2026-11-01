@@ -18,9 +18,53 @@ class AdminAccessController extends Controller
 {
     public function __construct(private readonly PermissionService $permissions) {}
 
-    public function users()
+    public function users(Request $request)
     {
-        return response()->json(['data' => User::query()->with(['roles','permissions'])->withCount('bookings')->orderBy('name')->get()->map(fn ($user) => $this->userPayload($user))]);
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:120'],
+            'role' => ['nullable', 'string', 'max:80'],
+            'active' => ['nullable', 'in:0,1'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:10', 'max:100'],
+        ]);
+
+        $query = User::query()
+            ->with(['roles', 'permissions'])
+            ->withCount('bookings')
+            ->when($filters['q'] ?? null, function ($query, string $term): void {
+                $like = '%' . addcslashes($term, '%_') . '%';
+                $query->where(function ($nested) use ($like): void {
+                    $nested->where('name', 'like', $like)
+                        ->orWhere('email', 'like', $like)
+                        ->orWhere('phone', 'like', $like)
+                        ->orWhere('id', ctype_digit($like) ? (int) trim($like, '%') : -1);
+                });
+            })
+            ->when($filters['role'] ?? null, function ($query, string $role): void {
+                $query->where(function ($nested) use ($role): void {
+                    $nested->where('role', $role)
+                        ->orWhereHas('roles', fn ($roles) => $roles->where('name', $role));
+                });
+            })
+            ->when(array_key_exists('active', $filters), fn ($query) => $query->where('active', (bool) $filters['active']))
+            ->when($filters['date_from'] ?? null, fn ($query, string $date) => $query->whereDate('created_at', '>=', $date))
+            ->when($filters['date_to'] ?? null, fn ($query, string $date) => $query->whereDate('created_at', '<=', $date))
+            ->orderBy('name')
+            ->orderBy('id');
+
+        $page = $query->paginate((int) ($filters['per_page'] ?? 25));
+
+        return response()->json([
+            'data' => $page->getCollection()->map(fn ($user) => $this->userPayload($user))->values(),
+            'meta' => [
+                'current_page' => $page->currentPage(),
+                'last_page' => $page->lastPage(),
+                'per_page' => $page->perPage(),
+                'total' => $page->total(),
+            ],
+        ]);
     }
 
     public function storeUser(Request $request, AuditService $audit)

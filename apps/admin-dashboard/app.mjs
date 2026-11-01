@@ -65,6 +65,8 @@ const state = {
   user: null,
   permissions: [],
   users: [],
+  userMeta: { current_page: 1, last_page: 1, per_page: 25, total: 0 },
+  userFilters: { q: '', role: '', active: '', date_from: '', date_to: '', page: 1, per_page: 25 },
   roles: [],
   permissionCatalog: [],
   generalSettings: null,
@@ -805,7 +807,12 @@ function content() {
     const roleOptions = [...state.roles];
     if (user.role && !roleOptions.some((role) => role.name === user.role)) roleOptions.unshift({ name: user.role, label: `${user.role} (legacy)` });
     const userForm = state.userFormOpen ? `<form id="userForm" class="premium-form-grid fleet-form"><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.userEditingId ? 'Update user access' : 'Create user'}</strong><span>Assign roles, then set direct permission overrides only where needed.</span></div></div><label><span>Name</span><input name="name" required maxlength="150" value="${esc(user.name)}" /></label><label><span>Email</span><input name="email" type="email" required maxlength="190" value="${esc(user.email)}" /></label><label><span>Phone</span><input name="phone" maxlength="40" value="${esc(user.phone ?? '')}" /></label><label><span>Legacy access role</span><select name="role" ${canManageRoles ? '' : 'disabled'}>${roleOptions.map((role) => `<option value="${esc(role.name)}" ${user.role === role.name ? 'selected' : ''}>${esc(role.label ?? role.name)}</option>`).join('')}</select></label><label><span>Password ${state.userEditingId ? '(leave blank to keep)' : ''}</span><input name="password" type="password" ${state.userEditingId ? '' : 'required'} minlength="8" /></label><label><span>Status</span><select name="active"><option value="1" ${user.active !== false ? 'selected' : ''}>Active</option><option value="0" ${user.active === false ? 'selected' : ''}>Disabled</option></select></label><fieldset class="access-list"><legend>Assigned roles ${canManageRoles ? '' : '(requires roles.manage)'}</legend>${accessRoleList(state.roles, user.role_ids, !canManageRoles)}</fieldset><fieldset class="access-list"><legend>Direct permission overrides ${canAssignPermissions ? '' : '(requires permissions.assign)'}</legend><p class="access-list__help">Inherit follows assigned roles. Use Allow or Deny only to override that result.</p>${directPermissionList(state.permissionCatalog, user.permission_grants, user.role_ids, state.roles, !canAssignPermissions)}</fieldset><div class="form-actions"><button type="submit" class="button button--primary">${state.userEditingId ? 'Update user' : 'Create user'}</button><button type="button" class="button button--ghost" id="cancelUser">Cancel</button></div><div id="userMessage" aria-live="polite"></div></form>` : '';
-    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Access control</div><h2>Users</h2></div><button class="button button--primary" id="addUser" type="button">Add user</button></div>${userForm}</section>${table('Users', ['Name', 'Email', 'Roles', 'Effective permissions', 'Status', 'Actions'], state.users.map((item) => [item.name, item.email, (item.roles ?? []).map((role) => role.label ?? role.name).join(', ') || item.role, (item.permissions ?? []).length, item.active ? 'Active' : 'Disabled', { html: `<div class="table-actions"><button class="button button--icon" data-edit-user="${esc(item.id)}" type="button" aria-label="Edit user">${icon('edit')}</button><button class="button button--icon" data-disable-user="${esc(item.id)}" type="button" aria-label="Disable user" ${item.active ? '' : 'disabled'}>${icon('archive')}</button></div>` }]))}`;
+    const filter = state.userFilters;
+    const meta = state.userMeta;
+    const roleFilter = [...new Map(state.roles.map((role) => [role.name, role])).values()];
+    const filters = `<form class="admin-filter-bar" id="userFilters"><label><span>Search account</span><input name="q" type="search" placeholder="ID, name, email or phone" value="${esc(filter.q)}" /></label><label><span>Role</span><select name="role"><option value="">All roles</option>${roleFilter.map((role) => `<option value="${esc(role.name)}" ${filter.role === role.name ? 'selected' : ''}>${esc(role.label ?? role.name)}</option>`).join('')}</select></label><label><span>Status</span><select name="active"><option value="">All statuses</option><option value="1" ${filter.active === '1' ? 'selected' : ''}>Active</option><option value="0" ${filter.active === '0' ? 'selected' : ''}>Disabled</option></select></label><label><span>Registered from</span><input name="date_from" type="date" value="${esc(filter.date_from)}" /></label><label><span>Registered to</span><input name="date_to" type="date" value="${esc(filter.date_to)}" /></label><button class="button button--primary" type="submit">Search accounts</button><button class="button button--ghost" id="clearUserFilters" type="button">Clear</button></form>`;
+    const pagination = `<footer class="server-pagination"><span>Showing ${state.users.length} of ${meta.total} accounts</span><div><button class="button button--ghost" type="button" data-users-page="prev" ${meta.current_page <= 1 ? 'disabled' : ''}>Previous</button><span>Page ${meta.current_page} of ${meta.last_page}</span><button class="button button--ghost" type="button" data-users-page="next" ${meta.current_page >= meta.last_page ? 'disabled' : ''}>Next</button></div></footer>`;
+    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Access control</div><h2>Users</h2><p class="module-subtitle">Search only the accounts you are permitted to manage. Results are paginated by the server.</p></div><button class="button button--primary" id="addUser" type="button">Add user</button></div>${filters}${userForm}</section>${table('Users', ['Name', 'Email', 'Roles', 'Effective permissions', 'Status', 'Actions'], state.users.map((item) => [item.name, item.email, (item.roles ?? []).map((role) => role.label ?? role.name).join(', ') || item.role, (item.permissions ?? []).length, item.active ? 'Active' : 'Disabled', { html: `<div class="table-actions"><button class="button button--icon" data-edit-user="${esc(item.id)}" type="button" aria-label="Edit user">${icon('edit')}</button><button class="button button--icon" data-disable-user="${esc(item.id)}" type="button" aria-label="Disable user" ${item.active ? '' : 'disabled'}>${icon('archive')}</button></div>` }]))}${pagination}`;
   }
   if (state.module === 'customers') {
     const customers = state.users.filter((user) => user.role === 'passenger' || (user.roles ?? []).some((role) => role.name === 'passenger'));
@@ -963,7 +970,9 @@ async function loadModule() {
     }
 
     if (state.module === 'users' || state.module === 'customers') {
-      state.users = await api.users();
+      const usersResult = await api.users(state.userFilters);
+      state.users = usersResult.items;
+      state.userMeta = usersResult.meta;
       if (state.module === 'users' && (state.permissions.includes('roles.view') || state.permissions.includes('roles.manage'))) state.roles = await api.roles();
       if (state.module === 'users' && (state.permissions.includes('permissions.view') || state.permissions.includes('permissions.assign'))) state.permissionCatalog = await api.permissions();
     }
@@ -1385,6 +1394,31 @@ function wire() {
     state.userForm = { name: '', email: '', phone: '', role: 'passenger', active: true, role_ids: [], permission_grants: {} };
     render();
   });
+  document.querySelector('#userFilters')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    state.userFilters = {
+      ...state.userFilters,
+      q: String(form.get('q') ?? '').trim(),
+      role: String(form.get('role') ?? ''),
+      active: String(form.get('active') ?? ''),
+      date_from: String(form.get('date_from') ?? ''),
+      date_to: String(form.get('date_to') ?? ''),
+      page: 1,
+    };
+    void loadModule();
+  });
+  document.querySelector('#clearUserFilters')?.addEventListener('click', () => {
+    state.userFilters = { q: '', role: '', active: '', date_from: '', date_to: '', page: 1, per_page: 25 };
+    void loadModule();
+  });
+  document.querySelectorAll('[data-users-page]').forEach((button) => button.addEventListener('click', () => {
+    const direction = button.dataset.usersPage === 'next' ? 1 : -1;
+    const page = Math.max(1, Math.min(state.userMeta.last_page, state.userMeta.current_page + direction));
+    if (page === state.userMeta.current_page) return;
+    state.userFilters = { ...state.userFilters, page };
+    void loadModule();
+  }));
   document.querySelector('#cancelUser')?.addEventListener('click', () => {
     state.userFormOpen = false;
     state.userEditingId = null;
@@ -1401,7 +1435,7 @@ function wire() {
   }));
   document.querySelectorAll('[data-disable-user]').forEach((button) => button.addEventListener('click', async () => {
     if (!confirm('Disable this user account?')) return;
-    try { await api.disableUser(button.dataset.disableUser); state.users = await api.users(); render(); } catch (error) { state.error = error.message; render(); }
+    try { await api.disableUser(button.dataset.disableUser); const usersResult = await api.users(state.userFilters); state.users = usersResult.items; state.userMeta = usersResult.meta; render(); } catch (error) { state.error = error.message; render(); }
   }));
   document.querySelectorAll('[data-user-role], [data-role-permission]').forEach((button) => button.addEventListener('click', () => {
     const enabled = button.getAttribute('aria-pressed') !== 'true';
@@ -1430,7 +1464,7 @@ function wire() {
     }
     if (state.permissions.includes('permissions.assign')) data.permission_grants = grants;
     if (String(form.get('password') ?? '').trim()) data.password = form.get('password');
-    try { await api.saveUser(data, state.userEditingId); state.users = await api.users(); state.userFormOpen = false; state.userEditingId = null; state.userForm = null; render(); } catch (error) { const message = document.querySelector('#userMessage'); if (message) message.textContent = error.message; }
+    try { await api.saveUser(data, state.userEditingId); const usersResult = await api.users(state.userFilters); state.users = usersResult.items; state.userMeta = usersResult.meta; state.userFormOpen = false; state.userEditingId = null; state.userForm = null; render(); } catch (error) { const message = document.querySelector('#userMessage'); if (message) message.textContent = error.message; }
   });
   document.querySelectorAll('[data-edit-role]').forEach((button) => button.addEventListener('click', () => { state.roleEditingId = button.dataset.editRole; render(); }));
   document.querySelector('#cancelRole')?.addEventListener('click', () => { state.roleEditingId = null; render(); });

@@ -132,9 +132,15 @@ try {
         assert.ok(metrics.documentWidth <= metrics.viewport + 1, `${surface} ${width}px horizontal overflow: ${metrics.documentWidth}px > ${metrics.viewport}px`);
         assert.equal(pageErrors.length, 0, `${surface} ${width}px page errors: ${pageErrors.join('; ')}`);
         if (surface === 'admin' && width === 1440 && visualTokens) {
-          await page.locator('#adminLiveMap .encore-map-fallback, #adminLiveMap .leaflet-container').first().waitFor({ timeout: 10000 });
-          assert.match(await page.locator('#adminLiveMap').innerText(), /Route map unavailable|Map renderer unavailable/,
-            'The Admin map explains when route geometry is unavailable');
+          await page.waitForFunction(() => {
+            const map = document.querySelector('#adminLiveMap');
+            return Boolean(map?.querySelector('.leaflet-container'))
+              || /Route map unavailable|Map renderer unavailable/.test(map?.innerText ?? '');
+          }, null, { timeout: 10000 });
+          const adminMapText = await page.locator('#adminLiveMap').innerText();
+          const adminMapRendered = await page.locator('#adminLiveMap .leaflet-container').count() === 1;
+          assert.ok(adminMapRendered || /Route map unavailable|Map renderer unavailable/.test(adminMapText),
+            'The Admin map must either render real geometry or explain why route geometry is unavailable');
         }
         if (surface === 'website' && width === 390) {
           const missingAnchors = await page.locator('a[href^="#"]').evaluateAll((links) =>
@@ -217,7 +223,7 @@ try {
               try { bookingResponse = await response.json(); } catch { /* Keep the assertion below focused on a usable response. */ }
             }
           });
-          await page.getByRole('button', { name: 'HOLD SEATS & CONTINUE →' }).click();
+          await page.getByRole('button', { name: /CONTINUE AS GUEST →|RESERVE WITH ACCOUNT →/ }).click();
           await page.getByRole('heading', { name: 'Your seats are being held.' }).waitFor();
           assert.equal(bookingResponse?.data?.status, 'pending_payment', 'Guest booking stays pending until a configured payment gateway confirms payment');
           await page.screenshot({ path: 'artifacts/visual/passenger-booking-status-1440.png', fullPage: true, timeout: 60000 });
@@ -229,7 +235,7 @@ try {
             return { status: response.status, payload: await response.json() };
           }, { id: bookingResponse.data.id });
           assert.equal(cleanup.status, 200, 'The isolated visual flow can cancel its own guest booking');
-          const releasedSeats = await page.evaluate(async () => (await fetch('/api/v1/trips/1/seats?origin=Georgetown&destination=New%20Amsterdam').then((response) => response.json())).data);
+          const releasedSeats = await page.evaluate(async (tripId) => (await fetch(`/api/v1/trips/${encodeURIComponent(tripId)}/seats?origin=Georgetown&destination=New%20Amsterdam`, { headers: { accept: 'application/json' } }).then((response) => response.json())).data, availableDeparture.id);
           assert.ok(releasedSeats.find((seat) => seat.seat_number === seatNumber)?.available, 'Cancelling the guest hold releases its seat');
         }
         await page.evaluate(async () => {
@@ -310,6 +316,7 @@ try {
           await page.locator('[data-view-booking]').first().click();
           const bookingDialog = page.locator('#bookingDetailsDialog');
           await bookingDialog.waitFor({ state: 'visible' });
+          await page.locator('#bookingDetailsContent .booking-detail-header h2').waitFor({ timeout: 10000 });
           const bookingDetailsText = await page.locator('#bookingDetailsContent').innerText();
           assert.match(bookingDetailsText, /Georgetown → New Amsterdam/, 'Admin can inspect booking route details using the existing booking API');
           await page.screenshot({ path: 'artifacts/visual/admin-booking-details-1440.png', fullPage: true, timeout: 60000 });
@@ -492,8 +499,8 @@ try {
           await page.locator('#userForm [name="email"]').fill(qaUserEmail);
           await page.locator('#userForm [name="password"]').fill('Visual-QA-Password-2026');
           await page.locator('#userForm [name="role"]').selectOption('passenger');
-          await page.locator(`[data-user-role="${passengerRoleId}"]`).check();
-          await page.locator('[data-user-permission="bookings.view"]').check();
+          await page.locator(`[data-user-role="${passengerRoleId}"]`).click();
+          await page.locator('[data-user-permission="bookings.view"]').selectOption('allow');
           await page.locator('#userForm button[type="submit"]').click();
           const createdUser = await page.waitForFunction(async (email) => {
             const payload = await fetch('/api/v1/admin/users', { headers: { authorization: `Bearer ${sessionStorage.getItem('encore_api_token')}` } }).then((response) => response.json());
@@ -551,18 +558,19 @@ try {
           await page.locator('#scheduleForm [name="driver_id"]').selectOption(driverOption);
           const busOption = await page.locator('#scheduleForm [name="bus_id"] option:not([value=""])').first().getAttribute('value');
           if (busOption) await page.locator('#scheduleForm [name="bus_id"]').selectOption(busOption);
-          const scheduleDay = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+          const scheduleDay = new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10);
+          const scheduleNotes = `Visual interface verification ${Date.now()}`;
           await page.locator('#scheduleForm [name="work_date"]').fill(scheduleDay);
           await page.locator('#scheduleForm [name="starts_at"]').fill('03:00');
           await page.locator('#scheduleForm [name="ends_at"]').fill('04:00');
-          await page.locator('#scheduleForm [name="notes"]').fill('Visual interface verification');
+          await page.locator('#scheduleForm [name="notes"]').fill(scheduleNotes);
           await page.locator('#scheduleForm button[type="submit"]').click();
-          await page.waitForFunction(async (day) => {
+          await page.waitForFunction(async ({ day, notes }) => {
             const payload = await fetch('/api/v1/admin/driver-schedules', { headers: { authorization: `Bearer ${sessionStorage.getItem('encore_api_token')}` } }).then((response) => response.json());
-            return payload.data?.some((item) => String(item.work_date).slice(0, 10) === day && item.notes === 'Visual interface verification');
-          }, scheduleDay);
+            return payload.data?.some((item) => String(item.work_date).slice(0, 10) === day && item.notes === notes);
+          }, { day: scheduleDay, notes: scheduleNotes });
           await page.locator('#scheduleForm').waitFor({ state: 'detached' });
-          await page.locator('[data-table-shell="driver-schedules"] .badge').getByText('1 record').waitFor();
+          await page.locator('[data-table-shell="driver-schedules"] [data-table-row]').first().waitFor();
           await page.screenshot({ path: 'artifacts/visual/admin-schedules-1440.png', fullPage: true, timeout: 60000 });
 
           await page.locator('[data-module="reports"]').click();

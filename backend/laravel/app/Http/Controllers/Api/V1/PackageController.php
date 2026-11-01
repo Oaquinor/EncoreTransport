@@ -40,13 +40,23 @@ class PackageController extends Controller
         }
 
         $token = Str::random(64);
-        $package = DB::transaction(function () use ($data, $driver, $request, $token): TransportPackage {
+        $qrToken = Str::random(64);
+        $package = DB::transaction(function () use ($data, $driver, $request, $token, $qrToken): TransportPackage {
+            $publicId = (string) Str::uuid();
+            $reference = 'PK-' . strtoupper(Str::random(10));
             $package = TransportPackage::query()->create([
                 ...$data,
-                'public_id' => (string) Str::uuid(),
+                'public_id' => $publicId,
                 'tracking_token_hash' => hash('sha256', $token),
+                'qr_token_hash' => hash('sha256', $qrToken),
+                'qr_payload' => json_encode([
+                    'type' => 'encore.package',
+                    'package' => $publicId,
+                    'reference' => $reference,
+                    'token' => $qrToken,
+                ], JSON_THROW_ON_ERROR),
                 'driver_id' => $driver->id,
-                'reference' => 'PK-' . strtoupper(Str::random(10)),
+                'reference' => $reference,
                 'status' => 'received',
             ]);
 
@@ -64,6 +74,7 @@ class PackageController extends Controller
                 'package' => $package->load('trip.route', 'trip.bus'),
                 'tracking_token' => $token,
                 'tracking_url' => '/track-package/?token=' . $token,
+                'qr_payload' => json_decode($package->qr_payload, true, 512, JSON_THROW_ON_ERROR),
             ],
         ], 201);
     }

@@ -2,14 +2,14 @@
 
 Fecha: 2026-11-01  
 Rama: `main`  
-Commit de referencia: `d91c2b87d8cbfdec2c1796e431f7d35390e6a1e6`
+Commit de referencia: `b950cc9327a1078b3e8da0b91dafec5e6d0d8110`
 Commit final: no creado; los cambios de esta revisión permanecen sin confirmar.
 
 ## Clasificación
 
 `PARTIALLY_COMPLETE`
 
-La plataforma tiene una base funcional demostrable para Website, reservas, asientos, Passenger web, Driver PWA, Admin, mapas, tracking y contratos de seguridad. No se declara lista para producción porque pagos externos, dispositivos móviles reales, notificaciones externas y custodia avanzada siguen sin aceptación completa.
+La plataforma tiene una base funcional demostrable para Website, reservas, asientos, Passenger web, Driver PWA, Admin, mapas, tracking y contratos de seguridad. No se declara lista para producción porque pagos externos, dispositivos móviles reales, notificaciones externas y la integración operativa completa de custodia siguen sin aceptación completa.
 
 ## Trabajo realizado en esta revisión
 
@@ -23,8 +23,10 @@ La plataforma tiene una base funcional demostrable para Website, reservas, asien
 - La API compartida del Driver soporta evidencia multipart.
 - Website ya no permite que el fallo de viajes destacados sobrescriba el estado de Encore Live; el browser test espera explícitamente la inicialización asíncrona del mapa.
 - La navegación pública del Website quedó reducida a `Home | Trips | Packages | Tracking | Help`; se retiraron `Platform`, `Journey Control` y la barra rápida pública.
-- `ALL_ACTIONS_AUDIT.md` ahora contiene una fila por control/listener detectado en 38 archivos, 452 filas, con pantalla, propósito, destino, permisos, estado y evidencia.
+- `ALL_ACTIONS_AUDIT.md` ahora contiene 460 filas de controles/listeners detectados en 38 archivos, con pantalla, propósito, destino, permisos, estado y evidencia.
+- La gestión de cuentas incorpora búsqueda y filtros server-side con paginación; `AdminUserSearchTest` verifica el recorrido contra Laravel/MySQL.
 - Se eliminó la vinculación/notificación automática basada únicamente en `recipient_email`; el registro de paquetes no convierte al destinatario en cuenta sin confirmación.
+- La custodia avanzada añade QR opaco, manifiestos por viaje con reconciliación, escaneo idempotente y transferencia con aceptación del conductor receptor.
 
 ## Funcionalidad preservada
 
@@ -32,8 +34,8 @@ Reservas y cotización por tramo, selección de asientos, rutas y mapas TomTom/L
 
 ## Pendientes que impiden el lanzamiento
 
-Proveedor y credenciales de pago, transferencias y manifiesto conciliable de paquetes, QR operativo, GPS background en dispositivo, aceptación nativa, proveedores Gmail/WhatsApp/push, dominio SEO final y E2E autenticado contra un entorno sembrado.
+Proveedor y credenciales de pago, UI operativa de manifiestos/transferencias en Driver Mobile, terminal/vehículo/ubicación por evento, GPS background en dispositivo, aceptación nativa, proveedores Gmail/WhatsApp/push, dominio SEO final y E2E autenticado contra un entorno sembrado.
 
 ## Evidencia
 
-`npm test` pasa; los typechecks de API, Passenger web, Passenger Mobile y Driver Mobile pasan; el build de Passenger pasa; browser visual pasa con 36 checks y capturas en 360, 390, 768, 1024, 1440 y 1920 px. `php artisan test` pasa con 75 pruebas y 469 aserciones usando PHP 8.3.30 y MySQL de Laragon. Las pruebas en dispositivos reales y las integraciones externas siguen bloqueadas.
+`npm test` pasa; los typechecks de API, Passenger web, Passenger Mobile y Driver Mobile pasan; el build de Passenger pasa; browser visual pasa con 36 checks y capturas en 360, 390, 768, 1024, 1440 y 1920 px; el flujo Admin autenticado focalizado pasa a 1440 px. `php artisan test` pasa con 78 pruebas y 504 aserciones usando PHP 8.3.30 y MySQL de Laragon. Las pruebas en dispositivos reales y las integraciones externas siguen bloqueadas.

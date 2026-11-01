@@ -1,6 +1,6 @@
 # Auditoría completa de acciones y controles
 
-Generado desde controles declarados y listeners detectables en 38 archivos de aplicaciones. Filas: 452. Cada fila conserva la evidencia de origen; `DECLARADO` y `DINÁMICO` no equivalen a aceptación funcional.
+Generado desde controles declarados y listeners detectables en 38 archivos de aplicaciones, más los controles de búsqueda server-side añadidos en esta revisión. Filas: 460. Cada fila conserva la evidencia de origen; `DECLARADO` y `DINÁMICO` no equivalen a aceptación funcional.
 
 ## Criterio de estado
 
@@ -464,6 +464,14 @@ Generado desde controles declarados y listeners detectables en 38 archivos de ap
 | 450 | website | apps/website/index.html | a Accessibility | Navegar al destino declarado | #legal-accessibility | Público | DECLARADO; requiere recorrido runtime | fuente:apps/website/index.html:639 |
 | 451 | website | apps/website/index.html | a Skip to main content | Navegar al destino declarado | #mainContent | Público | DECLARADO; requiere recorrido runtime | fuente:apps/website/index.html:92 |
 | 452 | website | apps/website/index.html | a encore transport | Navegar al destino declarado | #home | Público | DECLARADO; requiere recorrido runtime | fuente:apps/website/index.html:96 |
+| 453 | admin | apps/admin-dashboard/app.mjs | input Search account | Filtrar cuentas por ID, nombre, correo o teléfono | `admin/users?q=` | users.view | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:813 |
+| 454 | admin | apps/admin-dashboard/app.mjs | select Role | Filtrar cuentas por rol | `admin/users?role=` | users.view | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:813 |
+| 455 | admin | apps/admin-dashboard/app.mjs | select Status | Filtrar cuentas por estado | `admin/users?active=` | users.view | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:813 |
+| 456 | admin | apps/admin-dashboard/app.mjs | input Registered from/to | Filtrar por fecha de registro | `admin/users?date_from/date_to` | users.view | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:813 |
+| 457 | admin | apps/admin-dashboard/app.mjs | button Search accounts | Ejecutar consulta paginada | `admin/users` | users.view | LISTENER DETECTADO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:1410 |
+| 458 | admin | apps/admin-dashboard/app.mjs | button Clear | Restablecer filtros de cuentas | `admin/users?page=1` | users.view | LISTENER DETECTADO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:1412 |
+| 459 | admin | apps/admin-dashboard/app.mjs | button Previous/Next | Cambiar página del directorio | `admin/users?page=` | users.view | LISTENER DETECTADO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:1415 |
+| 460 | admin | apps/admin-dashboard/app.mjs | listener userFilters | Enviar filtros al backend paginado | `admin/users` | users.view | LISTENER DETECTADO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:1400 |
 
 ## Cierre de auditoría
 

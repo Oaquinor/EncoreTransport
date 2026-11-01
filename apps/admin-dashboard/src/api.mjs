@@ -69,7 +69,11 @@ export const vehicleStatus = async () => {
   return payload.data ?? [];
 };
 
-export const users = async () => (await requestJson('/admin/users')).data ?? [];
+export const users = async (filters = {}) => {
+  const query = new URLSearchParams(Object.entries(filters).filter(([, value]) => value !== '' && value != null));
+  const payload = await requestJson(`/admin/users${query.toString() ? `?${query}` : ''}`);
+  return { items: payload.data ?? [], meta: payload.meta ?? { current_page: 1, last_page: 1, per_page: 25, total: (payload.data ?? []).length } };
+};
 export const saveUser = async (data, id = null) => {
   const payload = await requestJson(id ? `/admin/users/${encodeURIComponent(id)}` : '/admin/users', {
     method: id ? 'PUT' : 'POST', body: JSON.stringify(data),

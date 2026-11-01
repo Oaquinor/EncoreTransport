@@ -26,6 +26,18 @@ El recorrido comercial primario es hero/búsqueda → resultados → detalle →
 
 `recipient_email` se trata como dato de contacto: registrar un paquete no busca automáticamente una cuenta ni vincula o notifica a un pasajero. La vinculación requiere confirmación explícita. La evidencia fotográfica de entrega se guarda en almacenamiento privado y el tracking público solo expone el estado operativo mínimo, sin correo, teléfono ni notas internas.
 
+## Reglas por aplicación
+
+- **Website:** identidad comercial, una búsqueda principal, rutas y paquetes como accesos contextuales; no expone herramientas internas de operación.
+- **Admin:** producto empresarial con sidebar por dominio, header persistente, breadcrumbs, búsqueda server-side, tablas paginadas, filtros combinables, acciones contextuales, permisos visibles y estados de carga/error/vacío.
+- **Passenger:** aplicación personal centrada en el próximo viaje, con reservas, boletos vigentes e historial separados; el pago y la emisión del boleto muestran estados reales del backend.
+- **Driver:** operación primero: viaje activo, pasajeros, paquetes, vehículo, GPS e incidencias; cada acción debe ser rápida, reversible cuando corresponda y autorizada por Laravel.
+- **Paquetería:** la referencia, estado actual, próxima acción y línea temporal son el eje; los detalles administrativos y la evidencia privada no se mezclan con el tracking público.
+
+## Componentes compartidos
+
+Se reutilizan los patrones de `packages/shared`: botones con foco visible, badges semánticos, tablas con búsqueda/paginación, tarjetas de viaje, mensajes de estado, mapas con fallback explícito y controles táctiles. No se crea una hoja correctiva nueva para ocultar problemas; las reglas específicas permanecen junto a la aplicación responsable y los contratos de comportamiento se prueban en frontend o Laravel.
+
 ## Responsive
 
 Desktop usa dos columnas; tablet apila tarjetas manteniendo densidad intermedia; móvil convierte el formulario en una columna y mantiene botones táctiles. Las capturas se validaron a 390, 1024 y 1440 px sin overflow horizontal.
