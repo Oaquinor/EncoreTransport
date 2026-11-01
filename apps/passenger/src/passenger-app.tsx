@@ -157,8 +157,6 @@ export function PassengerApp() {
   const go = (next: Screen) => {
     setHistory((value) => [...value, screen]);
     setScreen(next);
-    // Keep step changes immediate; smooth scrolling made each API response
-    // feel like a second page reload on slower devices.
     scrollTo({ top: 0, behavior: 'auto' });
   };
 
@@ -665,7 +663,7 @@ function AccountScreen({ user, bookings, loading, onBack, onNewTrip, onProfileUp
                 if (navigator.share) await navigator.share({ title: 'Encore Transport journey', text });
                 else await navigator.clipboard.writeText(text);
                 setBookingAction('Journey details ready to share.');
-              } catch { /* user cancelled the native share sheet */ }
+              } catch {}
             };
             const copyReference = async () => {
               try { await navigator.clipboard.writeText(reference); setBookingAction('Booking reference copied.'); }

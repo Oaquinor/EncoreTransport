@@ -163,9 +163,6 @@ function initializeBusinessFooter() {
       link.rel = 'noopener noreferrer';
       visibleSocials += 1;
     } else {
-      // Keep the community affordance visible even before official handles
-      // are configured; disabled links explain the state instead of leaving
-      // an empty footer column.
       link.setAttribute('aria-disabled', 'true');
       link.setAttribute('title', 'Official account coming soon');
     }
@@ -189,10 +186,6 @@ async function applyPublishedWebsiteContent() {
       contact: { section: '#contact', title: '#contactTitle', subtitle: '#contact .public-section-copy > p', button: '#contact .public-contact-card a' },
       final_cta: { section: '.public-final-cta', title: '.public-final-cta h2', subtitle: '.public-final-cta p', button: '.public-final-cta a' },
     };
-    // Older published drafts used the original generic copy. Treat those exact
-    // values as a migration baseline so the polished static experience remains
-    // coherent until an administrator republishes the new copy, while still
-    // preserving any intentional CMS edits.
     const legacyCopy = {
       tracking: { title: 'Your package, easier to follow.', description: 'Enter your tracking reference to see the latest update recorded for your shipment.', button_label: 'Track my package' },
       contact: { title: 'Need help planning a trip.', description: 'Need help with a booking? Start with the trip and package tools, or review the answers to common questions.', button_label: 'Visit travel help' },
@@ -239,7 +232,7 @@ async function applyPublishedWebsiteContent() {
       if (list) list.innerHTML = data.faqs.filter((faq) => faq.enabled !== false).map((faq) => `<details data-reveal><summary>${esc(faq.question)}</summary><p>${esc(faq.answer)}</p></details>`).join('');
       observeDynamicReveal(list);
     }
-  } catch { /* CMS remains optional until a published version exists. */ }
+  } catch {}
 }
 
 function minutes(seconds) {
@@ -729,7 +722,7 @@ async function initializePublicSession() {
   try {
     const cached = JSON.parse(sessionStorage.getItem('encore_auth_user') || 'null');
     if (cached) applyUser(cached);
-  } catch { /* A stale cache is replaced by the authoritative request below. */ }
+  } catch {}
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
@@ -836,7 +829,7 @@ recentSearches?.addEventListener('click', (event) => {
     if (date && saved.date) date.value = saved.date;
     if (passengers && saved.passengers) passengers.value = saved.passengers;
     setText('#searchMessage', 'Search restored. Review the details and find trips.');
-  } catch { /* stale local preference */ }
+  } catch {}
 });
 
 initializeMotion();

@@ -212,7 +212,11 @@ class AuthController extends Controller
     {
         $payload = $user->toArray();
         $photoPath = $user->profile_photo_path ?: $user->driver?->photo_path;
-        $payload['avatar_url'] = $photoPath && Storage::disk('public')->exists($photoPath)
+        // Keep the persisted public path in the auth contract even when a
+        // legacy/driver photo has not been materialized on the current disk.
+        // The frontend already has an explicit broken-image fallback, while
+        // dropping the URL here hides a valid profile reference from clients.
+        $payload['avatar_url'] = $photoPath
             ? Storage::disk('public')->url($photoPath)
             : null;
 

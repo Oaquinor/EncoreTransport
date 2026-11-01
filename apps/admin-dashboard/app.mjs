@@ -4,6 +4,9 @@ import {
   logout,
   mapJourney,
   requestJson,
+  listNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
 } from '../../packages/shared/api.mjs';
 import {
   renderJourneyMapWithLoader,
@@ -70,9 +73,17 @@ const state = {
   userForm: null,
   roleEditingId: null,
   profilePhotoMessage: '',
+  profilePhotoDraftUrl: '',
+  profilePhotoDraftFile: null,
+  profilePhotoZoom: 1,
+  profileDialog: '',
+  profileSaving: false,
+  profileDirty: false,
+  userMenuOpen: false,
+  notificationsOpen: false,
+  notifications: [],
+  notificationsUnread: 0,
   sidebarCollapsed: localStorage.getItem('encore_admin_sidebar_collapsed') === '1',
-  // v2 resets the old all-collapsed preference that could leave the menu
-  // looking empty after the sidebar redesign.
   navGroups: JSON.parse(localStorage.getItem('encore_admin_nav_groups_v2') || '{}'),
 };
 
@@ -128,6 +139,23 @@ async function optimizeImageForUpload(file) {
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.84));
     if (!blob || blob.size >= file.size) return file;
     return new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.webp`, { type: 'image/webp', lastModified: Date.now() });
+  } finally { bitmap.close?.(); }
+}
+
+async function cropProfileImage(file, zoom = 1) {
+  if (typeof createImageBitmap !== 'function' || typeof File !== 'function') return file;
+  const bitmap = await createImageBitmap(file);
+  try {
+    const side = Math.min(bitmap.width, bitmap.height) / Math.max(1, Number(zoom));
+    const sx = Math.max(0, (bitmap.width - side) / 2);
+    const sy = Math.max(0, (bitmap.height - side) / 2);
+    const canvas = document.createElement('canvas');
+    canvas.width = 720; canvas.height = 720;
+    const context = canvas.getContext('2d');
+    if (!context) return file;
+    context.drawImage(bitmap, sx, sy, side, side, 0, 0, 720, 720);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.86));
+    return blob ? new File([blob], `${file.name.replace(/\.[^.]+$/, '')}-profile.webp`, { type: 'image/webp', lastModified: Date.now() }) : file;
   } finally { bitmap.close?.(); }
 }
 
@@ -365,6 +393,11 @@ async function ensureAdmin() {
     state.user = payload.user ?? payload.data?.user ?? payload;
 
     state.permissions = payload.permissions ?? [];
+    try {
+      const notifications = await listNotifications({ limit: 12 });
+      state.notifications = notifications.items;
+      state.notificationsUnread = notifications.unread;
+    } catch { state.notifications = []; state.notificationsUnread = 0; }
 
     if (!state.permissions.includes('dashboard.view')) {
       state.loading = false;
@@ -407,7 +440,7 @@ function sidebar() {
         </div>
       </a>
       <button class="admin-sidebar-toggle" type="button" data-sidebar-toggle aria-expanded="${!state.sidebarCollapsed}" aria-label="${state.sidebarCollapsed ? 'Show navigation menu' : 'Hide navigation menu'}">
-        <span aria-hidden="true">${state.sidebarCollapsed ? '→' : '←'}</span><b>${state.sidebarCollapsed ? 'Show menu' : 'Hide menu'}</b>
+        ${icon(state.sidebarCollapsed ? 'arrowRight' : 'arrowLeft')}<b>${state.sidebarCollapsed ? 'Show menu' : 'Hide menu'}</b>
       </button>
       <div class="admin-nav-tools" role="group" aria-label="Navigation section controls">
         <button type="button" data-nav-expand-all>${icon('arrowRight')}Expand all</button>
@@ -455,9 +488,6 @@ function publicAssetUrl(candidate) {
   }
   try {
     const parsed = new URL(value, location.origin);
-    // Laravel's local APP_URL is often http://localhost while the frontend is
-    // opened at 127.0.0.1:4173. Keep the path but use the current origin so
-    // the Node storage proxy can serve the file.
     if (['localhost', '127.0.0.1', '::1'].includes(parsed.hostname)) {
       return `${parsed.pathname}${parsed.search}`;
     }
@@ -465,6 +495,19 @@ function publicAssetUrl(candidate) {
   } catch {
     return value.startsWith('/') ? value : '';
   }
+}
+
+function initialsForUser(user = {}) {
+  const parts = String(user.name ?? 'Staff account').trim().split(/\s+/).filter(Boolean);
+  return parts.slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'ET';
+}
+
+function profileDialogMarkup() {
+  const draft = state.profilePhotoDraftUrl;
+  if (state.profileDialog === 'photo') return `<dialog class="profile-dialog" open aria-labelledby="photoDialogTitle"><form method="dialog" class="profile-dialog__panel" id="profilePhotoDialog"><div class="eyebrow">Profile photo</div><div class="profile-dialog__heading"><h3 id="photoDialogTitle">Change profile photo</h3><button class="button button--icon" value="cancel" aria-label="Close">${icon('close')}</button></div><div class="photo-dialog-grid"><div class="photo-dialog-preview" style="--photo-zoom:${state.profilePhotoZoom}">${draft ? `<img src="${esc(draft)}" alt="Selected profile preview" />` : `<span>${icon('user')}</span>`}</div><label class="photo-dropzone"><input id="profilePhotoDialogInput" type="file" accept="image/jpeg,image/png,image/webp" /><span>${icon('view')}Choose a photo</span><small>JPG, PNG or WebP · maximum 5 MB</small></label></div><label class="photo-zoom"><span>Adjust framing</span><input id="profilePhotoZoom" type="range" min="1" max="2" step="0.05" value="${state.profilePhotoZoom}" ${draft ? '' : 'disabled'} /></label><div class="profile-dialog__actions"><button class="button button--ghost" value="cancel">Cancel</button><button class="button button--primary" id="applyProfilePhoto" type="button" ${draft ? '' : 'disabled'}>${icon('save')}Save photo</button></div><p id="profilePhotoDialogMessage" class="profile-dialog__message" aria-live="polite"></p></form></dialog>`;
+  if (state.profileDialog === 'delete') return `<dialog class="profile-dialog profile-dialog--danger" open aria-labelledby="deleteDialogTitle"><form method="dialog" class="profile-dialog__panel" id="deleteProfileDialog"><div class="profile-danger-icon">${icon('close')}</div><div class="profile-dialog__heading"><h3 id="deleteDialogTitle">Delete account?</h3><button class="button button--icon" value="cancel" aria-label="Close">${icon('close')}</button></div><p>This action cannot be undone. Historical bookings will be preserved and personal data will be anonymized where required.</p><label><span>Type DELETE to confirm</span><input id="deleteConfirmation" autocomplete="off" placeholder="DELETE" /></label><div class="profile-dialog__actions"><button class="button button--ghost" value="cancel">Cancel</button><button class="button button--danger" id="confirmDeleteProfile" type="button" disabled>Delete account</button></div><p id="deleteProfileMessage" class="profile-dialog__message" aria-live="polite"></p></form></dialog>`;
+  if (state.profileDialog === 'saved') return `<dialog class="profile-dialog profile-dialog--success" open aria-labelledby="savedDialogTitle"><form method="dialog" class="profile-dialog__panel"><div class="profile-success-icon">${icon('save')}</div><h3 id="savedDialogTitle">Profile updated</h3><p>Your information was saved successfully.</p><button class="button button--primary" value="cancel">Done</button></form></dialog>`;
+  return '';
 }
 
 function accessRoleList(roles, selectedIds = [], disabled = false) {
@@ -779,10 +822,15 @@ function content() {
     const user = state.user ?? {};
     const avatar = profileImageSource(user);
     return `<section class="admin-panel admin-panel--pad profile-module">
-      <div class="module-view__header"><div><div class="eyebrow">Account</div><h2>Profile & settings</h2><p class="module-subtitle">Update your identity, photo and account preferences without leaving operations.</p></div></div>
-      <div class="profile-module__identity"><div class="profile-module__avatar">${avatar ? `<img src="${esc(avatar)}" alt="" />` : icon('user')}</div><div><strong>${esc(adminDisplayName(user))}</strong><span>${esc(user.email ?? '')}</span><small>${esc(user.role ?? 'Staff account')} · ${state.permissions.length} permissions</small></div></div>
-      <form id="profileForm" class="premium-form-grid fleet-form"><label><span>Display name</span><input name="name" required maxlength="150" value="${esc(user.name ?? '')}" /></label><label><span>Email</span><input value="${esc(user.email ?? '')}" disabled /></label><label><span>Phone</span><input name="phone" maxlength="40" value="${esc(user.phone ?? '')}" /></label><label class="file-field"><span>Profile photo</span><input name="photo" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG or WebP · maximum 5 MB</small></label><div class="form-actions"><button class="button button--primary button--with-icon" type="submit">${icon('save')}Save profile</button></div><div id="profileMessage" aria-live="polite"></div></form>
-      <div class="profile-danger"><div><strong>Delete account</strong><span>Type DELETE to deactivate or remove this account. Existing bookings are preserved anonymously.</span></div><button class="button button--danger" type="button" id="deleteProfile">Delete account</button></div>
+      <div class="profile-breadcrumb"><span>${icon('dashboard')}Operations</span><b>›</b><span>${icon('settings')}Configuration</span><b>›</b><strong>Account</strong></div>
+      <div class="module-view__header profile-heading"><div><div class="eyebrow">Account settings</div><h2>Account configuration</h2><p class="module-subtitle">Manage your identity, access and preferences from one secure workspace.</p></div><button class="button button--ghost" id="profileClose" type="button">Back to dashboard</button></div>
+      <nav class="profile-tabs" aria-label="Account sections"><button class="is-active" type="button">${icon('user')}Personal information</button><button type="button" disabled title="Security API not available">${icon('save')}Security<span>Unavailable</span></button><button type="button" disabled title="Preferences API not available">${icon('settings')}Preferences<span>Unavailable</span></button><button type="button" disabled title="Device sessions API not available">${icon('view')}Devices<span>Unavailable</span></button><button type="button" disabled title="Activity API not available">${icon('report')}Activity<span>Unavailable</span></button></nav>
+      <div class="profile-grid">
+        <section class="profile-card profile-photo-card"><div class="profile-card-heading">${icon('user')}<div><h3>Profile photo</h3><p>Use a clear image for your account.</p></div></div><div class="profile-avatar-large">${avatar ? `<img src="${esc(avatar)}" alt="Current profile photo" />` : `<span>${esc(initialsForUser(user))}</span>`}<button type="button" id="changeProfilePhoto" aria-label="Change profile photo">${icon('view')}</button></div><button class="button button--ghost profile-photo-button" id="changeProfilePhotoSecondary" type="button">${icon('view')}Change photo</button><small class="profile-help">JPG, PNG or WebP · maximum 5 MB</small></section>
+        <section class="profile-card profile-info-card"><div class="profile-card-heading">${icon('user')}<div><h3>Personal information</h3><p>Keep your account details current.</p></div></div><form id="profileForm" class="profile-form"><label><span>Full name</span><input name="name" required maxlength="150" value="${esc(user.name ?? '')}" /></label><label><span>Phone number</span><input name="phone" maxlength="40" value="${esc(user.phone ?? '')}" /></label>${user.email ? `<label><span>Email address</span><input value="${esc(user.email)}" disabled /></label>` : ''}<label><span>Account role</span><input value="${esc(user.role ?? 'Staff account')}" disabled /></label><div class="profile-form-actions"><span id="profileMessage" aria-live="polite">${state.profileDirty ? 'Unsaved changes' : ''}</span><button class="button button--primary button--with-icon" type="submit" ${state.profileDirty ? '' : 'disabled'}>${icon('save')}Save changes</button></div></form></section>
+      </div>
+      <div class="profile-grid profile-grid-bottom"><section class="profile-card profile-access-card"><div class="profile-card-heading">${icon('save')}<div><h3>Account access</h3><p>Manage this session and account lifecycle.</p></div></div><div class="profile-access-row"><button class="button button--ghost" id="profileLogout" type="button">${icon('logout')}Sign out</button><span>End the current authenticated session.</span></div><div class="profile-access-row profile-access-danger"><button class="button button--danger" id="deleteProfile" type="button">${icon('close')}Delete account</button><span>Requires explicit confirmation and preserves historical records.</span></div></section><section class="profile-card profile-status-card"><div class="profile-card-heading">${icon('view')}<div><h3>Connected devices</h3><p>Device-session inventory is not available from the current API.</p></div></div><div class="profile-unavailable"><span>${icon('view')}</span><div><strong>Not available</strong><small>The backend does not expose active device sessions yet.</small></div></div></section></div>
+      ${profileDialogMarkup()}
     </section>`;
   }
 
@@ -827,7 +875,9 @@ function render() {
           </div>
 
           <div class="admin-controls">
-            <button class="admin-user-chip" type="button" data-module="profile" aria-label="Open profile settings">${icon('user')}<span>${esc(adminDisplayName(state.user))}</span></button>
+            <button class="admin-notification-button" id="adminNotificationsToggle" type="button" aria-expanded="${state.notificationsOpen}" aria-label="Open notifications">${icon('report')}${state.notificationsUnread ? `<b>${state.notificationsUnread}</b>` : ''}</button>
+            ${state.notificationsOpen ? `<div class="admin-notifications-panel" role="dialog" aria-label="Notifications"><header><strong>Notifications</strong><button id="markAllNotifications" type="button" ${state.notificationsUnread ? '' : 'disabled'}>Mark all read</button></header>${state.notifications.length ? state.notifications.map((notification) => `<button class="admin-notification-item ${notification.read_at ? '' : 'is-unread'}" data-notification-id="${esc(notification.id)}" type="button"><span>${icon('report')}</span><span><strong>${esc(notification.title)}</strong><small>${esc(notification.body)}</small></span></button>`).join('') : '<p class="admin-notifications-empty">No notifications yet.</p>'}</div>` : ''}
+            <div class="admin-user-menu"><button class="admin-user-chip" id="adminUserMenuToggle" type="button" aria-expanded="${state.userMenuOpen}" aria-haspopup="menu" aria-label="Open user menu">${icon('user')}<span>${esc(adminDisplayName(state.user))}</span>${icon('arrowRight')}</button>${state.userMenuOpen ? `<div class="admin-user-menu__panel" role="menu"><div class="admin-user-menu__identity"><strong>${esc(adminDisplayName(state.user))}</strong><small>${esc(state.user?.role ?? 'Staff account')}</small></div><button type="button" data-module="profile" role="menuitem">${icon('user')}My account</button><button type="button" data-module="settings" role="menuitem">${icon('settings')}General settings</button><button type="button" id="menuLogout" role="menuitem" class="is-danger">${icon('logout')}Sign out</button></div>` : ''}</div>
             ${state.accessDenied ? '' : `<button class="button button--icon" id="openSettings" type="button" aria-label="Open settings" title="Settings">${icon('settings')}</button>`}
             ${state.accessDenied ? '' : `<button class="button button--ghost button--with-icon" id="refresh">${icon('refresh')}Refresh</button>`}
             <button class="button button--ghost button--with-icon" id="logout">${icon('logout')}Logout</button>
@@ -981,8 +1031,6 @@ function wire() {
       render();
       return;
     }
-    // Show the selected image immediately so the action is visibly working
-    // even while the authenticated upload request is in flight.
     state.profilePhotoMessage = 'Uploading photo…';
     const localPreview = URL.createObjectURL(file);
     state.user = { ...state.user, avatar_url: localPreview };
@@ -1000,6 +1048,13 @@ function wire() {
     }
   });
 
+  document.querySelectorAll('#profileForm input[name="name"], #profileForm input[name="phone"]').forEach((input) => input.addEventListener('input', () => {
+    state.profileDirty = true;
+    const button = document.querySelector('#profileForm button[type="submit"]');
+    const message = document.querySelector('#profileMessage');
+    if (button) button.disabled = false;
+    if (message) message.textContent = 'Unsaved changes';
+  }));
   document.querySelector('#profileForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -1009,15 +1064,81 @@ function wire() {
       state.user = { ...state.user, ...(await api.updateProfile({ name: form.get('name'), phone: form.get('phone') })) };
       const photo = form.get('photo');
       if (photo instanceof File && photo.size) state.user = { ...state.user, ...(await api.uploadProfilePhoto(await optimizeImageForUpload(photo))) };
+      state.profileDirty = false;
       if (message) message.textContent = 'Profile saved.';
+      state.profileDialog = 'saved';
       render();
     } catch (error) { if (message) message.textContent = error?.message ?? 'Profile could not be saved.'; }
   });
-  document.querySelector('#deleteProfile')?.addEventListener('click', async () => {
-    if (window.prompt('Type DELETE to confirm account deletion') !== 'DELETE') return;
-    try { await api.deleteProfile(); sessionStorage.removeItem('encore_api_token'); location.href = '/login/'; }
-    catch (error) { window.alert(error?.message ?? 'Account could not be deleted.'); }
+  document.querySelectorAll('#changeProfilePhoto, #changeProfilePhotoSecondary').forEach((button) => button.addEventListener('click', () => {
+    state.profileDialog = 'photo';
+    state.profilePhotoDraftUrl = '';
+    state.profilePhotoDraftFile = null;
+    state.profilePhotoZoom = 1;
+    render();
+    document.querySelector('#profilePhotoDialog')?.showModal?.();
+  }));
+  document.querySelector('#profilePhotoDialogInput')?.addEventListener('change', (event) => {
+    const file = event.currentTarget.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      const message = document.querySelector('#profilePhotoDialogMessage');
+      if (message) message.textContent = 'Choose a JPG, PNG or WebP image under 5 MB.';
+      return;
+    }
+    if (state.profilePhotoDraftUrl) URL.revokeObjectURL(state.profilePhotoDraftUrl);
+    state.profilePhotoDraftFile = file;
+    state.profilePhotoDraftUrl = URL.createObjectURL(file);
+    state.profilePhotoZoom = 1;
+    render();
   });
+  document.querySelector('#profilePhotoZoom')?.addEventListener('input', (event) => {
+    state.profilePhotoZoom = Number(event.currentTarget.value || 1);
+    const preview = document.querySelector('.photo-dialog-preview');
+    if (preview) preview.style.setProperty('--photo-zoom', state.profilePhotoZoom);
+  });
+  document.querySelector('#applyProfilePhoto')?.addEventListener('click', async () => {
+    if (!state.profilePhotoDraftFile) return;
+    const message = document.querySelector('#profilePhotoDialogMessage');
+    if (message) message.textContent = 'Saving photo…';
+    try {
+      state.user = { ...state.user, ...(await api.uploadProfilePhoto(await cropProfileImage(state.profilePhotoDraftFile, state.profilePhotoZoom))) };
+      if (state.profilePhotoDraftUrl) URL.revokeObjectURL(state.profilePhotoDraftUrl);
+      state.profilePhotoDraftUrl = ''; state.profilePhotoDraftFile = null; state.profileDialog = '';
+      state.profilePhotoMessage = 'Photo saved.';
+      render();
+    } catch (error) { if (message) message.textContent = error?.message ?? 'Photo upload failed. Please try again.'; }
+  });
+  document.querySelector('#deleteProfile')?.addEventListener('click', () => { state.profileDialog = 'delete'; render(); });
+  document.querySelector('#deleteConfirmation')?.addEventListener('input', (event) => {
+    const button = document.querySelector('#confirmDeleteProfile');
+    if (button) button.disabled = event.currentTarget.value.trim() !== 'DELETE';
+  });
+  document.querySelector('#confirmDeleteProfile')?.addEventListener('click', async () => {
+    const message = document.querySelector('#deleteProfileMessage');
+    if (message) message.textContent = 'Deleting account…';
+    try { await api.deleteProfile(); sessionStorage.removeItem('encore_api_token'); location.href = '/login/'; }
+    catch (error) { if (message) message.textContent = error?.message ?? 'Account could not be deleted.'; }
+  });
+  document.querySelector('#profileLogout')?.addEventListener('click', async () => {
+    try { await logout(); } finally { sessionStorage.removeItem('encore_api_token'); location.href = '/login/'; }
+  });
+  document.querySelector('#profileClose')?.addEventListener('click', () => { state.module = 'dashboard'; void loadModule(); });
+  document.querySelector('#adminUserMenuToggle')?.addEventListener('click', () => { state.userMenuOpen = !state.userMenuOpen; render(); });
+  document.querySelector('#adminNotificationsToggle')?.addEventListener('click', () => { state.notificationsOpen = !state.notificationsOpen; state.userMenuOpen = false; render(); });
+  document.querySelector('#markAllNotifications')?.addEventListener('click', async () => { await markAllNotificationsRead().catch(() => {}); state.notifications = state.notifications.map((item) => ({ ...item, read_at: item.read_at ?? new Date().toISOString() })); state.notificationsUnread = 0; render(); });
+  document.querySelectorAll('[data-notification-id]').forEach((button) => button.addEventListener('click', async () => {
+    await markNotificationRead(button.dataset.notificationId).catch(() => {});
+    state.notifications = state.notifications.map((item) => String(item.id) === String(button.dataset.notificationId) ? { ...item, read_at: item.read_at ?? new Date().toISOString() } : item);
+    state.notificationsUnread = state.notifications.filter((item) => !item.read_at).length;
+    render();
+  }));
+  document.querySelector('#menuLogout')?.addEventListener('click', async () => {
+    try { await logout(); } finally { sessionStorage.removeItem('encore_api_token'); location.href = '/login/'; }
+  });
+  document.querySelectorAll('.profile-dialog [value="cancel"]').forEach((button) => button.addEventListener('click', () => {
+    state.profileDialog = ''; state.profilePhotoDraftUrl = ''; state.profilePhotoDraftFile = null; render();
+  }));
 
   document.querySelector('#exportReportCsv')?.addEventListener('click', () => downloadReport('csv'));
   document.querySelector('#exportReportJson')?.addEventListener('click', () => downloadReport('json'));
@@ -1031,6 +1152,7 @@ function wire() {
       if (mapContainer) destroyRealMap(mapContainer);
 
       state.module = button.dataset.module;
+      state.userMenuOpen = false;
       state.reportData = null;
       void loadModule();
     });
@@ -1562,7 +1684,7 @@ function wire() {
             await api.deleteWebsiteMedia(imagePath);
             state.websiteMedia = state.websiteMedia.filter((asset) => asset.image_path !== imagePath);
           }
-          catch { /* The API keeps an image while any saved section still references it. */ }
+          catch {}
         }
       }
       if (message) message.textContent = publish ? 'Website content published.' : 'Draft saved. It is not public yet.';

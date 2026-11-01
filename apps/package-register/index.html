@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Package intake | Encore Operations</title>
-  <link rel="stylesheet" href="/package-register/app.css" />
+  <link rel="stylesheet" href="/package-register/app.css?v=20261031" />
 </head>
 <body>
   <main class="intake-shell">
@@ -18,7 +18,7 @@
         <h1>Register a package for tracking.</h1>
         <p class="lede">Create a secure tracking reference for a package travelling on your assigned trip. The driver can then update its status from the road.</p>
       </div>
-      <div class="hero-badge"><span aria-hidden="true">□</span><strong>Driver-linked</strong><small>Only your active trip can receive this package.</small></div>
+      <div class="hero-badge"><span class="ui-icon-wrap" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/></svg></span><strong>Driver-linked</strong><small>Only your active trip can receive this package.</small></div>
     </section>
     <section class="intake-grid">
       <form id="packageForm" class="card intake-form" novalidate>
@@ -32,12 +32,12 @@
           <label class="field-span">Package description<input id="description" name="description" maxlength="3000" placeholder="What is inside? (optional)" /></label>
         </div>
         <p id="formError" class="form-message error" role="alert" hidden></p>
-        <button id="submitButton" class="primary-button" type="submit" disabled><span aria-hidden="true">＋</span> Register package</button>
+        <button id="submitButton" class="primary-button" type="submit" disabled><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Register package</button>
       </form>
       <aside class="card process-card">
         <p class="eyebrow">What happens next</p><h2>Ready for the road.</h2>
         <ol><li><b>01</b><span><strong>Reference created</strong><small>A unique PK reference is generated instantly.</small></span></li><li><b>02</b><span><strong>Share the reference</strong><small>Give the recipient the secure tracking link.</small></span></li><li><b>03</b><span><strong>Update from Driver</strong><small>Move received → in progress → delivered.</small></span></li></ol>
-        <div id="successCard" class="success-card" hidden><span class="success-icon">✓</span><div><p class="eyebrow">Package registered</p><h3 id="successReference">PK-</h3><p>Save this reference or open the tracking page.</p><div class="success-actions"><a id="trackingLink" class="secondary-button" href="/track-package/">Open tracking ↗</a><button id="copyTrackingLink" class="secondary-button" type="button">Copy link</button></div></div></div>
+        <div id="successCard" class="success-card" hidden><span class="success-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><p class="eyebrow">Package registered</p><h3 id="successReference">PK-</h3><p>Save this reference or open the tracking page.</p><div class="success-actions"><a id="trackingLink" class="secondary-button" href="/track-package/">Open tracking <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><button id="copyTrackingLink" class="secondary-button" type="button">Copy link</button></div></div></div>
       </aside>
     </section>
   </main>

@@ -6,3 +6,37 @@
 @import url("./public-rework.css");
 @import url("../../packages/shared/design-system.css");
 @import url("./visual-polish.css");
+
+.public-topbar{position:relative;z-index:20;background:#fff;border-bottom:1px solid #d8e7ef;box-shadow:0 8px 24px rgba(7,37,56,.08)}
+.public-topbar .public-nav{background:#fff;border:1px solid #e2edf2;border-radius:999px;padding:8px 14px;gap:22px}
+.public-topbar .public-nav a{font-size:.76rem;font-weight:800;color:#31536a}
+.public-topbar__actions{gap:8px}
+.public-account-link,.public-passenger-link{border-radius:10px;font-size:.75rem;font-weight:900;padding:10px 14px}
+.public-account-link{border:1px solid #b9d5e3;background:#fff;color:#0b4160}
+.public-passenger-link{background:#078fd0;color:#fff}
+.public-hero{position:relative;isolation:isolate;overflow:hidden;min-height:540px;margin-top:22px;border-radius:26px;background:linear-gradient(100deg,#072c45 0%,#0b5270 58%,#073149 100%);box-shadow:0 24px 56px rgba(4,34,52,.2)}
+.public-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,27,43,.93) 0%,rgba(4,27,43,.68) 38%,rgba(4,27,43,.08) 75%),url('/assets/media/Autobus.png') right 8% center/60% auto no-repeat;z-index:-1;opacity:1}
+.public-hero__copy{padding:74px 0 60px 66px;max-width:650px;color:#fff}
+.public-hero__eyebrow{color:#d9f7ff;border-color:rgba(255,255,255,.32);background:rgba(255,255,255,.08)}
+.public-hero h1{font-size:clamp(3.2rem,5vw,5.8rem);line-height:.9;letter-spacing:-.075em;color:#fff;max-width:700px}
+.public-hero h1 span{color:#66d3f4}
+.public-hero__copy>p{color:#d8e9f2;font-size:1.02rem}
+.public-hero__actions .public-secondary{border-color:rgba(255,255,255,.5);color:#fff;background:rgba(255,255,255,.08)}
+.public-trust-strip{color:#e6f6fa}
+.public-hero__stats article{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.12);color:#fff}
+.public-hero__stats{display:none}
+.public-hero__visual{display:none}
+.public-booking{margin-top:-112px;position:relative;z-index:4}
+.public-booking__layout>header{display:none}
+.public-booking-card{background:rgba(255,255,255,.97);border:1px solid #c3dce8;border-radius:18px;box-shadow:0 22px 45px rgba(4,34,52,.22)}
+.public-quick-rail{margin-top:18px;grid-template-columns:repeat(3,1fr);gap:12px}
+.public-quick-card{border-radius:14px;box-shadow:0 10px 24px rgba(7,37,56,.08)}
+.public-quick-card__icon{display:grid;place-items:center}.public-quick-card__icon .ui-icon,.public-quick-card>b .ui-icon{width:1.1rem;height:1.1rem}.icon-badge{display:inline-grid;place-items:center;width:1.1rem;height:1.1rem;border-radius:999px;background:#dff6ec;color:#159a69;vertical-align:-.2em}.icon-badge .ui-icon{width:.75rem;height:.75rem}
+.public-quick-rail,.public-journey-system{display:none}
+@media(max-width:900px){.public-topbar .public-nav{display:none}.public-hero{min-height:620px}.public-hero::before{background:linear-gradient(180deg,rgba(4,27,43,.85) 0%,rgba(4,27,43,.6) 48%,rgba(4,27,43,.94) 100%),url('/assets/media/Autobus.png') center bottom/92% auto no-repeat}.public-hero__copy{padding:52px 28px}.public-hero h1{font-size:clamp(3rem,12vw,5rem)}.public-quick-rail{grid-template-columns:1fr}}
+@media(max-width:900px){.public-booking{margin-top:-48px}.public-booking__layout>header{display:block}.public-booking-card{border-radius:16px}}
+.public-footer__legal{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:18px 0;border-top:1px solid rgba(255,255,255,.14)}
+.public-footer__legal details{border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:12px 14px;color:inherit;background:rgba(255,255,255,.04)}
+.public-footer__legal summary{cursor:pointer;font-weight:800}
+.public-footer__legal p{margin:10px 0 0;max-width:42ch;line-height:1.55;opacity:.8;font-size:.82rem}
+@media(max-width:720px){.public-footer__legal{grid-template-columns:1fr}}

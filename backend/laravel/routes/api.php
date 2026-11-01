@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\IncidentController;
 use App\Http\Controllers\Api\V1\LiveNetworkController;
 use App\Http\Controllers\Api\V1\MapController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PackageController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PricingController;
@@ -82,6 +83,10 @@ Route::prefix('v1')->group(function () {
         Route::delete('auth/profile', [AuthController::class, 'deleteProfile']);
         Route::post('auth/profile/photo', [AuthController::class, 'uploadProfilePhoto'])->middleware('throttle:10,1');
         Route::post('auth/logout', [AuthController::class, 'logout']);
+
+        Route::get('notifications', [NotificationController::class, 'index']);
+        Route::post('notifications/read-all', [NotificationController::class, 'readAll']);
+        Route::patch('notifications/{notification}/read', [NotificationController::class, 'read']);
 
         Route::get('bookings', [BookingController::class, 'index']);
 

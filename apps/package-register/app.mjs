@@ -58,7 +58,7 @@ form.addEventListener('submit', async (event) => {
     formError.hidden = false;
   } finally {
     submitButton.disabled = !tripId.value;
-    submitButton.innerHTML = '<span aria-hidden="true">＋</span> Register package';
+  submitButton.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Register package';
   }
 });
 

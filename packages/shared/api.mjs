@@ -44,6 +44,12 @@ export {
 } from './api/bookings.mjs';
 
 export {
+  listNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+} from './api/notifications.mjs';
+
+export {
   boardPassenger,
   completeDriverTrip,
   createIncident,
