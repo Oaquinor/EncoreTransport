@@ -6,6 +6,7 @@
 @import url("./public-rework.css");
 @import url("../../packages/shared/design-system.css");
 @import url("./visual-polish.css");
+@import url("./multipage.css");
 
 .public-topbar{position:relative;z-index:20;background:#fff;border-bottom:1px solid #d8e7ef;box-shadow:0 8px 24px rgba(7,37,56,.08)}
 .public-topbar .public-nav{background:#fff;border:1px solid #e2edf2;border-radius:999px;padding:8px 14px;gap:22px}

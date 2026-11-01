@@ -6,6 +6,7 @@ const websiteCss = await Promise.all([
   readFile('apps/website/app.css', 'utf8'),
   readFile('apps/website/styles.css', 'utf8'),
   readFile('apps/website/public-rework.css', 'utf8'),
+  readFile('apps/website/multipage.css', 'utf8'),
 ]).then((parts) => parts.join('\n'));
 const passengerCss = await Promise.all([
   readFile('apps/passenger/src/app.css', 'utf8'),
@@ -18,8 +19,8 @@ const trackingCss = await Promise.all([
 ]).then((parts) => parts.join('\n'));
 
 assert.match(websiteHtml, /meta name="viewport"/);
-assert.match(websiteHtml, /Skip to main content/);
-assert.match(websiteHtml, /aria-label="Primary navigation"/);
+assert.match(websiteHtml, /Saltar al contenido/);
+assert.match(websiteCss, /site-menu__panel/);
 assert.match(websiteCss, /@media\s*\(max-width:/);
 assert.match(websiteCss, /prefers-reduced-motion/);
 assert.match(passengerCss, /prefers-reduced-motion/);

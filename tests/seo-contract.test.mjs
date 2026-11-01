@@ -20,12 +20,10 @@ const robots =
   read('robots.txt');
 const server =
   read('server.mjs');
-const vector =
-  read('apps/website/seat-layout-preview.svg');
 
 assert.match(
   website,
-  /<title>Encore Transport \| Bus Routes, Trips & Seat Selection<\/title>/,
+  /<title>Encore Transport \| Viajes y paquetería<\/title>/,
 );
 
 assert.match(
@@ -45,37 +43,23 @@ assert.match(
 
 assert.match(
   website,
+  /name="description" content="Planifica viajes, consulta rutas y sigue tus paquetes/,
+);
+
+assert.match(
+  website,
   /name="twitter:title"/,
 );
 
 assert.match(
   website,
-  /"@type": "FAQPage"/,
+  /"@type":"Organization"/,
 );
 
 assert.match(
   website,
-  /seat-layout-preview\.svg/,
-  'Homepage seat section must use the responsive vector seat preview.',
-);
-
-assert.doesNotMatch(
-  website.match(
-    /<section class="public-section public-seat-section"[\s\S]*?<\/section>/,
-  )?.[0] ?? '',
-  /\/assets\/media\/Autobus\.png/,
-  'Homepage seat section must not use the bus photo.',
-);
-
-assert.match(
-  vector,
-  /viewBox="0 0 980 330"/,
-);
-
-assert.match(
-  vector,
-  />55<\/text>/,
-  'Vector preview must include the rear seat numbering.',
+  /href="\/website\/trips\/"/,
+  'The homepage must preserve a direct path to trip and seat selection.',
 );
 
 for (

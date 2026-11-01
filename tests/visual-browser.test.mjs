@@ -149,7 +149,8 @@ try {
           assert.deepEqual(missingAnchors, [], 'Website in-page navigation must point to existing sections');
           assert.equal(await page.locator('.public-quick-links').count(), 0, 'Redundant quick links must be removed');
           assert.equal(await page.locator('.public-quick-rail').count(), 0, 'The public quick rail must be removed');
-          assert.equal(await page.locator('#primaryNav a').count(), 5, 'The primary navigation must contain five commercial destinations');
+          assert.equal(await page.locator('#primaryNav > a').count(), 1, 'The primary navigation must expose Inicio directly');
+          assert.equal(await page.locator('#primaryNav [data-menu]').count(), 4, 'The primary navigation must group commercial destinations');
           assert.equal(await page.locator('#journey-control, #platform').count(), 0, 'Internal workspace sections must stay out of the commercial homepage');
           assert.equal(await page.locator('#package-tracking a[href="/track-package/"]').count(), 1, 'Package tracking must have a clear destination');
           assert.equal(await page.locator('#networkRouteSelect').count(), 1, 'The live map must offer route selection');
@@ -159,11 +160,23 @@ try {
           const menu = page.locator('#mobileMenuToggle');
           await menu.click();
           assert.equal(await menu.getAttribute('aria-expanded'), 'true', 'Mobile menu must open');
+          const mobileTravel = page.locator('#mobileNavigation [data-mobile-menu-button]').first();
+          await mobileTravel.click();
+          assert.equal(await page.locator('#mobileTravelMenu').getAttribute('hidden'), null, 'Mobile travel accordion must open');
           await page.keyboard.press('Escape');
           assert.equal(await menu.getAttribute('aria-expanded'), 'false', 'Escape must close the mobile menu');
 
         }
         if (surface === 'website' && width === 1440) {
+          const travelMenu = page.locator('#primaryNav [data-menu-button]').first();
+          await travelMenu.hover();
+          assert.equal(await page.locator('#travelMenu').getAttribute('hidden'), null, 'Desktop dropdown must open on hover');
+          await page.mouse.move(8, 8);
+          assert.notEqual(await page.locator('#travelMenu').getAttribute('hidden'), null, 'Desktop dropdown must close when pointer leaves');
+          await travelMenu.click();
+          assert.equal(await page.locator('#travelMenu').getAttribute('hidden'), null, 'Desktop dropdown must open on click');
+          await page.keyboard.press('Escape');
+          assert.notEqual(await page.locator('#travelMenu').getAttribute('hidden'), null, 'Escape must close the desktop dropdown');
           await page.locator('#networkBusList').scrollIntoViewIfNeeded();
           await page.waitForFunction(() => document.querySelector('#networkBusList .public-network-empty')?.innerText.includes('No buses are sharing a live location right now'), null, { timeout: 10000 }).catch(async (error) => {
             const state = await page.evaluate(() => ({ status: document.querySelector('#mapStatus')?.textContent, listing: document.querySelector('#networkBusList')?.innerText }));

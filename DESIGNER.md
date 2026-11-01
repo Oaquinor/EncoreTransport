@@ -18,9 +18,11 @@ La pantalla usa breadcrumb, encabezado, pestañas, tarjeta de avatar, informaci�
 
 ## Arquitectura del Website
 
-La navegación pública principal expone únicamente `Home`, `Trips`, `Packages`, `Tracking` y `Help`. Cuenta y reservas son superficies separadas: el acceso a cuenta aparece como acción secundaria y no compite con la búsqueda principal. El acceso de Staff permanece en el pie como entrada operativa secundaria.
+El Website es ahora multipágina. La navegación primaria expone `Inicio`, `Viajes`, `Paquetería`, `Seguimiento` y `Empresa y ayuda`; cada grupo despliega destinos reales con hover, clic y teclado en escritorio, y se comporta como acordeón en móvil. Escape, navegación a un enlace, pérdida de foco y cambio de breakpoint cierran los menús abiertos.
 
-El recorrido comercial primario es hero/búsqueda → resultados → detalle → Passenger. `Platform`, `Journey Control` y la barra rápida no son superficies públicas; sus destinos válidos se conservan mediante enlaces contextuales en las áreas correspondientes. Se evita repetir botones que llevan al mismo `#book` sin aportar contexto.
+Las páginas públicas son `/website/`, `/website/routes/`, `/website/trips/`, `/website/packages/`, `/website/services/`, `/website/live/`, `/website/about/`, `/website/contact/` y `/website/help/`. La home conserva únicamente la decisión inicial: hero, búsqueda, rutas destacadas, acceso contextual a paquetería, resumen de Encore Live, servicios y ayuda. Las explicaciones extensas viven en sus páginas propias.
+
+El recorrido comercial primario es inicio/búsqueda → resultados → detalle → asientos → pasajeros → pago → boleto en Passenger. El Website solo construye y transfiere `origin`, `destination`, `date` y `passengers`; no duplica la lógica de reserva. `Platform`, `Journey Control` y la barra rápida no son superficies públicas. El acceso de personal se mantiene discreto en el footer y la cuenta/reservas permanecen separadas.
 
 ## Estados de privacidad de paquetería
 

@@ -69,6 +69,11 @@ const website =
     'apps/website/index.html',
   );
 
+const websiteShell =
+  read(
+    'apps/website/site-shell.mjs',
+  );
+
 const passengerApp =
   read(
     'apps/passenger/src/passenger-app.tsx',
@@ -80,8 +85,8 @@ const adminViews =
   );
 
 assert.equal(
-  website.includes('encore') &&
-  website.includes('transport'),
+  websiteShell.includes('encore') &&
+  websiteShell.includes('transport'),
   true,
 );
 

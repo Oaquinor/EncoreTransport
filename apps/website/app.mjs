@@ -120,6 +120,19 @@ function populateSegmentSelectors(routes) {
   destinationSelect.innerHTML = renderOptions(destinations, 'Select destination point');
   originSelect.disabled = origins.length === 0;
   destinationSelect.disabled = destinations.length === 0;
+
+  const query = new URLSearchParams(window.location.search);
+  const requestedOrigin = query.get('origin') ?? '';
+  const requestedDestination = query.get('destination') ?? '';
+  if (requestedOrigin && origins.includes(requestedOrigin)) {
+    originSelect.value = requestedOrigin;
+    filterDestinationSelector(requestedOrigin);
+    if (requestedDestination) destinationSelect.value = requestedDestination;
+  }
+  const date = bookingForm?.querySelector('[name="date"]');
+  const passengers = bookingForm?.querySelector('[name="passengers"]');
+  if (date && query.get('date')) date.value = query.get('date');
+  if (passengers && query.get('passengers')) passengers.value = query.get('passengers');
 }
 
 function filterDestinationSelector(origin) {
@@ -178,7 +191,7 @@ async function applyPublishedWebsiteContent() {
     const data = payload.data ?? {};
     if (!data || !Object.keys(data).length) return;
     const selectors = {
-      hero: { section: '#home', title: '.hero-copy h1', description: '.hero-copy > p' },
+      hero: { section: '#home', title: '.public-hero__copy h1, .hero-copy h1', description: '.public-hero__copy > p, .hero-copy > p' },
       tracking: { section: '#package-tracking', title: '#parcelTitle', subtitle: '.parcel-feature__copy p', button: '#package-tracking > a' },
       routes: { section: '#destinations', title: '#routesTitle', subtitle: '#destinations .public-section-head > div > p' },
       faq: { section: '#faq', title: '#faqTitle', subtitle: '.public-faq-copy > p' },
@@ -207,7 +220,7 @@ async function applyPublishedWebsiteContent() {
         if (link && ((values.button_url.startsWith('/') && !values.button_url.startsWith('//')) || values.button_url.startsWith('#') || /^https:\/\//i.test(values.button_url))) link.href = values.button_url;
       }
       if (values.image_url) {
-        const imageTarget = key === 'hero' ? document.querySelector('.hero-visual') : section;
+        const imageTarget = key === 'hero' ? document.querySelector('.public-hero__visual, .hero-visual') : section;
         const imageUrl = publicAssetUrl(values.image_url);
         if (imageTarget && imageUrl) {
           imageTarget.style.setProperty('--cms-section-image', `url(${JSON.stringify(imageUrl)})`);
@@ -319,7 +332,7 @@ function openMobileMenu() {
 }
 
 function initializeMobileNavigation() {
-  if (!mobileMenuToggle || !mobileNavigation) return;
+  if (!mobileMenuToggle || !mobileNavigation || document.querySelector('[data-site-navigation]')) return;
 
   mobileMenuToggle.addEventListener('click', () => {
     const expanded = mobileMenuToggle.getAttribute('aria-expanded') === 'true';
@@ -497,7 +510,7 @@ async function loadRoutes() {
     setText('#serviceStatus', 'Online');
 
     if (!routes.length) {
-      destinationGrid.innerHTML = `
+      if (destinationGrid) destinationGrid.innerHTML = `
         <article class="destination-card">
           <div class="destination-body">
             <small>Availability</small>
@@ -509,6 +522,7 @@ async function loadRoutes() {
       return;
     }
 
+    if (!destinationGrid) return;
     destinationGrid.innerHTML = routes.slice(0, 8).map((route) => `
       <a
         class="destination-card"
@@ -537,7 +551,7 @@ async function loadRoutes() {
     setText('#serviceStatus', 'Unavailable');
     setText('#routesState', 'Unable to load routes.');
 
-    destinationGrid.innerHTML = `
+    if (destinationGrid) destinationGrid.innerHTML = `
       <article class="destination-card">
         <div class="destination-body">
           <small>Connection issue</small>

@@ -1,0 +1,106 @@
+const header = document.querySelector('[data-site-navigation]');
+const mobileToggle = document.querySelector('#mobileMenuToggle');
+const mobileNavigation = document.querySelector('#mobileNavigation');
+const menus = [...document.querySelectorAll('[data-menu]')];
+
+function closeMenu(menu, { focus = false } = {}) {
+  const button = menu.querySelector('[data-menu-button]');
+  const panel = menu.querySelector('[data-menu-panel]');
+  button?.setAttribute('aria-expanded', 'false');
+  if (panel) panel.hidden = true;
+  menu.classList.remove('is-open');
+  delete menu.dataset.openReason;
+  if (focus) button?.focus();
+}
+
+function openMenu(menu, reason = 'click') {
+  menus.forEach((item) => { if (item !== menu) closeMenu(item); });
+  const button = menu.querySelector('[data-menu-button]');
+  const panel = menu.querySelector('[data-menu-panel]');
+  button?.setAttribute('aria-expanded', 'true');
+  if (panel) panel.hidden = false;
+  menu.classList.add('is-open');
+  menu.dataset.openReason = reason;
+}
+
+function closeMenus({ restoreFocus = false } = {}) {
+  menus.forEach((menu) => closeMenu(menu, { focus: restoreFocus }));
+}
+
+function closeMobileNavigation({ restoreFocus = false } = {}) {
+  if (!mobileToggle || !mobileNavigation) return;
+  mobileNavigation.hidden = true;
+  mobileToggle.setAttribute('aria-expanded', 'false');
+  mobileToggle.setAttribute('aria-label', 'Open navigation');
+  document.body.classList.remove('mobile-menu-open');
+  if (restoreFocus) mobileToggle.focus();
+}
+
+function openMobileNavigation() {
+  if (!mobileToggle || !mobileNavigation) return;
+  mobileNavigation.hidden = false;
+  mobileToggle.setAttribute('aria-expanded', 'true');
+  mobileToggle.setAttribute('aria-label', 'Close navigation');
+  document.body.classList.add('mobile-menu-open');
+  mobileNavigation.querySelector('a, button')?.focus();
+}
+
+menus.forEach((menu) => {
+  const button = menu.querySelector('[data-menu-button]');
+  button?.addEventListener('click', () => {
+    const expanded = button.getAttribute('aria-expanded') === 'true';
+    if (expanded && menu.dataset.openReason === 'hover') menu.dataset.openReason = 'click';
+    else if (expanded) closeMenu(menu);
+    else openMenu(menu);
+  });
+
+  menu.addEventListener('pointerenter', () => {
+    if (window.matchMedia('(min-width: 981px) and (pointer: fine)').matches) openMenu(menu, 'hover');
+  });
+  menu.addEventListener('pointerleave', () => {
+    if (window.matchMedia('(min-width: 981px)').matches) closeMenu(menu);
+  });
+  menu.addEventListener('focusout', (event) => {
+    if (!menu.contains(event.relatedTarget)) closeMenu(menu);
+  });
+});
+
+mobileToggle?.addEventListener('click', () => {
+  if (mobileToggle.getAttribute('aria-expanded') === 'true') closeMobileNavigation();
+  else openMobileNavigation();
+});
+
+mobileNavigation?.querySelectorAll('a').forEach((link) => {
+  link.addEventListener('click', () => closeMobileNavigation());
+});
+
+document.addEventListener('click', (event) => {
+  if (!header?.contains(event.target)) closeMenus();
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return;
+  const open = menus.find((menu) => menu.classList.contains('is-open'));
+  if (open) {
+    closeMenu(open, { focus: true });
+    return;
+  }
+  if (mobileToggle?.getAttribute('aria-expanded') === 'true') closeMobileNavigation({ restoreFocus: true });
+});
+
+const mediaQuery = window.matchMedia('(min-width: 981px)');
+mediaQuery.addEventListener?.('change', () => {
+  closeMenus();
+  if (mediaQuery.matches) closeMobileNavigation();
+});
+
+const currentPath = window.location.pathname.replace(/\/+$/, '') || '/website';
+document.querySelectorAll('[data-nav-link]').forEach((link) => {
+  const target = new URL(link.href, window.location.origin).pathname.replace(/\/+$/, '') || '/website';
+  if (target === currentPath || (target !== '/website' && currentPath.startsWith(`${target}/`))) {
+    link.setAttribute('aria-current', 'page');
+    link.closest('[data-menu]')?.querySelector('[data-menu-button]')?.setAttribute('aria-current', 'page');
+  }
+});
+
+document.querySelector('#copyrightYear')?.replaceChildren(String(new Date().getFullYear()));

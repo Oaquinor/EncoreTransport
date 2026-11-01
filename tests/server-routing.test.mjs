@@ -115,6 +115,20 @@ try {
     /text\/javascript/,
   );
 
+  for (const page of [
+    '/website/routes/',
+    '/website/trips/',
+    '/website/packages/',
+    '/website/services/',
+    '/website/live/',
+    '/website/about/',
+    '/website/contact/',
+    '/website/help/',
+  ]) {
+    const response = await expectOk(page, /text\/html/);
+    assert.match(await response.text(), /data-site-header/);
+  }
+
   const login =
     await expectOk(
       '/login/',
