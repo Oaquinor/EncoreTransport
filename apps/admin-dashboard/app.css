@@ -195,8 +195,19 @@
 .admin-filter-bar .button { min-height:36px; white-space:nowrap; }
 .server-pagination { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:12px 0 0; color:var(--muted); font-size:.72rem; }
 .server-pagination > div { display:flex; align-items:center; gap:10px; }
+.user-detail-panel { margin-top:20px; }
+.user-detail-tabs { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 20px; border-bottom:1px solid var(--line); padding-bottom:10px; }
+.user-detail-tabs button { border:0; background:transparent; color:var(--muted); padding:9px 12px; border-radius:10px; cursor:pointer; }
+.user-detail-tabs button.is-active { background:var(--ink); color:#fff; }
+.user-detail-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.user-detail-grid article, .user-detail-permissions section { border:1px solid var(--line); border-radius:12px; padding:14px; background:#fff; }
+.user-detail-grid article span, .user-detail-permissions h4 { display:block; color:var(--muted); font-size:.78rem; margin-bottom:5px; }
+.user-detail-grid__wide { grid-column:span 3; }
+.user-detail-permissions { display:grid; gap:12px; }
+.user-detail-permissions p { margin:0; line-height:1.6; }
+.user-detail-table-wrap { overflow:auto; }
 @media (max-width:1100px) { .admin-filter-bar { grid-template-columns:repeat(3,minmax(0,1fr)); } .admin-filter-bar label:first-child { grid-column:1/-1; } }
-@media (max-width:620px) { .admin-filter-bar { grid-template-columns:1fr; } .admin-filter-bar label:first-child { grid-column:auto; } .admin-filter-bar .button { width:100%; justify-content:center; } .server-pagination { align-items:stretch; flex-direction:column; } .server-pagination > div { justify-content:space-between; } }
+@media (max-width:620px) { .admin-filter-bar { grid-template-columns:1fr; } .admin-filter-bar label:first-child { grid-column:auto; } .admin-filter-bar .button { width:100%; justify-content:center; } .server-pagination { align-items:stretch; flex-direction:column; } .server-pagination > div { justify-content:space-between; } .user-detail-grid { grid-template-columns:1fr; } .user-detail-grid__wide { grid-column:span 1; } }
 
 .cms-editor__top { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
 .cms-editor__top h2 { margin: 5px 0 0; }

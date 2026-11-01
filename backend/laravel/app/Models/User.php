@@ -20,4 +20,5 @@ class User extends Authenticatable
     public function roles(): BelongsToMany { return $this->belongsToMany(Role::class); }
     public function permissions(): BelongsToMany { return $this->belongsToMany(Permission::class)->withPivot(['granted', 'assigned_by_user_id'])->withTimestamps(); }
     public function userNotifications(): HasMany { return $this->hasMany(UserNotification::class); }
+    public function packageAuthorizations(): HasMany { return $this->hasMany(PackageAuthorization::class); }
 }

@@ -2,7 +2,7 @@
 
 Fecha: 2026-11-01  
 Rama: `main`  
-Commit de referencia: `b950cc9327a1078b3e8da0b91dafec5e6d0d8110`
+Commit de referencia: `2bfa9665ca643fac974079bddfd84cbfacd7728f`
 Commit final: no creado; los cambios de esta revisión permanecen sin confirmar.
 
 ## Clasificación
@@ -25,8 +25,12 @@ La plataforma tiene una base funcional demostrable para Website, reservas, asien
 - La navegación pública del Website quedó reducida a `Home | Trips | Packages | Tracking | Help`; se retiraron `Platform`, `Journey Control` y la barra rápida pública.
 - `ALL_ACTIONS_AUDIT.md` ahora contiene 460 filas de controles/listeners detectados en 38 archivos, con pantalla, propósito, destino, permisos, estado y evidencia.
 - La gestión de cuentas incorpora búsqueda y filtros server-side con paginación; `AdminUserSearchTest` verifica el recorrido contra Laravel/MySQL.
+- La pantalla de clientes usa el mismo contrato server-side, con búsqueda, rol/estado, paginación y separación de cuentas Passenger frente a reservas guest.
+- La ficha administrativa de usuario expone pestañas reales de General, Perfil, Reservas, Boletos, Encomiendas autorizadas, Actividad y Permisos; cada pestaña carga su endpoint autorizado y paginado cuando corresponde.
+- Admin incorpora consulta, detalle, historial y transiciones explícitas de ciclo de vida de boletos; separa estado de boleto, reserva, pago y abordaje y no infiere uso por finalización del viaje.
 - Se eliminó la vinculación/notificación automática basada únicamente en `recipient_email`; el registro de paquetes no convierte al destinatario en cuenta sin confirmación.
 - La custodia avanzada añade QR opaco, manifiestos por viaje con reconciliación, escaneo idempotente y transferencia con aceptación del conductor receptor.
+- Driver PWA y Driver Mobile ya consumen los flujos de escaneo, carga, manifiesto, discrepancia y transferencia; las respuestas y errores provienen del backend.
 
 ## Funcionalidad preservada
 
@@ -34,8 +38,8 @@ Reservas y cotización por tramo, selección de asientos, rutas y mapas TomTom/L
 
 ## Pendientes que impiden el lanzamiento
 
-Proveedor y credenciales de pago, UI operativa de manifiestos/transferencias en Driver Mobile, terminal/vehículo/ubicación por evento, GPS background en dispositivo, aceptación nativa, proveedores Gmail/WhatsApp/push, dominio SEO final y E2E autenticado contra un entorno sembrado.
+Proveedor y credenciales de pago, evidencia nativa de foto/cámara para completar la entrega desde dispositivos, terminal/vehículo/ubicación por evento, GPS background, aceptación en dispositivos reales, proveedores Gmail/WhatsApp/push, dominio SEO final y E2E autenticado contra un entorno sembrado. La gestión administrativa de autorizaciones de paquetes y la cobertura exhaustiva de cada transición de boleto todavía requieren una iteración específica.
 
 ## Evidencia
 
-`npm test` pasa; los typechecks de API, Passenger web, Passenger Mobile y Driver Mobile pasan; el build de Passenger pasa; browser visual pasa con 36 checks y capturas en 360, 390, 768, 1024, 1440 y 1920 px; el flujo Admin autenticado focalizado pasa a 1440 px. `php artisan test` pasa con 78 pruebas y 504 aserciones usando PHP 8.3.30 y MySQL de Laragon. Las pruebas en dispositivos reales y las integraciones externas siguen bloqueadas.
+`npm test` pasa; los typechecks de API, Passenger web, Passenger Mobile y Driver Mobile pasan; el build de Passenger pasa; browser visual pasa con 36 checks y capturas en 360, 390, 768, 1024, 1440 y 1920 px; el flujo Admin autenticado focalizado pasa a 1440 px. `php artisan test` pasa con 82 pruebas y 541 aserciones usando PHP 8.3.30 y MySQL de Laragon, incluyendo `AdminUserSearchTest` y `AdminTicketLifecycleTest`. Las pruebas en dispositivos reales y las integraciones externas siguen bloqueadas.

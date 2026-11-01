@@ -1,6 +1,6 @@
 # Auditoría completa de acciones y controles
 
-Generado desde controles declarados y listeners detectables en 38 archivos de aplicaciones, más los controles de búsqueda server-side añadidos en esta revisión. Filas: 460. Cada fila conserva la evidencia de origen; `DECLARADO` y `DINÁMICO` no equivalen a aceptación funcional.
+Generado desde controles declarados y listeners detectables en 41 archivos de aplicaciones, más los controles de búsqueda server-side, ficha administrativa, lifecycle de boletos y custodia Driver añadidos en esta revisión. Filas: 490. Cada fila conserva la evidencia de origen; `DECLARADO` y `DINÁMICO` no equivalen a aceptación funcional.
 
 ## Criterio de estado
 
@@ -472,6 +472,36 @@ Generado desde controles declarados y listeners detectables en 38 archivos de ap
 | 458 | admin | apps/admin-dashboard/app.mjs | button Clear | Restablecer filtros de cuentas | `admin/users?page=1` | users.view | LISTENER DETECTADO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:1412 |
 | 459 | admin | apps/admin-dashboard/app.mjs | button Previous/Next | Cambiar página del directorio | `admin/users?page=` | users.view | LISTENER DETECTADO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:1415 |
 | 460 | admin | apps/admin-dashboard/app.mjs | listener userFilters | Enviar filtros al backend paginado | `admin/users` | users.view | LISTENER DETECTADO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:1400 |
+| 461 | admin | apps/admin-dashboard/app.mjs | button Open user detail | Abrir ficha administrativa | `admin/users/{user}` | users.view | DINÁMICO; verificado en browser Admin focalizado | fuente:apps/admin-dashboard/app.mjs:856 |
+| 462 | admin | apps/admin-dashboard/app.mjs | nav User detail tabs | Cambiar entre General, Perfil, Reservas, Boletos, Encomiendas, Actividad y Permisos | `admin/users/{user}/*` | users.view | DINÁMICO; verificado con carga independiente | fuente:apps/admin-dashboard/app.mjs:609 |
+| 463 | admin | apps/admin-dashboard/app.mjs | button User detail pagination | Paginar reservas, boletos, encomiendas o actividad | endpoint paginado de la pestaña activa | users.view | DINÁMICO; requiere datos de volumen | fuente:apps/admin-dashboard/app.mjs:609 |
+| 464 | admin | apps/admin-dashboard/app.mjs | button Close detail | Cerrar ficha y volver al listado | `admin/users` | users.view | LISTENER DETECTADO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:1519 |
+| 465 | admin | apps/admin-dashboard/app.mjs | input Ticket search | Buscar boletos por referencia, pasajero o viaje | `admin/tickets?q=` | tickets.view | DINÁMICO; verificado en browser Admin focalizado | fuente:apps/admin-dashboard/app.mjs:700 |
+| 466 | admin | apps/admin-dashboard/app.mjs | select Ticket lifecycle | Filtrar lifecycle server-side | `admin/tickets?lifecycle=` | tickets.view | DINÁMICO; verificado en browser Admin focalizado | fuente:apps/admin-dashboard/app.mjs:700 |
+| 467 | admin | apps/admin-dashboard/app.mjs | select Ticket status | Filtrar estado persistido del boleto | `admin/tickets?status=` | tickets.view | DINÁMICO; requiere matriz completa de estados | fuente:apps/admin-dashboard/app.mjs:700 |
+| 468 | admin | apps/admin-dashboard/app.mjs | button View ticket | Abrir detalle e historial del boleto | `admin/tickets/{ticket}` | tickets.view | DINÁMICO; verificado en browser Admin focalizado | fuente:apps/admin-dashboard/app.mjs:714 |
+| 469 | admin | apps/admin-dashboard/app.mjs | button Ticket transition | Registrar no presentado, vencido, cancelado o reembolso | `admin/tickets/{ticket}/transition` | tickets.validate | DINÁMICO; backend transaccional, requiere E2E por estado | fuente:apps/admin-dashboard/app.mjs:714 |
+| 470 | admin | apps/admin-dashboard/app.mjs | button Ticket pagination | Paginar el directorio de boletos | `admin/tickets?page=` | tickets.view | DINÁMICO; requiere datos de volumen | fuente:apps/admin-dashboard/app.mjs:721 |
+| 471 | driver-pwa | apps/driver-pwa/app.mjs | input packageQrToken | Capturar token QR opaco de encomienda | `driver/packages/scan` | packages.view | DINÁMICO; backend conectado; cámara real pendiente | fuente:apps/driver-pwa/app.mjs:249 |
+| 472 | driver-pwa | apps/driver-pwa/app.mjs | button scanPackageQr | Consultar custodia actual | `driver/packages/scan` | packages.view | LISTENER DETECTADO; backend conectado | fuente:apps/driver-pwa/app.mjs:434 |
+| 473 | driver-pwa | apps/driver-pwa/app.mjs | button loadPackage | Registrar carga | `driver/packages/{package}/status` | packages.update | LISTENER DETECTADO; backend conectado | fuente:apps/driver-pwa/app.mjs:440 |
+| 474 | driver-pwa | apps/driver-pwa/app.mjs | button unloadPackage | Intentar validar entrega con evidencia | `driver/packages/{package}/status` multipart | packages.update | BLOQUEADO si no hay foto/receptor; no simula éxito | fuente:apps/driver-pwa/app.mjs:442 |
+| 475 | driver-pwa | apps/driver-pwa/app.mjs | button recordDiscrepancy | Registrar discrepancia de custodia | `driver/packages/{package}/discrepancy` | packages.update | LISTENER DETECTADO; backend conectado | fuente:apps/driver-pwa/app.mjs:447 |
+| 476 | driver-pwa | apps/driver-pwa/app.mjs | button requestPackageTransfer | Solicitar transferencia a otro conductor | `driver/packages/{package}/transfer` | packages.update | LISTENER DETECTADO; backend conectado | fuente:apps/driver-pwa/app.mjs:449 |
+| 477 | driver-pwa | apps/driver-pwa/app.mjs | button acceptPackageTransfer | Aceptar transferencia asignada | `driver/transfers/{transfer}/accept` | packages.update | LISTENER DETECTADO; backend conectado | fuente:apps/driver-pwa/app.mjs:452 |
+| 478 | driver-pwa | apps/driver-pwa/app.mjs | button createManifest | Crear manifiesto del viaje | `driver/manifests` | packages.update | LISTENER DETECTADO; backend conectado | fuente:apps/driver-pwa/app.mjs:455 |
+| 479 | driver-pwa | apps/driver-pwa/app.mjs | button refreshManifest | Consultar manifiesto | `driver/manifests/{manifest}` | packages.view | LISTENER DETECTADO; backend conectado | fuente:apps/driver-pwa/app.mjs:459 |
+| 480 | driver-pwa | apps/driver-pwa/app.mjs | button reconcileManifest | Conciliar escaneos y faltantes | `driver/manifests/{manifest}/reconcile` | packages.update | LISTENER DETECTADO; backend conectado | fuente:apps/driver-pwa/app.mjs:461 |
+| 481 | driver-mobile | apps/driver-mobile/App.tsx | button Registrar encomienda | Crear encomienda desde Driver Mobile | `driver/packages` | packages.create | DINÁMICO; typecheck aprobado, dispositivo pendiente | fuente:apps/driver-mobile/App.tsx:947 |
+| 482 | driver-mobile | apps/driver-mobile/App.tsx | input Token QR opaco | Capturar token QR para consulta | `driver/packages/scan` | packages.view | DINÁMICO; cámara real pendiente | fuente:apps/driver-mobile/App.tsx:948 |
+| 483 | driver-mobile | apps/driver-mobile/App.tsx | button Escanear / consultar | Consultar custodia | `driver/packages/scan` | packages.view | DINÁMICO; backend conectado | fuente:apps/driver-mobile/App.tsx:949 |
+| 484 | driver-mobile | apps/driver-mobile/App.tsx | button Cargar | Registrar carga | `driver/packages/{package}/status` | packages.update | DINÁMICO; backend conectado | fuente:apps/driver-mobile/App.tsx:949 |
+| 485 | driver-mobile | apps/driver-mobile/App.tsx | button Validar entrega | Intentar entrega con validación backend | `driver/packages/{package}/status` | packages.update | BLOQUEADO sin evidencia nativa; muestra error real | fuente:apps/driver-mobile/App.tsx:949 |
+| 486 | driver-mobile | apps/driver-mobile/App.tsx | button Crear manifiesto | Crear manifiesto del viaje | `driver/manifests` | packages.update | DINÁMICO; backend conectado | fuente:apps/driver-mobile/App.tsx:951 |
+| 487 | driver-mobile | apps/driver-mobile/App.tsx | button Consultar y reconciliar manifiesto | Consultar y conciliar manifiesto | `driver/manifests/{manifest}/reconcile` | packages.update | DINÁMICO; backend conectado | fuente:apps/driver-mobile/App.tsx:952 |
+| 488 | driver-mobile | apps/driver-mobile/App.tsx | button Registrar discrepancia | Registrar discrepancia de custodia | `driver/packages/{package}/discrepancy` | packages.update | DINÁMICO; backend conectado | fuente:apps/driver-mobile/App.tsx:953 |
+| 489 | driver-mobile | apps/driver-mobile/App.tsx | button Transferir | Solicitar transferencia | `driver/packages/{package}/transfer` | packages.update | DINÁMICO; backend conectado | fuente:apps/driver-mobile/App.tsx:956 |
+| 490 | driver-mobile | apps/driver-mobile/App.tsx | button Aceptar transferencia | Aceptar transferencia asignada | `driver/transfers/{transfer}/accept` | packages.update | DINÁMICO; backend conectado | fuente:apps/driver-mobile/App.tsx:958 |
 
 ## Cierre de auditoría
 

@@ -8,9 +8,9 @@ El alcance funcional auditado está parcialmente implementado. Las áreas críti
 
 ## B. Funcionalidades
 
-Completadas: disponibilidad por tramo, reservas concurrentes, bloqueos, conflictos de viajes, permisos, perfil/foto, directorio de cuentas con búsqueda server-side y paginación, registro y tracking por token de paquetes, transacciones de custodia inicial, evidencia privada de entrega, emisión/validación transaccional de boletos y notificaciones internas.
+Completadas: disponibilidad por tramo, reservas concurrentes, bloqueos, conflictos de viajes, permisos, perfil/foto, directorio de cuentas con búsqueda server-side y paginación, ficha administrativa con pestañas y endpoints autorizados, registro y tracking por token de paquetes, transacciones de custodia inicial, evidencia privada de entrega, consulta/historial/transiciones administrativas de boletos y notificaciones internas.
 
-Parciales o pendientes: ficha profunda de cuenta, lifecycle completo de boletos, UI móvil de manifiestos/transferencias, terminal/vehículo/ubicación por evento, proveedor de pagos, preferencias por canal, dashboard E2E completo y Mobile nativo.
+Parciales o pendientes: evidencia nativa de entrega desde cámara/fotos, terminal/vehículo/ubicación por evento, proveedor de pagos, preferencias por canal, dashboard E2E completo, pruebas en dispositivos y cobertura completa de autorización operativa de encomiendas.
 
 ## C. Aplicaciones
 
@@ -26,7 +26,7 @@ Se ajustó el Website al lenguaje navy/blue del tablero, se compactó el registr
 
 ## F. Pruebas
 
-`npm test` pasó completo después de la corrección de custodia; también pasaron los typechecks web/móviles, build de Passenger y browser visual. Laravel pasó con 78 pruebas y 504 aserciones usando PHP 8.3.30 y MySQL de Laragon. Las pruebas en dispositivos reales siguen pendientes.
+`npm test` pasó completo después de la corrección de custodia; también pasaron los typechecks web/móviles, build de Passenger y browser visual. Laravel pasó con 82 pruebas y 541 aserciones usando PHP 8.3.30 y MySQL de Laragon. Las pruebas en dispositivos reales siguen pendientes.
 
 ## G. Integraciones
 

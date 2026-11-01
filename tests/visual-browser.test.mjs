@@ -524,6 +524,29 @@ try {
             return payload.data?.some((item) => String(item.id) === String(id) && item.active === false);
           }, user.id);
 
+          await page.locator(`[data-open-user="${user.id}"]`).click();
+          await page.waitForSelector('#userDetailPanel');
+          for (const tab of ['profile', 'bookings', 'tickets', 'packages', 'activity', 'permissions']) {
+            await page.locator(`[data-user-detail-tab="${tab}"]`).click();
+            await page.waitForSelector('#userDetailPanel');
+            await page.waitForFunction(() => !document.querySelector('#userDetailPanel .admin-loading-state'));
+          }
+          await page.locator('#closeUserDetail').click();
+
+          await page.locator('[data-module="customers"]').click();
+          await page.waitForSelector('[data-table-shell="registered-customers"]');
+          await page.locator('#customerFilters [name="q"]').fill('Passenger');
+          await page.locator('#customerFilters button[type="submit"]').click();
+          await page.waitForSelector('[data-table-shell="registered-customers"] [data-table-row]');
+          await page.screenshot({ path: 'artifacts/visual/admin-customers-directory-1440.png', fullPage: true, timeout: 60000 });
+
+          await page.locator('[data-module="tickets"]').click();
+          await page.waitForSelector('[data-table-shell="admin-tickets"]');
+          await page.locator('#ticketFilters [name="lifecycle"]').selectOption('valid');
+          await page.locator('#ticketFilters button[type="submit"]').click();
+          await page.waitForSelector('[data-table-shell="admin-tickets"]');
+          await page.screenshot({ path: 'artifacts/visual/admin-ticket-lifecycle-1440.png', fullPage: true, timeout: 60000 });
+
           await page.locator('[data-module="roles"]').click();
           await page.waitForSelector('[data-table-shell="roles"]');
           await page.screenshot({ path: 'artifacts/visual/admin-roles-access-1440.png', fullPage: true, timeout: 60000 });

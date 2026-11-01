@@ -12,6 +12,14 @@ import {
   fetchDriverSchedule,
   updateVehicleStatus,
   createPackage,
+  scanPackageQr,
+  createPackageManifest,
+  fetchPackageManifest,
+  scanPackageManifest,
+  reconcilePackageManifest,
+  recordPackageDiscrepancy,
+  requestPackageTransfer,
+  acceptPackageTransfer,
   mapJourney,
   requestJson,
 } from '../../packages/shared/api.mjs';
@@ -34,6 +42,14 @@ const state = {
     tires_status: 'unknown',
     network_status: 'unknown',
   },
+  package: null,
+  manifest: null,
+  packageQrToken: '',
+  discrepancyType: 'missing_item',
+  discrepancyNotes: '',
+  transferDriverId: '',
+  transferId: '',
+  transfer: null,
 };
 
 function esc(value = '') {
@@ -228,6 +244,18 @@ function renderTrip(trip) {
       </div>
       <button class="button button--ghost button--with-icon" id="createPackage">${icon('package')}Register package</button>
       <div id="packageResult"></div>
+      <div class="driver-custody-tools">
+        <h4>Custody controls</h4>
+        <label><span class="muted-copy">Package QR token</span><input class="field" id="packageQrToken" value="${esc(state.packageQrToken)}" placeholder="Paste or scan the opaque QR token"></label>
+        <div class="driver-actions"><button class="button button--ghost" id="scanPackageQr" type="button">Scan / query custody</button><button class="button button--ghost" id="loadPackage" type="button" ${state.package?.id ? '' : 'disabled'}>Load</button><button class="button button--ghost" id="unloadPackage" type="button" ${state.package?.id ? '' : 'disabled'}>Unload / deliver</button></div>
+        <div class="driver-grid"><label><span class="muted-copy">Discrepancy type</span><input class="field" id="discrepancyType" value="${esc(state.discrepancyType)}"></label><label><span class="muted-copy">Discrepancy notes</span><input class="field" id="discrepancyNotes" value="${esc(state.discrepancyNotes)}"></label></div>
+        <button class="button button--ghost" id="recordDiscrepancy" type="button" ${state.package?.id ? '' : 'disabled'}>Record discrepancy</button>
+        <div class="driver-grid"><label><span class="muted-copy">Receiving driver ID</span><input class="field" id="transferDriverId" value="${esc(state.transferDriverId)}"></label><label><span class="muted-copy">Transfer ID to accept</span><input class="field" id="transferId" value="${esc(state.transferId)}"></label></div>
+        <div class="driver-actions"><button class="button button--ghost" id="requestPackageTransfer" type="button" ${state.package?.id ? '' : 'disabled'}>Transfer package</button><button class="button button--ghost" id="acceptPackageTransfer" type="button">Accept transfer</button></div>
+        <div class="driver-actions"><button class="button button--ghost" id="createManifest" type="button" ${state.package?.id ? '' : 'disabled'}>Create manifest</button><button class="button button--ghost" id="refreshManifest" type="button" ${state.manifest?.id ? '' : 'disabled'}>Refresh manifest</button><button class="button button--ghost" id="reconcileManifest" type="button" ${state.manifest?.id ? '' : 'disabled'}>Reconcile manifest</button></div>
+        ${state.package ? `<div class="feed-item"><strong>${esc(state.package.reference)} · ${esc(state.package.status)}</strong><small>${esc(state.package.events?.at(-1)?.status ?? 'No custody events')}</small></div>` : ''}
+        ${state.manifest ? `<div class="feed-item"><strong>Manifest ${esc(state.manifest.reference)}</strong><small>${Number(state.manifest.scanned_count ?? 0)} / ${Number(state.manifest.expected_count ?? 0)} scanned · ${esc(state.manifest.status)}</small></div>` : ''}
+      </div>
     </section>
 
     <section class="driver-card incident-box">
@@ -382,6 +410,8 @@ function wire() {
       });
 
       const result = document.querySelector('#packageResult');
+      state.package = response.package;
+      state.packageQrToken = response.qr_payload?.token ?? state.packageQrToken;
       if (result) {
         result.innerHTML = `
           <div class="feed-item">
@@ -394,10 +424,42 @@ function wire() {
             </div>
           </div>`;
       }
+      render();
     } catch (error) {
       state.error = error.message;
       render();
     }
+  });
+
+  document.querySelector('#scanPackageQr')?.addEventListener('click', async () => {
+    const token = document.querySelector('#packageQrToken')?.value?.trim();
+    if (!token) { state.error = 'An opaque package QR token is required.'; render(); return; }
+    try { state.packageQrToken = token; state.package = await scanPackageQr(token); state.error = ''; render(); } catch (error) { state.error = error.message; render(); }
+  });
+  document.querySelector('#loadPackage')?.addEventListener('click', async () => {
+    try { state.package = await requestJson(`/driver/packages/${state.package.id}/status`, { method: 'POST', body: JSON.stringify({ status: 'in_progress' }) }).then((payload) => payload.data ?? payload); state.error = ''; render(); } catch (error) { state.error = error.message; render(); }
+  });
+  document.querySelector('#unloadPackage')?.addEventListener('click', async () => {
+    state.error = 'Delivery validation requires recipient verification and a private photo. Use Full intake to attach the evidence before closing custody.';
+    render();
+  });
+  document.querySelector('#recordDiscrepancy')?.addEventListener('click', async () => {
+    try { state.discrepancyType = document.querySelector('#discrepancyType')?.value?.trim() || 'other'; state.discrepancyNotes = document.querySelector('#discrepancyNotes')?.value?.trim() || ''; if (!state.discrepancyNotes) throw new Error('Discrepancy notes are required.'); await recordPackageDiscrepancy(state.package.id, state.discrepancyType, state.discrepancyNotes); state.package = await scanPackageQr(state.packageQrToken); state.error = ''; render(); } catch (error) { state.error = error.message; render(); }
+  });
+  document.querySelector('#requestPackageTransfer')?.addEventListener('click', async () => {
+    try { state.transferDriverId = document.querySelector('#transferDriverId')?.value?.trim() || ''; state.transfer = await requestPackageTransfer(state.package.id, state.transferDriverId); state.error = ''; render(); } catch (error) { state.error = error.message; render(); }
+  });
+  document.querySelector('#acceptPackageTransfer')?.addEventListener('click', async () => {
+    try { state.transferId = document.querySelector('#transferId')?.value?.trim() || ''; state.transfer = await acceptPackageTransfer(state.transferId); state.error = ''; render(); } catch (error) { state.error = error.message; render(); }
+  });
+  document.querySelector('#createManifest')?.addEventListener('click', async () => {
+    try { state.manifest = await createPackageManifest({ trip_id: state.currentTrip.id, package_ids: [state.package.id] }); state.error = ''; render(); } catch (error) { state.error = error.message; render(); }
+  });
+  document.querySelector('#refreshManifest')?.addEventListener('click', async () => {
+    try { state.manifest = await fetchPackageManifest(state.manifest.id); state.error = ''; render(); } catch (error) { state.error = error.message; render(); }
+  });
+  document.querySelector('#reconcileManifest')?.addEventListener('click', async () => {
+    try { state.manifest = await reconcilePackageManifest(state.manifest.id); state.error = ''; render(); } catch (error) { state.error = error.message; render(); }
   });
 
   document.querySelector('#reportIncident')?.addEventListener('click', async () => {

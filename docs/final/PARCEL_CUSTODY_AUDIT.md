@@ -15,7 +15,7 @@
 
 ## Cadena todavía incompleta
 
-Los estados base siguen siendo (`received`, `in_progress`, `delivered`) y ahora la custodia avanzada vive en eventos de manifiesto y transferencia. Para el cierre operativo completo faltan terminales, vehículo/ubicación por evento, evidencia por transferencia, integración UI en Driver Mobile/PWA y notificaciones externas confirmadas. Esas capacidades quedan `PARTIAL`, no se simulan en la interfaz.
+Los estados base siguen siendo (`received`, `in_progress`, `delivered`) y ahora la custodia avanzada vive en eventos de manifiesto y transferencia. Driver PWA y Driver Mobile ya integran controles de escaneo, carga, manifiesto, discrepancia y transferencia contra el backend. Para el cierre operativo completo faltan terminales, vehículo/ubicación por evento, evidencia nativa por entrega/transferencia, validación en dispositivos y notificaciones externas confirmadas. Esas capacidades quedan `PARTIAL`, no se simulan en la interfaz.
 
 ## Criterio de cierre
 

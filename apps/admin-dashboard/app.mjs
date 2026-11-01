@@ -41,6 +41,10 @@ const state = {
   tripEditingId: null,
   tripForm: null,
   packages: [],
+  tickets: [],
+  ticketMeta: { current_page: 1, last_page: 1, per_page: 25, total: 0 },
+  ticketFilters: { q: '', status: '', lifecycle: '', page: 1, per_page: 25 },
+  ticketDetail: null,
   routes: [],
   drivers: [],
   vehicles: [],
@@ -73,6 +77,11 @@ const state = {
   userFormOpen: false,
   userEditingId: null,
   userForm: null,
+  userDetail: null,
+  userDetailTab: 'general',
+  userDetailLoading: false,
+  userDetailError: '',
+  userDetailMeta: {},
   roleEditingId: null,
   profilePhotoMessage: '',
   profilePhotoDraftUrl: '',
@@ -108,6 +117,7 @@ const navIconByModule = {
   dashboard: 'dashboard',
   trips: 'route',
   bookings: 'archive',
+  tickets: 'archive',
   vehicles: 'archive',
   drivers: 'user',
   routes: 'route',
@@ -577,6 +587,28 @@ function liveMapPanel() {
     </section>`;
 }
 
+function userDetailPanel() {
+  const detail = state.userDetail;
+  if (!detail) return '';
+  const user = detail.user ?? { name: 'Selected account' };
+  const tabs = [
+    ['general', 'General'], ['profile', 'Profile'], ['bookings', 'Bookings'], ['tickets', 'Tickets'],
+    ['packages', 'Authorized packages'], ['activity', 'Activity'], ['permissions', 'Permissions'],
+  ];
+  const body = state.userDetailLoading
+    ? '<div class="admin-loading-state">Loading selected account…</div>'
+    : state.userDetailError
+      ? `<div class="admin-error-state" role="alert">${esc(state.userDetailError)}</div>`
+      : detail.tab === 'general' || detail.tab === 'profile'
+        ? `<div class="user-detail-grid"><article><span>Name</span><strong>${esc(user.name)}</strong></article><article><span>Email</span><strong>${esc(user.email)}</strong></article><article><span>Phone</span><strong>${esc(user.phone || 'Not provided')}</strong></article><article><span>Status</span><strong>${user.active ? 'Active' : 'Disabled'}</strong></article><article><span>Legacy role</span><strong>${esc(user.role || '—')}</strong></article><article><span>Registered</span><strong>${esc(String(user.created_at ?? '').slice(0, 10) || '—')}</strong></article>${detail.tab === 'profile' ? `<article class="user-detail-grid__wide"><span>Assigned roles</span><strong>${(user.roles ?? []).map((role) => esc(role.label ?? role.name)).join(', ') || 'None'}</strong></article><article class="user-detail-grid__wide"><span>Direct permission overrides</span><strong>${(user.direct_permissions ?? []).map((permission) => esc(permission.key)).join(', ') || 'None'}</strong></article>` : ''}</div>`
+        : detail.tab === 'permissions'
+          ? `<div class="user-detail-permissions"><section><h4>Roles</h4><p>${(detail.data.roles ?? []).map((role) => esc(role.label ?? role.name)).join(', ') || 'None'}</p></section><section><h4>Direct grants/denials</h4><p>${(detail.data.direct ?? []).map((permission) => `${esc(permission.key)} (${permission.pivot?.granted ? 'allow' : 'deny'})`).join(', ') || 'None'}</p></section><section><h4>Effective permissions</h4><p>${(detail.data.effective ?? []).map((permission) => esc(typeof permission === 'string' ? permission : permission.key ?? '')).join(', ') || 'None'}</p></section></div>`
+          : `<div class="user-detail-table-wrap"><table class="table admin-table"><thead><tr>${(detail.tab === 'bookings' ? ['Reference', 'Status', 'Trip', 'Ticket', 'Payment'] : detail.tab === 'tickets' ? ['Ticket', 'Lifecycle', 'Booking', 'Payment', 'Boarding'] : detail.tab === 'packages' ? ['Reference', 'Status', 'Route', 'Authorized'] : ['Action', 'Subject', 'Date']).map((header) => `<th>${header}</th>`).join('')}</tr></thead><tbody>${(detail.data ?? []).length ? (detail.data ?? []).map((item) => `<tr>${detail.tab === 'bookings' ? `<td>${esc(item.reference)}</td><td>${esc(item.status)}</td><td>${esc(item.trip?.route ?? '—')}</td><td>${esc(item.ticket_status ?? '—')}</td><td>${esc(item.payment_status ?? '—')}</td>` : detail.tab === 'tickets' ? `<td>${esc(item.public_id)}</td><td>${esc(item.lifecycle_status)}</td><td>${esc(item.booking_reference ?? '—')}</td><td>${esc(item.payment_status ?? '—')}</td><td>${esc(item.boarding_status)}</td>` : detail.tab === 'packages' ? `<td>${esc(item.reference ?? '—')}</td><td>${esc(item.status ?? '—')}</td><td>${esc(item.route ?? '—')}</td><td>${esc(String(item.authorized_at ?? '').slice(0, 10) || '—')}</td>` : `<td>${esc(item.action)}</td><td>${esc(item.subject_type ? `${item.subject_type}#${item.subject_id ?? ''}` : '—')}</td><td>${esc(String(item.created_at ?? '').slice(0, 19) || '—')}</td>`}</tr>`).join('') : `<tr><td colspan="5">No records found.</td></tr>`}</tbody></table></div>`;
+  const meta = state.userDetailMeta;
+  const paginated = !['general', 'profile', 'permissions'].includes(detail.tab);
+  return `<section class="admin-panel admin-panel--pad user-detail-panel" id="userDetailPanel"><div class="module-view__header"><div><div class="eyebrow">Account detail</div><h2>${esc(user.name)}</h2><p class="module-subtitle">Each tab loads its own authorized data source.</p></div><button class="button button--ghost" type="button" id="closeUserDetail">Close detail</button></div><nav class="user-detail-tabs" aria-label="User detail tabs">${tabs.map(([id, label]) => `<button type="button" data-user-detail-tab="${id}" class="${detail.tab === id ? 'is-active' : ''}">${label}</button>`).join('')}</nav>${body}${paginated ? `<footer class="server-pagination"><span>Showing ${(detail.data ?? []).length} of ${meta.total ?? 0}</span><div><button class="button button--ghost" type="button" data-user-detail-page="prev" ${(meta.current_page ?? 1) <= 1 ? 'disabled' : ''}>Previous</button><span>Page ${meta.current_page ?? 1} of ${meta.last_page ?? 1}</span><button class="button button--ghost" type="button" data-user-detail-page="next" ${(meta.current_page ?? 1) >= (meta.last_page ?? 1) ? 'disabled' : ''}>Next</button></div></footer>` : ''}</section>`;
+}
+
 function content() {
   if (state.loading) {
     return `
@@ -673,6 +705,15 @@ function content() {
         { html: `<div class="table-actions"><button class="button button--icon" data-view-booking="${esc(booking.id)}" type="button" aria-label="View booking ${esc(booking.reference)}" title="View booking details">${icon('view')}</button>${['draft', 'pending_payment'].includes(booking.status) ? `<button class="button button--ghost" data-cancel-booking="${esc(booking.id)}" type="button">Cancel unpaid</button>` : ''}</div>` },
       ]),
     )}<dialog class="booking-details-dialog" id="bookingDetailsDialog" aria-label="Booking details"><div id="bookingDetailsContent"></div></dialog>`;
+  }
+
+  if (state.module === 'tickets') {
+    const filter = state.ticketFilters;
+    const meta = state.ticketMeta;
+    const filters = `<form class="admin-filter-bar" id="ticketFilters"><label><span>Search ticket</span><input name="q" type="search" placeholder="Ticket, booking or email" value="${esc(filter.q)}"></label><label><span>Lifecycle</span><select name="lifecycle"><option value="">All states</option>${['valid','used','not_used','no_show','expired','cancelled','refunded'].map((status) => `<option value="${status}" ${filter.lifecycle === status ? 'selected' : ''}>${status.replaceAll('_', ' ')}</option>`).join('')}</select></label><label><span>Stored status</span><select name="status"><option value="">All stored statuses</option>${['active','used','no_show','expired','cancelled','refunded'].map((status) => `<option value="${status}" ${filter.status === status ? 'selected' : ''}>${status.replaceAll('_', ' ')}</option>`).join('')}</select></label><button class="button button--primary" type="submit">Filter tickets</button><button class="button button--ghost" id="clearTicketFilters" type="button">Clear</button></form>`;
+    const rows = state.tickets.map((ticket) => [ticket.public_id, ticket.lifecycle_status, ticket.booking_reference ?? '—', ticket.payment_status ?? '—', ticket.boarding_status, { html: `<div class="table-actions"><button class="button button--icon" data-view-ticket="${esc(ticket.id)}" type="button" aria-label="View ticket">${icon('view')}</button>${ticket.status === 'active' ? `<button class="button button--ghost" data-ticket-transition="${esc(ticket.id)}" data-ticket-status="no_show" type="button">No show</button>` : ''}</div>` }]);
+    const detail = state.ticketDetail ? `<section class="admin-panel admin-panel--pad user-detail-panel"><div class="module-view__header"><div><div class="eyebrow">Ticket detail</div><h2>${esc(state.ticketDetail.public_id)}</h2><p class="module-subtitle">Reservation, payment, ticket and boarding states remain separate.</p></div><button class="button button--ghost" id="closeTicketDetail" type="button">Close detail</button></div><div class="user-detail-grid"><article><span>Ticket state</span><strong>${esc(state.ticketDetail.status)}</strong></article><article><span>Lifecycle</span><strong>${esc(state.ticketDetail.lifecycle_status)}</strong></article><article><span>Payment</span><strong>${esc(state.ticketDetail.payment_status ?? '—')}</strong></article><article><span>Reservation</span><strong>${esc(state.ticketDetail.booking_status ?? '—')}</strong></article><article><span>Boarding</span><strong>${esc(state.ticketDetail.boarding_status)}</strong></article><article><span>Trip</span><strong>${esc(state.ticketDetail.trip?.route ?? '—')}</strong></article></div><h3>History</h3><div class="user-detail-table-wrap"><table class="table admin-table"><thead><tr><th>Action</th><th>Date</th><th>Context</th></tr></thead><tbody>${(state.ticketDetail.history ?? []).map((entry) => `<tr><td>${esc(entry.action)}</td><td>${esc(String(entry.created_at ?? '').slice(0, 19))}</td><td>${esc(JSON.stringify(entry.context ?? {}))}</td></tr>`).join('') || '<tr><td colspan="3">No history recorded.</td></tr>'}</tbody></table></div></section>` : '';
+    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Operations control</div><h2>Tickets</h2><p class="module-subtitle">Manage valid, used, not used, no-show, expired, cancelled and refunded states without inferring boarding from trip completion.</p></div><span class="badge badge--neutral">${meta.total} tickets</span></div>${filters}</section>${table('Ticket lifecycle', ['Ticket', 'Lifecycle', 'Booking', 'Payment', 'Boarding', 'Actions'], rows, { id: 'admin-tickets' })}<footer class="server-pagination"><span>Showing ${state.tickets.length} of ${meta.total}</span><div><button class="button button--ghost" type="button" data-tickets-page="prev" ${meta.current_page <= 1 ? 'disabled' : ''}>Previous</button><span>Page ${meta.current_page} of ${meta.last_page}</span><button class="button button--ghost" type="button" data-tickets-page="next" ${meta.current_page >= meta.last_page ? 'disabled' : ''}>Next</button></div></footer>${detail}`;
   }
 
   if (state.module === 'vehicles') {
@@ -812,11 +853,15 @@ function content() {
     const roleFilter = [...new Map(state.roles.map((role) => [role.name, role])).values()];
     const filters = `<form class="admin-filter-bar" id="userFilters"><label><span>Search account</span><input name="q" type="search" placeholder="ID, name, email or phone" value="${esc(filter.q)}" /></label><label><span>Role</span><select name="role"><option value="">All roles</option>${roleFilter.map((role) => `<option value="${esc(role.name)}" ${filter.role === role.name ? 'selected' : ''}>${esc(role.label ?? role.name)}</option>`).join('')}</select></label><label><span>Status</span><select name="active"><option value="">All statuses</option><option value="1" ${filter.active === '1' ? 'selected' : ''}>Active</option><option value="0" ${filter.active === '0' ? 'selected' : ''}>Disabled</option></select></label><label><span>Registered from</span><input name="date_from" type="date" value="${esc(filter.date_from)}" /></label><label><span>Registered to</span><input name="date_to" type="date" value="${esc(filter.date_to)}" /></label><button class="button button--primary" type="submit">Search accounts</button><button class="button button--ghost" id="clearUserFilters" type="button">Clear</button></form>`;
     const pagination = `<footer class="server-pagination"><span>Showing ${state.users.length} of ${meta.total} accounts</span><div><button class="button button--ghost" type="button" data-users-page="prev" ${meta.current_page <= 1 ? 'disabled' : ''}>Previous</button><span>Page ${meta.current_page} of ${meta.last_page}</span><button class="button button--ghost" type="button" data-users-page="next" ${meta.current_page >= meta.last_page ? 'disabled' : ''}>Next</button></div></footer>`;
-    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Access control</div><h2>Users</h2><p class="module-subtitle">Search only the accounts you are permitted to manage. Results are paginated by the server.</p></div><button class="button button--primary" id="addUser" type="button">Add user</button></div>${filters}${userForm}</section>${table('Users', ['Name', 'Email', 'Roles', 'Effective permissions', 'Status', 'Actions'], state.users.map((item) => [item.name, item.email, (item.roles ?? []).map((role) => role.label ?? role.name).join(', ') || item.role, (item.permissions ?? []).length, item.active ? 'Active' : 'Disabled', { html: `<div class="table-actions"><button class="button button--icon" data-edit-user="${esc(item.id)}" type="button" aria-label="Edit user">${icon('edit')}</button><button class="button button--icon" data-disable-user="${esc(item.id)}" type="button" aria-label="Disable user" ${item.active ? '' : 'disabled'}>${icon('archive')}</button></div>` }]))}${pagination}`;
+    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Access control</div><h2>Users</h2><p class="module-subtitle">Search only the accounts you are permitted to manage. Results are paginated by the server.</p></div><button class="button button--primary" id="addUser" type="button">Add user</button></div>${filters}${userForm}</section>${table('Users', ['Name', 'Email', 'Roles', 'Effective permissions', 'Status', 'Actions'], state.users.map((item) => [item.name, item.email, (item.roles ?? []).map((role) => role.label ?? role.name).join(', ') || item.role, (item.permissions ?? []).length, item.active ? 'Active' : 'Disabled', { html: `<div class="table-actions"><button class="button button--icon" data-open-user="${esc(item.id)}" type="button" aria-label="Open user detail">${icon('view')}</button><button class="button button--icon" data-edit-user="${esc(item.id)}" type="button" aria-label="Edit user">${icon('edit')}</button><button class="button button--icon" data-disable-user="${esc(item.id)}" type="button" aria-label="Disable user" ${item.active ? '' : 'disabled'}>${icon('archive')}</button></div>` }]))}${pagination}${userDetailPanel()}`;
   }
   if (state.module === 'customers') {
     const customers = state.users.filter((user) => user.role === 'passenger' || (user.roles ?? []).some((role) => role.name === 'passenger'));
-    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Customer service</div><h2>Customers</h2><p class="module-subtitle">Registered passenger accounts and their linked bookings. Guest bookings remain visible in Bookings.</p></div><span class="badge badge--neutral">${customers.length} accounts</span></div>${table('Registered Customers', ['Name', 'Email', 'Phone', 'Bookings', 'Account status', 'Joined'], customers.map((user) => [user.name, user.email, user.phone || '—', user.booking_count ?? 0, user.active ? 'Active' : 'Disabled', String(user.created_at ?? '').slice(0, 10) || '—']))}`;
+    const filter = state.userFilters;
+    const meta = state.userMeta;
+    const customerFilters = `<form class="admin-filter-bar" id="customerFilters"><label><span>Search customer</span><input name="q" type="search" placeholder="Name, email or phone" value="${esc(filter.q)}" /></label><label><span>Status</span><select name="active"><option value="">All statuses</option><option value="1" ${filter.active === '1' ? 'selected' : ''}>Active</option><option value="0" ${filter.active === '0' ? 'selected' : ''}>Disabled</option></select></label><button class="button button--primary" type="submit">Search customers</button><button class="button button--ghost" id="clearCustomerFilters" type="button">Clear</button></form>`;
+    const customerPagination = `<footer class="server-pagination"><span>Showing ${customers.length} of ${meta.total} customers</span><div><button class="button button--ghost" type="button" data-customers-page="prev" ${meta.current_page <= 1 ? 'disabled' : ''}>Previous</button><span>Page ${meta.current_page} of ${meta.last_page}</span><button class="button button--ghost" type="button" data-customers-page="next" ${meta.current_page >= meta.last_page ? 'disabled' : ''}>Next</button></div></footer>`;
+    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Customer service</div><h2>Customers</h2><p class="module-subtitle">Passenger accounts are filtered and paginated by Laravel. Guest bookings remain visible in Bookings.</p></div><span class="badge badge--neutral">${meta.total} accounts</span></div>${customerFilters}</section>${table('Registered Customers', ['Name', 'Email', 'Phone', 'Bookings', 'Account status', 'Joined', 'Actions'], customers.map((user) => [user.name, user.email, user.phone || '—', user.booking_count ?? 0, user.active ? 'Active' : 'Disabled', String(user.created_at ?? '').slice(0, 10) || '—', { html: `<button class="button button--icon" data-open-user="${esc(user.id)}" type="button" aria-label="Open customer detail">${icon('view')}</button>` }]))}${customerPagination}${userDetailPanel()}`;
   }
   if (state.module === 'roles') {
     const editing = state.roles.find((role) => String(role.id) === String(state.roleEditingId));
@@ -944,6 +989,11 @@ async function loadModule() {
     if (state.module === 'packages') {
       state.packages = await api.packages();
     }
+    if (state.module === 'tickets') {
+      const ticketsResult = await api.tickets(state.ticketFilters);
+      state.tickets = ticketsResult.items;
+      state.ticketMeta = ticketsResult.meta;
+    }
 
     if (state.module === 'routes') {
       state.routes = await api.routes();
@@ -970,7 +1020,8 @@ async function loadModule() {
     }
 
     if (state.module === 'users' || state.module === 'customers') {
-      const usersResult = await api.users(state.userFilters);
+      const directoryFilters = state.module === 'customers' ? { ...state.userFilters, role: 'passenger' } : state.userFilters;
+      const usersResult = await api.users(directoryFilters);
       state.users = usersResult.items;
       state.userMeta = usersResult.meta;
       if (state.module === 'users' && (state.permissions.includes('roles.view') || state.permissions.includes('roles.manage'))) state.roles = await api.roles();
@@ -988,6 +1039,34 @@ async function loadModule() {
     state.error = error.message;
   }
 
+  render();
+}
+
+async function openUserDetail(userId, tab = 'general', page = 1) {
+  state.userDetailLoading = true;
+  state.userDetailError = '';
+  state.userDetail = state.userDetail?.user?.id === Number(userId)
+    ? { ...state.userDetail, tab, data: [] }
+    : { user: null, tab, data: [], meta: {} };
+  render();
+  try {
+    const user = state.userDetail.user ?? await api.userDetail(userId);
+    let data = [];
+    let meta = {};
+    if (['bookings', 'tickets', 'packages', 'activity'].includes(tab)) {
+      const result = await api.userDetailTab(userId, tab, page);
+      data = result.items;
+      meta = result.meta;
+    } else if (tab === 'permissions') {
+      data = await api.userPermissions(userId);
+    }
+    state.userDetail = { user, tab, data, meta };
+    state.userDetailMeta = meta;
+    state.userDetailLoading = false;
+  } catch (error) {
+    state.userDetailLoading = false;
+    state.userDetailError = error.message;
+  }
   render();
 }
 
@@ -1412,12 +1491,69 @@ function wire() {
     state.userFilters = { q: '', role: '', active: '', date_from: '', date_to: '', page: 1, per_page: 25 };
     void loadModule();
   });
+  document.querySelector('#customerFilters')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    state.userFilters = { ...state.userFilters, q: String(form.get('q') ?? '').trim(), role: 'passenger', active: String(form.get('active') ?? ''), page: 1 };
+    void loadModule();
+  });
+  document.querySelector('#clearCustomerFilters')?.addEventListener('click', () => {
+    state.userFilters = { q: '', role: 'passenger', active: '', date_from: '', date_to: '', page: 1, per_page: 25 };
+    void loadModule();
+  });
+  document.querySelectorAll('[data-customers-page]').forEach((button) => button.addEventListener('click', () => {
+    const direction = button.dataset.customersPage === 'next' ? 1 : -1;
+    const page = Math.max(1, Math.min(state.userMeta.last_page, state.userMeta.current_page + direction));
+    if (page === state.userMeta.current_page) return;
+    state.userFilters = { ...state.userFilters, role: 'passenger', page };
+    void loadModule();
+  }));
+  document.querySelectorAll('[data-open-user]').forEach((button) => button.addEventListener('click', () => {
+    void openUserDetail(button.dataset.openUser);
+  }));
+  document.querySelector('#closeUserDetail')?.addEventListener('click', () => {
+    state.userDetail = null;
+    state.userDetailError = '';
+    render();
+  });
+  document.querySelectorAll('[data-user-detail-tab]').forEach((button) => button.addEventListener('click', () => {
+    void openUserDetail(state.userDetail?.user?.id, button.dataset.userDetailTab, 1);
+  }));
+  document.querySelectorAll('[data-user-detail-page]').forEach((button) => button.addEventListener('click', () => {
+    const meta = state.userDetailMeta;
+    const direction = button.dataset.userDetailPage === 'next' ? 1 : -1;
+    const page = Math.max(1, Math.min(meta.last_page ?? 1, (meta.current_page ?? 1) + direction));
+    if (page === meta.current_page) return;
+    void openUserDetail(state.userDetail?.user?.id, state.userDetail?.tab, page);
+  }));
   document.querySelectorAll('[data-users-page]').forEach((button) => button.addEventListener('click', () => {
     const direction = button.dataset.usersPage === 'next' ? 1 : -1;
     const page = Math.max(1, Math.min(state.userMeta.last_page, state.userMeta.current_page + direction));
     if (page === state.userMeta.current_page) return;
     state.userFilters = { ...state.userFilters, page };
     void loadModule();
+  }));
+  document.querySelector('#ticketFilters')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    state.ticketFilters = { ...state.ticketFilters, q: String(form.get('q') ?? '').trim(), lifecycle: String(form.get('lifecycle') ?? ''), status: String(form.get('status') ?? ''), page: 1 };
+    void loadModule();
+  });
+  document.querySelector('#clearTicketFilters')?.addEventListener('click', () => { state.ticketFilters = { q: '', status: '', lifecycle: '', page: 1, per_page: 25 }; void loadModule(); });
+  document.querySelectorAll('[data-tickets-page]').forEach((button) => button.addEventListener('click', () => {
+    const direction = button.dataset.ticketsPage === 'next' ? 1 : -1;
+    const page = Math.max(1, Math.min(state.ticketMeta.last_page, state.ticketMeta.current_page + direction));
+    if (page === state.ticketMeta.current_page) return;
+    state.ticketFilters = { ...state.ticketFilters, page };
+    void loadModule();
+  }));
+  document.querySelectorAll('[data-view-ticket]').forEach((button) => button.addEventListener('click', async () => {
+    try { state.ticketDetail = await api.ticketDetail(button.dataset.viewTicket); render(); } catch (error) { state.error = error.message; render(); }
+  }));
+  document.querySelector('#closeTicketDetail')?.addEventListener('click', () => { state.ticketDetail = null; render(); });
+  document.querySelectorAll('[data-ticket-transition]').forEach((button) => button.addEventListener('click', async () => {
+    if (!confirm(`Set ticket to ${button.dataset.ticketStatus}?`)) return;
+    try { await api.transitionTicket(button.dataset.ticketTransition, button.dataset.ticketStatus); const result = await api.tickets(state.ticketFilters); state.tickets = result.items; state.ticketMeta = result.meta; render(); } catch (error) { state.error = error.message; render(); }
   }));
   document.querySelector('#cancelUser')?.addEventListener('click', () => {
     state.userFormOpen = false;

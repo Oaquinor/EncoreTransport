@@ -13,4 +13,5 @@ class TransportPackage extends Model {
     public function events():HasMany{return $this->hasMany(PackageEvent::class,'package_id');}
     public function transfers():HasMany{return $this->hasMany(PackageTransfer::class,'package_id');}
     public function manifestItems():HasMany{return $this->hasMany(PackageManifestItem::class,'package_id');}
+    public function authorizations():HasMany{return $this->hasMany(PackageAuthorization::class,'package_id');}
 }

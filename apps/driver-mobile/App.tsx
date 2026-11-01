@@ -74,6 +74,15 @@ export default function App() {
   const [schedule, setSchedule] = useState<any[]>([]);
   const [journey, setJourney] = useState<any>(null);
   const [latestLocation, setLatestLocation] = useState<any>(null);
+  const [packageRecipient, setPackageRecipient] = useState('');
+  const [packageDescription, setPackageDescription] = useState('');
+  const [packageQrToken, setPackageQrToken] = useState('');
+  const [selectedPackage, setSelectedPackage] = useState<any>(null);
+  const [manifest, setManifest] = useState<any>(null);
+  const [custodyMessage, setCustodyMessage] = useState('');
+  const [transferDriverId, setTransferDriverId] = useState('');
+  const [transferId, setTransferId] = useState('');
+  const [discrepancyNotes, setDiscrepancyNotes] = useState('');
 
   const [incidentTitle, setIncidentTitle] = useState('');
   const [incidentDescription, setIncidentDescription] = useState('');
@@ -536,6 +545,54 @@ export default function App() {
     }
   };
 
+  const registerPackage = async () => {
+    if (!trip || !packageRecipient.trim()) return;
+    try {
+      const payload = await request('/driver/packages', { method: 'POST', body: JSON.stringify({ trip_id: trip.id, recipient_name: packageRecipient.trim(), description: packageDescription.trim() || null }) });
+      const created = payload.data ?? payload;
+      setSelectedPackage(created.package ?? created);
+      setPackageQrToken(created.qr_payload?.token ?? '');
+      setCustodyMessage('Encomienda registrada y disponible para escaneo.');
+      setPackageRecipient('');
+      setPackageDescription('');
+    } catch (caught) { setError(userFacingError(caught, 'No se pudo registrar la encomienda.')); }
+  };
+
+  const scanPackage = async () => {
+    if (!packageQrToken.trim()) return;
+    try { const payload = await request('/driver/packages/scan', { method: 'POST', body: JSON.stringify({ qr_token: packageQrToken.trim() }) }); setSelectedPackage(payload.data ?? payload); setCustodyMessage('Custodia consultada desde el backend.'); } catch (caught) { setError(userFacingError(caught, 'No se pudo escanear el QR de la encomienda.')); }
+  };
+
+  const advancePackage = async (status: string) => {
+    if (!selectedPackage?.id) return;
+    try { const payload = await request(`/driver/packages/${selectedPackage.id}/status`, { method: 'POST', body: JSON.stringify({ status }) }); setSelectedPackage(payload.data ?? payload); setCustodyMessage(`Estado actualizado: ${statusLabel(status)}.`); } catch (caught) { setError(userFacingError(caught, 'El backend rechazó la transición de custodia.')); }
+  };
+
+  const createManifestForPackage = async () => {
+    if (!trip || !selectedPackage?.id) return;
+    try { const payload = await request('/driver/manifests', { method: 'POST', body: JSON.stringify({ trip_id: trip.id, package_ids: [selectedPackage.id] }) }); setManifest(payload.data ?? payload); setCustodyMessage('Manifiesto creado; falta escanear y reconciliar.'); } catch (caught) { setError(userFacingError(caught, 'No se pudo crear el manifiesto.')); }
+  };
+
+  const reconcileManifest = async () => {
+    if (!manifest?.id) return;
+    try { const payload = await request(`/driver/manifests/${manifest.id}/reconcile`, { method: 'POST' }); setManifest(payload.data ?? payload); setCustodyMessage('Manifiesto reconciliado por el backend.'); } catch (caught) { setError(userFacingError(caught, 'El manifiesto aún tiene faltantes o discrepancias.')); }
+  };
+
+  const reportDiscrepancy = async () => {
+    if (!selectedPackage?.id || !discrepancyNotes.trim()) return;
+    try { await request(`/driver/packages/${selectedPackage.id}/discrepancy`, { method: 'POST', body: JSON.stringify({ type: 'mobile_report', notes: discrepancyNotes.trim() }) }); setDiscrepancyNotes(''); setCustodyMessage('Discrepancia registrada en la línea de custodia.'); } catch (caught) { setError(userFacingError(caught, 'No se pudo registrar la discrepancia.')); }
+  };
+
+  const requestTransfer = async () => {
+    if (!selectedPackage?.id || !transferDriverId.trim()) return;
+    try { const payload = await request(`/driver/packages/${selectedPackage.id}/transfer`, { method: 'POST', body: JSON.stringify({ to_driver_id: Number(transferDriverId) }) }); setTransferId(String(payload.data?.id ?? '')); setCustodyMessage('Transferencia solicitada; requiere aceptación del conductor receptor.'); } catch (caught) { setError(userFacingError(caught, 'No se pudo solicitar la transferencia.')); }
+  };
+
+  const acceptTransfer = async () => {
+    if (!transferId.trim()) return;
+    try { await request(`/driver/package-transfers/${transferId.trim()}/accept`, { method: 'POST' }); setCustodyMessage('Transferencia aceptada por el conductor autenticado.'); } catch (caught) { setError(userFacingError(caught, 'No se pudo aceptar la transferencia.')); }
+  };
+
   if (!token) {
     return (
       <SafeAreaView style={styles.safe}>
@@ -882,6 +939,26 @@ export default function App() {
                 )}
             </View>
 
+            <View style={styles.card}>
+              <Text style={styles.cardKicker}>CUSTODIA DE PAQUETERÍA</Text>
+              <Text style={styles.copy}>Estas acciones escriben en la cadena de custodia real; no muestran confirmaciones si el backend rechaza la operación.</Text>
+              <TextInput style={styles.input} placeholder="Nombre del destinatario" value={packageRecipient} onChangeText={setPackageRecipient} />
+              <TextInput style={styles.input} placeholder="Descripción" value={packageDescription} onChangeText={setPackageDescription} />
+              <TouchableOpacity style={styles.secondaryButton} onPress={registerPackage}><Text style={styles.secondaryButtonText}>Registrar encomienda</Text></TouchableOpacity>
+              <TextInput style={styles.input} placeholder="Token QR opaco" value={packageQrToken} onChangeText={setPackageQrToken} autoCapitalize="none" />
+              <View style={styles.gpsButtons}><TouchableOpacity style={styles.secondaryButton} onPress={scanPackage}><Text style={styles.secondaryButtonText}>Escanear / consultar</Text></TouchableOpacity><TouchableOpacity style={styles.secondaryButton} onPress={() => advancePackage('in_progress')} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Cargar</Text></TouchableOpacity><TouchableOpacity style={styles.secondaryButton} onPress={() => advancePackage('delivered')} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Validar entrega</Text></TouchableOpacity></View>
+              {selectedPackage && <Text style={styles.status}>Paquete {selectedPackage.reference ?? selectedPackage.public_id} · {statusLabel(selectedPackage.status)}</Text>}
+              <TouchableOpacity style={styles.secondaryButton} onPress={createManifestForPackage} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Crear manifiesto</Text></TouchableOpacity>
+              {manifest && <><Text style={styles.status}>Manifiesto {manifest.reference} · {manifest.scanned_count ?? 0}/{manifest.expected_count ?? 0} · {statusLabel(manifest.status)}</Text><TouchableOpacity style={styles.secondaryButton} onPress={reconcileManifest}><Text style={styles.secondaryButtonText}>Consultar y reconciliar manifiesto</Text></TouchableOpacity></>}
+              <TextInput style={styles.input} placeholder="Notas de discrepancia" value={discrepancyNotes} onChangeText={setDiscrepancyNotes} />
+              <TouchableOpacity style={styles.secondaryButton} onPress={reportDiscrepancy} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Registrar discrepancia</Text></TouchableOpacity>
+              <TextInput style={styles.input} placeholder="ID conductor receptor" value={transferDriverId} onChangeText={setTransferDriverId} keyboardType="numeric" />
+              <TouchableOpacity style={styles.secondaryButton} onPress={requestTransfer} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Transferir</Text></TouchableOpacity>
+              <TextInput style={styles.input} placeholder="ID transferencia a aceptar" value={transferId} onChangeText={setTransferId} keyboardType="numeric" />
+              <TouchableOpacity style={styles.secondaryButton} onPress={acceptTransfer}><Text style={styles.secondaryButtonText}>Aceptar transferencia</Text></TouchableOpacity>
+              {!!custodyMessage && <Text style={styles.locationMessage}>{custodyMessage}</Text>}
+            </View>
+
             <TouchableOpacity
               style={styles.button}
               onPress={changeTripState}
@@ -953,6 +1030,9 @@ export default function App() {
             setTrip(null);
             setPassengers([]);
             setSchedule([]);
+            setSelectedPackage(null);
+            setManifest(null);
+            setCustodyMessage('');
           }}
         >
           <Text style={styles.secondaryButtonText}>

@@ -63,6 +63,13 @@ export const packages = async () => {
   const payload = await requestJson('/admin/packages');
   return payload.data ?? [];
 };
+export const tickets = async (filters = {}) => {
+  const query = new URLSearchParams(Object.entries(filters).filter(([, value]) => value !== '' && value != null));
+  const payload = await requestJson(`/admin/tickets${query.toString() ? `?${query}` : ''}`);
+  return { items: payload.data ?? [], meta: payload.meta ?? { current_page: 1, last_page: 1, per_page: 25, total: (payload.data ?? []).length } };
+};
+export const ticketDetail = async (id) => (await requestJson(`/admin/tickets/${encodeURIComponent(id)}`)).data ?? {};
+export const transitionTicket = async (id, status) => (await requestJson(`/admin/tickets/${encodeURIComponent(id)}/transition`, { method: 'POST', body: JSON.stringify({ status }) })).data ?? {};
 
 export const vehicleStatus = async () => {
   const payload = await requestJson('/admin/vehicle-status');
@@ -84,6 +91,12 @@ export const disableUser = async (id) => {
   const payload = await requestJson(`/admin/users/${encodeURIComponent(id)}/disable`, { method: 'POST' });
   return payload.data ?? payload;
 };
+export const userDetail = async (id) => (await requestJson(`/admin/users/${encodeURIComponent(id)}`)).data ?? {};
+export const userDetailTab = async (id, tab, page = 1) => {
+  const payload = await requestJson(`/admin/users/${encodeURIComponent(id)}/${encodeURIComponent(tab)}?page=${page}&per_page=10`);
+  return { items: payload.data ?? [], meta: payload.meta ?? { current_page: page, last_page: 1, per_page: 10, total: (payload.data ?? []).length } };
+};
+export const userPermissions = async (id) => (await requestJson(`/admin/users/${encodeURIComponent(id)}/permissions`)).data ?? { roles: [], direct: [], effective: [] };
 export const roles = async () => (await requestJson('/admin/roles')).data ?? [];
 export const updateRole = async (id, data) => {
   const payload = await requestJson(`/admin/roles/${encodeURIComponent(id)}`, {

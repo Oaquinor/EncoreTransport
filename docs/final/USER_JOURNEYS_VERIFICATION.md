@@ -7,10 +7,10 @@
 | Driver → viaje → GPS foreground → incidencia | PARCIAL | GPS contract/browser | dispositivo y background |
 | Registrar paquete → tracking | PASS | `PackageCustodyTest`, `PackageController`, browser existente | E2E autenticado |
 | Tracking → estado/historial/próxima acción | PASS | `PackageCustodyTest`, tracking público | ampliar cadena de custodia |
-| Entrega → verificación + foto privada | PASS Feature | `PackageCustodyTest`, almacenamiento `local` privado | integrar UI de transferencias/manifiesto/QR en Driver PWA/Mobile |
+| Entrega → verificación + foto privada | PASS Feature / UI parcial | `PackageCustodyTest`, almacenamiento `local` privado y controles Driver conectados | cámara/foto nativa, dispositivo y E2E autenticado |
 | Website → Passenger | PASS de contrato | nav simplificada, flujo de búsqueda y rutas existentes | E2E autenticado completo |
 | Driver PWA → registro/estado de paquete | PASS local | API multipart y browser/contratos Driver | aceptación en dispositivo |
-| Driver Mobile → paquete | NO DISPONIBLE | no hay pantalla de paquete equivalente | implementar recorrido Mobile |
+| Driver Mobile → paquete | PARCIAL local | pantalla de registro, QR, carga, manifiesto, discrepancia y transferencia conectada al backend | validación en dispositivo y evidencia nativa de entrega |
 | Admin → usuarios/roles/reportes | PARCIAL | dashboard/report contracts | E2E autenticado sembrado |
 | Admin → buscar cuenta y paginar resultados | PASS Feature | `AdminUserSearchTest`, endpoint `admin/users` | volumen de producción y E2E por rol |
 | Pago válido/rechazado/pendiente | BLOQUEADO | gateway unconfigured | sandbox y webhook |

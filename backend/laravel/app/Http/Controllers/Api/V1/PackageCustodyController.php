@@ -52,7 +52,7 @@ class PackageCustodyController extends Controller
     {
         $data = $request->validate(['qr_token' => ['required', 'string', 'min:32', 'max:128']]);
         $driver = $this->driver($request);
-        $package = TransportPackage::query()->with(['trip.route', 'driver'])
+        $package = TransportPackage::query()->with(['trip.route', 'driver', 'events', 'transfers'])
             ->where('qr_token_hash', hash('sha256', $data['qr_token']))->first();
 
         if (!$driver || !$package || $package->driver_id !== $driver->id) {
@@ -60,6 +60,20 @@ class PackageCustodyController extends Controller
         }
 
         return response()->json(['data' => $this->packagePayload($package)]);
+    }
+
+    public function discrepancy(Request $request, TransportPackage $package)
+    {
+        $data = $request->validate(['type' => ['required', 'string', 'max:80'], 'notes' => ['required', 'string', 'max:2000']]);
+        $driver = $this->driver($request);
+        if (!$driver || $package->driver_id !== $driver->id) return response()->json(['message' => 'Forbidden.'], 403);
+
+        $event = DB::transaction(function () use ($data, $request, $package) {
+            $locked = TransportPackage::query()->lockForUpdate()->findOrFail($package->id);
+            return $locked->events()->create(['user_id' => $request->user()?->id, 'status' => 'discrepancy', 'notes' => $data['type'] . ': ' . $data['notes'], 'occurred_at' => now()]);
+        });
+
+        return response()->json(['data' => $event], 201);
     }
 
     public function createManifest(Request $request)
@@ -281,6 +295,8 @@ class PackageCustodyController extends Controller
             'route' => $package->trip?->route?->origin && $package->trip?->route?->destination
                 ? $package->trip->route->origin . ' → ' . $package->trip->route->destination
                 : null,
+            'events' => $package->events?->map(fn ($event) => ['status' => $event->status, 'notes' => $event->notes, 'occurred_at' => $event->occurred_at])->values(),
+            'transfers' => $package->transfers?->map(fn ($transfer) => ['id' => $transfer->id, 'status' => $transfer->status, 'from_driver_id' => $transfer->from_driver_id, 'to_driver_id' => $transfer->to_driver_id])->values(),
         ];
     }
 }

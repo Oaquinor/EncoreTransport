@@ -8,6 +8,9 @@
 @import url("../../packages/shared/design-system.css");
 .ui-icon { width: 17px; height: 17px; flex: 0 0 auto; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .button--with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.driver-custody-tools { display:grid; gap:12px; margin-top:16px; padding-top:16px; border-top:1px solid rgba(120,150,165,.25); }
+.driver-custody-tools h4 { margin:0; }
+.driver-custody-tools small { color:var(--muted); }
 
 /* Operational hierarchy inspired by mature driver tools: identity first,
    trip context second, and only then the detailed actions. */

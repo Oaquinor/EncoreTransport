@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\ApiToken;
+use App\Models\AuditLog;
+use App\Models\Booking;
 use App\Models\Permission;
+use App\Models\PackageAuthorization;
 use App\Models\Role;
+use App\Models\Ticket;
 use App\Models\User;
 use App\Services\Audit\AuditService;
 use App\Services\Auth\PermissionService;
@@ -13,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Carbon;
 
 class AdminAccessController extends Controller
 {
@@ -65,6 +70,83 @@ class AdminAccessController extends Controller
                 'total' => $page->total(),
             ],
         ]);
+    }
+
+    public function showUser(User $user)
+    {
+        return response()->json(['data' => $this->userPayload($user->load(['roles.permissions', 'permissions']))]);
+    }
+
+    public function userBookings(Request $request, User $user)
+    {
+        $page = Booking::query()->with(['trip.route', 'trip.bus', 'ticket', 'payments'])
+            ->where('user_id', $user->id)->latest()->paginate($this->perPage($request));
+
+        return response()->json(['data' => $page->getCollection()->map(fn ($booking) => [
+            'id' => $booking->id,
+            'reference' => $booking->reference,
+            'status' => $booking->status,
+            'total_amount' => $booking->total_amount,
+            'confirmed_at' => $booking->confirmed_at,
+            'expires_at' => $booking->expires_at,
+            'trip' => $booking->trip ? [
+                'id' => $booking->trip->id,
+                'status' => $booking->trip->status,
+                'departure_date' => $booking->trip->departure_date?->toDateString(),
+                'departure_time' => $booking->trip->departure_time,
+                'route' => $booking->trip->route ? $booking->trip->route->origin . ' → ' . $booking->trip->route->destination : null,
+            ] : null,
+            'ticket_status' => $booking->ticket?->status,
+            'payment_status' => $booking->payments->sortByDesc('id')->first()?->status,
+        ])->values(), 'meta' => $this->paginationMeta($page)]);
+    }
+
+    public function userTickets(Request $request, User $user)
+    {
+        $page = Ticket::query()->with(['booking.trip.route', 'booking.payments'])
+            ->whereHas('booking', fn ($query) => $query->where('user_id', $user->id))
+            ->latest()->paginate($this->perPage($request));
+
+        return response()->json(['data' => $page->getCollection()->map(fn ($ticket) => $this->ticketPayload($ticket))->values(), 'meta' => $this->paginationMeta($page)]);
+    }
+
+    public function userPackages(Request $request, User $user)
+    {
+        $page = PackageAuthorization::query()->with(['package.trip.route', 'package.events'])
+            ->where('user_id', $user->id)->where('status', 'authorized')->latest()->paginate($this->perPage($request));
+
+        return response()->json(['data' => $page->getCollection()->map(fn ($authorization) => [
+            'authorization_id' => $authorization->id,
+            'authorized_at' => $authorization->authorized_at,
+            'reference' => $authorization->package?->reference,
+            'status' => $authorization->package?->status,
+            'route' => $authorization->package?->trip?->route?->origin && $authorization->package?->trip?->route?->destination
+                ? $authorization->package->trip->route->origin . ' → ' . $authorization->package->trip->route->destination : null,
+            'events' => $authorization->package?->events?->map(fn ($event) => ['status' => $event->status, 'occurred_at' => $event->occurred_at])->values(),
+        ])->values(), 'meta' => $this->paginationMeta($page)]);
+    }
+
+    public function userActivity(Request $request, User $user)
+    {
+        $page = AuditLog::query()->where(function ($query) use ($user) {
+            $query->where('user_id', $user->id)->orWhere(function ($subject) use ($user) {
+                $subject->where('subject_type', User::class)->where('subject_id', (string) $user->id);
+            });
+        })->latest()->paginate($this->perPage($request));
+
+        return response()->json(['data' => $page->getCollection()->map(fn ($log) => [
+            'id' => $log->id, 'action' => $log->action, 'subject_type' => $log->subject_type,
+            'subject_id' => $log->subject_id, 'context' => $log->context, 'created_at' => $log->created_at,
+        ])->values(), 'meta' => $this->paginationMeta($page)]);
+    }
+
+    public function userPermissions(User $user)
+    {
+        return response()->json(['data' => [
+            'roles' => $user->load('roles.permissions')->roles,
+            'direct' => $user->load('permissions')->permissions,
+            'effective' => $this->permissions->effective($user),
+        ]]);
     }
 
     public function storeUser(Request $request, AuditService $audit)
@@ -206,5 +288,43 @@ class AdminAccessController extends Controller
     private function userPayload(User $user): array
     {
         return ['id'=>$user->id,'name'=>$user->name,'email'=>$user->email,'phone'=>$user->phone,'role'=>$user->role,'active'=>(bool)$user->active,'created_at'=>$user->created_at,'booking_count'=>$user->bookings_count ?? $user->bookings()->count(),'roles'=>$user->roles,'direct_permissions'=>$user->permissions,'permissions'=>app(\App\Services\Auth\PermissionService::class)->effective($user)];
+    }
+
+    private function ticketPayload(Ticket $ticket): array
+    {
+        $booking = $ticket->booking;
+        $trip = $booking?->trip;
+        $departure = $trip?->departure_date && $trip?->departure_time
+            ? Carbon::parse($trip->departure_date->toDateString() . ' ' . $trip->departure_time)
+            : null;
+        $lifecycle = $ticket->status;
+        if ($ticket->status === 'active') {
+            $lifecycle = $departure && $departure->isPast() ? 'not_used' : 'valid';
+        }
+
+        return [
+            'id' => $ticket->id,
+            'public_id' => $ticket->public_id,
+            'status' => $ticket->status,
+            'lifecycle_status' => $lifecycle,
+            'issued_at' => $ticket->issued_at,
+            'validated_at' => $ticket->validated_at,
+            'used_at' => $ticket->used_at,
+            'booking_status' => $booking?->status,
+            'payment_status' => $booking?->payments?->sortByDesc('id')->first()?->status,
+            'boarding_status' => $ticket->used_at ? 'boarded' : 'not_boarded',
+            'booking' => $booking ? ['id' => $booking->id, 'reference' => $booking->reference] : null,
+            'trip' => $trip ? ['id' => $trip->id, 'status' => $trip->status, 'departure_date' => $trip->departure_date?->toDateString(), 'departure_time' => $trip->departure_time, 'route' => $trip->route ? $trip->route->origin . ' → ' . $trip->route->destination : null] : null,
+        ];
+    }
+
+    private function perPage(Request $request): int
+    {
+        return min(100, max(10, (int) $request->input('per_page', 25)));
+    }
+
+    private function paginationMeta($page): array
+    {
+        return ['current_page' => $page->currentPage(), 'last_page' => $page->lastPage(), 'per_page' => $page->perPage(), 'total' => $page->total()];
     }
 }

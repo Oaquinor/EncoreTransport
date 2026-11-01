@@ -2,6 +2,7 @@ export const modules=[
   {id:'dashboard',label:'Dashboard',group:'Operations',permission:'dashboard.view'},
   {id:'trips',label:'Trips',group:'Operations',permission:'trips.view'},
   {id:'bookings',label:'Bookings',group:'Operations',permission:'bookings.view'},
+  {id:'tickets',label:'Tickets',group:'Operations',permission:'tickets.view'},
   {id:'vehicles',label:'Vehicles',group:'Fleet',permission:'vehicles.view'},
   {id:'drivers',label:'Drivers',group:'Fleet',permission:'drivers.view'},
   {id:'routes',label:'Routes',group:'Fleet',permission:'routes.view'},
