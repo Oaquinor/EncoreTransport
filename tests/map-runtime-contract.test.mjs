@@ -9,6 +9,11 @@ const mapService = fs.readFileSync(
   'backend/laravel/app/Services/Maps/TomTomMapService.php',
   'utf8',
 );
+const mapController = fs.readFileSync(
+  'backend/laravel/app/Http/Controllers/Api/V1/MapController.php',
+  'utf8',
+);
+const mapConfig = fs.readFileSync('backend/laravel/config/maps.php', 'utf8');
 
 assert.equal(
   packageJson.dependencies?.leaflet,
@@ -52,6 +57,13 @@ assert.match(
   'TomTom Map Display requests must include the API version header.',
 );
 
+assert.match(mapService, /Cache::store[\s\S]*->get\(\$cacheKey\)/, 'TomTom tiles must be read from a bounded server cache.');
+assert.match(mapService, /cacheTtl\(/, 'Tile cache TTL must be derived from upstream cache directives.');
+assert.match(mapConfig, /TOMTOM_TILE_CACHE_MAX_TTL/, 'Tile cache must have an explicit maximum lifetime.');
+assert.match(mapController, /matchesEtag/, 'The tile proxy must support conditional ETag responses.');
+assert.match(mapController, /X-Map-Cache/, 'The tile proxy must expose cache evidence for measurements.');
+assert.match(mapController, /Server-Timing/, 'The tile proxy must expose upstream timing evidence.');
+
 assert.doesNotMatch(
   realMap,
   /TOMTOM_API_KEY/,
@@ -63,6 +75,11 @@ assert.match(
   /liveMapRequests/,
   'Overlapping live-network renders must not initialize or paint the same map out of order.',
 );
+assert.match(realMap, /__ENCORE_MAP_METRICS__/, 'Browser maps must expose measurable runtime metrics.');
+assert.match(realMap, /firstImageMs/, 'Browser maps must measure first tile image timing.');
+assert.match(realMap, /lastRouteViewKey/, 'Live maps must not refit the viewport for every moving GPS position.');
+assert.match(realMap, /sampleAt/, 'Live marker animation must use real GPS sample timestamps.');
+assert.doesNotMatch(realMap, /const duration = 900/, 'Live marker animation must not use a fixed 900ms duration.');
 
 assert.match(
   websiteApp,

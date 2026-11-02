@@ -15,5 +15,10 @@ return [
         'tile_size' => (int) env('TOMTOM_TILE_SIZE', 256),
         'travel_mode' => env('TOMTOM_TRAVEL_MODE', 'car'),
         'timeout' => (int) env('TOMTOM_TIMEOUT', 15),
+        // Tile caching is bounded and only applied when TomTom permits it.
+        'cache_enabled' => filter_var(env('TOMTOM_TILE_CACHE_ENABLED', true), FILTER_VALIDATE_BOOL),
+        'cache_store' => env('TOMTOM_TILE_CACHE_STORE'),
+        'cache_default_ttl' => (int) env('TOMTOM_TILE_CACHE_DEFAULT_TTL', 300),
+        'cache_max_ttl' => (int) env('TOMTOM_TILE_CACHE_MAX_TTL', 3600),
     ],
 ];

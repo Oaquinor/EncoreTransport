@@ -22,7 +22,7 @@ interface MapServiceInterface
      * Returns a real TomTom raster tile payload without exposing the API key
      * to browser clients.
      *
-     * @return array{body:string,content_type:string,cache_control:string,etag:?string}
+     * @return array{body:string,content_type:string,cache_control:string,etag:?string,cache_status:string,upstream_ms:float|int}
      */
     public function rasterTile(int $zoom, int $x, int $y, array $options = []): array;
 }

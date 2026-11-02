@@ -19,8 +19,18 @@
         <div><span class="site-kicker">Tracking · Encore Live</span><h1>See the network in motion.</h1><p>Choose a published route to see recent, authorized bus locations. This view complements the schedule; it does not promise an exact arrival time.</p></div>
         <aside class="site-page__aside live-status-panel"><strong>Network status</strong><p id="serviceStatus" aria-live="polite">Checking service…</p><div class="live-status-panel__metrics"><span><small>Route signal</small><b id="mapStatus">Select a route</b></span><span><small>Latest update</small><b id="mapEta">Waiting for a route</b></span></div></aside>
       </section>
-      <section class="site-page__section" aria-labelledby="liveMapTitle">
-        <header><span class="site-kicker">Live route map</span><h2 id="liveMapTitle">Select a route to see it in motion.</h2><div class="public-map-card__bar"><label for="networkRouteSelect">Select a route</label><select id="networkRouteSelect" aria-label="Select a route"><option value="">Select a route</option></select></div></header>
+      <section class="site-page__section live-map-section" aria-labelledby="liveMapTitle">
+        <header class="live-map-section__header">
+          <div class="live-map-section__heading">
+            <span class="site-kicker">Live route map</span>
+            <h2 id="liveMapTitle">Select a route to see it in motion.</h2>
+            <p>Choose one published route. The map will show only recent, authorized signals for that route.</p>
+          </div>
+          <div class="public-map-card__bar live-map-toolbar">
+            <label for="networkRouteSelect">Route to monitor</label>
+            <select id="networkRouteSelect" aria-label="Select a route"><option value="">Select a route</option></select>
+          </div>
+        </header>
         <div class="site-live-map"><div id="routeMapCanvas" data-map-mode="live" class="website-real-map public-real-map" aria-label="Encore Live map"><div class="encore-map-fallback" aria-live="polite"><div><strong>Select a route to begin</strong><span>Choose a route above to see recent authorized locations.</span></div></div></div><div id="networkBusList" class="public-network-buses" aria-live="polite" aria-label="Buses with recent signals"></div></div>
       </section>
       <section class="site-page__section site-page__section--tint"><div class="shell"><div class="site-card-grid"><article class="site-card"><h3>What you will see</h3><p>Recent locations, the selected route and the time of the latest signal received.</p></article><article class="site-card"><h3>How to read it</h3><p>A moving marker requires a recent authorized GPS signal. A route can remain visible even when no bus is currently reporting.</p></article><article class="site-card"><h3>Looking for a parcel?</h3><p>Shipments have their own reference and tracking view.</p><a href="/track-package/">Track a parcel →</a></article></div></div></section>

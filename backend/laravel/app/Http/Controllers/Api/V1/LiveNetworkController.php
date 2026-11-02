@@ -10,6 +10,7 @@ class LiveNetworkController extends Controller
 {
     public function __invoke(): JsonResponse
     {
+        $startedAt = hrtime(true);
         $trips = Trip::query()
             ->with(['route.stops', 'bus', 'latestLocation'])
             ->where('status', 'in_progress')
@@ -54,12 +55,16 @@ class LiveNetworkController extends Controller
             ];
         })->values();
 
+        $queryMs = round((hrtime(true) - $startedAt) / 1_000_000, 2);
+
         return response()->json([
             'data' => [
                 'routes' => $routes,
                 'trips' => $activeTrips,
                 'updated_at' => now()->toIso8601String(),
             ],
-        ])->header('Cache-Control', 'public, max-age=10, stale-while-revalidate=20');
+        ])->header('Cache-Control', 'public, max-age=10, stale-while-revalidate=20')
+            ->header('X-Live-Query-Ms', (string) $queryMs)
+            ->header('Server-Timing', 'live-query;dur='.$queryMs);
     }
 }

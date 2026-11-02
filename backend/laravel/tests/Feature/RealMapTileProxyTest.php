@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class RealMapTileProxyTest extends TestCase
@@ -66,6 +67,48 @@ class RealMapTileProxyTest extends TestCase
             ->assertJsonPath('message', 'Invalid map tile coordinates.');
 
         Http::assertNothingSent();
+    }
+
+    public function test_map_tile_proxy_reuses_permitted_cache_and_honours_etag(): void
+    {
+        config([
+            'maps.provider' => 'tomtom',
+            'maps.tomtom.api_key' => 'test-secret-map-key',
+            'maps.tomtom.display_base_url' => 'https://api.tomtom.test',
+            'maps.tomtom.cache_enabled' => true,
+            'maps.tomtom.cache_max_ttl' => 600,
+            'maps.tomtom.cache_store' => 'array',
+        ]);
+
+        Http::fake([
+            'https://api.tomtom.test/maps/orbis/map-display/tile/10/301/400.png*' =>
+                Http::response('PNG_BYTES', 200, [
+                    'Content-Type' => 'image/png',
+                    'Cache-Control' => 'public, max-age=120',
+                    'ETag' => '"cacheable-tile"',
+                ]),
+        ]);
+
+        Cache::store('array')->flush();
+
+        $first = $this->get('/api/v1/maps/tiles/10/301/400.png?style=street-light');
+        $second = $this->get('/api/v1/maps/tiles/10/301/400.png?style=street-light');
+        $conditional = $this->get('/api/v1/maps/tiles/10/301/400.png?style=street-light', [
+            'If-None-Match' => '"cacheable-tile"',
+        ]);
+
+        $first->assertOk()
+            ->assertHeader('X-Map-Cache', 'MISS')
+            ->assertHeader('Server-Timing');
+        $second->assertOk()
+            ->assertHeader('X-Map-Cache', 'HIT')
+            ->assertHeader('X-Map-Upstream-Ms', '0');
+        $conditional
+            ->assertStatus(304)
+            ->assertHeader('ETag', '"cacheable-tile"')
+            ->assertHeader('X-Map-Cache', 'HIT');
+
+        Http::assertSentCount(1);
     }
 
     public function test_map_tile_proxy_classifies_tomtom_authorization_failure_without_leaking_key(): void

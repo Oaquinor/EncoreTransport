@@ -1,0 +1,257 @@
+{
+  "first": {
+    "maps": {
+      "version": 1,
+      "maps": {
+        "routeMapCanvas": {
+          "id": "routeMapCanvas",
+          "kind": "live",
+          "createdAt": 1793586167895,
+          "tiles": {
+            "started": 6,
+            "loaded": 15,
+            "errors": 0,
+            "duplicateUrls": 0,
+            "bytes": 5520,
+            "resourceRequests": 15,
+            "uniqueUrls": 15,
+            "firstImageMs": 37.1,
+            "completeMs": 122.3,
+            "completedAt": 1793586168018,
+            "urls": {
+              "http://127.0.0.1:64106/api/v1/maps/tiles/9/173/246.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:64106/api/v1/maps/tiles/9/173/247.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:64106/api/v1/maps/tiles/9/172/246.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:64106/api/v1/maps/tiles/9/174/246.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:64106/api/v1/maps/tiles/9/172/247.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:64106/api/v1/maps/tiles/9/174/247.png?style=street-light&tileSize=512": 1
+            },
+            "firstRequestMs": 86.1,
+            "lastTileMs": 35.8
+          },
+          "markers": {
+            "created": 1,
+            "updated": 0,
+            "removed": 0,
+            "skipped": 0,
+            "outOfOrder": 0
+          },
+          "interactions": [
+            {
+              "durationMs": 13.8,
+              "frames": 0,
+              "fps": 0
+            },
+            {
+              "durationMs": 260.4,
+              "frames": 16,
+              "fps": 61.44
+            }
+          ],
+          "initializedAt": 347.79999999701977,
+          "leafletLoadMs": 76.5,
+          "updates": 2,
+          "updateMs": 18.5,
+          "lastUpdatedAt": 1793586167983,
+          "memory": {
+            "usedJsHeapBytes": 10000000,
+            "totalJsHeapBytes": 10000000,
+            "limitBytes": 3760000000
+          }
+        }
+      }
+    },
+    "api": {
+      "version": 1,
+      "requests": [
+        {
+          "path": "/website-content",
+          "method": "GET",
+          "status": 200,
+          "ok": true,
+          "durationMs": 27.7,
+          "retries": 0,
+          "serverTiming": "",
+          "mapCache": "",
+          "mapUpstreamMs": null
+        },
+        {
+          "path": "/health",
+          "method": "GET",
+          "status": 200,
+          "ok": true,
+          "durationMs": 24.9,
+          "retries": 0,
+          "serverTiming": "",
+          "mapCache": "",
+          "mapUpstreamMs": null
+        },
+        {
+          "path": "/routes",
+          "method": "GET",
+          "status": 200,
+          "ok": true,
+          "durationMs": 24.4,
+          "retries": 0,
+          "serverTiming": "",
+          "mapCache": "",
+          "mapUpstreamMs": null
+        },
+        {
+          "path": "/trips/search?passengers=1",
+          "method": "GET",
+          "status": 200,
+          "ok": true,
+          "durationMs": 44,
+          "retries": 0,
+          "serverTiming": "",
+          "mapCache": "",
+          "mapUpstreamMs": null
+        },
+        {
+          "path": "/network/live",
+          "method": "GET",
+          "status": 200,
+          "ok": true,
+          "durationMs": 40.9,
+          "retries": 0,
+          "serverTiming": "live-query;dur=2.5",
+          "mapCache": "",
+          "mapUpstreamMs": null
+        }
+      ],
+      "totals": {
+        "count": 5,
+        "errors": 0,
+        "retries": 0
+      }
+    },
+    "resources": 15
+  },
+  "second": {
+    "maps": {
+      "version": 1,
+      "maps": {
+        "routeMapCanvas": {
+          "id": "routeMapCanvas",
+          "kind": "live",
+          "createdAt": 1793586169037,
+          "tiles": {
+            "started": 6,
+            "loaded": 6,
+            "errors": 0,
+            "duplicateUrls": 0,
+            "bytes": 5520,
+            "resourceRequests": 15,
+            "uniqueUrls": 15,
+            "urls": {
+              "http://127.0.0.1:64106/api/v1/maps/tiles/9/173/246.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:64106/api/v1/maps/tiles/9/173/247.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:64106/api/v1/maps/tiles/9/172/246.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:64106/api/v1/maps/tiles/9/174/246.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:64106/api/v1/maps/tiles/9/172/247.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:64106/api/v1/maps/tiles/9/174/247.png?style=street-light&tileSize=512": 1
+            },
+            "firstRequestMs": 17.7,
+            "lastTileMs": 58.3,
+            "firstImageMs": 49,
+            "completeMs": 76.5,
+            "completedAt": 1793586169114
+          },
+          "markers": {
+            "created": 1,
+            "updated": 0,
+            "removed": 0,
+            "skipped": 0,
+            "outOfOrder": 0
+          },
+          "interactions": [
+            {
+              "durationMs": 4.8,
+              "frames": 0,
+              "fps": 0
+            }
+          ],
+          "initializedAt": 235.60000000149012,
+          "leafletLoadMs": 16.2,
+          "updates": 2,
+          "updateMs": 7.9,
+          "lastUpdatedAt": 1793586169056,
+          "memory": {
+            "usedJsHeapBytes": 10000000,
+            "totalJsHeapBytes": 10000000,
+            "limitBytes": 3760000000
+          }
+        }
+      }
+    },
+    "api": {
+      "version": 1,
+      "requests": [
+        {
+          "path": "/website-content",
+          "method": "GET",
+          "status": 200,
+          "ok": true,
+          "durationMs": 7.6,
+          "retries": 0,
+          "serverTiming": "",
+          "mapCache": "",
+          "mapUpstreamMs": null
+        },
+        {
+          "path": "/health",
+          "method": "GET",
+          "status": 200,
+          "ok": true,
+          "durationMs": 12.4,
+          "retries": 0,
+          "serverTiming": "",
+          "mapCache": "",
+          "mapUpstreamMs": null
+        },
+        {
+          "path": "/routes",
+          "method": "GET",
+          "status": 200,
+          "ok": true,
+          "durationMs": 12,
+          "retries": 0,
+          "serverTiming": "",
+          "mapCache": "",
+          "mapUpstreamMs": null
+        },
+        {
+          "path": "/trips/search?passengers=1",
+          "method": "GET",
+          "status": 200,
+          "ok": true,
+          "durationMs": 27.6,
+          "retries": 0,
+          "serverTiming": "",
+          "mapCache": "",
+          "mapUpstreamMs": null
+        },
+        {
+          "path": "/network/live",
+          "method": "GET",
+          "status": 200,
+          "ok": true,
+          "durationMs": 18,
+          "retries": 0,
+          "serverTiming": "live-query;dur=2.5",
+          "mapCache": "",
+          "mapUpstreamMs": null
+        }
+      ],
+      "totals": {
+        "count": 5,
+        "errors": 0,
+        "retries": 0
+      }
+    },
+    "resources": 15
+  },
+  "firstTileRequests": 15,
+  "secondTileRequests": 15
+}

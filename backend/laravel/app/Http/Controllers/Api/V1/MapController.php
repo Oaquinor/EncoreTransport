@@ -137,10 +137,19 @@ class MapController extends Controller
                 'Content-Type' => $tile['content_type'],
                 'Cache-Control' => $tile['cache_control'],
                 'X-Content-Type-Options' => 'nosniff',
+                'X-Map-Cache' => $tile['cache_status'] ?? 'MISS',
+                'X-Map-Upstream-Ms' => (string) ($tile['upstream_ms'] ?? 0),
+                'Server-Timing' => ($tile['cache_status'] ?? 'MISS') === 'HIT'
+                    ? 'map-cache;dur=0'
+                    : 'map-upstream;dur='.($tile['upstream_ms'] ?? 0),
             ];
 
             if (!empty($tile['etag'])) {
                 $headers['ETag'] = $tile['etag'];
+            }
+
+            if ($this->matchesEtag($request->header('If-None-Match'), $tile['etag'] ?? null)) {
+                return response('', 304, $headers);
             }
 
             return response($tile['body'], 200, $headers);
@@ -164,6 +173,15 @@ class MapController extends Controller
                 'code' => 'MAP_TILE_ERROR',
             ], 502);
         }
+    }
+
+    private function matchesEtag(?string $requested, ?string $etag): bool
+    {
+        if (!$requested || !$etag) return false;
+
+        return collect(explode(',', $requested))
+            ->map(fn (string $value) => trim($value))
+            ->contains(fn (string $value) => $value === '*' || $value === $etag);
     }
 
     private function normalizeGeocode(array $payload): ?array

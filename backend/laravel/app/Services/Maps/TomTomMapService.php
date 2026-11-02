@@ -7,6 +7,7 @@ use App\Exceptions\MapProviderException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use RuntimeException;
 
 class TomTomMapService implements MapServiceInterface
@@ -125,9 +126,21 @@ class TomTomMapService implements MapServiceInterface
             $tileSize = 256;
         }
 
+        $cacheKey = $this->tileCacheKey($zoom, $x, $y, $style, $tileSize);
+        if ($this->tileCacheEnabled()) {
+            $cached = $this->tileCache()->get($cacheKey);
+            if (is_array($cached) && isset($cached['body'], $cached['content_type'], $cached['cache_control'])) {
+                return array_merge($cached, [
+                    'cache_status' => 'HIT',
+                    'upstream_ms' => 0,
+                ]);
+            }
+        }
+
         $url = rtrim((string) config('maps.tomtom.display_base_url'), '/')
             ."/maps/orbis/map-display/tile/{$zoom}/{$x}/{$y}.png";
 
+        $startedAt = hrtime(true);
         $response = Http::withHeaders([
                 'Accept' => 'image/png,*/*;q=0.8',
                 'TomTom-Api-Version' => '1',
@@ -145,6 +158,8 @@ class TomTomMapService implements MapServiceInterface
 
         $this->assertSuccessful($response, 'map-display');
 
+        $upstreamMs = round((hrtime(true) - $startedAt) / 1_000_000, 2);
+
         $contentType = strtolower((string) $response->header('Content-Type'));
 
         if ($contentType !== '' && !str_starts_with($contentType, 'image/')) {
@@ -156,12 +171,64 @@ class TomTomMapService implements MapServiceInterface
             );
         }
 
-        return [
+        $cacheControl = $response->header('Cache-Control') ?: 'public, max-age='.config('maps.tomtom.cache_default_ttl', 300);
+        $tile = [
             'body' => $response->body(),
             'content_type' => $response->header('Content-Type') ?: 'image/png',
-            'cache_control' => $response->header('Cache-Control') ?: 'public, max-age=300',
+            'cache_control' => $cacheControl,
             'etag' => $response->header('ETag'),
+            'cache_status' => 'MISS',
+            'upstream_ms' => $upstreamMs,
         ];
+
+        $ttl = $this->cacheTtl($cacheControl);
+        if ($this->tileCacheEnabled() && $ttl > 0) {
+            $this->tileCache()->put($cacheKey, $tile, $ttl);
+        }
+
+        return $tile;
+    }
+
+    private function tileCacheEnabled(): bool
+    {
+        return (bool) config('maps.tomtom.cache_enabled', true);
+    }
+
+    private function tileCache()
+    {
+        $store = trim((string) config('maps.tomtom.cache_store', ''));
+
+        return $store !== '' ? Cache::store($store) : Cache::driver();
+    }
+
+    private function tileCacheKey(int $zoom, int $x, int $y, string $style, int $tileSize): string
+    {
+        return 'maps:tomtom:tile:'.hash('sha256', implode('|', [
+            $zoom,
+            $x,
+            $y,
+            $style,
+            $tileSize,
+            config('maps.tomtom.language', 'en-GB'),
+            config('maps.tomtom.view', 'Unified'),
+        ]));
+    }
+
+    private function cacheTtl(string $cacheControl): int
+    {
+        $directives = strtolower($cacheControl);
+        if (str_contains($directives, 'no-store') || str_contains($directives, 'private')) {
+            return 0;
+        }
+
+        $default = max(0, (int) config('maps.tomtom.cache_default_ttl', 300));
+        $maximum = max(0, (int) config('maps.tomtom.cache_max_ttl', 3600));
+        $ttl = $default;
+        if (preg_match('/(?:^|,)\s*max-age\s*=\s*(\d+)/i', $cacheControl, $matches)) {
+            $ttl = (int) $matches[1];
+        }
+
+        return $maximum > 0 ? min($ttl, $maximum) : 0;
     }
 
     private function performGeocode(

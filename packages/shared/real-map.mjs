@@ -40,6 +40,117 @@ const mapRegistry = new WeakMap();
 const liveMapRegistry = new WeakMap();
 const liveMapRequests = new WeakMap();
 
+function metricNow() {
+  return globalThis.performance?.now?.() ?? Date.now();
+}
+
+function ensureMapMetrics(container, kind = 'map') {
+  const store = globalThis.__ENCORE_MAP_METRICS__ ??= {
+    version: 1,
+    maps: {},
+  };
+  const key = container.id || container.dataset.mapMetricsId || `map-${Object.keys(store.maps).length + 1}`;
+  container.dataset.mapMetricsId = key;
+  store.maps[key] ??= {
+    id: key,
+    kind,
+    createdAt: Date.now(),
+    tiles: { started: 0, loaded: 0, errors: 0, duplicateUrls: 0, bytes: 0 },
+    markers: { created: 0, updated: 0, removed: 0, skipped: 0, outOfOrder: 0 },
+    interactions: [],
+  };
+  store.maps[key].kind = kind;
+  return store.maps[key];
+}
+
+function recordResourceMetrics(metrics) {
+  if (!globalThis.performance?.getEntriesByType) return;
+  const entries = performance.getEntriesByType('resource').filter((entry) => /\/maps\/tiles\//.test(entry.name));
+  const seen = new Set();
+  let bytes = 0;
+  for (const entry of entries) {
+    if (seen.has(entry.name)) metrics.tiles.duplicateUrls += 1;
+    seen.add(entry.name);
+    bytes += Number(entry.transferSize || entry.encodedBodySize || 0);
+  }
+  metrics.tiles.resourceRequests = entries.length;
+  metrics.tiles.bytes = bytes;
+  metrics.tiles.uniqueUrls = seen.size;
+  if (performance.memory) {
+    metrics.memory = {
+      usedJsHeapBytes: performance.memory.usedJSHeapSize,
+      totalJsHeapBytes: performance.memory.totalJSHeapSize,
+      limitBytes: performance.memory.jsHeapSizeLimit,
+    };
+  }
+}
+
+function installMapMetrics(map, tileLayer, metrics) {
+  const started = new Map();
+  const interaction = { startedAt: 0, frames: 0, frameId: null };
+  const sampleFrame = () => {
+    if (!interaction.startedAt) return;
+    interaction.frames += 1;
+    interaction.frameId = requestAnimationFrame(sampleFrame);
+  };
+
+  tileLayer.on('tileloadstart', (event) => {
+    const src = event?.tile?.src || '';
+    metrics.tiles.started += 1;
+    if (src) {
+      if (metrics.tiles.urls?.[src]) metrics.tiles.duplicateUrls += 1;
+      metrics.tiles.urls ??= {};
+      metrics.tiles.urls[src] = (metrics.tiles.urls[src] || 0) + 1;
+      started.set(src, metricNow());
+    }
+    metrics.tiles.firstRequestMs ??= Math.round((metricNow() - metrics.initializedAt) * 100) / 100;
+  });
+  tileLayer.on('tileload', (event) => {
+    metrics.tiles.loaded += 1;
+    const src = event?.tile?.src || '';
+    const startedAt = started.get(src);
+    if (startedAt != null) {
+      metrics.tiles.lastTileMs = Math.round((metricNow() - startedAt) * 100) / 100;
+      started.delete(src);
+    }
+    metrics.tiles.firstImageMs ??= Math.round((metricNow() - metrics.initializedAt) * 100) / 100;
+  });
+  tileLayer.on('tileerror', () => {
+    metrics.tiles.errors += 1;
+  });
+  tileLayer.on('load', () => {
+    metrics.tiles.completeMs = Math.round((metricNow() - metrics.initializedAt) * 100) / 100;
+    metrics.tiles.completedAt = Date.now();
+    recordResourceMetrics(metrics);
+  });
+  map.on('movestart zoomstart', () => {
+    if (interaction.startedAt) return;
+    interaction.startedAt = metricNow();
+    interaction.frames = 0;
+    interaction.frameId = requestAnimationFrame(sampleFrame);
+  });
+  map.on('moveend zoomend', () => {
+    if (!interaction.startedAt) return;
+    if (interaction.frameId != null) cancelAnimationFrame(interaction.frameId);
+    const durationMs = metricNow() - interaction.startedAt;
+    metrics.interactions.push({
+      durationMs: Math.round(durationMs * 100) / 100,
+      frames: interaction.frames,
+      fps: durationMs > 0 ? Math.round((interaction.frames / durationMs) * 1000 * 100) / 100 : null,
+    });
+    if (metrics.interactions.length > 30) metrics.interactions.shift();
+    interaction.startedAt = 0;
+    interaction.frameId = null;
+  });
+}
+
+function markerIconCached(state, L, kind, label) {
+  state.iconCache ??= new Map();
+  const key = `${kind}:${label}`;
+  if (!state.iconCache.has(key)) state.iconCache.set(key, markerIcon(L, kind, label));
+  return state.iconCache.get(key);
+}
+
 function ensureSharedStyles() {
   if (document.querySelector('style[data-encore-map-styles]')) return;
 
@@ -149,13 +260,18 @@ function loadLeaflet() {
   if (leafletPromise) return leafletPromise;
 
   ensureSharedStyles();
+  const startedAt = metricNow();
 
   leafletPromise = (async () => {
     const failures = [];
 
     for (const source of leafletSources) {
       try {
-        return await loadLeafletSource(source);
+        const leaflet = await loadLeafletSource(source);
+        globalThis.__ENCORE_MAP_RUNTIME_METRICS__ ??= {};
+        globalThis.__ENCORE_MAP_RUNTIME_METRICS__.leafletLoadMs = Math.round((metricNow() - startedAt) * 100) / 100;
+        globalThis.__ENCORE_MAP_RUNTIME_METRICS__.source = source.label;
+        return leaflet;
       } catch (error) {
         failures.push(String(error?.message ?? error));
       }
@@ -332,19 +448,19 @@ function stopLiveMarkerAnimations(state) {
   state?.vehicleAnimations?.clear?.();
 }
 
-function animateLiveMarker(state, key, marker, from, to) {
+function animateLiveMarker(state, key, marker, from, to, duration = 0) {
   const existingFrame = state.vehicleAnimations.get(key);
   if (existingFrame != null) cancelAnimationFrame(existingFrame);
 
   const distance = Math.abs(from[0] - to[0]) + Math.abs(from[1] - to[1]);
-  if (distance < 0.000001) {
+  if (distance < 0.000001 || duration <= 0) {
     marker.setLatLng(to);
     state.vehicleAnimations.delete(key);
     return;
   }
 
   const startedAt = performance.now();
-  const duration = 900;
+  state.metrics.animationsStarted = (state.metrics.animationsStarted || 0) + 1;
   const step = (now) => {
     const progress = Math.min(1, (now - startedAt) / duration);
     const eased = progress < 0.5
@@ -371,7 +487,11 @@ export function destroyRealMap(container) {
 
   const existing = mapRegistry.get(container);
 
-  stopLiveMarkerAnimations(liveMapRegistry.get(container));
+  const liveState = liveMapRegistry.get(container);
+  stopLiveMarkerAnimations(liveState);
+  liveState?.resizeObserver?.disconnect?.();
+  if (liveState?.resizeFrame != null) cancelAnimationFrame(liveState.resizeFrame);
+  if (liveState?.metrics) liveState.metrics.destroyedAt = Date.now();
 
   if (existing) {
     existing.remove();
@@ -428,11 +548,15 @@ export async function renderJourneyMap(container, journey, options = {}) {
   });
 
   mapRegistry.set(container, map);
+  const metrics = ensureMapMetrics(container, 'journey');
+  metrics.initializedAt = metricNow();
+  metrics.leafletLoadMs = globalThis.__ENCORE_MAP_RUNTIME_METRICS__?.leafletLoadMs ?? null;
 
   const tileLayer = L.tileLayer(
     tileLayerUrl(),
     tileLayerOptions,
   );
+  installMapMetrics(map, tileLayer, metrics);
 
   let tileFailures = 0;
 
@@ -578,7 +702,11 @@ export async function renderLocationMap(container, location, options = {}) {
   }).setView(center, options.zoom ?? 15);
   mapRegistry.set(container, map);
 
-  L.tileLayer(tileLayerUrl(), tileLayerOptions).addTo(map);
+  const metrics = ensureMapMetrics(container, 'location');
+  metrics.initializedAt = metricNow();
+  metrics.leafletLoadMs = globalThis.__ENCORE_MAP_RUNTIME_METRICS__?.leafletLoadMs ?? null;
+  const tileLayer = L.tileLayer(tileLayerUrl(), tileLayerOptions).addTo(map);
+  installMapMetrics(map, tileLayer, metrics);
 
   L.marker(center, {
     icon: markerIcon(L, 'origin', 'E'),
@@ -611,6 +739,9 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
 
   if (!state?.map) {
     container.innerHTML = '';
+    const metrics = ensureMapMetrics(container, 'live');
+    metrics.initializedAt = metricNow();
+    metrics.leafletLoadMs = globalThis.__ENCORE_MAP_RUNTIME_METRICS__?.leafletLoadMs ?? null;
     const map = L.map(container, {
       zoomControl: options.zoomControl !== false,
       attributionControl: true,
@@ -619,6 +750,7 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
       markerZoomAnimation: false,
     }).setView([6.8013, -58.1551], 8);
     const tileLayer = L.tileLayer(tileLayerUrl(), tileLayerOptions).addTo(map);
+    installMapMetrics(map, tileLayer, metrics);
     tileLayer.on('tileerror', () => runtimeStatus(container, 'Map tiles unavailable.', 'Live vehicle data will continue updating when the map service recovers.'));
     tileLayer.on('load', () => clearRuntimeStatus(container));
     state = {
@@ -627,10 +759,31 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
       nodeMarkers: new Map(),
       vehiclePositions: new Map(),
       vehicleAnimations: new Map(),
+      vehicleSamples: new Map(),
+      iconCache: new Map(),
+      metrics,
+      hasInitialFit: false,
+      lastRouteViewKey: null,
+      lastSelectedTripId: null,
     };
+    if ('ResizeObserver' in window) {
+      state.resizeObserver = new ResizeObserver(() => {
+        if (state.resizeFrame != null) cancelAnimationFrame(state.resizeFrame);
+        state.resizeFrame = requestAnimationFrame(() => {
+          state.resizeFrame = null;
+          state.map.invalidateSize({ pan: false, debounceMoveend: true });
+        });
+      });
+      state.resizeObserver.observe(container);
+    }
     liveMapRegistry.set(container, state);
     mapRegistry.set(container, map);
+    requestAnimationFrame(() => map.invalidateSize({ pan: false, debounceMoveend: true }));
   }
+
+  const updateStartedAt = metricNow();
+  state.metrics ??= ensureMapMetrics(container, 'live');
+  state.metrics.updates = (state.metrics.updates || 0) + 1;
 
   const routes = Array.isArray(network?.routes) ? network.routes : [];
   const trips = Array.isArray(network?.trips) ? network.trips : [];
@@ -644,7 +797,8 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
   const seenRouteLines = new Set();
   for (const route of routes) {
     const key = String(route.id ?? route.route_id ?? `${route.origin ?? ''}:${route.destination ?? ''}`);
-    const points = routePoints(route).length >= 2 ? routePoints(route) : normalizePoints(route.stops);
+    const candidatePoints = routePoints(route);
+    const points = candidatePoints.length >= 2 ? candidatePoints : normalizePoints(route.stops);
     if (points.length < 2) continue;
     seenRouteLines.add(key);
     let line = state.routeLines.get(key);
@@ -661,7 +815,10 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
       if (label && line.bindTooltip) line.bindTooltip(label, { sticky: true });
       state.routeLines.set(key, line);
     } else {
-      line.setLatLngs(points);
+      const previousPoints = line.getLatLngs?.() ?? [];
+      const nextKey = points.map((point) => point.join(',')).join('|');
+      const previousKey = previousPoints.map((point) => `${point.lat},${point.lng}`).join('|');
+      if (nextKey !== previousKey) line.setLatLngs(points);
       line.setStyle?.({ color: staticMode ? '#159ac0' : '#6da8b9', weight: staticMode ? 5 : 3, opacity: staticMode ? .72 : .45 });
     }
   }
@@ -698,29 +855,48 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
     const gpsState = trip.is_stale ? 'GPS not current' : 'GPS current';
     const popup = `<strong>${escapePopup(trip.bus_code || 'Encore bus')}</strong><br>${escapePopup(trip.origin || '')} → ${escapePopup(trip.destination || '')}<br>Status: ${escapePopup(trip.status || '')}<br>${gpsState}<br>Updated: ${escapePopup(trip.last_location_at || '—')}`;
     const coordinates = [Number(trip.latitude), Number(trip.longitude)];
+    const markerKind = trip.is_stale ? 'vehicle-stale' : 'vehicle';
+    const sampleAt = Date.parse(trip.last_location_at || '');
     let marker = state.vehicleMarkers.get(key);
     if (!marker) {
       marker = L.marker(coordinates, {
-        icon: markerIcon(L, trip.is_stale ? 'vehicle-stale' : 'vehicle', '•'),
+        icon: markerIconCached(state, L, markerKind, '•'),
         title: trip.bus_code || 'Encore bus',
       }).addTo(state.map);
       state.vehicleMarkers.set(key, marker);
       state.vehiclePositions.set(key, coordinates);
+      state.vehicleSamples.set(key, { coordinates, sampleAt: Number.isFinite(sampleAt) ? sampleAt : null });
+      state.metrics.markers.created += 1;
     } else {
-      const current = marker.getLatLng?.();
-      animateLiveMarker(
-        state,
-        key,
-        marker,
-        current ? [current.lat, current.lng] : (state.vehiclePositions.get(key) ?? coordinates),
-        coordinates,
-      );
+      const previousSample = state.vehicleSamples.get(key);
+      if (Number.isFinite(sampleAt) && Number.isFinite(previousSample?.sampleAt) && sampleAt < previousSample.sampleAt) {
+        state.metrics.markers.outOfOrder += 1;
+      } else {
+        const current = marker.getLatLng?.();
+        const from = current ? [current.lat, current.lng] : (state.vehiclePositions.get(key) ?? coordinates);
+        const gapMs = Number.isFinite(sampleAt) && Number.isFinite(previousSample?.sampleAt)
+          ? Math.max(0, sampleAt - previousSample.sampleAt)
+          : 0;
+        const duration = trip.is_stale || !Number.isFinite(sampleAt) || !Number.isFinite(previousSample?.sampleAt)
+          ? 0
+          : Math.min(5000, Math.max(350, Math.round(gapMs * 0.8)));
+        animateLiveMarker(state, key, marker, from, coordinates, duration);
+        state.metrics.markers.updated += 1;
+        state.vehicleSamples.set(key, { coordinates, sampleAt: Number.isFinite(sampleAt) ? sampleAt : previousSample?.sampleAt ?? null });
+      }
       state.vehiclePositions.set(key, coordinates);
     }
-    if (marker.setIcon) marker.setIcon(markerIcon(L, trip.is_stale ? 'vehicle-stale' : 'vehicle', '•'));
-    marker.setPopupContent?.(popup);
-    if (!marker.getPopup()) marker.bindPopup(popup);
-    else marker.getPopup().setContent(popup);
+    const iconKey = `${markerKind}:•`;
+    if (marker.setIcon && marker.__encoreIconKey !== iconKey) {
+      marker.setIcon(markerIconCached(state, L, markerKind, '•'));
+      marker.__encoreIconKey = iconKey;
+    }
+    if (marker.__encorePopup !== popup) {
+      marker.setPopupContent?.(popup);
+      if (!marker.getPopup()) marker.bindPopup(popup);
+      else marker.getPopup().setContent(popup);
+      marker.__encorePopup = popup;
+    }
   }
 
   for (const [key, marker] of state.vehicleMarkers) {
@@ -728,6 +904,8 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
       marker.remove();
       state.vehicleMarkers.delete(key);
       state.vehiclePositions.delete(key);
+      state.vehicleSamples.delete(key);
+      state.metrics.markers.removed += 1;
       const frame = state.vehicleAnimations.get(key);
       if (frame != null) cancelAnimationFrame(frame);
       state.vehicleAnimations.delete(key);
@@ -737,25 +915,40 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
   const selectedMarker = options.selectedTripId
     ? state.vehicleMarkers.get(String(options.selectedTripId))
     : null;
-  if (selectedMarker) {
+  if (selectedMarker && state.lastSelectedTripId !== String(options.selectedTripId)) {
     state.map.setView(selectedMarker.getLatLng(), Math.max(state.map.getZoom(), 10), { animate: false });
     selectedMarker.openPopup();
+    state.lastSelectedTripId = String(options.selectedTripId);
+  } else if (!options.selectedTripId) {
+    state.lastSelectedTripId = null;
   }
 
-  const points = [
+  const staticPoints = [
     ...[...state.routeLines.values()].flatMap((line) => line.getLatLngs?.().map((point) => [point.lat, point.lng]) ?? []),
     ...visibleStops.map((point) => [Number(point.latitude), Number(point.longitude)]),
-    ...trips.filter(validCoordinate).map((point) => [Number(point.latitude), Number(point.longitude)]),
   ];
+  const fallbackPoints = trips.filter(validCoordinate).map((point) => [Number(point.latitude), Number(point.longitude)]);
+  const points = staticPoints.length ? staticPoints : fallbackPoints;
   const viewKey = points.map((point) => point.join(',')).sort().join('|');
-  if (points.length && state.lastViewKey !== viewKey) {
+  const shouldFit = points.length && (staticPoints.length
+    ? state.lastRouteViewKey !== viewKey
+    : !state.hasInitialFit);
+  if (shouldFit) {
     state.map.fitBounds(L.latLngBounds(points).pad(0.18), { animate: false, maxZoom: 11 });
-    state.lastViewKey = viewKey;
+    state.lastRouteViewKey = viewKey;
+    state.hasInitialFit = true;
   }
-  requestAnimationFrame(() => state.map.invalidateSize());
+  state.metrics.updateMs = Math.round((metricNow() - updateStartedAt) * 100) / 100;
+  state.metrics.lastUpdatedAt = Date.now();
+  recordResourceMetrics(state.metrics);
   if (points.length) clearRuntimeStatus(container);
   else if (options.emptyTitle || options.emptyDetail) runtimeStatus(container, options.emptyTitle ?? 'No current locations to show', options.emptyDetail ?? 'The map will update when a bus shares a recent, authorized location.');
   else if (staticMode) runtimeStatus(container, 'Published route geometry unavailable', 'The route book will show the network when published coordinates are available.');
   else runtimeStatus(container, 'No current locations to show', 'The map will update when a bus shares a recent, authorized location.');
   return state.map;
+}
+
+export function getMapPerformanceSnapshot() {
+  const value = globalThis.__ENCORE_MAP_METRICS__ ?? { version: 1, maps: {} };
+  return JSON.parse(JSON.stringify(value));
 }

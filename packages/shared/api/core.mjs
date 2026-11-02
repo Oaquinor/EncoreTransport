@@ -2,6 +2,24 @@ import { appConfig } from '../app-config.mjs';
 
 const TOKEN_KEY = 'encore_api_token';
 
+function nowMs() {
+  return globalThis.performance?.now?.() ?? Date.now();
+}
+
+function recordApiMetric(metric) {
+  const store = globalThis.__ENCORE_API_METRICS__ ??= {
+    version: 1,
+    requests: [],
+    totals: { count: 0, errors: 0, retries: 0 },
+  };
+
+  store.requests.push(metric);
+  if (store.requests.length > 200) store.requests.shift();
+  store.totals.count += 1;
+  if (!metric.ok) store.totals.errors += 1;
+  store.totals.retries += metric.retries;
+}
+
 export const getApiToken = () =>
   sessionStorage.getItem(TOKEN_KEY) ??
   '';
@@ -45,6 +63,7 @@ export async function requestJson(
   path,
   options = {},
 ) {
+  const requestStartedAt = nowMs();
   const headers =
     new Headers(options.headers ?? {});
 
@@ -86,6 +105,7 @@ export async function requestJson(
   const retryableMethod = ['GET', 'HEAD', 'OPTIONS'].includes(method);
   const attempts = retryableMethod ? 2 : 1;
   let lastError;
+  let retries = 0;
 
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     try {
@@ -99,6 +119,7 @@ export async function requestJson(
       );
       if (retryableMethod && attempt === 0 && [408, 429, 502, 503, 504].includes(response.status)) {
         response.body?.cancel?.();
+        retries += 1;
         await new Promise((resolve) => setTimeout(resolve, 180));
         continue;
       }
@@ -112,6 +133,17 @@ export async function requestJson(
 
   if (timeoutId) clearTimeout(timeoutId);
   if (!response) {
+    recordApiMetric({
+      path,
+      method,
+      status: 0,
+      ok: false,
+      durationMs: Math.round((nowMs() - requestStartedAt) * 100) / 100,
+      retries,
+      serverTiming: '',
+      mapCache: '',
+      mapUpstreamMs: null,
+    });
     throw new ApiError(
       lastError?.name === 'AbortError'
         ? 'The request took too long. Please try again.'
@@ -138,12 +170,36 @@ export async function requestJson(
       ? 'Encore Transport is temporarily unavailable. Please try again shortly.'
       : message || `Request failed (${response.status}).`;
 
+    recordApiMetric({
+      path,
+      method,
+      status: response.status,
+      ok: false,
+      durationMs: Math.round((nowMs() - requestStartedAt) * 100) / 100,
+      retries,
+      serverTiming: response.headers.get('server-timing') ?? '',
+      mapCache: response.headers.get('x-map-cache') ?? '',
+      mapUpstreamMs: Number(response.headers.get('x-map-upstream-ms')) || null,
+    });
+
     throw new ApiError(
       safeMessage,
       response.status,
       payload,
     );
   }
+
+  recordApiMetric({
+    path,
+    method,
+    status: response.status,
+    ok: true,
+    durationMs: Math.round((nowMs() - requestStartedAt) * 100) / 100,
+    retries,
+    serverTiming: response.headers.get('server-timing') ?? '',
+    mapCache: response.headers.get('x-map-cache') ?? '',
+    mapUpstreamMs: Number(response.headers.get('x-map-upstream-ms')) || null,
+  });
 
   return payload;
 }
