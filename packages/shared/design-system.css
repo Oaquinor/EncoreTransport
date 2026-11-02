@@ -1,5 +1,18 @@
 /* Encore product surface: shared visual language for public and operational apps. */
 :root {
+  --et-color-ink: #102130;
+  --et-color-ink-strong: #08283b;
+  --et-color-brand: #2da9df;
+  --et-color-brand-deep: #1479a7;
+  --et-color-positive: #1f9d74;
+  --et-color-bg: #f4f7f9;
+  --et-color-surface: #fff;
+  --et-color-line: #d8e3ea;
+  --et-radius-control: 12px;
+  --et-radius-card: 18px;
+  --et-radius-surface: 26px;
+  --et-content-max: 1200px;
+  --et-focus-ring: 3px solid rgba(45, 169, 223, .3);
   --et-display: clamp(2.4rem, 5vw, 5.4rem);
   --et-tight: -0.055em;
   --et-panel-radius: 22px;

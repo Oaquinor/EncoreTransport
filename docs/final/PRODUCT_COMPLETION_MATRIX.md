@@ -2,7 +2,7 @@
 
 | Módulo | Estado | Evidencia | Próximo cierre |
 |---|---|---|---|
-| Website comercial | `VERIFIED` | navegación simplificada, búsqueda y browser visual | E2E autenticado completo |
+| Website comercial | `VERIFIED` | navegación simplificada, búsqueda, páginas públicas, Encore Live con selector explícito y browser visual responsive | E2E autenticado completo |
 | Admin dashboard | `PARTIAL` | KPI reales, sidebar por dominios, iconografía compartida, mapa, reportes, permisos y browser focal autenticado a 1440 px | E2E por rol y tablas con volumen |
 | Gestión de cuentas | `VERIFIED` | filtros server-side, paginación, permisos y ficha por pestañas con endpoints independientes | E2E por rol y datos de volumen |
 | Passenger Web/PWA | `PARTIAL` | reservas, asientos, pagos configurables, boleto | aceptación completa de boleto/QR |

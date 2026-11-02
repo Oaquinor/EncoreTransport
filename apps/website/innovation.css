@@ -193,8 +193,13 @@ html[lang="es"] .site-page--trips .trips-hero h1 { max-width: 680px; font-size: 
    and an instructional surface. The map remains the functional focal point. */
 .site-page--live {
   padding-top: 0;
-  background: #f4f9fb;
-  color: #08283b;
+  background: var(--et-color-bg);
+  color: var(--et-color-ink-strong);
+}
+.site-page {
+  /* Every public page owns its section rhythm. The base multipage padding was
+     adding an empty band above every hero and below every final section. */
+  padding-block: 0;
 }
 .site-page--live::before { opacity: .38; }
 .site-page--live .site-page__hero {
@@ -262,7 +267,7 @@ html[lang="es"] .site-page--trips .trips-hero h1 { max-width: 680px; font-size: 
 .site-page--live .live-map-section {
   position: relative;
   padding-block: clamp(74px, 8vw, 116px);
-  background: #f4f9fb;
+  background: var(--et-color-bg);
 }
 .site-page--live .live-map-section__header {
   display: grid;
@@ -278,20 +283,20 @@ html[lang="es"] .site-page--trips .trips-hero h1 { max-width: 680px; font-size: 
   gap: 9px;
   height: auto;
   padding: 16px;
-  border: 1px solid #cfe2e9;
-  border-radius: 18px;
-  background: #fff;
+  border: 1px solid var(--et-color-line);
+  border-radius: var(--et-radius-card);
+  background: var(--et-color-surface);
   color: #31536a;
   box-shadow: 0 14px 30px rgba(16, 49, 70, .08);
 }
 .site-page--live .live-map-toolbar label { color: #1479a7; font-size: .68rem; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; }
-.site-page--live .live-map-toolbar select { width: 100%; min-width: 0; min-height: 46px; border-color: #b9d8e3; border-radius: 12px; background: #f7fbfc; color: #08283b; font-size: .82rem; font-weight: 850; }
-.site-page--live .live-map-toolbar select:focus-visible { outline: 3px solid rgba(45, 169, 223, .3); outline-offset: 2px; }
+.site-page--live .live-map-toolbar select { width: 100%; min-width: 0; min-height: 46px; border-color: #b9d8e3; border-radius: var(--et-radius-control); background: #f7fbfc; color: var(--et-color-ink-strong); font-size: .82rem; font-weight: 850; }
+.site-page--live .live-map-toolbar select:focus-visible { outline: var(--et-focus-ring); outline-offset: 2px; }
 .site-page--live .site-live-map {
   min-height: 0;
-  border: 1px solid #cfe2e9;
+  border: 1px solid var(--et-color-line);
   border-radius: 30px;
-  background: #fff;
+  background: var(--et-color-surface);
   box-shadow: 0 24px 64px rgba(16, 49, 70, .12);
 }
 .site-page--live .site-live-map .public-real-map {

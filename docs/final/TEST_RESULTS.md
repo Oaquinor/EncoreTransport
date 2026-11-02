@@ -41,3 +41,12 @@
 - CMS bilingüe: PASS — `WebsiteContentAndRouteImageTest` pasó 5 pruebas y 38 aserciones; las variantes `*_en`/`*_es` se validan y el copy interno continúa bloqueado.
 - Revisión visual premium: PASS — `test:website-pages-browser` y `test:visual-browser` validan navegación, overflow, menús, responsive y 36 superficies entre 360 y 1920 px; se añadió la constelación de rutas y la barra de progreso inferior sin alterar la transferencia de búsqueda.
 - La aceptación móvil real sigue bloqueada por falta de dispositivo/emulador configurado. Pagos, Gmail, WhatsApp, push y TomTom con credenciales reales también siguen pendientes.
+
+## Ejecución posterior — refinamiento visual de Encore Live
+
+- `npm run test:website-pages-browser`: PASS; páginas profundas, refresh, overflow y transferencia de parámetros.
+- `$env:VISUAL_VIEWPORTS='390,1440'; npm run test:visual-browser`: PASS; 12 comprobaciones/capturas para Website, Passenger, Driver, Admin, Login y Tracking.
+- `npm run test:map-performance-browser`: PASS; primera imagen 37.1 ms, carga completa 122.3 ms, segunda imagen 49 ms, carga completa 76.5 ms, cero errores de tiles y cero URLs duplicadas en el entorno de prueba.
+- `git diff --check`: PASS; solo advertencias de normalización CRLF de Git.
+
+La evidencia visual de Live se encuentra en `artifacts/visual/website-live-multipage-1440.png`. Admin y Driver no se consideran aceptados visualmente en esta ejecución porque no se configuró una sesión autenticada para esos recorridos; Passenger conserva su error real de API visible y no se rellenó con datos ficticios.

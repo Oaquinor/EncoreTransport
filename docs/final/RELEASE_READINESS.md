@@ -6,4 +6,4 @@ Cumplido: reglas de reservas, permisos, perfil Admin, directorio de cuentas con 
 
 No cumplido: cobertura exhaustiva del lifecycle de boletos, proveedor de pagos con sandbox, integración externa con credenciales reales, aceptación de cámara/GPS en dispositivo móvil, push y E2E autenticado por cada rol.
 
-La navegación Admin tiene ahora una estructura por dominios y contrato automatizado; el flujo focal autenticado pasa con el entorno local sembrado. La aceptación por rol y en dispositivo real siguen pendientes, por lo que no se declara `READY_FOR_RELEASE`.
+La navegación Admin tiene ahora una estructura por dominios y contrato automatizado; existe un flujo focal autenticado documentado, pero la ejecución visual amplia de esta iteración no contó con credenciales de rol configuradas. Encore Live tiene una composición visual diferenciada y métricas de mapa de navegador, sin cambiar la fuente de posiciones reales. La aceptación por rol, en dispositivo real y con proveedores externos siguen pendientes, por lo que no se declara `READY_FOR_RELEASE`.

@@ -56,7 +56,7 @@ El menú desplegable tenía una separación física entre el botón y el panel. 
 
 - Hero y buscador: superficie protagonista con profundidad y radios amplios.
 - Rutas: composición de libro de rutas y red visual, no una cuadrícula de tarjetas repetidas.
-- Live: mapa oscuro y contexto operativo.
+- Live: hero oscuro para señal operativa, workspace claro para el mapa y ayuda contextual separada.
 - Paquetería: secuencia de custodia y pasos numerados.
 - Ayuda: filas expandibles, lectura rápida y foco de teclado; se retiró la sección explicativa de accesibilidad porque no era una tarea del visitante.
 - Nosotros: composición narrativa con burbuja de conversación, línea de recorrido y principios conectados; no se reutiliza la tarjeta lateral genérica.
@@ -78,6 +78,26 @@ La composición toma patrones de productos reales: búsqueda centrada para reser
 - `npm run test:website-pages-browser` — PASS; nueve páginas, transferencia de búsqueda, recuperación de búsqueda reciente, selector EN/ES y capturas multipágina de About, Contact y Help.
 - `npm test` — PASS.
 - `git diff --check` — sin errores de formato.
+
+## Addendum — refinamiento de Encore Live
+
+Fecha de verificación: 2026-11-01.
+
+| Aplicación | URL | Componente | Estado anterior | Causa raíz | Corrección | Prueba de aceptación |
+|---|---|---|---|---|---|---|
+| Website | `/website/live/` | Superficie principal | Hero, mapa y ayuda compartían un fondo navy continuo; el selector parecía flotante y el estado vacío quedaba visualmente unido al mapa | `.site-page--live` aplicaba `background: #071f31` a todo el `main`, mientras la cabecera del mapa no tenía una composición propia | Hero oscuro limitado a la señal; workspace de mapa claro; selector en panel etiquetado; mapa vacío con fondo técnico y estado contextual; tarjetas inferiores en superficie tintada | `test:website-pages-browser`, `VISUAL_SURFACES=website VISUAL_VIEWPORTS=390,1440 npm run test:visual-browser`, captura `website-live-multipage-1440.png` |
+
+La ruta sigue siendo operacional: el estado inicial conserva `Select a route`, no muestra vehículos ficticios y solo dibuja posiciones recibidas del backend después de seleccionar una ruta. La prueba visual también cubre selección de ruta, selección de autobús y estado de señal reciente.
+
+### Limitaciones de esta iteración
+
+- La ejecución amplia de browser pasó Website, Passenger, Driver, Admin, Login y Tracking en 390 y 1440 px, pero Admin y Driver se resolvieron como pantalla de acceso al no existir credenciales visuales configuradas en esa ejecución; no se declara aceptación interna de esos módulos.
+- Passenger mostró el mensaje controlado de API no disponible en la captura sin backend. No se sustituyó por datos simulados.
+- La prueba de mapa de navegador registró en el entorno de prueba 37.1 ms hasta primera imagen y 122.3 ms hasta carga completa en la primera carga; en la segunda, 49 ms y 76.5 ms respectivamente, sin errores ni URLs duplicadas. Estas cifras no sustituyen una medición de producción con red móvil real.
+
+## Addendum — alineación transversal de páginas públicas
+
+Se identificó una causa estructural de las franjas vacías que hacían que las composiciones parecieran descentradas: `.site-page` aportaba `padding: 72px 0 110px` aunque cada página ya definía el espacio de su hero y de sus secciones. La regla se neutralizó en `innovation.css` con `padding-block: 0`; el ritmo queda bajo responsabilidad de `routes-hero`, `packages-hero`, `trips-hero`, `about-intro`, `contact-intro`, `help-intro` y las secciones propias de cada página. Se verificó nuevamente el Website en 390 y 1440 px, incluyendo refresh, overflow y transferencia de búsqueda.
 
 Las pruebas visuales cubren Website, Passenger, Driver, Admin, login y tracking como regresión. La intervención estética profunda de esta iteración se concentra en el Website público; no se declara aquí aceptación nativa de cámara, GPS background, pagos externos, correo, push ni dispositivos reales.
 
