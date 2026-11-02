@@ -9,10 +9,15 @@ import { renderLiveNetworkMap } from '../../packages/shared/real-map.mjs';
 import { formatMoney } from '../../packages/shared/formatters.mjs';
 import { icon } from '../../packages/shared/icons.mjs';
 
+const locale = new URLSearchParams(window.location.search).get('lang') === 'es' ? 'es' : 'en';
+const text = (english, spanish) => locale === 'es' ? spanish : english;
+
 const destinationGrid = document.querySelector('#destinationGrid');
+const routesBrowseLink = document.querySelector('#routesBrowseLink');
 const bookingForm = document.querySelector('#bookingForm');
 const seatPreview = document.querySelector('#seatPreview');
 const routeMapCanvas = document.querySelector('#routeMapCanvas');
+const isStaticNetworkMap = routeMapCanvas?.dataset.mapMode === 'static';
 const mobileMenuToggle = document.querySelector('#mobileMenuToggle');
 const mobileNavigation = document.querySelector('#mobileNavigation');
 const recentSearches = document.querySelector('#recentSearches');
@@ -21,6 +26,7 @@ const RECENT_SEARCHES_KEY = 'encore_recent_searches_v1';
 let featuredTrip = null;
 let revealObserver = null;
 let publishedSegments = [];
+let publishedRoutes = [];
 
 function readRecentSearches() {
   try {
@@ -29,18 +35,27 @@ function readRecentSearches() {
   } catch { return []; }
 }
 
+function writeRecentSearches(items) {
+  try {
+    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(items));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function renderRecentSearches() {
   if (!recentSearches) return;
   const items = readRecentSearches();
   recentSearches.hidden = !items.length;
   recentSearches.innerHTML = items.length
-    ? `<span class="recent-searches__label">Recent searches</span>${items.map((item) => `<button type="button" data-recent-search="${esc(JSON.stringify(item))}">${esc(item.origin)} → ${esc(item.destination)}${item.date ? ` · ${esc(item.date)}` : ''}</button>`).join('')}`
+    ? `<span class="recent-searches__label">${text('Recent searches', 'Búsquedas recientes')}</span>${items.map((item) => `<button type="button" data-recent-search="${esc(JSON.stringify(item))}">${esc(item.origin)} → ${esc(item.destination)}${item.date ? ` · ${esc(item.date)}` : ''}</button>`).join('')}`
     : '';
 }
 
 function rememberSearch(item) {
   const next = [item, ...readRecentSearches().filter((saved) => `${saved.origin}|${saved.destination}|${saved.date ?? ''}` !== `${item.origin}|${item.destination}|${item.date ?? ''}`)].slice(0, 5);
-  localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+  writeRecentSearches(next);
   renderRecentSearches();
 }
 
@@ -92,6 +107,24 @@ function setText(selector, value) {
   if (element) element.textContent = String(value ?? '');
 }
 
+function renderRouteConstellation(routes) {
+  const nodes = document.querySelector('#routeConstellation');
+  if (!nodes) return;
+  const publishedRoutes = Array.isArray(routes) ? routes.filter((route) => route?.origin || route?.destination).slice(0, 8) : [];
+  setText('#routePulseCount', publishedRoutes.length || '—');
+  setText('#routePulseLabel', publishedRoutes.length
+    ? text(`${publishedRoutes.length} published route${publishedRoutes.length === 1 ? '' : 's'}`, `${publishedRoutes.length} ruta${publishedRoutes.length === 1 ? '' : 's'} publicada${publishedRoutes.length === 1 ? '' : 's'}`)
+    : text('No route data available', 'No hay datos de rutas disponibles'));
+  nodes.innerHTML = publishedRoutes.map((route, index) => {
+    const angle = (-90 + (index * 360) / Math.max(1, publishedRoutes.length)) * Math.PI / 180;
+    const x = 50 + Math.cos(angle) * 37;
+    const y = 50 + Math.sin(angle) * 37;
+    const origin = String(route.origin ?? route.segments?.[0]?.origin ?? '').trim();
+    const destination = String(route.destination ?? route.segments?.at(-1)?.destination ?? '').trim();
+    return `<span class="route-node" style="--node-x:${x.toFixed(2)}%;--node-y:${y.toFixed(2)}%"><i aria-hidden="true"></i><strong>${esc(origin || text('Origin', 'Origen'))}</strong><span>${esc(destination || text('Destination', 'Destino'))}</span></span>`;
+  }).join('');
+}
+
 function populateSegmentSelectors(routes) {
   const segments = routes.flatMap((route) => (Array.isArray(route.segments) ? route.segments : [])
     .filter((segment) => segment.active !== false)
@@ -115,9 +148,9 @@ function populateSegmentSelectors(routes) {
     `<option value="">${label}</option>`,
     ...values.map((value) => `<option value="${esc(value)}">${esc(value)}</option>`),
   ].join('');
-  originSelect.innerHTML = renderOptions(origins, 'Elige el punto de salida');
+  originSelect.innerHTML = renderOptions(origins, text('Choose a departure point', 'Elige el punto de salida'));
   const destinations = [...new Set(publishedSegments.map((segment) => segment.destination))].sort();
-  destinationSelect.innerHTML = renderOptions(destinations, 'Elige el destino');
+  destinationSelect.innerHTML = renderOptions(destinations, text('Choose a destination', 'Elige el destino'));
   originSelect.disabled = origins.length === 0;
   destinationSelect.disabled = destinations.length === 0;
 
@@ -143,19 +176,19 @@ function filterDestinationSelector(origin) {
     .map((segment) => segment.destination))].sort();
   const selected = destinationSelect.value;
   destinationSelect.innerHTML = [
-    '<option value="">Elige el destino</option>',
+    `<option value="">${text('Choose a destination', 'Elige el destino')}</option>`,
     ...destinations.map((value) => `<option value="${esc(value)}">${esc(value)}</option>`),
   ].join('');
   if (destinations.includes(selected)) destinationSelect.value = selected;
   destinationSelect.disabled = destinations.length === 0;
 }
 
-function renderMapFallback(message = 'El mapa de la ruta no está disponible por el momento. Intenta de nuevo.') {
+function renderMapFallback(message = text('The route map is temporarily unavailable. Please try again.', 'El mapa de la ruta no está disponible por el momento. Intenta de nuevo.')) {
   if (!routeMapCanvas) return;
   routeMapCanvas.innerHTML = `
     <div class="encore-map-fallback">
       <div>
-        <strong>Vista de ruta no disponible</strong>
+        <strong>${text('Route view unavailable', 'Vista de ruta no disponible')}</strong>
         <span>${esc(message)}</span>
       </div>
     </div>`;
@@ -200,9 +233,9 @@ async function applyPublishedWebsiteContent() {
       final_cta: { section: '.public-final-cta', title: '.public-final-cta h2', subtitle: '.public-final-cta p', button: '.public-final-cta a' },
     };
     const legacyCopy = {
-      tracking: { title: 'Tu encomienda, fácil de seguir.', description: 'Escribe tu referencia para consultar la última actualización de tu envío.', button_label: 'Rastrear mi paquete' },
-      contact: { title: '¿Necesitas ayuda para planificar?', description: 'Encuentra la opción correcta para reservar, rastrear un envío o resolver una duda.', button_label: 'Visitar ayuda' },
-      final_cta: { title: 'Encuentra tu próximo viaje.', description: 'Busca una salida disponible y continúa cuando encuentres la opción que te conviene.', button_label: 'Buscar viajes', button_url: '/passenger/' },
+      tracking: { title: 'A shipment you can follow.', description: 'Enter your reference to check the latest recorded update.', button_label: 'Track my parcel' },
+      contact: { title: 'Need help planning?', description: 'Find the right place to book, track a shipment or ask a question.', button_label: 'Visit Help' },
+      final_cta: { title: 'Find your next trip.', description: 'Search an available departure and continue when you find the right option.', button_label: 'Find a trip', button_url: '/passenger/' },
     };
     for (const [key, values] of Object.entries(data.sections ?? {})) {
       const target = selectors[key];
@@ -212,9 +245,11 @@ async function applyPublishedWebsiteContent() {
       if (values.enabled === false) { section.hidden = true; continue; }
       section.hidden = false;
       for (const [field, selector] of [['title',target.title],['description',target.description],['subtitle',target.subtitle]]) {
-        if (values[field] && selector && values[field] !== legacyCopy[key]?.[field]) setText(selector, values[field]);
+        const localizedValue = values[`${field}_${locale}`] ?? values[field];
+        if (localizedValue && selector && localizedValue !== legacyCopy[key]?.[field]) setText(selector, localizedValue);
       }
-      if (values.button_label && target.button && values.button_label !== legacyCopy[key]?.button_label) setText(`${target.button}`, values.button_label);
+      const localizedButtonLabel = values[`button_label_${locale}`] ?? values.button_label;
+      if (localizedButtonLabel && target.button && localizedButtonLabel !== legacyCopy[key]?.button_label) setText(`${target.button}`, localizedButtonLabel);
       if (values.button_url && target.button && values.button_url !== legacyCopy[key]?.button_url) {
         const link = document.querySelector(target.button);
         if (link && ((values.button_url.startsWith('/') && !values.button_url.startsWith('//')) || values.button_url.startsWith('#') || /^https:\/\//i.test(values.button_url))) link.href = values.button_url;
@@ -242,7 +277,7 @@ async function applyPublishedWebsiteContent() {
     }
     if (Array.isArray(data.faqs)) {
       const list = document.querySelector('.public-faq-list');
-      if (list) list.innerHTML = data.faqs.filter((faq) => faq.enabled !== false).map((faq) => `<details data-reveal><summary>${esc(faq.question)}</summary><p>${esc(faq.answer)}</p></details>`).join('');
+      if (list) list.innerHTML = data.faqs.filter((faq) => faq.enabled !== false).map((faq) => `<details data-reveal><summary>${esc(faq[`question_${locale}`] ?? faq.question)}</summary><p>${esc(faq[`answer_${locale}`] ?? faq.answer)}</p></details>`).join('');
       observeDynamicReveal(list);
     }
   } catch {}
@@ -366,12 +401,12 @@ function renderFeatured(trip) {
   if (!card) return;
 
   if (!trip) {
-    card.innerHTML = '<div class="trip-status"><i></i>No hay salidas disponibles en este momento.</div>';
+    card.innerHTML = `<div class="trip-status"><i></i>${text('No departures are available right now.', 'No hay salidas disponibles en este momento.')}</div>`;
     return;
   }
 
   card.innerHTML = `
-    <div class="trip-status"><i></i>${esc({ scheduled: 'Salida programada', boarding: 'Abordaje', in_progress: 'En recorrido', completed: 'Finalizado' }[trip.status] ?? 'Salida disponible')}</div>
+    <div class="trip-status"><i></i>${esc({ scheduled: text('Scheduled departure', 'Salida programada'), boarding: text('Boarding', 'Abordaje'), in_progress: text('In progress', 'En recorrido'), completed: text('Completed', 'Finalizado') }[trip.status] ?? text('Departure available', 'Salida disponible'))}</div>
     <div class="trip-points">
       <div>
         <small>FROM</small>
@@ -393,7 +428,7 @@ function renderFeatured(trip) {
     </div>
 
     <div class="trip-card-meta">
-      <span>${Number(trip.availableSeats ?? 0)} asientos</span>
+        <span>${Number(trip.availableSeats ?? 0)} ${text('seats', 'asientos')}</span>
       <span>${Number(trip.durationMinutes ?? 0)} min</span>
       <span>${formatMoney(trip.baseFare)}</span>
     </div>`;
@@ -423,11 +458,11 @@ function renderSeats(seats) {
   if (!Array.isArray(seats) || seats.length === 0) {
     seatPreview.innerHTML = `
       <div class="seat-preview-empty">
-        <strong>Illustrative coach layout</strong>
-        <span>This preview is not the assigned vehicle. Choose a departure to see its actual seat plan and live availability.</span>
+        <strong>${text('Illustrative coach layout', 'Distribución ilustrativa')}</strong>
+        <span>${text('This preview is not the assigned vehicle. Choose a departure to see its actual seat plan and live availability.', 'Esta vista no corresponde al vehículo asignado. Elige una salida para ver su distribución y disponibilidad real.')}</span>
       </div>`;
 
-    setText('#seatState', 'La disponibilidad se muestra para la salida seleccionada.');
+    setText('#seatState', text('Availability is shown for the selected departure.', 'La disponibilidad se muestra para la salida seleccionada.'));
     return;
   }
 
@@ -445,7 +480,7 @@ function renderSeats(seats) {
           .join('')}
       </div>`;
 
-    setText('#seatState', `${seats.length} asientos disponibles. La distribución puede variar según el vehículo.`);
+    setText('#seatState', `${seats.length} ${text('seats available. Layout may vary by vehicle.', 'asientos disponibles. La distribución puede variar según el vehículo.')}`);
     return;
   }
 
@@ -495,34 +530,45 @@ function renderSeats(seats) {
 
   setText(
     '#seatState',
-    `${available} asientos disponibles${accessible ? ` · ${accessible} accesibles` : ''}.`,
+    `${available} ${text('seats available', 'asientos disponibles')}${accessible ? ` · ${accessible} ${text('accessible', 'accesibles')}` : ''}.`,
   );
 }
 
 async function loadRoutes() {
-  setText('#routesState', 'Cargando rutas disponibles…');
+  setText('#routesState', text('Loading available routes…', 'Cargando rutas disponibles…'));
 
   try {
     const routes = await fetchRoutes();
+    publishedRoutes = routes;
     populateSegmentSelectors(routes);
+    renderRouteConstellation(routes);
+
+    if (isStaticNetworkMap) {
+      updateStaticRouteSelector(routes);
+      await renderStaticNetworkSelection();
+      setText('#mapStatus', `${routes.length} ${text('published route', 'ruta publicada')}${routes.length === 1 ? '' : text('s', 's')}`);
+      setText('#mapEta', text('Static network view', 'Vista estática de la red'));
+    }
 
     setText('#routeCount', routes.length);
-    setText('#serviceStatus', 'Servicio disponible');
+    setText('#serviceStatus', text('Service available', 'Servicio disponible'));
 
     if (!routes.length) {
+      if (routesBrowseLink) routesBrowseLink.hidden = true;
       if (destinationGrid) destinationGrid.innerHTML = `
         <article class="destination-card">
           <div class="destination-body">
-            <small>Disponibilidad</small>
-            <h3>No hay rutas disponibles en este momento.</h3>
+            <small>${text('Availability', 'Disponibilidad')}</small>
+            <h3>${text('No routes are available right now.', 'No hay rutas disponibles en este momento.')}</h3>
           </div>
         </article>`;
 
-      setText('#routesState', 'No hay rutas disponibles en este momento.');
+      setText('#routesState', text('No routes are available right now.', 'No hay rutas disponibles en este momento.'));
       return;
     }
 
     if (!destinationGrid) return;
+    if (routesBrowseLink) routesBrowseLink.hidden = false;
     destinationGrid.innerHTML = routes.slice(0, 8).map((route) => `
       <a
         class="destination-card"
@@ -533,31 +579,32 @@ async function loadRoutes() {
         </div>
 
         <div class="destination-body">
-          <small>Salida desde ${esc(route.origin ?? '')}</small>
+          <small>${text('Departure from', 'Salida desde')} ${esc(route.origin ?? '')}</small>
           <h3>${esc(route.destination ?? '')}</h3>
-          <p>Consulta salidas y asientos disponibles.</p>
+          <p>${text('Review departures and available seats.', 'Consulta salidas y asientos disponibles.')}</p>
 
           <div class="destination-meta">
-            <span>${route.distance_km ? `${Number(route.distance_km).toLocaleString('es-DO')} km` : 'Distancia por confirmar'}</span>
-            <strong>Ver salidas →</strong>
+            <span>${route.distance_km ? `${Number(route.distance_km).toLocaleString(locale === 'es' ? 'es-DO' : 'en-US')} km` : text('Distance to be confirmed', 'Distancia por confirmar')}</span>
+            <strong>${text('View departures', 'Ver salidas')} →</strong>
           </div>
         </div>
       </a>`).join('');
 
     observeDynamicReveal(destinationGrid);
-    setText('#routesState', `${routes.length} ruta${routes.length === 1 ? '' : 's'} disponible${routes.length === 1 ? '' : 's'}.`);
+    setText('#routesState', routes.length === 1 ? text('1 route available.', '1 ruta disponible.') : `${routes.length} ${text('routes available.', 'rutas disponibles.')}`);
   } catch (error) {
+    if (routesBrowseLink) routesBrowseLink.hidden = true;
     setText('#routeCount', '—');
-    setText('#serviceStatus', 'Información temporalmente no disponible');
-    setText('#routesState', 'No pudimos cargar las rutas.');
+    setText('#serviceStatus', text('Information temporarily unavailable', 'Información temporalmente no disponible'));
+    setText('#routesState', text('We could not load routes.', 'No pudimos cargar las rutas.'));
 
     if (destinationGrid) destinationGrid.innerHTML = `
       <article class="destination-card">
         <div class="destination-body">
-          <small>Información temporalmente no disponible</small>
-          <h3>No pudimos cargar las rutas.</h3>
-          <p>Intenta de nuevo en unos minutos.</p>
-          <button class="btn btn-secondary btn-with-icon" id="retryRoutes" type="button">${icon('refresh')}Intentar de nuevo</button>
+          <small>${text('Information temporarily unavailable', 'Información temporalmente no disponible')}</small>
+          <h3>${text('We could not load routes.', 'No pudimos cargar las rutas.')}</h3>
+          <p>${text('Please try again in a few minutes.', 'Intenta de nuevo en unos minutos.')}</p>
+          <button class="btn btn-secondary btn-with-icon" id="retryRoutes" type="button">${icon('refresh')}${text('Try again', 'Intentar de nuevo')}</button>
         </div>
       </article>`;
 
@@ -600,13 +647,28 @@ const LIVE_NETWORK_MAX_DELAY = 120000;
 let latestNetwork = null;
 let selectedNetworkTripId = null;
 
+function updateStaticRouteSelector(routes) {
+  const select = document.querySelector('#networkRouteSelect');
+  if (!select) return;
+  select.innerHTML = [`<option value="">${text('All published routes', 'Todas las rutas publicadas')}</option>`, ...routes.map((route) => `<option value="${esc(route.id ?? '')}">${esc(route.origin ?? '')} → ${esc(route.destination ?? '')}</option>`)].join('');
+}
+
+async function renderStaticNetworkSelection() {
+  if (!isStaticNetworkMap || !routeMapCanvas) return;
+  const routeId = document.querySelector('#networkRouteSelect')?.value;
+  const routes = routeId ? publishedRoutes.filter((route) => String(route.id) === String(routeId)) : publishedRoutes;
+  const list = document.querySelector('#networkBusList');
+  if (list) { list.hidden = true; list.innerHTML = ''; }
+  await renderLiveNetworkMap(routeMapCanvas, { routes, trips: [] }, { mode: 'static' });
+}
+
 function updateNetworkRoutes(network) {
   latestNetwork = network;
   const select = document.querySelector('#networkRouteSelect');
   if (!select) return;
   const previous = select.value;
   const routes = Array.isArray(network.routes) ? network.routes : [];
-  select.innerHTML = ['<option value="">All routes</option>', ...routes.map((route) =>
+  select.innerHTML = [`<option value="">${text('Select a route', 'Selecciona una ruta')}</option>`, ...routes.map((route) =>
     `<option value="${esc(route.id ?? route.route_id ?? '')}">${esc(route.name ?? `${route.origin ?? ''} → ${route.destination ?? ''}`)}</option>`,
   )].join('');
   if ([...select.options].some((option) => option.value === previous)) select.value = previous;
@@ -616,6 +678,13 @@ function updateNetworkRoutes(network) {
 function renderNetworkSelection() {
   if (!latestNetwork || !routeMapCanvas) return;
   const routeId = document.querySelector('#networkRouteSelect')?.value;
+  const list = document.querySelector('#networkBusList');
+  if (!routeId) {
+    selectedNetworkTripId = null;
+    if (list) list.innerHTML = `<div class="public-network-empty"><strong>${text('Select a route to begin.', 'Selecciona una ruta para comenzar.')}</strong><span>${text('Choose a route above to see recent authorized locations.', 'Elige una ruta arriba para ver ubicaciones autorizadas recientes.')}</span></div>`;
+    void renderLiveNetworkMap(routeMapCanvas, { routes: [], trips: [] }, { emptyTitle: text('Select a route to begin', 'Selecciona una ruta para comenzar'), emptyDetail: text('Choose a route above to see recent authorized locations.', 'Elige una ruta arriba para ver ubicaciones autorizadas recientes.') });
+    return;
+  }
   const routes = Array.isArray(latestNetwork.routes) ? latestNetwork.routes : [];
   const trips = Array.isArray(latestNetwork.trips) ? latestNetwork.trips : [];
   const selectedRoute = routes.find((route) => String(route.id ?? route.route_id) === String(routeId));
@@ -626,18 +695,24 @@ function renderNetworkSelection() {
   } : latestNetwork;
   const tripsForList = Array.isArray(filtered.trips) ? filtered.trips : [];
   const liveTrips = tripsForList.filter((trip) => !trip.is_stale && Number.isFinite(Number(trip.latitude)) && Number.isFinite(Number(trip.longitude)));
+  const latestLocation = liveTrips.map((trip) => trip.last_location_at).filter(Boolean).sort().at(-1);
+  setText('#mapStatus', routeId
+    ? `${liveTrips.length} ${liveTrips.length === 1 ? text('bus', 'autobús') : text('buses', 'autobuses')} ${text('moving', 'en movimiento')}${tripsForList.length - liveTrips.length ? ` · ${tripsForList.length - liveTrips.length} ${text('without a recent signal', 'sin señal reciente')}` : ''}`
+    : text('Select a route', 'Selecciona una ruta'));
+  setText('#mapEta', routeId
+    ? (latestLocation ? new Date(latestLocation).toLocaleTimeString(locale === 'es' ? 'es-DO' : 'en-US', { hour: '2-digit', minute: '2-digit' }) : text('No recent signal', 'Sin señal reciente'))
+    : text('Waiting for a route', 'Esperando una ruta'));
   if (!tripsForList.some((trip) => String(trip.trip_id) === String(selectedNetworkTripId))) selectedNetworkTripId = null;
-  const list = document.querySelector('#networkBusList');
   if (list) {
     list.innerHTML = tripsForList.length ? tripsForList.map((trip) => {
       const isLive = !trip.is_stale && Number.isFinite(Number(trip.latitude)) && Number.isFinite(Number(trip.longitude));
-      const timestamp = trip.last_location_at ? new Date(trip.last_location_at).toLocaleString('es-DO', { dateStyle: 'medium', timeStyle: 'short' }) : 'Sin señal registrada';
+      const timestamp = trip.last_location_at ? new Date(trip.last_location_at).toLocaleString(locale === 'es' ? 'es-DO' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }) : text('No signal recorded', 'Sin señal registrada');
       const selected = String(trip.trip_id) === String(selectedNetworkTripId);
-      return `<article class="public-network-bus${selected ? ' is-selected' : ''}" data-network-bus="${esc(trip.trip_id)}"><div class="public-network-bus__identity"><span class="public-network-bus__icon" aria-hidden="true">${icon('route')}</span><div><strong>${esc(trip.bus_code || 'Autobús Encore')}</strong><span>${esc(trip.origin || '')} → ${esc(trip.destination || '')}</span></div></div><div class="public-network-bus__meta"><span class="public-network-bus__status${isLive ? ' is-live' : ' is-stale'}"><i></i>${isLive ? 'Ubicación reciente' : 'Sin señal reciente'}</span><small>${esc(timestamp)}</small></div><button type="button" class="btn-with-icon" data-network-trip="${esc(trip.trip_id)}" aria-pressed="${selected}" ${isLive ? '' : 'disabled'}>${icon(isLive ? 'route' : 'info')}${selected ? 'Visible en el mapa' : isLive ? 'Ver en el mapa' : 'Ubicación no disponible'}</button></article>`;
-    }).join('') : '<div class="public-network-empty"><strong>No hay autobuses compartiendo una ubicación reciente.</strong><span>Vuelve a consultar para ver nuevas actualizaciones.</span></div>';
+      return `<article class="public-network-bus${selected ? ' is-selected' : ''}" data-network-bus="${esc(trip.trip_id)}"><div class="public-network-bus__identity"><span class="public-network-bus__icon" aria-hidden="true">${icon('route')}</span><div><strong>${esc(trip.bus_code || text('Encore bus', 'Autobús Encore'))}</strong><span>${esc(trip.origin || '')} → ${esc(trip.destination || '')}</span></div></div><div class="public-network-bus__meta"><span class="public-network-bus__status${isLive ? ' is-live' : ' is-stale'}"><i></i>${isLive ? text('Recent location', 'Ubicación reciente') : text('No recent signal', 'Sin señal reciente')}</span><small>${esc(timestamp)}</small></div><button type="button" class="btn-with-icon" data-network-trip="${esc(trip.trip_id)}" aria-pressed="${selected}" ${isLive ? '' : 'disabled'}>${icon(isLive ? 'route' : 'info')}${selected ? text('Visible on map', 'Visible en el mapa') : isLive ? text('View on map', 'Ver en el mapa') : text('Location unavailable', 'Ubicación no disponible')}</button></article>`;
+    }).join('') : `<div class="public-network-empty"><strong>${text('No buses are sharing a recent location.', 'No hay autobuses compartiendo una ubicación reciente.')}</strong><span>${text('Check again for new updates.', 'Vuelve a consultar para ver nuevas actualizaciones.')}</span></div>`;
   }
   void renderLiveNetworkMap(routeMapCanvas, filtered, { selectedTripId: selectedNetworkTripId })
-    .catch(() => renderMapFallback('El mapa no está disponible por el momento.'));
+    .catch(() => renderMapFallback(text('The map is temporarily unavailable.', 'El mapa no está disponible por el momento.')));
 }
 
 async function refreshLiveNetwork() {
@@ -645,21 +720,29 @@ async function refreshLiveNetwork() {
     const network = await fetchLiveNetwork();
     updateNetworkRoutes(network);
     const trips = Array.isArray(network.trips) ? network.trips : [];
-    const tripCount = trips.filter((trip) => !trip.is_stale && Number.isFinite(Number(trip.latitude)) && Number.isFinite(Number(trip.longitude))).length;
-    const staleCount = trips.length - tripCount;
+    const selectedRouteId = document.querySelector('#networkRouteSelect')?.value ?? '';
+    const visibleTrips = selectedRouteId
+      ? trips.filter((trip) => String(trip.route_id ?? trip.route?.id) === String(selectedRouteId))
+      : [];
+    const tripCount = visibleTrips.filter((trip) => !trip.is_stale && Number.isFinite(Number(trip.latitude)) && Number.isFinite(Number(trip.longitude))).length;
+    const staleCount = visibleTrips.length - tripCount;
     const routeCount = Array.isArray(network.routes) ? network.routes.length : 0;
-    setText('#mapStatus', `${tripCount} ${tripCount === 1 ? 'autobús' : 'autobuses'} en movimiento${staleCount ? ` · ${staleCount} sin señal reciente` : ''}`);
-    const latestLocation = trips.map((trip) => trip.last_location_at).filter(Boolean).sort().at(-1);
-    setText('#mapEta', latestLocation ? new Date(latestLocation).toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' }) : 'Sin señal reciente');
+    setText('#mapStatus', selectedRouteId
+      ? `${tripCount} ${tripCount === 1 ? text('bus', 'autobús') : text('buses', 'autobuses')} ${text('moving', 'en movimiento')}${staleCount ? ` · ${staleCount} ${text('without a recent signal', 'sin señal reciente')}` : ''}`
+      : text('Select a route', 'Selecciona una ruta'));
+    const latestLocation = visibleTrips.map((trip) => trip.last_location_at).filter(Boolean).sort().at(-1);
+    setText('#mapEta', selectedRouteId
+      ? (latestLocation ? new Date(latestLocation).toLocaleTimeString(locale === 'es' ? 'es-DO' : 'en-US', { hour: '2-digit', minute: '2-digit' }) : text('No recent signal', 'Sin señal reciente'))
+      : text('Waiting for a route', 'Esperando una ruta'));
     setText('#routeCount', routeCount || '—');
     liveNetworkFailureCount = 0;
     return true;
   } catch {
     liveNetworkFailureCount = Math.min(liveNetworkFailureCount + 1, 3);
-    setText('#mapStatus', 'La vista no está disponible');
-    setText('#mapEta', 'Actualización pendiente');
+    setText('#mapStatus', text('View unavailable', 'La vista no está disponible'));
+    setText('#mapEta', text('Update pending', 'Actualización pendiente'));
     const list = document.querySelector('#networkBusList');
-    if (list) list.innerHTML = `<div class="public-network-empty"><strong>No pudimos actualizar las ubicaciones.</strong><span>La vista se actualizará cuando vuelva la conexión.</span><button type="button" class="btn-with-icon" data-network-retry>${icon('refresh')}Intentar de nuevo</button></div>`;
+    if (list) list.innerHTML = `<div class="public-network-empty"><strong>${text('We could not update locations.', 'No pudimos actualizar las ubicaciones.')}</strong><span>${text('The view will update when the connection returns.', 'La vista se actualizará cuando vuelva la conexión.')}</span><button type="button" class="btn-with-icon" data-network-retry>${icon('refresh')}${text('Try again', 'Intentar de nuevo')}</button></div>`;
     if (routeMapCanvas) {
       void renderLiveNetworkMap(routeMapCanvas, { routes: [], trips: [] })
         .catch(() => renderMapFallback('Live vehicle positions are temporarily unavailable.'));
@@ -709,7 +792,7 @@ function startLiveNetwork() {
 }
 
 function initializeLiveNetwork() {
-  if (!routeMapCanvas) return;
+  if (!routeMapCanvas || isStaticNetworkMap) return;
   if ('IntersectionObserver' in window) {
     liveNetworkObserver = new IntersectionObserver((entries, observer) => {
       if (!entries.some((entry) => entry.isIntersecting)) return;
@@ -747,7 +830,7 @@ async function initializePublicSession() {
     mobileTrips?.setAttribute('hidden', '');
     mobileAccount?.removeAttribute('hidden');
     account.href = '/login/?return=/passenger/';
-    account.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg><span>Iniciar sesión</span>';
+    account.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg><span>${text('Sign in', 'Iniciar sesión')}</span>`;
   };
   if (!token) { setSignedOut(); return; }
   const applyUser = (user) => {
@@ -787,7 +870,10 @@ async function initializePublicSession() {
   }
 }
 
-document.querySelector('#networkRouteSelect')?.addEventListener('change', renderNetworkSelection);
+document.querySelector('#networkRouteSelect')?.addEventListener('change', () => {
+  if (isStaticNetworkMap) void renderStaticNetworkSelection();
+  else renderNetworkSelection();
+});
 document.querySelector('#networkBusList')?.addEventListener('click', (event) => {
   if (event.target.closest('[data-network-retry]')) {
     void refreshLiveNetwork();
@@ -810,24 +896,24 @@ bookingForm?.addEventListener('submit', (event) => {
   const submit = bookingForm.querySelector('button[type="submit"]');
 
   if (!origin || !destination) {
-    setText('#searchMessage', 'Elige origen y destino para continuar.');
+    setText('#searchMessage', text('Choose an origin and destination to continue.', 'Elige origen y destino para continuar.'));
     return;
   }
 
   if (!publishedSegments.some((segment) => segment.origin === origin && segment.destination === destination)) {
-    setText('#searchMessage', 'Elige una ruta disponible para continuar.');
+    setText('#searchMessage', text('Choose an available route to continue.', 'Elige una ruta disponible para continuar.'));
     return;
   }
 
   if (origin.localeCompare(destination, undefined, { sensitivity: 'accent' }) === 0) {
-    setText('#searchMessage', 'El origen y el destino deben ser diferentes.');
+    setText('#searchMessage', text('Origin and destination must be different.', 'El origen y el destino deben ser diferentes.'));
     return;
   }
 
   if (submit) {
     submit.disabled = true;
     submit.setAttribute('aria-busy', 'true');
-    submit.lastChild.textContent = 'Abriendo salidas…';
+    submit.lastChild.textContent = text('Opening departures…', 'Abriendo salidas…');
   }
   rememberSearch({ origin, destination, date, passengers });
 
@@ -871,7 +957,7 @@ recentSearches?.addEventListener('click', (event) => {
     if (destination) destination.value = saved.destination;
     if (date && saved.date) date.value = saved.date;
     if (passengers && saved.passengers) passengers.value = saved.passengers;
-    setText('#searchMessage', 'Búsqueda recuperada. Revisa los datos y encuentra tu salida.');
+    setText('#searchMessage', text('Search restored. Review the details and find your departure.', 'Búsqueda recuperada. Revisa los datos y encuentra tu salida.'));
   } catch {}
 });
 
@@ -883,5 +969,5 @@ initializeBusinessFooter();
 void initializePublicSession();
 initializeLiveNetwork();
 void applyPublishedWebsiteContent();
-void health().then(() => setText('#serviceStatus', 'Servicio disponible')).catch(() => setText('#serviceStatus', 'Información temporalmente no disponible'));
+void health().then(() => setText('#serviceStatus', text('Service available', 'Servicio disponible'))).catch(() => setText('#serviceStatus', text('Information temporarily unavailable', 'Información temporalmente no disponible')));
 void Promise.allSettled([loadRoutes(), loadFeaturedTrip()]);

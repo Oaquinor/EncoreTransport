@@ -13,7 +13,7 @@ const pages = [
   'apps/website/help/index.html',
 ];
 
-const forbidden = /\b(backend|frontend|endpoint|api|arquitectura|architecture|implementaci[oó]n|par[aá]metros?|contratos?|passenger)\b/i;
+const forbidden = /\b(backend|frontend|endpoint|api|arquitectura|architecture|implementaci[oó]n|par[aá]metros?|contratos?|Passenger\s+(?:Web|Mobile|app|application))\b/i;
 
 for (const path of pages) {
   const html = fs.readFileSync(path, 'utf8')

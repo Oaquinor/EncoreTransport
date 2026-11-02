@@ -6,6 +6,7 @@ import { gzip } from 'node:zlib';
 import { promisify } from 'node:util';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { getPageKey, pageSeo } from './apps/website/locale-data.mjs';
 
 const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
 const gzipAsync = promisify(gzip);
@@ -112,12 +113,36 @@ function normalizePublicSiteUrl(value) {
   }
 }
 
-function applyPublicSeoOrigin(filePath, contents, publicSiteUrl) {
-  if (!publicSiteUrl || !filePath.includes(path.join('apps', 'website'))) return contents;
+function applyPublicSeoOrigin(filePath, contents, publicSiteUrl, request) {
+  if (!filePath.includes(path.join('apps', 'website'))) return contents;
   const source = contents.toString('utf8');
-  const rewritten = source
-    .replace(/(rel="canonical"\s+href=")\/([^"]*)/i, `$1${publicSiteUrl}/$2`)
-    .replace(/(property="og:url"\s+content=")\/([^"]*)/i, `$1${publicSiteUrl}/$2`);
+  const normalized = filePath.split(path.sep).join('/');
+  const websiteRelative = normalized.split('/apps/website/').at(-1) ?? 'index.html';
+  const pagePath = websiteRelative === 'index.html' ? '/website/' : `/website/${websiteRelative.replace(/\/index\.html$/, '/')}`;
+  const requestedLocale = new URL(request?.url ?? '/', 'http://encore.local').searchParams.get('lang') === 'es' ? 'es' : 'en';
+  const seo = pageSeo(getPageKey(pagePath), requestedLocale);
+  const localizedPath = requestedLocale === 'es' ? `${pagePath}?lang=es` : pagePath;
+  const absolute = publicSiteUrl ? `${publicSiteUrl}${localizedPath}` : localizedPath;
+  const enUrl = publicSiteUrl ? `${publicSiteUrl}${pagePath}` : pagePath;
+  const esUrl = publicSiteUrl ? `${publicSiteUrl}${pagePath}?lang=es` : `${pagePath}?lang=es`;
+  let rewritten = source
+    .replace(/(<html[^>]*\blang=")[^"]*/i, `$1${requestedLocale}`)
+    .replace(/(<title>)[\s\S]*?(<\/title>)/i, `$1${seo.title}$2`)
+    .replace(/(<meta\s+name="description"\s+content=")[^"]*/i, `$1${seo.description}`)
+    .replace(/(<meta\s+property="og:title"\s+content=")[^"]*/i, `$1${seo.title}`)
+    .replace(/(<meta\s+property="og:description"\s+content=")[^"]*/i, `$1${seo.description}`)
+    .replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*/i, `$1${seo.title}`)
+    .replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*/i, `$1${seo.description}`)
+    .replace(/(rel="canonical"\s+href=")[^"]*/i, `$1${absolute}`)
+    .replace(/(property="og:url"\s+content=")[^"]*/i, `$1${absolute}`);
+  const socialMeta = `<meta property="og:site_name" content="Encore Transport" /><meta property="og:title" content="${seo.title}" /><meta property="og:description" content="${seo.description}" /><meta property="og:type" content="website" /><meta property="og:url" content="${absolute}" /><meta name="twitter:card" content="summary" /><meta name="twitter:title" content="${seo.title}" /><meta name="twitter:description" content="${seo.description}" />`;
+  if (!/property="og:title"/i.test(rewritten)) rewritten = rewritten.replace(/<\/head>/i, `${socialMeta}</head>`);
+  if (!/rel="alternate"\s+hreflang="en"/i.test(rewritten)) {
+    const alternates = `<link rel="alternate" hreflang="en" href="${enUrl}" /><link rel="alternate" hreflang="es" href="${esUrl}" /><link rel="alternate" hreflang="x-default" href="${enUrl}" />`;
+    rewritten = rewritten.includes('<link rel="icon"')
+      ? rewritten.replace(/<link rel="icon"/i, `${alternates}<link rel="icon"`)
+      : rewritten.replace(/<\/head>/i, `${alternates}</head>`);
+  }
   return Buffer.from(rewritten, 'utf8');
 }
 
@@ -138,7 +163,7 @@ async function serveFile(response, filePath, request, publicSiteUrl = '') {
     }
 
     const extension = path.extname(filePath).toLowerCase();
-    const fileContents = applyPublicSeoOrigin(filePath, await readFile(filePath), publicSiteUrl);
+    const fileContents = applyPublicSeoOrigin(filePath, await readFile(filePath), publicSiteUrl, request);
     const etag = `"${createHash('sha1').update(fileContents).digest('hex')}"`;
     if (request?.headers?.['if-none-match'] === etag) {
       response.writeHead(304, { ETag: etag });

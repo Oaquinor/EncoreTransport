@@ -149,11 +149,18 @@ try {
           assert.deepEqual(missingAnchors, [], 'Website in-page navigation must point to existing sections');
           assert.equal(await page.locator('.public-quick-links').count(), 0, 'Redundant quick links must be removed');
           assert.equal(await page.locator('.public-quick-rail').count(), 0, 'The public quick rail must be removed');
+          assert.equal(await page.locator('.wayfinding-rail').count(), 0, 'The side wayfinding rail must be removed');
+          assert.equal(await page.locator('.scroll-progress').count(), 1, 'The website must expose one bottom scroll progress bar');
+          await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+          await page.waitForTimeout(80);
+          assert.ok(await page.locator('.scroll-progress span').evaluate((element) => parseFloat(getComputedStyle(element).width) > 0), 'The bottom progress bar must respond to scroll');
+          await page.evaluate(() => window.scrollTo(0, 0));
           assert.equal(await page.locator('#primaryNav > a').count(), 1, 'The primary navigation must expose Inicio directly');
           assert.equal(await page.locator('#primaryNav [data-menu]').count(), 4, 'The primary navigation must group commercial destinations');
           assert.equal(await page.locator('#journey-control, #platform').count(), 0, 'Internal workspace sections must stay out of the commercial homepage');
           assert.equal(await page.locator('#package-tracking a[href="/track-package/"]').count(), 1, 'Package tracking must have a clear destination');
-          assert.equal(await page.locator('#networkRouteSelect').count(), 1, 'The live map must offer route selection');
+          assert.equal(await page.locator('#networkRouteSelect').count(), 0, 'The homepage map must remain a static published-network overview');
+          assert.equal(await page.locator('#routeMapCanvas[data-map-mode="static"]').count(), 1, 'The homepage map must be marked as static');
           assert.equal(await page.locator('[data-open-map]').count(), 0, 'The generic current-route CTA must not show without a selected trip');
           assert.ok(await page.locator('#bookingForm input[name="date"]').inputValue(), 'The booking date must default to today');
 
@@ -172,23 +179,12 @@ try {
           await travelMenu.hover();
           assert.equal(await page.locator('#travelMenu').getAttribute('hidden'), null, 'Desktop dropdown must open on hover');
           await page.mouse.move(8, 8);
+          await page.waitForTimeout(240);
           assert.notEqual(await page.locator('#travelMenu').getAttribute('hidden'), null, 'Desktop dropdown must close when pointer leaves');
           await travelMenu.click();
           assert.equal(await page.locator('#travelMenu').getAttribute('hidden'), null, 'Desktop dropdown must open on click');
           await page.keyboard.press('Escape');
           assert.notEqual(await page.locator('#travelMenu').getAttribute('hidden'), null, 'Escape must close the desktop dropdown');
-          await page.locator('#networkBusList').scrollIntoViewIfNeeded();
-          await page.waitForFunction(() => document.querySelector('#networkBusList .public-network-empty')?.innerText.includes('No hay autobuses compartiendo una ubicación reciente'), null, { timeout: 10000 }).catch(async (error) => {
-            const state = await page.evaluate(() => ({ status: document.querySelector('#mapStatus')?.textContent, listing: document.querySelector('#networkBusList')?.innerText }));
-            throw new Error(`Public map empty state failed: ${JSON.stringify(state)} (${error.message})`);
-          });
-          assert.match(await page.locator('#networkBusList').innerText(), /No hay autobuses compartiendo una ubicación reciente/,
-            'The public map explains when there are no current authorized positions');
-          assert.match(await page.locator('#mapStatus').innerText(), /0 autobuses en movimiento/,
-            'Scheduled trips without live GPS are not presented as live buses');
-          await page.locator('#routeMapCanvas.leaflet-container').waitFor({ timeout: 10000 });
-          assert.equal(await page.locator('#routeMapCanvas.leaflet-container').count(), 1,
-            'The public map initializes once and remains visible without live vehicle positions');
         }
         if (['driver', 'admin'].includes(surface)) {
           if (visualTokens) {
@@ -263,6 +259,12 @@ try {
         });
         await page.screenshot({ path: `artifacts/visual/${surface}-${width}.png`, fullPage: true, timeout: 60000 });
         if (surface === 'website' && width === 1440) {
+          await page.goto(`http://${host}:${port}/website/live/`, { waitUntil: 'domcontentloaded' });
+          await page.locator('#networkRouteSelect').waitFor();
+          assert.equal(await page.locator('#networkRouteSelect').inputValue(), '', 'Encore Live starts without an implicit all-routes selection');
+          await page.locator('#networkBusList .public-network-empty').waitFor();
+          assert.match(await page.locator('#networkBusList').innerText(), /Select a route to begin/, 'Encore Live asks the visitor to choose a route first');
+
           liveNetworkFixture = 'active';
           try {
             await page.reload({ waitUntil: 'domcontentloaded', timeout: 15000 });
@@ -271,20 +273,20 @@ try {
             await page.waitForTimeout(500);
             await page.reload({ waitUntil: 'domcontentloaded', timeout: 20000 });
           }
+          await page.waitForFunction(() => Boolean(document.querySelector('#networkRouteSelect option[value="10"]')));
+          await page.locator('#networkRouteSelect').selectOption('10');
           await page.locator('#networkBusList').scrollIntoViewIfNeeded();
           await page.locator('[data-network-bus="101"]').waitFor();
           assert.equal(await page.locator('#routeMapCanvas.leaflet-container').count(), 1,
-            'Refreshing live data reuses the existing map instance');
-          assert.equal(await page.locator('[data-network-bus]').count(), 3, 'The public map lists multiple live buses and keeps stale buses identifiable');
+            'Encore Live initializes the real map after a route is selected');
+          assert.equal(await page.locator('[data-network-bus]').count(), 2, 'The selected route keeps both current buses visible');
           await page.waitForFunction(
-            () => document.querySelector('#mapStatus')?.textContent.includes('2 autobuses en movimiento · 1 sin señal reciente'),
+            () => document.querySelector('#mapStatus')?.textContent.includes('2 buses moving'),
             null,
             { timeout: 10000 },
           );
           const mapStatus = await page.locator('#mapStatus').textContent();
-          assert.match(mapStatus, /2\s+autobuses en movimiento\s+·\s+1 sin señal reciente/, `The map distinguishes current GPS from stale data: ${JSON.stringify(mapStatus)}`);
-          await page.locator('#networkRouteSelect').selectOption('10');
-          assert.equal(await page.locator('[data-network-bus]').count(), 2, 'Route filter keeps both buses operating on the selected route');
+          assert.match(mapStatus, /2\s+buses moving/, `The selected route exposes its current GPS count: ${JSON.stringify(mapStatus)}`);
           await page.locator('[data-network-trip="102"]').click();
           assert.equal(await page.locator('[data-network-trip="102"]').getAttribute('aria-pressed'), 'true', 'A visitor can select a current bus on the map');
         }
@@ -679,7 +681,16 @@ try {
         console.log(`${surface} ${width}px OK width=${metrics.documentWidth} title=${JSON.stringify(metrics.title)}`);
       } catch (error) {
         failures.push(error.message);
-        console.error(`${surface} ${width}px FAILED: ${error.message}`);
+        const diagnostic = surface === 'website' && width === 1440
+          ? await page.evaluate(() => ({
+            url: location.pathname,
+            routeOptions: document.querySelector('#networkRouteSelect')?.innerText,
+            routeValue: document.querySelector('#networkRouteSelect')?.value,
+            busList: document.querySelector('#networkBusList')?.innerText,
+            mapStatus: document.querySelector('#mapStatus')?.innerText,
+          })).catch(() => null)
+          : null;
+        console.error(`${surface} ${width}px FAILED: ${error.message}${diagnostic ? ` state=${JSON.stringify(diagnostic)}` : ''}`);
       } finally {
         await page.close();
       }

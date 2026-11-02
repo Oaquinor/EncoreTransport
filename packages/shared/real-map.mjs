@@ -291,6 +291,8 @@ function routePoints(route) {
   const candidates = [
     route?.points,
     route?.coordinates,
+    route?.route_geometry,
+    route?.route_geometry?.coordinates,
     route?.geometry?.coordinates,
     ...(Array.isArray(route?.legs) ? route.legs.flatMap((leg) => [
       leg?.points,
@@ -632,10 +634,43 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
 
   const routes = Array.isArray(network?.routes) ? network.routes : [];
   const trips = Array.isArray(network?.trips) ? network.trips : [];
+  const staticMode = options.mode === 'static';
   const stops = routes.flatMap((route) => Array.isArray(route.stops) ? route.stops : [])
     .filter(validCoordinate);
   const visibleStops = stops;
   const seenNodes = new Set();
+
+  state.routeLines ??= new Map();
+  const seenRouteLines = new Set();
+  for (const route of routes) {
+    const key = String(route.id ?? route.route_id ?? `${route.origin ?? ''}:${route.destination ?? ''}`);
+    const points = routePoints(route).length >= 2 ? routePoints(route) : normalizePoints(route.stops);
+    if (points.length < 2) continue;
+    seenRouteLines.add(key);
+    let line = state.routeLines.get(key);
+    if (!line) {
+      line = L.polyline(points, {
+        color: staticMode ? '#159ac0' : '#6da8b9',
+        weight: staticMode ? 5 : 3,
+        opacity: staticMode ? .72 : .45,
+        dashArray: staticMode ? null : '7 8',
+        lineCap: 'round',
+        lineJoin: 'round',
+      }).addTo(state.map);
+      const label = `${route.origin ?? ''} → ${route.destination ?? ''}`.trim();
+      if (label && line.bindTooltip) line.bindTooltip(label, { sticky: true });
+      state.routeLines.set(key, line);
+    } else {
+      line.setLatLngs(points);
+      line.setStyle?.({ color: staticMode ? '#159ac0' : '#6da8b9', weight: staticMode ? 5 : 3, opacity: staticMode ? .72 : .45 });
+    }
+  }
+  for (const [key, line] of state.routeLines) {
+    if (!seenRouteLines.has(key)) {
+      line.remove();
+      state.routeLines.delete(key);
+    }
+  }
 
   for (const stop of visibleStops) {
     const key = `${stop.name}:${stop.latitude}:${stop.longitude}`;
@@ -708,6 +743,7 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
   }
 
   const points = [
+    ...[...state.routeLines.values()].flatMap((line) => line.getLatLngs?.().map((point) => [point.lat, point.lng]) ?? []),
     ...visibleStops.map((point) => [Number(point.latitude), Number(point.longitude)]),
     ...trips.filter(validCoordinate).map((point) => [Number(point.latitude), Number(point.longitude)]),
   ];
@@ -718,6 +754,8 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
   }
   requestAnimationFrame(() => state.map.invalidateSize());
   if (points.length) clearRuntimeStatus(container);
+  else if (options.emptyTitle || options.emptyDetail) runtimeStatus(container, options.emptyTitle ?? 'No current locations to show', options.emptyDetail ?? 'The map will update when a bus shares a recent, authorized location.');
+  else if (staticMode) runtimeStatus(container, 'Published route geometry unavailable', 'The route book will show the network when published coordinates are available.');
   else runtimeStatus(container, 'No current locations to show', 'The map will update when a bus shares a recent, authorized location.');
   return state.map;
 }

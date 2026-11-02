@@ -6,6 +6,11 @@ const website = fs.readFileSync(
   'utf8',
 );
 
+const liveWebsite = fs.readFileSync(
+  'apps/website/live/index.html',
+  'utf8',
+);
+
 const websiteApp = fs.readFileSync(
   'apps/website/app.mjs',
   'utf8',
@@ -34,9 +39,9 @@ assert.equal(
 );
 
 assert.equal(
-  websiteApp.includes('renderLiveNetworkMap') && website.includes('id="networkRouteSelect"'),
+  websiteApp.includes('renderLiveNetworkMap') && !website.includes('id="networkRouteSelect"') && liveWebsite.includes('id="networkRouteSelect"') && liveWebsite.includes('value="">Select a route'),
   true,
-  'Website must render the live map through the shared map component and offer route filtering.',
+  'The homepage must show a static network while Encore Live owns route selection.',
 );
 
 /*

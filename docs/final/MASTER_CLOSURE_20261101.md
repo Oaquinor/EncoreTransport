@@ -33,7 +33,8 @@ La plataforma tiene una base funcional demostrable para Website, reservas, asien
 - Driver PWA y Driver Mobile ya consumen los flujos de escaneo, carga, manifiesto, discrepancia y transferencia; las respuestas y errores provienen del backend.
 - Encore Live incorpora polling adaptativo, recuperación al volver online/visible, interpolación de posiciones reales, marcadores stale y cleanup de animaciones; no se introduce WebSocket/SSE sin contrato backend.
 - Driver Mobile incorpora permisos y tarea de GPS background, cámara QR, fotografía privada y validación explícita del destinatario; Passenger Mobile falla de forma segura sin red.
-- El Website público fue reescrito con copy comercial en español, sin nombres internos en el texto visible; el CMS rechaza términos técnicos antes de guardar o publicar.
+- El Website público sirve inglés por defecto y ofrece EN/ES desde header desktop y móvil; `locale-data.mjs` centraliza navegación, contenido estático/dinámico y SEO por variante. Las páginas tienen composiciones visuales diferenciadas y el CMS rechaza términos técnicos antes de guardar o publicar.
+- El CMS admite campos bilingües `*_en`/`*_es` para secciones y FAQ, con validación editorial compartida y selección por locale en el Website.
 - El servidor admite convertir canonical y `og:url` relativos en URLs absolutas cuando se configura `PUBLIC_SITE_URL` con un dominio público no local; no convierte el dominio de desarrollo en canonical de producción.
 
 ## Funcionalidad preservada
@@ -46,4 +47,4 @@ Proveedor y credenciales de pago, aceptación de evidencia/cámara y GPS backgro
 
 ## Evidencia
 
-`npm test` pasa; los typechecks de API, Passenger web, Passenger Mobile y Driver Mobile pasan; el build de Passenger pasa; browser visual pasa con 36 checks y capturas en 360, 390, 768, 1024, 1440 y 1920 px; los flujos Admin y Driver autenticados focalizados pasan a 1440 px. `php artisan test` pasa con 83 pruebas y 545 aserciones usando PHP 8.3.30 y MySQL de Laragon, incluyendo `WebsiteContentAndRouteImageTest`, `AdminUserSearchTest` y `AdminTicketLifecycleTest`. Las pruebas en dispositivos reales y las integraciones externas siguen bloqueadas.
+`npm test` pasa; los typechecks de API, Passenger web, Passenger Mobile y Driver Mobile pasan; el build de Passenger pasa; browser visual pasa con 36 checks y capturas en 360, 390, 768, 1024, 1440 y 1920 px, incluyendo cambio EN/ES y transferencia de búsqueda; los flujos Admin y Driver autenticados focalizados pasan a 1440 px. `php artisan test` pasa con 83 pruebas y 545 aserciones usando PHP 8.3.30 y MySQL de Laragon, incluyendo `WebsiteContentAndRouteImageTest`, `AdminUserSearchTest` y `AdminTicketLifecycleTest`. Las pruebas en dispositivos reales y las integraciones externas siguen bloqueadas.

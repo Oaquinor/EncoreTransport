@@ -12,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 class WebsiteContentController extends Controller
 {
     private const SECTIONS = ['hero', 'tracking', 'routes', 'faq', 'about', 'contact', 'final_cta'];
-    private const FIELDS = ['title', 'subtitle', 'description', 'button_label', 'button_url', 'image_url', 'image_path', 'enabled', 'order'];
+    private const FIELDS = ['title', 'title_en', 'title_es', 'subtitle', 'subtitle_en', 'subtitle_es', 'description', 'description_en', 'description_es', 'button_label', 'button_label_en', 'button_label_es', 'button_url', 'image_url', 'image_path', 'enabled', 'order'];
     private const INTERNAL_COPY_PATTERN = '/\\b(backend|frontend|endpoint|api|arquitectura|architecture|implementaci[oó]n|par[aá]metros?|contratos?|passenger)\\b/i';
 
     public function published()
@@ -102,9 +102,17 @@ class WebsiteContentController extends Controller
             'sections' => ['required', 'array'],
             'sections.*' => ['required', 'array'],
             'sections.*.title' => ['sometimes', 'nullable', 'string', 'max:180'],
+            'sections.*.title_en' => ['sometimes', 'nullable', 'string', 'max:180'],
+            'sections.*.title_es' => ['sometimes', 'nullable', 'string', 'max:180'],
             'sections.*.subtitle' => ['sometimes', 'nullable', 'string', 'max:240'],
+            'sections.*.subtitle_en' => ['sometimes', 'nullable', 'string', 'max:240'],
+            'sections.*.subtitle_es' => ['sometimes', 'nullable', 'string', 'max:240'],
             'sections.*.description' => ['sometimes', 'nullable', 'string', 'max:1200'],
+            'sections.*.description_en' => ['sometimes', 'nullable', 'string', 'max:1200'],
+            'sections.*.description_es' => ['sometimes', 'nullable', 'string', 'max:1200'],
             'sections.*.button_label' => ['sometimes', 'nullable', 'string', 'max:80'],
+            'sections.*.button_label_en' => ['sometimes', 'nullable', 'string', 'max:80'],
+            'sections.*.button_label_es' => ['sometimes', 'nullable', 'string', 'max:80'],
             'sections.*.button_url' => ['sometimes', 'nullable', 'string', 'max:500'],
             'sections.*.image_url' => ['sometimes', 'nullable', 'string', 'max:500'],
             'sections.*.image_path' => ['sometimes', 'nullable', 'string', 'max:500'],
@@ -112,7 +120,11 @@ class WebsiteContentController extends Controller
             'sections.*.order' => ['sometimes', 'integer', 'min:0', 'max:100'],
             'faqs' => ['sometimes', 'array', 'max:30'],
             'faqs.*.question' => ['required_with:faqs', 'string', 'max:240'],
+            'faqs.*.question_en' => ['sometimes', 'nullable', 'string', 'max:240'],
+            'faqs.*.question_es' => ['sometimes', 'nullable', 'string', 'max:240'],
             'faqs.*.answer' => ['required_with:faqs', 'string', 'max:1200'],
+            'faqs.*.answer_en' => ['sometimes', 'nullable', 'string', 'max:1200'],
+            'faqs.*.answer_es' => ['sometimes', 'nullable', 'string', 'max:1200'],
             'faqs.*.enabled' => ['sometimes', 'boolean'],
         ]);
         foreach (array_keys($data['sections']) as $key) {
@@ -136,7 +148,9 @@ class WebsiteContentController extends Controller
             }
         }
         $data['faqs'] = array_values(array_map(fn ($faq) => [
-            'question' => $faq['question'], 'answer' => $faq['answer'], 'enabled' => (bool) ($faq['enabled'] ?? true),
+            'question' => $faq['question'], 'question_en' => $faq['question_en'] ?? null, 'question_es' => $faq['question_es'] ?? null,
+            'answer' => $faq['answer'], 'answer_en' => $faq['answer_en'] ?? null, 'answer_es' => $faq['answer_es'] ?? null,
+            'enabled' => (bool) ($faq['enabled'] ?? true),
         ], $data['faqs'] ?? []));
         foreach ($data['faqs'] as $index => $faq) {
             $this->rejectInternalCopy($faq, "faqs.$index");
@@ -146,7 +160,7 @@ class WebsiteContentController extends Controller
 
     private function rejectInternalCopy(array $fields, string $path): void
     {
-        foreach (['title', 'subtitle', 'description', 'button_label', 'question', 'answer'] as $field) {
+        foreach (['title', 'title_en', 'title_es', 'subtitle', 'subtitle_en', 'subtitle_es', 'description', 'description_en', 'description_es', 'button_label', 'button_label_en', 'button_label_es', 'question', 'question_en', 'question_es', 'answer', 'answer_en', 'answer_es'] as $field) {
             $value = $fields[$field] ?? null;
             if (is_string($value) && preg_match(self::INTERNAL_COPY_PATTERN, $value)) {
                 throw ValidationException::withMessages([

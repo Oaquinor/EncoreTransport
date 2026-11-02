@@ -1,10 +1,6 @@
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const topbar = document.querySelector('.topbar');
 
-const progress = document.createElement('div');
-progress.className = 'scroll-progress';
-document.body.append(progress);
-
 const glow = document.createElement('div');
 glow.className = 'pointer-glow';
 document.body.append(glow);
@@ -12,9 +8,6 @@ document.body.append(glow);
 function updateScrollEffects() {
   const y = window.scrollY;
   topbar?.classList.toggle('is-scrolled', y > 12);
-
-  const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-  progress.style.width = `${max ? Math.min(100, y / max * 100) : 0}%`;
 
   if (!reducedMotion) {
     const bus = document.querySelector('.hero-bus');

@@ -36,7 +36,13 @@ for (const width of [390, 768, 1440]) {
     await page.waitForTimeout(150);
     assert.ok(await page.title(), `${name} must have a title`);
     assert.ok((await page.evaluate(() => document.documentElement.scrollWidth)) <= width + 1, `${name} must not overflow at ${width}px`);
-    if (width === 1440 && ['home', 'routes', 'trips', 'packages', 'live', 'help'].includes(name)) {
+    const primaryShell = page.locator('main > .shell').first();
+    if (await primaryShell.count()) {
+      const shellBox = await primaryShell.boundingBox();
+      const expectedShellWidth = Math.min(1240, width - 48);
+      assert.ok(shellBox && shellBox.width >= expectedShellWidth * 0.95, `${name} must use the available layout width at ${width}px`);
+    }
+    if (width === 1440 && ['home', 'routes', 'trips', 'packages', 'services', 'live', 'about', 'contact', 'help'].includes(name)) {
       await page.screenshot({ path: `artifacts/visual/website-${name}-multipage-1440.png`, fullPage: true });
     }
   }
@@ -44,8 +50,35 @@ for (const width of [390, 768, 1440]) {
 
 await page.setViewportSize({ width: 1440, height: 900 });
 await page.goto(`http://${host}:${port}/website/`, { waitUntil: 'domcontentloaded' });
+await page.locator('#routesBrowseLink').waitFor({ state: 'visible' });
+assert.equal(await page.locator('#routesBrowseLink').textContent(), 'View all routes →', 'route directory action must be explicit when routes exist');
+await page.evaluate(() => localStorage.removeItem('encore_recent_searches_v1'));
+await page.reload({ waitUntil: 'domcontentloaded' });
+await page.waitForFunction(() => Boolean(document.querySelector('[name="origin"] option[value="Georgetown"]')));
+await page.locator('[name="origin"]').selectOption('Georgetown');
+await page.waitForFunction(() => Boolean(document.querySelector('[name="destination"] option[value="New Amsterdam"]')));
+await page.locator('[name="destination"]').selectOption('New Amsterdam');
+await page.locator('[name="date"]').fill('2027-01-08');
+await Promise.all([
+  page.waitForURL('**/passenger/**'),
+  page.locator('#bookingForm').evaluate((form) => form.requestSubmit()),
+]);
+await page.goto(`http://${host}:${port}/website/`, { waitUntil: 'domcontentloaded' });
+const recentSearches = page.locator('#recentSearches');
+await recentSearches.waitFor({ state: 'visible' });
+assert.equal(await recentSearches.locator('[data-recent-search]').count(), 1, 'the latest search must persist in browser storage');
+await recentSearches.locator('[data-recent-search]').click();
+assert.equal(await page.locator('[name="origin"]').inputValue(), 'Georgetown', 'recent search must restore origin');
+assert.equal(await page.locator('[name="destination"]').inputValue(), 'New Amsterdam', 'recent search must restore destination');
+
 await page.locator('#primaryNav [data-menu-button]').first().click();
 await page.screenshot({ path: 'artifacts/visual/website-navigation-desktop-1440.png', fullPage: false });
+await page.locator('#primaryNav [data-menu-button]').first().hover();
+const routeMenuLink = page.locator('#travelMenu a').first();
+await routeMenuLink.hover();
+assert.equal(await routeMenuLink.isVisible(), true, 'Desktop dropdown must remain selectable while crossing to its panel');
+await routeMenuLink.click();
+await page.waitForURL('**/website/routes/**');
 await page.setViewportSize({ width: 390, height: 900 });
 await page.goto(`http://${host}:${port}/website/`, { waitUntil: 'domcontentloaded' });
 await page.locator('#mobileMenuToggle').click();
@@ -66,6 +99,49 @@ assert.ok(await page.locator('[name="date"]').inputValue(), 'search date must re
 await page.reload({ waitUntil: 'domcontentloaded' });
 await page.waitForFunction(() => document.querySelector('[name="origin"]')?.value === 'Georgetown');
 assert.equal(await page.locator('[name="destination"]').inputValue(), 'New Amsterdam', 'deep refresh must preserve URL search parameters');
+
+await page.goto(`http://${host}:${port}/website/help/`, { waitUntil: 'domcontentloaded' });
+const faqItems = page.locator('.site-page--help .help-faq-list details');
+assert.equal(await faqItems.count(), 6, 'help page must expose all FAQ items');
+const helpCta = page.locator('.site-page--help .help-intro__copy .btn-primary');
+assert.equal(await helpCta.textContent(), 'Find a trip →', 'help search action must be visibly labeled');
+assert.ok(await helpCta.isVisible(), 'help search action must be visible');
+assert.equal(await faqItems.nth(0).getAttribute('open'), '', 'first FAQ answer should be available immediately');
+assert.equal(await faqItems.nth(1).getAttribute('open'), null, 'secondary FAQ answers should start compact');
+await faqItems.nth(1).locator('summary').click();
+assert.equal(await faqItems.nth(1).getAttribute('open'), '', 'FAQ question row must open its answer');
+assert.ok(await faqItems.nth(1).locator('p').isVisible(), 'opened FAQ answer must be visible');
+
+await page.goto(`http://${host}:${port}/website/about/`, { waitUntil: 'domcontentloaded' });
+assert.equal(await page.locator('.about-speech-bubble').count(), 1, 'About must use the journey speech bubble composition');
+assert.equal(await page.locator('.about-principle').count(), 3, 'About must expose three connected principles');
+assert.ok(await page.locator('.about-next a[href="/website/routes/"]').isVisible(), 'About must keep a route discovery action');
+
+await page.goto(`http://${host}:${port}/website/contact/`, { waitUntil: 'domcontentloaded' });
+assert.equal(await page.locator('.contact-path').count(), 3, 'Contact must expose three real resolution paths');
+assert.equal(await page.locator('.contact-path[href="/passenger/"]').count(), 1, 'Contact must preserve the booking path');
+assert.equal(await page.locator('.contact-path[href="/track-package/"]').count(), 1, 'Contact must preserve parcel tracking');
+assert.equal(await page.locator('.contact-path[href="/website/help/"]').count(), 1, 'Contact must preserve help');
+
+await page.goto(`http://${host}:${port}/website/packages/?lang=es`, { waitUntil: 'domcontentloaded' });
+await page.locator('[data-locale-switcher]').first().waitFor();
+assert.equal(await page.locator('html').getAttribute('lang'), 'es', 'Spanish locale must update the document language');
+assert.equal(await page.locator('[data-locale-switcher]').first().inputValue(), 'es', 'Spanish locale must be selected');
+assert.match(await page.locator('body').innerText(), /Paquetería/, 'Spanish locale must translate customer-facing page content');
+assert.match(await page.title(), /Paquetería/);
+await page.locator('[data-locale-switcher]').first().selectOption('en');
+await page.waitForURL('**/website/packages/');
+assert.equal(await page.locator('html').getAttribute('lang'), 'en', 'English locale must be restorable');
+
+for (const [path, expected] of [
+  ['/website/about/?lang=es', 'Mueve personas y encomiendas'],
+  ['/website/contact/?lang=es', '¿A dónde debemos llevarte?'],
+  ['/website/help/?lang=es', 'Encuentra la respuesta'],
+]) {
+  await page.goto(`http://${host}:${port}${path}`, { waitUntil: 'domcontentloaded' });
+  assert.equal(await page.locator('html').getAttribute('lang'), 'es', `${path} must expose the Spanish document language`);
+  assert.match(await page.locator('body').innerText(), new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `${path} must translate its redesigned customer-facing copy`);
+}
 
 await browser.close();
 server.close();

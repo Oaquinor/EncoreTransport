@@ -1,5 +1,12 @@
 # Resultados de pruebas — 2026-11-01
 
+## Corrección UX y Website — ejecución más reciente
+
+- `npm run test:website-pages-browser`: PASS; nueve páginas públicas a 390, 768 y 1440 px, búsqueda → Passenger con parámetros, recuperación de la última búsqueda, EN/ES en las nuevas composiciones y capturas de About, Contact y Help.
+- `VISUAL_SURFACES=website VISUAL_VIEWPORTS=390,1440 npm run test:visual-browser`: PASS; homepage estática sin selector de ruta y Encore Live con selección explícita, estados vacío/activo y mapa real.
+- `npm run test:real-map`, `npm run test:map-runtime`, `npm run test:website-editorial`, `npm run test:seo`: PASS.
+- Loader global: validado en capturas sin cubrir el contenido; usa el GIF de marca y se retira antes de que terminen recursos secundarios.
+
 ## Reejecución de esta iteración
 
 - Laravel directo con PHP 8.3.30/MySQL local: PASS — 83 pruebas, 545 aserciones, 56.48 s.
@@ -29,5 +36,8 @@
 - CMS editorial Laravel: PASS; `WebsiteContentAndRouteImageTest` cubre rechazo de términos internos y publicación segura.
 - Browser sin backend: PASS — 36 checks/capturas en 360, 390, 768, 1024, 1440 y 1920 px.
 - Browser autenticado contra `http://127.0.0.1:8000`: PASS focalizado en Admin y Driver tras ejecutar `EncoreTransportDemoSeeder` con el usuario autorizado de demo; la prueba no fabrica sesiones.
-- Website editorial y visual: PASS; nueve páginas públicas en español, navegación multipágina, búsqueda y transferencia de parámetros a la reserva, 36 capturas responsive y estados vacíos de Live.
+- Website editorial y visual: PASS; nueve páginas públicas con inglés predeterminado y selector EN/ES probado en navegador, navegación multipágina, búsqueda y transferencia de parámetros a la reserva, 36 capturas responsive y estados vacíos de Live.
+- SEO bilingüe: PASS en servidor; `?lang=es` devuelve `lang="es"`, título/descripción en español, canonical por variante y `hreflang` EN/ES/x-default; el dominio absoluto solo se aplica con `PUBLIC_SITE_URL` público.
+- CMS bilingüe: PASS — `WebsiteContentAndRouteImageTest` pasó 5 pruebas y 38 aserciones; las variantes `*_en`/`*_es` se validan y el copy interno continúa bloqueado.
+- Revisión visual premium: PASS — `test:website-pages-browser` y `test:visual-browser` validan navegación, overflow, menús, responsive y 36 superficies entre 360 y 1920 px; se añadió la constelación de rutas y la barra de progreso inferior sin alterar la transferencia de búsqueda.
 - La aceptación móvil real sigue bloqueada por falta de dispositivo/emulador configurado. Pagos, Gmail, WhatsApp, push y TomTom con credenciales reales también siguen pendientes.

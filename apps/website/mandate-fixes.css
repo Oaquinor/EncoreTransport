@@ -160,7 +160,6 @@ html.motion-ready [data-reveal].is-visible {
     transform: none !important;
   }
 
-  .scroll-progress,
   .pointer-glow {
     display: none !important;
   }

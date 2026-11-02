@@ -1,3 +1,50 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="Busca salidas de Encore Transport por origen, destino, fecha y pasajeros." /><meta name="robots" content="index,follow" /><link rel="canonical" href="/website/trips/" /><title>Buscar viajes | Encore Transport</title><link rel="stylesheet" href="../app.css" /></head>
-<body><a class="skip-link" href="#mainContent">Saltar al contenido</a><header data-site-header></header><div data-site-mobile-navigation></div><main id="mainContent" class="site-page"><div class="shell"><section class="site-page__hero"><div><span class="site-kicker">Viajes</span><h1>Encuentra una salida que encaje contigo.</h1><p>Selecciona un trayecto y compara horarios, detalles, asientos y precios antes de confirmar.</p></div><aside class="site-page__aside"><strong>Tu búsqueda, sin rodeos</strong><p>Elige origen, destino, fecha y pasajeros para ver las salidas disponibles.</p></aside></section><section class="site-page__section" aria-labelledby="tripSearchTitle"><div class="site-form-shell"><header><span class="site-kicker">Buscar salidas</span><h2 id="tripSearchTitle">¿A dónde quieres ir?</h2><p>Los puntos de salida y destino se actualizan con las rutas disponibles.</p></header><form class="booking-card public-booking-card" id="bookingForm"><div class="public-booking-card__route"><label class="booking-field public-field"><span class="booking-label">Origen</span><select name="origin" required disabled><option value="">Cargando orígenes…</option></select></label><button class="swap public-swap" type="button" aria-label="Intercambiar origen y destino">⇄</button><label class="booking-field public-field"><span class="booking-label">Destino</span><select name="destination" required disabled><option value="">Cargando destinos…</option></select></label></div><div class="public-booking-card__details"><label class="booking-field public-field"><span class="booking-label">Fecha</span><input type="date" name="date" required /></label><label class="booking-field public-field"><span class="booking-label">Pasajeros</span><input type="number" name="passengers" min="1" max="10" value="1" /></label><button class="booking-submit public-search-button" type="submit">Continuar a resultados →</button></div><p id="searchMessage" class="form-message" aria-live="polite">Listo cuando tú estés.</p></form><div id="recentSearches" class="recent-searches" hidden></div></div></section><section class="site-page__section site-page__section--tint"><div class="shell"><header><span class="site-kicker">Después de buscar</span><h2>Todo lo importante antes de confirmar.</h2></header><div class="site-card-grid"><article class="site-card"><span class="site-kicker">Resultados</span><h3>Compara salidas</h3><p>Revisa horarios y disponibilidad para escoger la opción que mejor te convenga.</p></article><article class="site-card"><span class="site-kicker">Asientos</span><h3>Elige tu lugar</h3><p>Selecciona entre los asientos disponibles para la salida que prefieras.</p></article><article class="site-card"><span class="site-kicker">Boleto</span><h3>Confirma con calma</h3><p>Revisa pasajeros, asientos y total antes de completar la reserva.</p></article></div></div></section></div></main><footer data-site-footer></footer><script type="module" src="../site-shell.mjs"></script><script type="module" src="../site-navigation.mjs"></script><script type="module" src="../app.mjs"></script></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#071d2d" />
+  <meta name="description" content="Search Encore Transport departures by origin, destination, date and passengers." />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <link rel="canonical" href="/website/trips/" />
+  <meta property="og:site_name" content="Encore Transport" />
+  <meta property="og:title" content="Find a trip | Encore Transport" />
+  <meta property="og:description" content="Compare departures, seats and prices for your next Encore Transport trip." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="/website/trips/" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Find a trip | Encore Transport" />
+  <meta name="twitter:description" content="Compare departures, seats and prices for your next Encore Transport trip." />
+  <title>Find a trip | Encore Transport</title>
+  <link rel="stylesheet" href="../app.css" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"SearchAction","name":"Find an Encore Transport trip","target":"/website/trips/?origin={origin}&destination={destination}&date={date}&passengers={passengers}","query-input":["required name=origin","required name=destination","required name=date","required name=passengers"]}</script>
+</head>
+<body>
+  <a class="skip-link" href="#mainContent">Skip to content</a>
+  <header data-site-header></header>
+  <div data-site-mobile-navigation></div>
+  <main id="mainContent" class="site-page site-page--trips">
+    <section class="trips-hero" aria-labelledby="tripsHeroTitle">
+      <div class="shell trips-hero__inner">
+        <div><span class="site-kicker">Trips</span><h1 id="tripsHeroTitle">Find a departure that fits.</h1><p>Select a route and compare schedules, details, seats and prices before confirming.</p></div>
+        <div class="trips-hero__signal"><span>Booking flow</span><strong>Search → Compare → Choose</strong><small>Your search stays in this flow until you are ready to continue.</small></div>
+      </div>
+    </section>
+
+    <section class="trip-search-section" id="tripSearch" aria-labelledby="tripSearchTitle">
+      <div class="shell trip-search-layout">
+        <div class="trip-search-intro"><span class="site-kicker">Find departures</span><h2 id="tripSearchTitle">Where are you going?</h2><p>Origins and destinations update with the routes currently available.</p><div class="trip-search-note"><i aria-hidden="true"></i><span id="searchMessage" aria-live="polite">Ready when you are.</span></div></div>
+        <div class="site-form-shell trip-search-card"><form class="booking-card public-booking-card" id="bookingForm"><div class="public-booking-card__route"><label class="booking-field public-field"><span class="booking-label">Origin</span><select name="origin" required disabled><option value="">Loading origins…</option></select></label><button class="swap public-swap" type="button" aria-label="Swap origin and destination">⇄</button><label class="booking-field public-field"><span class="booking-label">Destination</span><select name="destination" required disabled><option value="">Loading destinations…</option></select></label></div><div class="public-booking-card__details"><label class="booking-field public-field"><span class="booking-label">Date</span><input type="date" name="date" required /></label><label class="booking-field public-field"><span class="booking-label">Passengers</span><input type="number" name="passengers" min="1" max="10" value="1" /></label><button class="booking-submit public-search-button" type="submit">Continue to results <span aria-hidden="true">→</span></button></div></form><div id="recentSearches" class="recent-searches" hidden aria-label="Recent searches"></div></div>
+      </div>
+    </section>
+
+    <section class="site-page__section trip-steps-section" aria-labelledby="tripStepsTitle">
+      <div class="shell"><header><span class="site-kicker">After you search</span><h2 id="tripStepsTitle">Everything important before you confirm.</h2><p>One clear flow takes you from available departures to a seat and a ticket.</p></header><div class="trip-steps-grid"><article><span>01</span><div><strong>Compare departures</strong><p>Review schedules and availability to choose the option that works best.</p></div></article><article><span>02</span><div><strong>Choose your place</strong><p>Select from the available seats for the departure you prefer.</p></div></article><article><span>03</span><div><strong>Confirm with confidence</strong><p>Review passengers, seats and total before completing the booking.</p></div></article></div></div>
+    </section>
+  </main>
+  <footer data-site-footer></footer>
+  <script type="module" src="../site-shell.mjs"></script>
+  <script type="module" src="../site-navigation.mjs"></script>
+  <script type="module" src="../app.mjs"></script>
+</body>
+</html>

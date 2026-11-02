@@ -2,8 +2,21 @@ const header = document.querySelector('[data-site-navigation]');
 const mobileToggle = document.querySelector('#mobileMenuToggle');
 const mobileNavigation = document.querySelector('#mobileNavigation');
 const menus = [...document.querySelectorAll('[data-menu]')];
+const closeTimers = new WeakMap();
+
+function cancelClose(menu) {
+  const timer = closeTimers.get(menu);
+  if (timer) window.clearTimeout(timer);
+  closeTimers.delete(menu);
+}
+
+function scheduleClose(menu) {
+  cancelClose(menu);
+  closeTimers.set(menu, window.setTimeout(() => closeMenu(menu), 180));
+}
 
 function closeMenu(menu, { focus = false } = {}) {
+  cancelClose(menu);
   const button = menu.querySelector('[data-menu-button]');
   const panel = menu.querySelector('[data-menu-panel]');
   button?.setAttribute('aria-expanded', 'false');
@@ -14,6 +27,7 @@ function closeMenu(menu, { focus = false } = {}) {
 }
 
 function openMenu(menu, reason = 'click') {
+  cancelClose(menu);
   menus.forEach((item) => { if (item !== menu) closeMenu(item); });
   const button = menu.querySelector('[data-menu-button]');
   const panel = menu.querySelector('[data-menu-panel]');
@@ -55,10 +69,11 @@ menus.forEach((menu) => {
   });
 
   menu.addEventListener('pointerenter', () => {
+    cancelClose(menu);
     if (window.matchMedia('(min-width: 981px) and (pointer: fine)').matches) openMenu(menu, 'hover');
   });
   menu.addEventListener('pointerleave', () => {
-    if (window.matchMedia('(min-width: 981px)').matches) closeMenu(menu);
+    if (window.matchMedia('(min-width: 981px)').matches) scheduleClose(menu);
   });
   menu.addEventListener('focusout', (event) => {
     if (!menu.contains(event.relatedTarget)) closeMenu(menu);

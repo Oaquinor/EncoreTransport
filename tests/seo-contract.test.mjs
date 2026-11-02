@@ -23,7 +23,7 @@ const server =
 
 assert.match(
   website,
-  /<title>Viajes y paquetería \| Encore Transport<\/title>/,
+  /<title>Travel and parcels \| Encore Transport<\/title>/,
 );
 
 assert.match(
@@ -43,7 +43,7 @@ assert.match(
 
 assert.match(
   website,
-  /name="description" content="Planifica tu próximo viaje, descubre rutas y sigue tus encomiendas/,
+  /name="description" content="Plan your next trip, explore published routes and follow your parcel/,
 );
 
 assert.match(

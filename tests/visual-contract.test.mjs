@@ -19,7 +19,7 @@ const trackingCss = await Promise.all([
 ]).then((parts) => parts.join('\n'));
 
 assert.match(websiteHtml, /meta name="viewport"/);
-assert.match(websiteHtml, /Saltar al contenido/);
+assert.match(websiteHtml, /Skip to content/);
 assert.match(websiteCss, /site-menu__panel/);
 assert.match(websiteCss, /@media\s*\(max-width:/);
 assert.match(websiteCss, /prefers-reduced-motion/);

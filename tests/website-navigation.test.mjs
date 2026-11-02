@@ -17,10 +17,13 @@ const shell = fs.readFileSync('apps/website/site-shell.mjs', 'utf8');
 const navigation = fs.readFileSync('apps/website/site-navigation.mjs', 'utf8');
 const app = fs.readFileSync('apps/website/app.mjs', 'utf8');
 
-assert.match(shell, /desktopMenu\('Viajes'/);
-assert.match(shell, /desktopMenu\('Paquetería'/);
-assert.match(shell, /desktopMenu\('Seguimiento'/);
-assert.match(shell, /desktopMenu\('Empresa y ayuda'/);
+assert.match(shell, /desktopMenu\(labels\.nav\.trips/);
+assert.match(shell, /desktopMenu\(labels\.nav\.packages/);
+assert.match(shell, /desktopMenu\(labels\.nav\.tracking/);
+assert.match(shell, /desktopMenu\(labels\.nav\.company/);
+assert.match(shell, /data-locale-switcher/);
+assert.match(shell, /encore_site_locale_v1/);
+assert.match(shell, /hreflang/);
 assert.match(navigation, /pointerenter/);
 assert.match(navigation, /event\.key !== 'Escape'/);
 assert.match(navigation, /focusout/);
@@ -34,6 +37,7 @@ for (const [name, file, canonical] of pages) {
   assert.ok(title, `${name} must have a title`);
   assert.equal(titles.has(title), false, `${name} must not duplicate another page title`);
   titles.add(title);
+  assert.match(html, /<html lang="en">/);
   assert.match(html, new RegExp(`rel="canonical" href="${canonical.replaceAll('/', '\\/')}"`));
   assert.match(html, /data-site-header/);
   assert.match(html, /data-site-mobile-navigation/);
