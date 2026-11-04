@@ -629,7 +629,7 @@ body {
 
 .public-search-button {
   min-height: 72px;
-  border-radius: 14px;
+  border-radius: var(--et-radius-control);
   background: linear-gradient(135deg, var(--pub-blue), var(--pub-blue-dark));
 }
 
@@ -1205,7 +1205,7 @@ body {
 .public-destination-grid .destination-visual:has(img)::after { position: absolute; inset: 45% 0 0; content: ""; background: linear-gradient(transparent, rgba(7, 35, 52, .32)); pointer-events: none; }
 .public-map-card__bar { gap: 12px; }
 .public-map-card__bar label { color: #426175; font-size: .72rem; font-weight: 850; }
-.public-map-card__bar select { min-width: min(320px, 70%); min-height: 38px; padding: 0 34px 0 12px; border: 1px solid #d2e2ea; border-radius: 11px; background: #fff; color: #17394c; font: inherit; }
+.public-map-card__bar select { min-width: min(320px, 70%); min-height: 46px; padding: 0 34px 0 12px; border: 1px solid #d2e2ea; border-radius: var(--et-radius-control); background: #fff; color: #17394c; font: inherit; }
 .public-map-card .encore-map-runtime-status { position: absolute; z-index: 500; inset: auto 16px 16px; display: grid; gap: 4px; max-width: 420px; padding: 14px 16px; border: 1px solid #d2e4eb; border-radius: 14px; background: rgba(255,255,255,.96); color: #17394c; box-shadow: 0 8px 24px rgba(12,52,75,.13); }
 .public-map-card .encore-map-runtime-status strong { font-size: .82rem; }
 .public-map-card .encore-map-runtime-status span { color: #597488; font-size: .72rem; line-height: 1.45; }
@@ -1221,7 +1221,7 @@ body {
 .public-network-bus__status i { width: 7px; height: 7px; border-radius: 50%; background: #d49a3a; }
 .public-network-bus__status.is-live { color: #14734b; }
 .public-network-bus__status.is-live i { background: #23a871; box-shadow: 0 0 0 3px rgba(35,168,113,.12); }
-.public-network-bus > button { justify-self: start; min-height: 34px; padding: 0 11px; border: 1px solid #cfe1e9; border-radius: 9px; background: #fff; color: #087ba7; font: inherit; font-size: .7rem; font-weight: 800; cursor: pointer; }
+.public-network-bus > button { justify-self: start; display: inline-flex; min-height: 40px; align-items: center; padding: 0 13px; border: 1px solid #cfe1e9; border-radius: var(--et-radius-control); background: #fff; color: #087ba7; font: inherit; font-size: .7rem; font-weight: 800; cursor: pointer; }
 .public-network-bus > button:disabled { color: #8094a0; background: #f3f6f7; cursor: not-allowed; }
 .public-network-empty { display: grid; gap: 4px; padding: 14px 4px; color: #23485b; }
 .public-network-empty strong { font-size: .82rem; }

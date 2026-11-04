@@ -38,6 +38,11 @@ assert.match(
   /tileerror/,
   'Leaflet tile failures must be observed instead of producing a silent blank map.',
 );
+assert.match(
+  realMap,
+  /Map tiles are still unavailable\./,
+  'A map with an empty tile response must keep a visible, honest recovery state.',
+);
 
 assert.match(
   realMap,
@@ -57,7 +62,11 @@ assert.match(
   'TomTom Map Display requests must include the API version header.',
 );
 
-assert.match(mapService, /Cache::store[\s\S]*->get\(\$cacheKey\)/, 'TomTom tiles must be read from a bounded server cache.');
+assert.match(
+  mapService,
+  /(?:Cache::store[\s\S]*->get\(\$cacheKey\)|\$this->tileCache\(\)->get\(\$cacheKey\))/,
+  'TomTom tiles must be read from a bounded server cache.',
+);
 assert.match(mapService, /cacheTtl\(/, 'Tile cache TTL must be derived from upstream cache directives.');
 assert.match(mapConfig, /TOMTOM_TILE_CACHE_MAX_TTL/, 'Tile cache must have an explicit maximum lifetime.');
 assert.match(mapController, /matchesEtag/, 'The tile proxy must support conditional ETag responses.');

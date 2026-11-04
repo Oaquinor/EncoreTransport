@@ -78,7 +78,11 @@ class EncoreTransportDemoSeeder extends Seeder
             'transport_route_id'=>$route->id,'bus_id'=>$bus->id,'driver_id'=>$driver->id,
             'departure_date'=>now()->addDays(3)->toDateString(),'departure_time'=>'07:00:00',
         ],[
-            'arrival_time'=>'10:15:00','status'=>'scheduled','available_seats'=>$bus->seats()->where('active',true)->count(),
+            // The visual acceptance flow starts and completes this trip. Reset
+            // its lifecycle on every demo preparation so each surface can be
+            // tested independently and in any order.
+            'arrival_time'=>'10:15:00','status'=>'scheduled','started_at'=>null,'completed_at'=>null,'cancelled_at'=>null,
+            'available_seats'=>$bus->seats()->where('active',true)->count(),
             'price_per_passenger'=>85,'seat_map'=>null,
         ]);
 

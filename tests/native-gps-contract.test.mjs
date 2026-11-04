@@ -51,6 +51,54 @@ assert.equal(
   true,
 );
 
+assert.equal(
+  app.includes('encore_driver_gps_outbox'),
+  true,
+  'Driver Mobile must persist a bounded GPS outbox for temporary network loss.',
+);
+
+assert.equal(
+  app.includes('sendOrQueueGpsLocation'),
+  true,
+  'Driver Mobile must queue only real GPS points when the network request fails.',
+);
+
+assert.equal(
+  app.includes('flushGpsOutbox'),
+  true,
+  'Driver Mobile must retry the GPS outbox after connectivity returns.',
+);
+
+assert.equal(
+  app.includes('onCameraReady'),
+  true,
+  'Driver Mobile must wait for the native camera before enabling evidence capture.',
+);
+
+assert.equal(
+  app.includes('onMountError'),
+  true,
+  'Driver Mobile must expose native camera initialization failures.',
+);
+
+assert.match(
+  app,
+  /skipProcessing:\s*true/,
+  'Driver Mobile must preserve the native camera file when post-processing fails.',
+);
+
+assert.equal(
+  app.includes('Reintentar cámara'),
+  true,
+  'Driver Mobile must expose a camera retry action after initialization errors.',
+);
+
+assert.match(
+  app,
+  /const retryMode = cameraMode/,
+  'Camera retry must preserve whether the operator was scanning QR or capturing delivery evidence.',
+);
+
 assert.match(
   app,
   /rawRequest\(\s*`\/trips\/\$\{activeTrip\.id\}\/location`,\s*\{\},\s*activeToken/,

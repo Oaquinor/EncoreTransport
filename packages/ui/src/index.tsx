@@ -4,8 +4,8 @@ import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react';
 type Tone = 'primary' | 'ghost' | 'danger';
 type BadgeTone = 'primary' | 'info' | 'success' | 'warning' | 'neutral';
 
-export function Button({ tone = 'primary', className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { tone?: Tone }) {
-  return <button className={cx('button', `button--${tone}`, className)} {...props} />;
+export function Button({ tone = 'primary', className = '', type = 'button', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { tone?: Tone }) {
+  return <button type={type} className={cx('button', `button--${tone}`, className)} {...props} />;
 }
 
 export function Card({ className = '', padded = true, ...props }: HTMLAttributes<HTMLElement> & { padded?: boolean }) {

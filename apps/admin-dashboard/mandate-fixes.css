@@ -1,11 +1,17 @@
 .admin-loading-state {
   min-height: 180px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 14px;
   color: var(--muted);
+  text-align: center;
 }
+
+.admin-loading-state__brand { display: block; width: 112px; height: 112px; object-fit: contain; }
+.admin-loading-state--inline { min-height: 120px; flex-direction: row; justify-content: flex-start; padding: 18px; border: 1px dashed var(--line); border-radius: 14px; text-align: left; }
+.admin-loading-state--inline img { width: 72px; height: 72px; }
 
 .admin-loading-state h2,
 .admin-access-denied h2,
@@ -18,15 +24,6 @@
 .admin-error-state p {
   margin: 0;
   color: var(--muted);
-}
-
-.admin-loading-state__spinner {
-  width: 22px;
-  height: 22px;
-  border: 3px solid #d7e5ec;
-  border-top-color: var(--blue);
-  border-radius: 50%;
-  animation: adminSpin .8s linear infinite;
 }
 
 .admin-access-denied,
@@ -46,18 +43,10 @@
   cursor: not-allowed;
 }
 
-@keyframes adminSpin {
-  to { transform: rotate(360deg); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .motion-enter {
     animation: none !important;
   }
 
-  .admin-loading-state__spinner {
-    animation: none;
-    border-top-color: #d7e5ec;
-    background: var(--blue);
-  }
+  .admin-loading-state__brand { animation: none; }
 }

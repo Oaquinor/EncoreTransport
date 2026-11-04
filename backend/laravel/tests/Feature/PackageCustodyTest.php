@@ -87,6 +87,49 @@ class PackageCustodyTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_delivery_photo_is_removed_when_package_persistence_fails(): void
+    {
+        Storage::fake('local');
+
+        $driver = User::query()->where('role', 'driver')->firstOrFail();
+        $package = $this->registerPackage($driver);
+        $token = $this->tokenFor($driver);
+        $endpoint = '/api/v1/driver/packages/' . $package->id . '/status';
+
+        $this->withToken($token)
+            ->postJson($endpoint, ['status' => 'in_progress'])
+            ->assertOk();
+
+        TransportPackage::saving(function (TransportPackage $model): void {
+            if ($model->isDirty('status') && $model->status === 'delivered') {
+                throw new \RuntimeException('Forced package persistence failure.');
+            }
+        });
+
+        $this->withoutExceptionHandling();
+
+        try {
+            $this->withToken($token)->post($endpoint, [
+                'status' => 'delivered',
+                'recipient_verified' => '1',
+                'delivery_photo' => UploadedFile::fake()->image('delivery-failure.jpg'),
+            ]);
+            $this->fail('The forced persistence failure should have escaped the request.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('Forced package persistence failure.', $exception->getMessage());
+        } finally {
+            TransportPackage::flushEventListeners();
+        }
+
+        $this->assertDatabaseHas('packages', [
+            'id' => $package->id,
+            'status' => 'in_progress',
+            'delivery_photo_path' => null,
+        ]);
+        $this->assertDatabaseCount('package_events', 2);
+        $this->assertSame([], Storage::disk('local')->allFiles('package-deliveries'));
+    }
+
     public function test_public_tracking_is_private_and_email_does_not_auto_link_a_recipient_account(): void
     {
         $driver = User::query()->where('role', 'driver')->firstOrFail();

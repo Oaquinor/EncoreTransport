@@ -15,12 +15,15 @@ import {
   View,
   Image,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import * as Location from 'expo-location';
+import * as Network from 'expo-network';
 import * as SecureStore from 'expo-secure-store';
 import * as TaskManager from 'expo-task-manager';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { requestJson } from '@encore/api-client';
+import { createCustodyOutbox } from './custody-outbox.mjs';
 
 import MapView, {
   Marker,
@@ -37,9 +40,34 @@ const API_ORIGIN =
 
 const TILE_TEMPLATE =
   `${API_ORIGIN}/api/v1/maps/tiles/{z}/{x}/{y}.png?style=street-light`;
+// react-native-maps uses Google Maps on Android and crashes at native mount
+// when the build has no authorized Google Maps key. Keep the operational app
+// usable with a truthful route summary until a key is supplied at build time.
+const NATIVE_MAPS_AVAILABLE = Boolean(
+  process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+);
 const AUTH_TOKEN_KEY = 'encore_driver_api_token';
 const ACTIVE_TRIP_KEY = 'encore_driver_active_trip';
+const GPS_OUTBOX_KEY = 'encore_driver_gps_outbox';
+const CUSTODY_OUTBOX_KEY = 'encore_driver_custody_outbox';
+const MAX_GPS_OUTBOX_ITEMS = 25;
+const MAX_CUSTODY_OUTBOX_ITEMS = 12;
 const BACKGROUND_LOCATION_TASK = 'encore-driver-background-location';
+
+type QueuedLocation = {
+  trip_id: number;
+  latitude: number;
+  longitude: number;
+  heading: number | null;
+  speed_kph: number | null;
+  recorded_at: string;
+};
+
+type QueuedCustodyStatus = {
+  package_id: number;
+  status: 'in_progress';
+  queued_at: string;
+};
 
 async function rawRequest(
   path: string,
@@ -47,6 +75,126 @@ async function rawRequest(
   token = '',
 ) {
   return requestJson<any>(API, path, options, { token });
+}
+
+function isNetworkFailure(error: unknown) {
+  const status = typeof error === 'object' && error !== null
+    ? Number((error as { status?: unknown }).status)
+    : NaN;
+
+  return status === 0 || status === 408 || status === 502 || status === 503;
+}
+
+const custodyOutbox = createCustodyOutbox({
+  key: CUSTODY_OUTBOX_KEY,
+  maxItems: MAX_CUSTODY_OUTBOX_ITEMS,
+  storage: {
+    getItem: (key) => SecureStore.getItemAsync(key),
+    setItem: (key, value) => SecureStore.setItemAsync(key, value),
+  },
+});
+
+async function readGpsOutbox(): Promise<QueuedLocation[]> {
+  try {
+    const stored = await SecureStore.getItemAsync(GPS_OUTBOX_KEY);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed.slice(-MAX_GPS_OUTBOX_ITEMS) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeGpsOutbox(items: QueuedLocation[]) {
+  await SecureStore.setItemAsync(
+    GPS_OUTBOX_KEY,
+    JSON.stringify(items.slice(-MAX_GPS_OUTBOX_ITEMS)),
+  );
+}
+
+async function enqueueGpsLocation(location: QueuedLocation) {
+  const current = await readGpsOutbox();
+  const next = current
+    .filter((item) => item.trip_id !== location.trip_id || item.recorded_at !== location.recorded_at)
+    .concat(location)
+    .slice(-MAX_GPS_OUTBOX_ITEMS);
+  await writeGpsOutbox(next);
+  return next.length;
+}
+
+async function flushGpsOutbox(activeToken: string) {
+  const pending = await readGpsOutbox();
+  while (pending.length) {
+    try {
+      await rawRequest(
+        '/driver/locations',
+        {
+          method: 'POST',
+          body: JSON.stringify(pending[0]),
+        },
+        activeToken,
+      );
+      pending.shift();
+    } catch (error) {
+      if (!isNetworkFailure(error)) break;
+      break;
+    }
+  }
+
+  await writeGpsOutbox(pending);
+  return pending.length;
+}
+
+async function sendOrQueueGpsLocation(
+  activeToken: string,
+  location: QueuedLocation,
+) {
+  try {
+    return {
+      queued: false,
+      payload: await rawRequest(
+        '/driver/locations',
+        {
+          method: 'POST',
+          body: JSON.stringify(location),
+        },
+        activeToken,
+      ),
+    };
+  } catch (error) {
+    if (!isNetworkFailure(error)) throw error;
+    return {
+      queued: true,
+      payload: null,
+      pending: await enqueueGpsLocation(location),
+    };
+  }
+}
+
+async function readCustodyOutbox(): Promise<QueuedCustodyStatus[]> {
+  return custodyOutbox.read();
+}
+
+async function writeCustodyOutbox(items: QueuedCustodyStatus[]) {
+  await custodyOutbox.write(items);
+}
+
+async function enqueueCustodyStatus(packageId: number, status: 'in_progress') {
+  return custodyOutbox.enqueue(packageId, status);
+}
+
+async function flushCustodyOutbox(activeToken: string) {
+  return custodyOutbox.flush(
+    (item, token) => rawRequest(
+      `/driver/packages/${item.package_id}/status`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ status: item.status }),
+      },
+      token,
+    ),
+    activeToken,
+  );
 }
 
 TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async (taskData) => {
@@ -57,17 +205,14 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async (taskData) => {
   const location = locations.at(-1);
   if (!token || !tripId || !location) return;
 
-  await rawRequest('/driver/locations', {
-    method: 'POST',
-    body: JSON.stringify({
+  await sendOrQueueGpsLocation(token, {
       trip_id: Number(tripId),
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
       heading: Number.isFinite(location.coords.heading ?? NaN) && Number(location.coords.heading) >= 0 ? Number(location.coords.heading) : null,
       speed_kph: Number.isFinite(location.coords.speed ?? NaN) && Number(location.coords.speed) >= 0 ? Number(location.coords.speed) * 3.6 : null,
       recorded_at: new Date(location.timestamp).toISOString(),
-    }),
-  }, token);
+  });
 });
 
 function validCoordinate(value: unknown) {
@@ -118,9 +263,14 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [tracking, setTracking] = useState(false);
   const [backgroundTracking, setBackgroundTracking] = useState(false);
+  const [pendingLocationCount, setPendingLocationCount] = useState(0);
+  const [pendingCustodyCount, setPendingCustodyCount] = useState(0);
   const [locationMessage, setLocationMessage] = useState('');
   const [error, setError] = useState('');
+  const [networkState, setNetworkState] = useState<Network.NetworkState | null>(null);
   const [cameraMode, setCameraMode] = useState<'qr' | 'delivery' | null>(null);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState('');
   const [deliveryPhotoUri, setDeliveryPhotoUri] = useState('');
   const [recipientVerified, setRecipientVerified] = useState(false);
   const cameraRef = useRef<CameraView | null>(null);
@@ -139,6 +289,9 @@ export default function App() {
     overrideToken,
   );
 
+  const isOffline = networkState?.isConnected === false
+    || networkState?.isInternetReachable === false;
+
   const stopLocationTracking = () => {
     locationSubscription.current?.remove();
     locationSubscription.current = null;
@@ -155,6 +308,77 @@ export default function App() {
       locationSubscription.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void Network.getNetworkStateAsync()
+      .then((next) => {
+        if (!cancelled) setNetworkState(next);
+      })
+      .catch(() => {});
+    const subscription = Network.addNetworkStateListener((next) => setNetworkState(next));
+    return () => {
+      cancelled = true;
+      subscription.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const synchronizeLocationOutbox = async () => {
+      const remaining = token
+        ? await flushGpsOutbox(token)
+        : (await readGpsOutbox()).length;
+      if (!cancelled) setPendingLocationCount(remaining);
+    };
+
+    void synchronizeLocationOutbox();
+    const interval = setInterval(
+      () => void synchronizeLocationOutbox(),
+      15000,
+    );
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [token]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const synchronizeCustodyOutbox = async () => {
+      if (!token) {
+        const pending = await readCustodyOutbox();
+        if (!cancelled) setPendingCustodyCount(pending.length);
+        return;
+      }
+
+      const result = isOffline
+        ? { remaining: (await readCustodyOutbox()).length, synced: [], rejected: [] }
+        : await flushCustodyOutbox(token);
+
+      if (cancelled) return;
+      setPendingCustodyCount(result.remaining);
+      result.synced.forEach((payload) => {
+        setSelectedPackage((current: any) => current?.id === payload?.id ? payload : current);
+      });
+      if (result.synced.length) {
+        setCustodyMessage('La carga pendiente fue confirmada por el backend.');
+      }
+      if (result.rejected.length) {
+        setError('Una acción de custodia pendiente fue rechazada por el backend y no se confirmó localmente.');
+      }
+    };
+
+    void synchronizeCustodyOutbox();
+    const interval = setInterval(() => void synchronizeCustodyOutbox(), 15000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [token, isOffline]);
 
   useEffect(() => {
     if (
@@ -443,41 +667,34 @@ export default function App() {
       return;
     }
 
-    const payload =
-      await request(
-        '/driver/locations',
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            trip_id: trip.id,
-            latitude,
-            longitude,
-            heading:
-              validCoordinate(heading) &&
-              Number(heading) >= 0
-                ? Number(heading)
-                : null,
-            speed_kph:
-              validCoordinate(speed) &&
-              Number(speed) >= 0
-                ? Number(speed) * 3.6
-                : null,
-            recorded_at:
-              new Date(
-                location.timestamp,
-              ).toISOString(),
-          }),
-        },
+    const locationPayload: QueuedLocation = {
+      trip_id: trip.id,
+      latitude,
+      longitude,
+      heading:
+        validCoordinate(heading) && Number(heading) >= 0
+          ? Number(heading)
+          : null,
+      speed_kph:
+        validCoordinate(speed) && Number(speed) >= 0
+          ? Number(speed) * 3.6
+          : null,
+      recorded_at: new Date(location.timestamp).toISOString(),
+    };
+
+    const result = await sendOrQueueGpsLocation(token, locationPayload);
+    if (result.queued) {
+      setPendingLocationCount(result.pending ?? 0);
+      setLocationMessage(
+        'Sin conexión: el último punto GPS real quedó guardado y se sincronizará al volver Internet.',
       );
+      return;
+    }
 
-    setLatestLocation(
-      payload.data ??
-      payload,
-    );
-
-    setLocationMessage(
-      'La ubicación GPS se envió a Operaciones.',
-    );
+    const payload = result.payload;
+    setLatestLocation(payload.data ?? payload);
+    setPendingLocationCount(await flushGpsOutbox(token));
+    setLocationMessage('La ubicación GPS se envió a Operaciones.');
   };
 
   const sendCurrentLocation = async () => {
@@ -632,6 +849,8 @@ export default function App() {
       return;
     }
     setError('');
+    setCameraReady(false);
+    setCameraError('');
     setCameraMode(mode);
   };
 
@@ -643,11 +862,25 @@ export default function App() {
   };
 
   const captureDeliveryPhoto = async () => {
-    const picture = await cameraRef.current?.takePictureAsync({ quality: 0.7, skipProcessing: true });
-    if (picture?.uri) {
-      setDeliveryPhotoUri(picture.uri);
-      setCameraMode(null);
-      setCustodyMessage('Evidencia fotográfica preparada para la validación de entrega.');
+    if (!cameraReady) {
+      setError('La cámara todavía se está preparando. Inténtalo en un momento.');
+      return;
+    }
+
+    try {
+      // Android devices can fail while applying the optional post-processing
+      // step even though the native camera has already produced a valid frame.
+      // Keep the original file and let the backend validate the multipart image.
+      const picture = await cameraRef.current?.takePictureAsync({ quality: 0.7, skipProcessing: true });
+      if (picture?.uri) {
+        setDeliveryPhotoUri(picture.uri);
+        setCameraMode(null);
+        setCustodyMessage('Evidencia fotográfica preparada para la validación de entrega.');
+      } else {
+        setError('La cámara no devolvió una fotografía. No se preparó evidencia.');
+      }
+    } catch (caught) {
+      setError(userFacingError(caught, 'No se pudo capturar la evidencia fotográfica.'));
     }
   };
 
@@ -671,7 +904,26 @@ export default function App() {
 
   const advancePackage = async (status: string) => {
     if (!selectedPackage?.id) return;
-    try { const payload = await request(`/driver/packages/${selectedPackage.id}/status`, { method: 'POST', body: JSON.stringify({ status }) }); setSelectedPackage(payload.data ?? payload); setCustodyMessage(`Estado actualizado: ${statusLabel(status)}.`); } catch (caught) { setError(userFacingError(caught, 'El backend rechazó la transición de custodia.')); }
+    if (status === 'in_progress' && isOffline) {
+      const pending = await enqueueCustodyStatus(selectedPackage.id, 'in_progress');
+      setPendingCustodyCount(pending);
+      setCustodyMessage('Carga guardada para sincronizar cuando vuelva Internet; todavía no está confirmada.');
+      return;
+    }
+
+    try {
+      const payload = await request(`/driver/packages/${selectedPackage.id}/status`, { method: 'POST', body: JSON.stringify({ status }) });
+      setSelectedPackage(payload.data ?? payload);
+      setCustodyMessage(`Estado actualizado: ${statusLabel(status)}.`);
+    } catch (caught) {
+      if (status === 'in_progress' && isNetworkFailure(caught)) {
+        const pending = await enqueueCustodyStatus(selectedPackage.id, 'in_progress');
+        setPendingCustodyCount(pending);
+        setCustodyMessage('Carga guardada para sincronizar cuando vuelva Internet; todavía no está confirmada.');
+        return;
+      }
+      setError(userFacingError(caught, 'El backend rechazó la transición de custodia.'));
+    }
   };
 
   const createManifestForPackage = async () => {
@@ -710,6 +962,11 @@ export default function App() {
           <Text style={styles.brandSub}>
             TRANSPORTE · CONDUCTOR
           </Text>
+
+          <View style={styles.loginHero}>
+            <View style={styles.loginHeroOrb}><Ionicons name="navigate" size={30} color="#ffffff" /></View>
+            <View style={styles.loginHeroCopy}><Text style={styles.loginHeroKicker}>OPERACIÓN EN MOVIMIENTO</Text><Text style={styles.loginHeroTitle}>Todo lo que necesitas para conducir con claridad.</Text><Text style={styles.loginHeroText}>Viajes, pasajeros, custodia y GPS en una sola cabina.</Text></View>
+          </View>
 
           <Text style={styles.title}>
             Acceso para conductores
@@ -765,13 +1022,21 @@ export default function App() {
           ref={cameraRef}
           style={StyleSheet.absoluteFill}
           facing="back"
+          onCameraReady={() => setCameraReady(true)}
+          onMountError={(caught) => {
+            const message = `No se pudo iniciar la cámara: ${caught.message}`;
+            setCameraError(message);
+            setError(message);
+          }}
           onBarcodeScanned={cameraMode === 'qr' ? handleBarcodeScanned : undefined}
           barcodeScannerSettings={cameraMode === 'qr' ? { barcodeTypes: ['qr'] } : undefined}
         />
-        <View style={styles.cameraOverlay}>
+        <View pointerEvents="box-none" style={styles.cameraOverlay}>
           <Text style={styles.cameraTitle}>{cameraMode === 'qr' ? 'Escanear QR de encomienda' : 'Capturar evidencia de entrega'}</Text>
           <Text style={styles.cameraCopy}>{cameraMode === 'qr' ? 'Apunta al QR opaco del paquete.' : 'La fotografía se enviará de forma privada al validar la entrega.'}</Text>
-          {cameraMode === 'delivery' && <TouchableOpacity style={styles.button} onPress={captureDeliveryPhoto}><Text style={styles.buttonText}>Capturar fotografía</Text></TouchableOpacity>}
+          {!!cameraError && <Text style={styles.error}>{cameraError}</Text>}
+          {cameraMode === 'delivery' && <TouchableOpacity disabled={!cameraReady} style={[styles.button, !cameraReady && styles.buttonDisabled]} onPress={captureDeliveryPhoto}><Text style={styles.buttonText}>{cameraReady ? 'Capturar fotografía' : 'Preparando cámara…'}</Text></TouchableOpacity>}
+          {!!cameraError && <TouchableOpacity style={styles.secondaryButton} onPress={() => { const retryMode = cameraMode; setCameraError(''); setCameraReady(false); setCameraMode(null); setTimeout(() => setCameraMode(retryMode), 0); }}><Text style={styles.secondaryButtonText}>Reintentar cámara</Text></TouchableOpacity>}
           <TouchableOpacity style={styles.secondaryButton} onPress={() => setCameraMode(null)}><Text style={styles.secondaryButtonText}>Cancelar</Text></TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -811,9 +1076,27 @@ export default function App() {
           {driver?.license_number ?? ''}
         </Text>
 
+        <View style={styles.opsBanner}>
+          <View style={styles.opsBadge}><View style={styles.signalDot} /><Text style={styles.opsBadgeText}>{trip ? 'OPERACIÓN ACTIVA' : 'CENTRO DEL CONDUCTOR'}</Text></View>
+          <Text style={styles.opsTitle}>{trip ? `${trip.origin} → ${trip.destination}` : 'Tu jornada, organizada.'}</Text>
+          <View style={styles.opsMetrics}><View><Text style={styles.opsMetricValue}>{trip ? '01' : '—'}</Text><Text style={styles.opsMetricLabel}>viaje</Text></View><View><Text style={styles.opsMetricValue}>{passengers.length || '—'}</Text><Text style={styles.opsMetricLabel}>pasajeros</Text></View><View><Text style={styles.opsMetricValue}>{backgroundTracking ? 'GPS' : '—'}</Text><Text style={styles.opsMetricLabel}>señal</Text></View></View>
+        </View>
+
         {!!error && (
           <Text style={styles.error}>
             {error}
+          </Text>
+        )}
+
+        {isOffline && (
+          <Text style={styles.offlineNotice}>
+            Sin conexión. El GPS puede quedar en cola; las operaciones de custodia esperan a que vuelva Internet y no se confirman localmente.
+          </Text>
+        )}
+
+        {pendingCustodyCount > 0 && (
+          <Text style={styles.offlineNotice}>
+            {pendingCustodyCount} carga(s) de custodia pendiente(s) de confirmar por el backend.
           </Text>
         )}
 
@@ -839,7 +1122,7 @@ export default function App() {
                         ).slice(0, 10)}
                       </Text>
 
-                      <Text>
+                      <Text style={styles.bodyText}>
                         {(item.starts_at ?? '').slice(0, 5)}
                         {' - '}
                         {(item.ends_at ?? '').slice(0, 5)}
@@ -869,16 +1152,16 @@ export default function App() {
                 {trip.origin} → {trip.destination}
               </Text>
 
-              <Text>
+              <Text style={styles.bodyText}>
                 {trip.date} · {trip.departureTime}
               </Text>
 
-              <Text>
+              <Text style={styles.bodyText}>
                 Estado: {statusLabel(trip.status)}
               </Text>
             </View>
 
-            {journey && (
+            {journey && NATIVE_MAPS_AVAILABLE && (
               <MapView
                 style={styles.map}
                 mapType="none"
@@ -958,6 +1241,19 @@ export default function App() {
               </MapView>
             )}
 
+            {journey && !NATIVE_MAPS_AVAILABLE && (
+              <View style={styles.mapFallback}>
+                <Text style={styles.cardKicker}>MAPA DE RUTA</Text>
+                <Text style={styles.cardTitle}>{trip.origin} → {trip.destination}</Text>
+                <Text style={styles.copy}>
+                  La ruta real está disponible. Esta compilación no tiene una clave de mapas nativos autorizada, así que las acciones del viaje siguen disponibles sin dejar la pantalla en blanco.
+                </Text>
+                <Text style={styles.status}>
+                  {journey.route.distanceMeters ? `${Math.round(journey.route.distanceMeters / 1000)} km de recorrido` : 'Recorrido disponible'}
+                </Text>
+              </View>
+            )}
+
             {!journey && (
               <View style={styles.card}>
                 <Text style={styles.cardKicker}>
@@ -978,6 +1274,11 @@ export default function App() {
                 La ubicación se comparte solo después de conceder el permiso del dispositivo y mientras el viaje asignado esté en abordaje o en curso.
               </Text>
               <Text style={styles.status}>{backgroundTracking ? 'Background GPS activo' : tracking ? 'Foreground GPS activo' : 'GPS detenido'}</Text>
+              {pendingLocationCount > 0 && (
+                <Text style={styles.locationMessage}>
+                  {pendingLocationCount} punto(s) GPS pendiente(s) de sincronizar.
+                </Text>
+              )}
 
               {!!locationMessage && (
                 <Text style={styles.locationMessage}>
@@ -997,7 +1298,7 @@ export default function App() {
 
                 {!tracking ? (
                   <TouchableOpacity
-                    style={styles.button}
+                    style={[styles.button, styles.growButton]}
                     onPress={startLocationTracking}
                   >
                     <Text style={styles.buttonText}>
@@ -1033,7 +1334,7 @@ export default function App() {
                         {passenger.full_name}
                       </Text>
 
-                      <Text>
+                      <Text style={styles.bodyText}>
                         {passenger.booking?.reference ?? ''}
                       </Text>
                     </View>
@@ -1071,22 +1372,22 @@ export default function App() {
               <Text style={styles.copy}>Estas acciones escriben en la cadena de custodia real; no muestran confirmaciones si el backend rechaza la operación.</Text>
               <TextInput style={styles.input} placeholder="Nombre del destinatario" value={packageRecipient} onChangeText={setPackageRecipient} />
               <TextInput style={styles.input} placeholder="Descripción" value={packageDescription} onChangeText={setPackageDescription} />
-              <TouchableOpacity style={styles.secondaryButton} onPress={registerPackage}><Text style={styles.secondaryButtonText}>Registrar encomienda</Text></TouchableOpacity>
+              <TouchableOpacity disabled={isOffline} style={[styles.secondaryButton, isOffline && styles.buttonDisabled]} onPress={registerPackage}><Text style={styles.secondaryButtonText}>Registrar encomienda</Text></TouchableOpacity>
               <TextInput style={styles.input} placeholder="Token QR opaco" value={packageQrToken} onChangeText={setPackageQrToken} autoCapitalize="none" />
-              <View style={styles.gpsButtons}><TouchableOpacity style={styles.secondaryButton} onPress={() => openCamera('qr')}><Text style={styles.secondaryButtonText}>Escanear QR</Text></TouchableOpacity><TouchableOpacity style={styles.secondaryButton} onPress={() => scanPackage()}><Text style={styles.secondaryButtonText}>Consultar token</Text></TouchableOpacity><TouchableOpacity style={styles.secondaryButton} onPress={() => advancePackage('in_progress')} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Cargar</Text></TouchableOpacity></View>
+              <View style={styles.gpsButtons}><TouchableOpacity disabled={isOffline} style={[styles.secondaryButton, isOffline && styles.buttonDisabled]} onPress={() => openCamera('qr')}><Text style={styles.secondaryButtonText}>Escanear QR</Text></TouchableOpacity><TouchableOpacity disabled={isOffline || !packageQrToken.trim()} style={[styles.secondaryButton, (isOffline || !packageQrToken.trim()) && styles.buttonDisabled]} onPress={() => scanPackage()}><Text style={styles.secondaryButtonText}>Consultar token</Text></TouchableOpacity><TouchableOpacity style={[styles.secondaryButton, (isOffline || !selectedPackage) && styles.buttonDisabled]} onPress={() => advancePackage('in_progress')} disabled={isOffline || !selectedPackage}><Text style={styles.secondaryButtonText}>Cargar</Text></TouchableOpacity></View>
               <TouchableOpacity style={styles.secondaryButton} onPress={() => openCamera('delivery')} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Tomar evidencia de entrega</Text></TouchableOpacity>
               {deliveryPhotoUri ? <Image source={{ uri: deliveryPhotoUri }} style={styles.evidencePreview} /> : null}
               <TouchableOpacity style={[styles.secondaryButton, recipientVerified && styles.selectedButton]} onPress={() => setRecipientVerified((value) => !value)} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>{recipientVerified ? 'Destinatario verificado' : 'Verificar destinatario'}</Text></TouchableOpacity>
-              <TouchableOpacity style={styles.secondaryButton} onPress={deliverPackage} disabled={!selectedPackage || !deliveryPhotoUri || !recipientVerified}><Text style={styles.secondaryButtonText}>Validar entrega</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.secondaryButton, (isOffline || !selectedPackage || !deliveryPhotoUri || !recipientVerified) && styles.buttonDisabled]} onPress={deliverPackage} disabled={isOffline || !selectedPackage || !deliveryPhotoUri || !recipientVerified}><Text style={styles.secondaryButtonText}>Validar entrega</Text></TouchableOpacity>
               {selectedPackage && <Text style={styles.status}>Paquete {selectedPackage.reference ?? selectedPackage.public_id} · {statusLabel(selectedPackage.status)}</Text>}
-              <TouchableOpacity style={styles.secondaryButton} onPress={createManifestForPackage} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Crear manifiesto</Text></TouchableOpacity>
-              {manifest && <><Text style={styles.status}>Manifiesto {manifest.reference} · {manifest.scanned_count ?? 0}/{manifest.expected_count ?? 0} · {statusLabel(manifest.status)}</Text><TouchableOpacity style={styles.secondaryButton} onPress={reconcileManifest}><Text style={styles.secondaryButtonText}>Consultar y reconciliar manifiesto</Text></TouchableOpacity></>}
+              <TouchableOpacity style={[styles.secondaryButton, (isOffline || !selectedPackage) && styles.buttonDisabled]} onPress={createManifestForPackage} disabled={isOffline || !selectedPackage}><Text style={styles.secondaryButtonText}>Crear manifiesto</Text></TouchableOpacity>
+              {manifest && <><Text style={styles.status}>Manifiesto {manifest.reference} · {manifest.scanned_count ?? 0}/{manifest.expected_count ?? 0} · {statusLabel(manifest.status)}</Text><TouchableOpacity style={[styles.secondaryButton, isOffline && styles.buttonDisabled]} onPress={reconcileManifest} disabled={isOffline}><Text style={styles.secondaryButtonText}>Consultar y reconciliar manifiesto</Text></TouchableOpacity></>}
               <TextInput style={styles.input} placeholder="Notas de discrepancia" value={discrepancyNotes} onChangeText={setDiscrepancyNotes} />
-              <TouchableOpacity style={styles.secondaryButton} onPress={reportDiscrepancy} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Registrar discrepancia</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.secondaryButton, (isOffline || !selectedPackage || !discrepancyNotes.trim()) && styles.buttonDisabled]} onPress={reportDiscrepancy} disabled={isOffline || !selectedPackage || !discrepancyNotes.trim()}><Text style={styles.secondaryButtonText}>Registrar discrepancia</Text></TouchableOpacity>
               <TextInput style={styles.input} placeholder="ID conductor receptor" value={transferDriverId} onChangeText={setTransferDriverId} keyboardType="numeric" />
-              <TouchableOpacity style={styles.secondaryButton} onPress={requestTransfer} disabled={!selectedPackage}><Text style={styles.secondaryButtonText}>Transferir</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.secondaryButton, (isOffline || !selectedPackage || !transferDriverId.trim()) && styles.buttonDisabled]} onPress={requestTransfer} disabled={isOffline || !selectedPackage || !transferDriverId.trim()}><Text style={styles.secondaryButtonText}>Transferir</Text></TouchableOpacity>
               <TextInput style={styles.input} placeholder="ID transferencia a aceptar" value={transferId} onChangeText={setTransferId} keyboardType="numeric" />
-              <TouchableOpacity style={styles.secondaryButton} onPress={acceptTransfer}><Text style={styles.secondaryButtonText}>Aceptar transferencia</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.secondaryButton, (isOffline || !transferId.trim()) && styles.buttonDisabled]} onPress={acceptTransfer} disabled={isOffline || !transferId.trim()}><Text style={styles.secondaryButtonText}>Aceptar transferencia</Text></TouchableOpacity>
               {!!custodyMessage && <Text style={styles.locationMessage}>{custodyMessage}</Text>}
             </View>
 
@@ -1189,6 +1490,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#071722',
   },
+  loginHero: {
+    minHeight: 150,
+    marginTop: 8,
+    marginBottom: 4,
+    padding: 18,
+    borderRadius: 26,
+    overflow: 'hidden',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    backgroundColor: '#0d4057',
+    borderWidth: 1,
+    borderColor: 'rgba(42, 169, 223, 0.4)',
+  },
+  loginHeroOrb: { width: 70, height: 70, borderRadius: 35, alignItems: 'center', justifyContent: 'center', backgroundColor: '#2aa9df', borderWidth: 8, borderColor: 'rgba(255, 255, 255, 0.17)' },
+  loginHeroCopy: { flex: 1, gap: 5 },
+  loginHeroKicker: { color: '#bfe9f7', fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
+  loginHeroTitle: { color: '#ffffff', fontSize: 18, lineHeight: 21, fontWeight: '900' },
+  loginHeroText: { color: '#b7d3de', fontSize: 12, lineHeight: 17 },
+  signalDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#34d399' },
   wrap: {
     padding: 20,
     gap: 16,
@@ -1223,6 +1544,13 @@ const styles = StyleSheet.create({
     color: '#2aa9df',
     letterSpacing: 2,
   },
+  opsBanner: { padding: 18, gap: 10, borderRadius: 26, backgroundColor: '#0d4057', borderWidth: 1, borderColor: 'rgba(42, 169, 223, 0.4)', shadowColor: '#000000', shadowOpacity: 0.22, shadowRadius: 18, elevation: 5 },
+  opsBadge: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  opsBadgeText: { color: '#bfe9f7', fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
+  opsTitle: { color: '#ffffff', fontSize: 20, fontWeight: '900' },
+  opsMetrics: { flexDirection: 'row', gap: 28, paddingTop: 4 },
+  opsMetricValue: { color: '#34d399', fontSize: 18, fontWeight: '900' },
+  opsMetricLabel: { color: '#a8c9d4', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8 },
   title: {
     fontSize: 34,
     fontWeight: '900',
@@ -1231,6 +1559,11 @@ const styles = StyleSheet.create({
   },
   copy: {
     color: '#9cb1be',
+    lineHeight: 22,
+    fontSize: 14,
+  },
+  bodyText: {
+    color: '#d7e5eb',
     lineHeight: 22,
     fontSize: 14,
   },
@@ -1254,17 +1587,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 999,
     alignItems: 'center',
-    flex: 1,
     shadowColor: '#2aa9df',
     shadowOpacity: 0.35,
     shadowRadius: 18,
     elevation: 6,
+  },
+  growButton: {
+    flex: 1,
   },
   buttonText: {
     color: '#ffffff',
     fontWeight: '900',
     fontSize: 15,
     letterSpacing: 0.4,
+  },
+  buttonDisabled: {
+    opacity: 0.45,
   },
   secondaryButton: {
     borderWidth: 1,
@@ -1303,6 +1641,16 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(198, 85, 99, 0.3)',
     borderRadius: 14,
     padding: 14,
+  },
+  offlineNotice: {
+    color: '#ffd58a',
+    backgroundColor: 'rgba(224, 146, 33, 0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(224, 146, 33, 0.38)',
+    borderRadius: 14,
+    padding: 14,
+    lineHeight: 20,
+    fontWeight: '700',
   },
   locationMessage: {
     color: '#34d399',
@@ -1393,12 +1741,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
   },
+  mapFallback: {
+    minHeight: 190,
+    justifyContent: 'center',
+    gap: 10,
+    padding: 20,
+    borderRadius: 24,
+    marginVertical: 10,
+    backgroundColor: '#0e2536',
+    borderWidth: 1,
+    borderColor: 'rgba(42, 169, 223, 0.3)',
+  },
   cameraScreen: {
     flex: 1,
     backgroundColor: '#000000',
   },
   cameraOverlay: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 1,
+    elevation: 1,
     justifyContent: 'flex-end',
     gap: 12,
     padding: 24,

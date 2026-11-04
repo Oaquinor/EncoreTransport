@@ -23,7 +23,11 @@
         {
           "cameraPermission": "Allow Encore Driver to scan package QR codes and capture delivery evidence."
         }
-      ]
-    ]
+      ],
+      "expo-secure-store"
+    ],
+    "android": {
+      "package": "com.anonymous.encoredriver"
+    }
   }
 }

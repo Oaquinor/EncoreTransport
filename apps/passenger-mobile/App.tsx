@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   AppState,
   FlatList,
+  Keyboard,
   Linking,
   SafeAreaView,
   ScrollView,
@@ -12,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker, Polyline, UrlTile } from 'react-native-maps';
 import * as SecureStore from 'expo-secure-store';
 import * as Network from 'expo-network';
@@ -60,6 +62,11 @@ const API =
 const API_ORIGIN = API.replace(/\/api\/v1\/?$/, '');
 const TILE_TEMPLATE =
   `${API_ORIGIN}/api/v1/maps/tiles/{z}/{x}/{y}.png?style=street-light`;
+// Guard the native map mount: Android Google Maps requires an authorized key.
+// Without one, keep search and booking usable with an honest route summary.
+const NATIVE_MAPS_AVAILABLE = Boolean(
+  process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+);
 const AUTH_TOKEN_KEY = 'encore_passenger_api_token';
 
 const money = (value: number) => formatCurrency(value);
@@ -109,6 +116,7 @@ export default function App() {
   const [screen, setScreen] = useState<'search' | 'trip' | 'booking' | 'status' | 'bookings' | 'ticket'>('search');
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
+  const [activeLocationField, setActiveLocationField] = useState<'origin' | 'destination' | null>(null);
   const [travelDate, setTravelDate] = useState(localCalendarDate);
   const [passengerCount, setPassengerCount] = useState(1);
   const [routes, setRoutes] = useState<RouteOption[]>([]);
@@ -178,6 +186,8 @@ export default function App() {
     }
     return route.stops?.length ? route.stops.slice(1).map((stop) => stop.name) : [route.destination];
   }))];
+  const visibleOrigins = origins.filter((point) => point.toLowerCase().includes(origin.trim().toLowerCase())).slice(0, 8);
+  const visibleDestinations = destinations.filter((point) => point.toLowerCase().includes(destination.trim().toLowerCase())).slice(0, 8);
 
   const selectedSeat = useMemo(
     () => seats.find((seat) => selected.includes(seat.id)),
@@ -450,37 +460,93 @@ export default function App() {
         {networkState && (networkState.isConnected === false || networkState.isInternetReachable === false) && <Text style={styles.offlineNotice}>Sin conexión · Las operaciones críticas esperan a que vuelva Internet.</Text>}
 
         <ScrollView contentContainerStyle={styles.wrap}>
-          <Text style={styles.eyebrow}>BUSCA TU VIAJE</Text>
-          <Text style={styles.title}>¿A dónde quieres ir?</Text>
-          <Text style={styles.copy}>
-            Busca salidas disponibles, elige tus asientos y continúa con tu reserva.
-          </Text>
+          <View style={styles.hero}>
+            <View style={styles.heroOrbit} />
+            <View style={styles.heroHeader}>
+              <View style={styles.heroSignal}><View style={styles.signalDot} /><Text style={styles.heroMeta}>ENCORE NETWORK</Text></View>
+              <Text style={styles.heroMeta}>01 / 04</Text>
+            </View>
+            <Text style={styles.eyebrow}>BUSCA TU VIAJE</Text>
+            <Text style={styles.heroTitle}>Tu próxima salida, en una sola vista.</Text>
+            <Text style={styles.heroCopy}>Compara horarios, elige tu asiento y lleva tu boleto contigo desde el primer toque.</Text>
+            <View style={styles.heroRail}>
+              <View style={[styles.railNode, styles.railNodeActive]} /><View style={styles.railLine} /><View style={styles.railNode} /><View style={styles.railLine} /><View style={styles.railNode} />
+            </View>
+          </View>
 
+          <View style={styles.searchPanel}>
+            <View style={styles.panelHeading}>
+              <View><Text style={styles.panelKicker}>PLANIFICADOR DE VIAJE</Text><Text style={styles.panelTitle}>¿A dónde quieres ir?</Text></View>
+              <Ionicons name="sparkles-outline" size={22} color="#2aa9df" />
+            </View>
+
+            <View style={styles.fieldBlock}>
+              <View style={styles.fieldHeader}><Text style={styles.fieldLabel}>ORIGEN</Text><Ionicons name="navigate-outline" size={16} color="#2aa9df" /></View>
           <TextInput
             style={styles.input}
             placeholder="Punto de salida"
             value={origin}
-            onChangeText={(value) => { setOrigin(value); setTrips([]); setHasSearched(false); }}
+            onFocus={() => setActiveLocationField('origin')}
+            onChangeText={(value) => { setOrigin(value); setActiveLocationField('origin'); setTrips([]); setHasSearched(false); }}
             placeholderTextColor="#75808d"
           />
-          <View style={styles.suggestions}>{origins.map((point) => <TouchableOpacity key={point} onPress={() => { setOrigin(point); setDestination(''); setTrips([]); setHasSearched(false); }}><Text style={styles.link}>{point}</Text></TouchableOpacity>)}</View>
+          {activeLocationField === 'origin' && visibleOrigins.length > 0 && (
+            <View style={styles.suggestions} accessibilityLabel="Opciones de punto de salida">
+              {visibleOrigins.map((point) => (
+                <TouchableOpacity
+                  key={point}
+                  style={styles.suggestion}
+                  onPress={() => {
+                    setOrigin(point);
+                    setDestination('');
+                    setActiveLocationField(null);
+                    Keyboard.dismiss();
+                    setTrips([]);
+                    setHasSearched(false);
+                  }}
+                >
+                  <Text style={styles.link}>{point}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+            </View>
+            <View style={styles.fieldBlock}>
+              <View style={styles.fieldHeader}><Text style={styles.fieldLabel}>DESTINO</Text><Ionicons name="flag-outline" size={16} color="#2aa9df" /></View>
           <TextInput
             style={styles.input}
             placeholder="Destino"
             value={destination}
-            onChangeText={(value) => { setDestination(value); setTrips([]); setHasSearched(false); }}
+            onFocus={() => setActiveLocationField('destination')}
+            onChangeText={(value) => { setDestination(value); setActiveLocationField('destination'); setTrips([]); setHasSearched(false); }}
           />
-          <View style={styles.suggestions}>{destinations.map((point) => <TouchableOpacity key={point} onPress={() => { setDestination(point); setTrips([]); setHasSearched(false); }}><Text style={styles.link}>{point}</Text></TouchableOpacity>)}</View>
-          <TextInput style={styles.input} placeholder="Fecha del viaje (AAAA-MM-DD)" value={travelDate} onChangeText={(value) => { setTravelDate(value); setTrips([]); setHasSearched(false); }} />
-          <Text style={styles.fieldLabel}>Pasajeros (1–10)</Text>
-          <TextInput style={styles.input} placeholder="Cantidad de pasajeros" keyboardType="number-pad" value={String(passengerCount)} onChangeText={(value) => {
-            const count = Math.max(1, Math.min(10, Number.parseInt(value, 10) || 1));
-            setPassengerCount(count);
-            setSelected((current) => current.slice(0, count));
-            setTrips([]);
-            setHasSearched(false);
-          }} />
-
+          {activeLocationField === 'destination' && visibleDestinations.length > 0 && (
+            <View style={styles.suggestions} accessibilityLabel="Opciones de destino">
+              {visibleDestinations.map((point) => (
+                <TouchableOpacity
+                  key={point}
+                  style={styles.suggestion}
+                  onPress={() => {
+                    setDestination(point);
+                    setActiveLocationField(null);
+                    Keyboard.dismiss();
+                    setTrips([]);
+                    setHasSearched(false);
+                  }}
+                >
+                  <Text style={styles.link}>{point}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+            </View>
+            <View style={styles.inlineFields}>
+              <View style={styles.inlineField}><Text style={styles.fieldLabel}>FECHA</Text><TextInput style={styles.compactInput} placeholder="AAAA-MM-DD" value={travelDate} onChangeText={(value) => { setTravelDate(value); setTrips([]); setHasSearched(false); }} /></View>
+              <View style={styles.inlineField}><Text style={styles.fieldLabel}>PASAJEROS</Text><TextInput style={styles.compactInput} keyboardType="number-pad" value={String(passengerCount)} onChangeText={(value) => {
+                const count = Math.max(1, Math.min(10, Number.parseInt(value, 10) || 1));
+                setPassengerCount(count); setSelected((current) => current.slice(0, count)); setTrips([]); setHasSearched(false);
+              }} /></View>
+            </View>
           <TouchableOpacity
             style={styles.button}
             onPress={search}
@@ -494,6 +560,13 @@ export default function App() {
           {loading && <ActivityIndicator />}
           {!!error && <Text style={styles.error}>{error}</Text>}
 
+            <View style={styles.quickStrip}>
+              <View style={styles.quickItem}><Ionicons name="time-outline" size={16} color="#34d399" /><Text style={styles.quickText}>Horarios claros</Text></View>
+              <View style={styles.quickItem}><Ionicons name="grid-outline" size={16} color="#34d399" /><Text style={styles.quickText}>Asiento a tu medida</Text></View>
+              <View style={styles.quickItem}><Ionicons name="ticket-outline" size={16} color="#34d399" /><Text style={styles.quickText}>Boleto listo</Text></View>
+            </View>
+          </View>
+
           {hasSearched && !loading && !error && trips.length === 0 && <Text style={styles.copy}>No encontramos salidas para esa ruta y fecha. Prueba con otra fecha o destino.</Text>}
 
           {trips.map((item) => (
@@ -506,8 +579,8 @@ export default function App() {
               <Text style={styles.cardTitle}>
                 {item.origin} → {item.destination}
               </Text>
-              <Text>{item.date} · {item.departureTime} - {item.arrivalTime}</Text>
-              <Text>{item.availableSeats} asientos · {money(item.baseFare)}</Text>
+              <Text style={styles.bodyText}>{item.date} · {item.departureTime} - {item.arrivalTime}</Text>
+              <Text style={styles.bodyText}>{item.availableSeats} asientos · {money(item.baseFare)}</Text>
               <Text style={styles.link}>Ver salida →</Text>
             </TouchableOpacity>
           ))}
@@ -530,7 +603,7 @@ export default function App() {
             {trip.date} · {trip.departureTime} · {trip.busCode ? `Autobús ${trip.busCode}` : 'Autobús asignado'}
           </Text>
 
-          {journey && (
+          {journey && NATIVE_MAPS_AVAILABLE && (
             <MapView
               style={styles.map}
               mapType="none"
@@ -571,6 +644,18 @@ export default function App() {
                 />
               )}
             </MapView>
+          )}
+          {journey && !NATIVE_MAPS_AVAILABLE && (
+            <View style={styles.mapFallback}>
+              <Text style={styles.cardKicker}>RUTA DEL VIAJE</Text>
+              <Text style={styles.cardTitle}>{trip.origin} → {trip.destination}</Text>
+              <Text style={styles.copy}>
+                La ruta real está disponible. Esta compilación no tiene una clave de mapas nativos autorizada; puedes continuar con asientos y reserva.
+              </Text>
+              <Text style={styles.link}>
+                {journey.route.distanceMeters ? `${Math.round(journey.route.distanceMeters / 1000)} km de recorrido` : 'Recorrido disponible'}
+              </Text>
+            </View>
           )}
           {!!mapMessage && <Text style={styles.copy}>{mapMessage}</Text>}
 
@@ -644,8 +729,8 @@ export default function App() {
 
           <View style={styles.summary}>
             <Text style={styles.summaryStrong}>{trip.origin} → {trip.destination}</Text>
-            <Text>Asientos: {seats.filter((seat) => selected.includes(seat.id)).map((seat) => seat.seat_number).join(', ') || '—'}</Text>
-            <Text>{money(quote?.total ?? 0)}</Text>
+            <Text style={styles.bodyText}>Asientos: {seats.filter((seat) => selected.includes(seat.id)).map((seat) => seat.seat_number).join(', ') || '—'}</Text>
+            <Text style={styles.bodyText}>{money(quote?.total ?? 0)}</Text>
           </View>
           {passengers.map((passenger, index) => (
             <View key={index} style={styles.passengerCard}>
@@ -714,8 +799,8 @@ export default function App() {
             <View key={item.id} style={styles.card}>
               <Text style={styles.cardKicker}>{item.reference ?? `RESERVA ${item.id}`}</Text>
               <Text style={styles.cardTitle}>{item.trip?.origin ?? item.origin} → {item.trip?.destination ?? item.destination}</Text>
-              <Text>{item.trip?.departure_date ?? item.trip?.date ?? ''} · {statusLabel(item.status)}</Text>
-              <Text>Asientos: {(item.seat_numbers ?? []).join(', ') || item.reserved_seats?.map((seat: any) => seat.seat?.seat_number).filter(Boolean).join(', ') || '—'}</Text>
+              <Text style={styles.bodyText}>{item.trip?.departure_date ?? item.trip?.date ?? ''} · {statusLabel(item.status)}</Text>
+              <Text style={styles.bodyText}>Asientos: {(item.seat_numbers ?? []).join(', ') || item.reserved_seats?.map((seat: any) => seat.seat?.seat_number).filter(Boolean).join(', ') || '—'}</Text>
               <View style={styles.actionRow}>
                 <TouchableOpacity onPress={() => void openTicket(item.id)}><Text style={styles.link}>Ver boleto</Text></TouchableOpacity>
                 {item.status === 'pending_payment' && <TouchableOpacity disabled={loading} onPress={() => void cancelReservation(item.id)}><Text style={styles.dangerLink}>Cancelar reserva</Text></TouchableOpacity>}
@@ -738,9 +823,9 @@ export default function App() {
           {!!error && <Text style={styles.error}>{error}</Text>}
           {ticket && <View style={styles.summary}>
             <Text style={styles.summaryStrong}>{ticket.reference ?? ticket.public_id ?? `Ticket ${ticket.id}`}</Text>
-            <Text>Estado: {statusLabel(ticket.status ?? 'issued')}</Text>
-            <Text>Número de boleto: {ticket.ticket_number ?? ticket.number ?? ticket.public_id ?? '—'}</Text>
-            <Text>Ten el boleto a mano al abordar.</Text>
+            <Text style={styles.bodyText}>Estado: {statusLabel(ticket.status ?? 'issued')}</Text>
+            <Text style={styles.bodyText}>Número de boleto: {ticket.ticket_number ?? ticket.number ?? ticket.public_id ?? '—'}</Text>
+            <Text style={styles.bodyText}>Ten el boleto a mano al abordar.</Text>
           </View>}
         </ScrollView>
       </SafeAreaView>
@@ -757,10 +842,10 @@ export default function App() {
           <Text style={styles.summaryStrong}>
             {booking?.reference ?? `Reserva ${booking?.id ?? ''}`}
           </Text>
-          <Text>Estado: {statusLabel(booking?.status)}</Text>
-          <Text>Asientos: {seats.filter((seat) => selected.includes(seat.id)).map((seat) => seat.seat_number).join(', ') || selectedSeat?.seat_number || '—'}</Text>
-          <Text>Total: {money(Number(booking?.total_amount ?? 0))}</Text>
-          <Text>Pago: {bookingPayments[0] ? statusLabel(bookingPayments[0].status) : 'Sin intentos de pago'}</Text>
+          <Text style={styles.bodyText}>Estado: {statusLabel(booking?.status)}</Text>
+          <Text style={styles.bodyText}>Asientos: {seats.filter((seat) => selected.includes(seat.id)).map((seat) => seat.seat_number).join(', ') || selectedSeat?.seat_number || '—'}</Text>
+          <Text style={styles.bodyText}>Total: {money(Number(booking?.total_amount ?? 0))}</Text>
+          <Text style={styles.bodyText}>Pago: {bookingPayments[0] ? statusLabel(bookingPayments[0].status) : 'Sin intentos de pago'}</Text>
           {bookingPayments.slice(1).map((payment) => <Text key={payment.id}>Intento anterior: {statusLabel(payment.status)} · {money(Number(payment.amount_minor ?? 0) / 100)}</Text>)}
         </View>
 
@@ -825,6 +910,53 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingBottom: 60,
   },
+  hero: {
+    minHeight: 248,
+    overflow: 'hidden',
+    borderRadius: 30,
+    padding: 22,
+    gap: 10,
+    backgroundColor: '#0d4057',
+    borderWidth: 1,
+    borderColor: 'rgba(42, 169, 223, 0.42)',
+    shadowColor: '#000000',
+    shadowOpacity: 0.32,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 7,
+  },
+  heroOrbit: {
+    position: 'absolute',
+    width: 210,
+    height: 210,
+    right: -80,
+    top: -72,
+    borderRadius: 105,
+    borderWidth: 28,
+    borderColor: 'rgba(42, 169, 223, 0.16)',
+  },
+  heroHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  heroSignal: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  signalDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#34d399' },
+  heroMeta: { color: '#bfe9f7', fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
+  heroTitle: { maxWidth: 320, color: '#ffffff', fontSize: 31, lineHeight: 34, fontWeight: '900', letterSpacing: -1 },
+  heroCopy: { maxWidth: 330, color: '#b7d3de', fontSize: 14, lineHeight: 20 },
+  heroRail: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  railNode: { width: 9, height: 9, borderRadius: 5, borderWidth: 2, borderColor: '#78cfe9', backgroundColor: '#0d4057' },
+  railNodeActive: { width: 13, height: 13, borderRadius: 7, borderWidth: 3, borderColor: '#34d399', backgroundColor: '#0d4057' },
+  railLine: { width: 38, height: 1, backgroundColor: 'rgba(120, 207, 233, 0.55)' },
+  searchPanel: { padding: 18, gap: 14, borderRadius: 28, backgroundColor: '#102b3b', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.14)' },
+  panelHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: 4 },
+  panelKicker: { color: '#2aa9df', fontSize: 10, fontWeight: '900', letterSpacing: 1.4 },
+  panelTitle: { color: '#ffffff', fontSize: 22, fontWeight: '900', marginTop: 5 },
+  fieldBlock: { gap: 7 },
+  fieldHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  inlineFields: { flexDirection: 'row', gap: 10 },
+  inlineField: { flex: 1, gap: 7 },
+  compactInput: { backgroundColor: 'rgba(255, 255, 255, 0.08)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.14)', borderRadius: 15, paddingHorizontal: 12, paddingVertical: 13, color: '#ffffff', fontSize: 14 },
+  quickStrip: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingTop: 2 },
+  quickItem: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 7, paddingHorizontal: 9, borderRadius: 999, backgroundColor: 'rgba(52, 211, 153, 0.09)', borderWidth: 1, borderColor: 'rgba(52, 211, 153, 0.18)' },
+  quickText: { color: '#bfe9d8', fontSize: 11, fontWeight: '800' },
   brand: {
     fontSize: 26,
     fontWeight: '900',
@@ -858,6 +990,11 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontSize: 14,
   },
+  bodyText: {
+    color: '#d7e5eb',
+    lineHeight: 22,
+    fontSize: 14,
+  },
   input: {
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1,
@@ -881,6 +1018,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
+    marginTop: -6,
+    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderRadius: 14,
+  },
+  suggestion: {
+    paddingVertical: 4,
+    paddingHorizontal: 2,
   },
   button: {
     backgroundColor: '#2aa9df',
@@ -981,6 +1128,17 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  mapFallback: {
+    minHeight: 190,
+    justifyContent: 'center',
+    gap: 10,
+    padding: 20,
+    borderRadius: 24,
+    marginVertical: 10,
+    backgroundColor: '#0e2536',
+    borderWidth: 1,
+    borderColor: 'rgba(42, 169, 223, 0.3)',
   },
   row: {
     flexDirection: 'row',

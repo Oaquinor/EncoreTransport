@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Package intake | Encore Operations</title>
+  <link rel="stylesheet" href="/packages/shared/styles.css" />
+  <link rel="stylesheet" href="/packages/shared/design-system.css" />
   <link rel="stylesheet" href="/package-register/app.css?v=20261031" />
 </head>
 <body>
@@ -32,12 +34,12 @@
           <label class="field-span">Package description<input id="description" name="description" maxlength="3000" placeholder="What is inside? (optional)" /></label>
         </div>
         <p id="formError" class="form-message error" role="alert" hidden></p>
-        <button id="submitButton" class="primary-button" type="submit" disabled><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Register package</button>
+        <button id="submitButton" class="button button--primary primary-button button--with-icon" type="submit" disabled><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-action-label>Register package</span></button>
       </form>
       <aside class="card process-card">
         <p class="eyebrow">What happens next</p><h2>Ready for the road.</h2>
         <ol><li><b>01</b><span><strong>Reference created</strong><small>A unique PK reference is generated instantly.</small></span></li><li><b>02</b><span><strong>Share the reference</strong><small>Give the recipient the secure tracking link.</small></span></li><li><b>03</b><span><strong>Update from Driver</strong><small>Move received → in progress → delivered.</small></span></li></ol>
-        <div id="successCard" class="success-card" hidden><span class="success-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><p class="eyebrow">Package registered</p><h3 id="successReference">PK-</h3><p>Save this reference or open the tracking page.</p><div class="success-actions"><a id="trackingLink" class="secondary-button" href="/track-package/">Open tracking <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><button id="copyTrackingLink" class="secondary-button" type="button">Copy link</button></div></div></div>
+        <div id="successCard" class="success-card" hidden><span class="success-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><p class="eyebrow">Package registered</p><h3 id="successReference">PK-</h3><p>Save this reference or open the tracking page.</p><div class="success-actions"><a id="trackingLink" class="button button--ghost secondary-button button--with-icon" href="/track-package/">Open tracking <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><button id="copyTrackingLink" class="button button--ghost secondary-button button--with-icon" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8h10v11H8z"/><path d="M6 16H4V5h10v3"/></svg><span data-action-label>Copy link</span></button></div></div></div>
       </aside>
     </section>
   </main>

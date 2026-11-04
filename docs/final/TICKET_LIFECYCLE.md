@@ -11,7 +11,7 @@ El modelo separa reserva, pago y boleto. Una reserva puede estar pendiente de pa
 | Validar QR/token una sola vez | `VERIFIED` | transacción, `lockForUpdate`, `TicketService::validateToken` |
 | Rechazar token incorrecto, viaje no activo o boleto usado | `VERIFIED` | `TicketController`, pruebas backend |
 | Vigente vs utilizado | `VERIFIED` | `tickets.status`, `validated_at`, `used_at` |
-| No presentado, vencido, cancelado, reembolsado | `PARTIAL` | Admin ya expone filtros, detalle, historial y transición explícita; falta ampliar cobertura transaccional individual y E2E con scanner/proveedor de pagos |
+| No presentado, vencido, cancelado, reembolsado | `VERIFIED LOCAL / E2E PENDING` | Admin expone filtros, detalle, historial y transición explícita; Laravel verifica los cuatro estados, mantiene la reserva y reembolsa el pago cuando corresponde; falta scanner/proveedor de pagos en entorno configurado |
 | Escaneo duplicado/concurrente | `VERIFIED` | bloqueo transaccional; falta prueba con dos clientes físicos |
 
 No se marca un boleto como usado porque el viaje terminó: la transición ocurre en la validación autorizada del token durante `boarding` o `in_progress`.

@@ -75,7 +75,7 @@ type RegistrationDetails = {
   password_confirmation: string;
 };
 
-function ActionIcon({ name }: { name: 'arrow' | 'back' | 'search' | 'swap' | 'account' | 'route' | 'settings' }) {
+function ActionIcon({ name }: { name: 'arrow' | 'back' | 'search' | 'swap' | 'account' | 'route' | 'settings' | 'copy' | 'share' | 'close' }) {
   const paths = {
     arrow: <><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></>,
     back: <><path d="M19 12H5" /><path d="m11 6-6 6 6 6" /></>,
@@ -83,6 +83,9 @@ function ActionIcon({ name }: { name: 'arrow' | 'back' | 'search' | 'swap' | 'ac
     swap: <><path d="M7 7h11l-3-3M17 17H6l3 3" /><path d="M18 4v5M6 15v5" /></>,
     account: <><circle cx="12" cy="8" r="3.5" /><path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></>,
     route: <><circle cx="6" cy="18" r="2" /><circle cx="18" cy="6" r="2" /><path d="M8 18h3a4 4 0 0 0 4-4V10a4 4 0 0 1 4-4" /></>,
+    copy: <><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>,
+    share: <><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="m8.2 10.8 7.5-4.4M8.2 13.2l7.5 4.4" /></>,
+    close: <><path d="m6 6 12 12" /><path d="m18 6-12 12" /></>,
     settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 1.7-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-2.4v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L8 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6.7v-2.4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L8 8.6l1.7-1.7.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h2.4v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.7 1.7-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2V14h-.2a1.7 1.7 0 0 0-1.5 1Z" /></>,
   };
   return <svg className="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
@@ -394,7 +397,7 @@ export function PassengerApp() {
     'status',
   ].indexOf(screen);
 
-  if (booting) return <div className="passenger-boot-screen" role="status" aria-live="polite"><span className="passenger-boot-screen__spinner" aria-hidden="true" /><strong>Preparing your journey…</strong><span>Checking your session and available routes.</span></div>;
+  if (booting) return <div className="passenger-boot-screen" role="status" aria-live="polite"><div className="passenger-boot-screen__inner"><div className="passenger-boot-screen__brand"><img src="/assets/media/encore-loader.gif" alt="" width="160" height="160" /><span>ENCORE TRANSPORT</span></div><strong>Preparing your journey…</strong><span>Checking your session and available routes.</span><div className="passenger-boot-screen__progress" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div></div>;
 
   return (
     <div className="app-shell">
@@ -540,10 +543,10 @@ function Topbar({ user, onAccount }: { user: { name: string; avatar_url?: string
       </a>
 
       <nav>
-        <button onClick={() => { location.href = '/website/'; }}>
+        <button type="button" className="button button--ghost button--with-icon" onClick={() => { location.href = '/website/'; }}>
           <ActionIcon name="route" />Website
         </button>
-        <button onClick={onAccount} aria-label={user?.name ? 'Open account for ' + user.name : 'Open passenger account'}>
+        <button type="button" className="button button--ghost button--with-icon" onClick={onAccount} aria-label={user?.name ? 'Open account for ' + user.name : 'Open passenger account'}>
           <ActionIcon name="account" />Account
         </button>
       </nav>
@@ -641,7 +644,7 @@ function AccountScreen({ user, bookings, loading, onBack, onNewTrip, onProfileUp
           </section>
       </dialog>}
       <div className="account-section-heading"><span className="account-panel-label">MY TRIPS</span><h2>Tickets and journey history</h2></div>
-      <div className="account-trip-tabs" role="tablist" aria-label="Trip history"><button className={tripTab === 'upcoming' ? 'is-active' : ''} onClick={() => setTripTab('upcoming')} role="tab">Upcoming</button><button className={tripTab === 'used' ? 'is-active' : ''} onClick={() => setTripTab('used')} role="tab">Used</button><button className={tripTab === 'expired' ? 'is-active' : ''} onClick={() => setTripTab('expired')} role="tab">Expired</button><button className={tripTab === 'cancelled' ? 'is-active' : ''} onClick={() => setTripTab('cancelled')} role="tab">Cancelled</button></div>
+      <div className="account-trip-tabs" role="tablist" aria-label="Trip history"><button type="button" className={`button button--tab ${tripTab === 'upcoming' ? 'is-active' : ''}`} onClick={() => setTripTab('upcoming')} role="tab" aria-selected={tripTab === 'upcoming'}>Upcoming</button><button type="button" className={`button button--tab ${tripTab === 'used' ? 'is-active' : ''}`} onClick={() => setTripTab('used')} role="tab" aria-selected={tripTab === 'used'}>Used</button><button type="button" className={`button button--tab ${tripTab === 'expired' ? 'is-active' : ''}`} onClick={() => setTripTab('expired')} role="tab" aria-selected={tripTab === 'expired'}>Expired</button><button type="button" className={`button button--tab ${tripTab === 'cancelled' ? 'is-active' : ''}`} onClick={() => setTripTab('cancelled')} role="tab" aria-selected={tripTab === 'cancelled'}>Cancelled</button></div>
       {loading ? <div className="smart-banner"><b>Loading your bookings…</b></div> : !bookings.length ? (
         <div className="smart-banner"><b>No bookings yet.</b><span>Search a departure to create your first ticket.</span><button type="button" className="button button--primary" onClick={onNewTrip}>Find a trip</button></div>
       ) : (
@@ -669,7 +672,7 @@ function AccountScreen({ user, bookings, loading, onBack, onNewTrip, onProfileUp
               try { await navigator.clipboard.writeText(reference); setBookingAction('Booking reference copied.'); }
               catch { setBookingAction('Copy is unavailable in this browser.'); }
             };
-            return <article key={booking.id} className="account-booking"><div><span>{used ? 'USED TICKET' : 'RESERVATION'}</span><h3>{reference}</h3><p>{route}</p><div className="account-booking__actions"><button type="button" onClick={copyReference}>Copy reference</button><button type="button" onClick={shareBooking}>Share journey</button></div></div><strong className={'account-booking__status account-booking__status--' + (used ? 'used' : status)}>{used ? 'Travel completed' : booking.status ?? 'Active'}</strong></article>;
+            return <article key={booking.id} className="account-booking"><div><span>{used ? 'USED TICKET' : 'RESERVATION'}</span><h3>{reference}</h3><p>{route}</p><div className="account-booking__actions"><button type="button" className="button button--subtle button--with-icon" onClick={copyReference}><ActionIcon name="copy" />Copy reference</button><button type="button" className="button button--subtle button--with-icon" onClick={shareBooking}><ActionIcon name="share" />Share journey</button></div></div><strong className={'account-booking__status account-booking__status--' + (used ? 'used' : status)}>{used ? 'Travel completed' : booking.status ?? 'Active'}</strong></article>;
           })}
           {!bookings.some((booking) => { const status = String(booking.status ?? '').toLowerCase(); return tripTab === 'used' ? ['completed', 'used', 'boarded'].includes(status) : tripTab === 'cancelled' ? ['cancelled', 'refunded'].includes(status) : tripTab === 'expired' ? ['expired', 'no_show'].includes(status) : !['completed', 'used', 'boarded', 'expired', 'no_show', 'cancelled', 'refunded'].includes(status); }) && <div className="smart-banner"><b>No {tripTab} trips.</b><span>Choose another section or plan a new journey.</span><button type="button" className="button button--primary" onClick={onNewTrip}>Find a trip</button></div>}
         </div>
@@ -708,14 +711,13 @@ function Journey({ step }: { step: number }) {
 
       <div className="journey-steps">
         {labels.map((label, index) => (
-          <button
+          <span
             key={label}
-            disabled
-            className={index <= step ? 'active' : ''}
+            className={`journey-step ${index <= step ? 'active' : ''}`}
           >
             <em>{String(index + 1).padStart(2, '0')}</em>
             {label}
-          </button>
+          </span>
         ))}
       </div>
     </section>
@@ -769,6 +771,7 @@ function Home({
 
         <button
           type="button"
+          className="button button--icon swap"
           aria-label="Swap origin and destination"
           onClick={() => setFilters({
             ...filters,
@@ -810,7 +813,7 @@ function Home({
           })}
         />
 
-        <button className="primary" disabled={loading}>
+        <button type="submit" className="button button--primary primary button--with-icon" disabled={loading}>
           <ActionIcon name="search" />{loading ? 'SEARCHING…' : 'SEARCH DEPARTURES'}
         </button>
       </form>
@@ -878,7 +881,7 @@ function PageHead({
         <span className="eyebrow">{eyebrow}</span>
         <h1>{title}</h1>
       </div>
-      <button className="ghost" onClick={onBack}>
+      <button type="button" className="button button--ghost ghost button--with-icon" onClick={onBack}>
         <ActionIcon name="back" />BACK
       </button>
     </div>
@@ -951,7 +954,8 @@ function Results({
               <aside>
                 <strong>{money(trip.baseFare)}</strong>
                 <button
-                  className="primary"
+                  type="button"
+                  className="button button--primary primary button--with-icon"
                   onClick={() => onSelect(trip)}
                 >
                   <ActionIcon name="arrow" />SELECT
@@ -1076,8 +1080,8 @@ function TripScreen({
           <span>FARE PER PASSENGER</span>
           <strong>{money(trip.baseFare)}</strong>
         </div>
-        <button className="primary" onClick={onNext}>
-          CHOOSE SEATS →
+        <button type="button" className="button button--primary primary button--with-icon" onClick={onNext}>
+          <ActionIcon name="arrow" />CHOOSE SEATS
         </button>
       </div>
     </>
@@ -1161,11 +1165,12 @@ function SeatScreen({
           </div>
 
           <button
-            className="primary"
+            type="button"
+            className="button button--primary primary button--with-icon"
             disabled={selected.length !== passengerCount}
             onClick={onNext}
           >
-            CONTINUE →
+            <ActionIcon name="arrow" />CONTINUE
           </button>
         </aside>
       </div>
@@ -1249,8 +1254,8 @@ function Passengers({
           </article>
         ))}
 
-        <button className="primary wide" disabled={!valid}>
-          REVIEW TRIP →
+        <button type="submit" className="button button--primary primary button--with-icon wide" disabled={!valid}>
+          <ActionIcon name="arrow" />REVIEW TRIP
         </button>
       </form>
     </>
@@ -1359,7 +1364,7 @@ function Review({
                 <label><span>Password</span><input name="password" type="password" required minLength={8} autoComplete="new-password" /></label>
                 <label><span>Confirm password</span><input name="password_confirmation" type="password" required minLength={8} autoComplete="new-password" /></label>
                 {registrationError && <p className="checkout-register__error" role="alert">{registrationError}</p>}
-                <button className="primary wide" disabled={loading}>{loading ? 'CREATING ACCOUNT…' : 'CREATE ACCOUNT & RESERVE →'}</button>
+                <button type="submit" className="button button--primary primary button--with-icon wide" disabled={loading}><ActionIcon name="arrow" />{loading ? 'CREATING ACCOUNT…' : 'CREATE ACCOUNT & RESERVE'}</button>
               </form>
             )}
           </section>
@@ -1377,7 +1382,7 @@ function Review({
             Calculated and validated before the reservation is created.
           </small>
 
-          {(signed || checkoutMode === 'guest') && <button className="primary" disabled={loading} onClick={() => onReserve()}>{loading ? 'RESERVING…' : signed ? 'RESERVE WITH ACCOUNT →' : 'CONTINUE AS GUEST →'}</button>}
+          {(signed || checkoutMode === 'guest') && <button type="button" className="button button--primary primary button--with-icon" disabled={loading} onClick={() => onReserve()}><ActionIcon name="arrow" />{loading ? 'RESERVING…' : signed ? 'RESERVE WITH ACCOUNT' : 'CONTINUE AS GUEST'}</button>}
         </aside>
       </div>
     </>
@@ -1438,15 +1443,15 @@ function Status({
           {isHeld && onCancel && (
             <button
               type="button"
-              className="ghost danger"
+              className="button button--danger danger button--with-icon"
               disabled={loading}
               onClick={onCancel}
             >
-              {loading ? 'CANCELLING…' : 'CANCEL HOLD'}
+              <ActionIcon name="close" />{loading ? 'CANCELLING…' : 'CANCEL HOLD'}
             </button>
           )}
-          <button className="primary" onClick={onNew}>
-            NEW SEARCH
+          <button type="button" className="button button--primary primary button--with-icon" onClick={onNew}>
+            <ActionIcon name="search" />NEW SEARCH
           </button>
         </div>
       </div>

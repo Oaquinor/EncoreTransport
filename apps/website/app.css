@@ -1,7 +1,6 @@
 @import url("../../packages/shared/styles.css");
 @import url("../../packages/shared/premium.css");
 @import url("./styles.css");
-@import url("./premium.css");
 @import url("./mandate-fixes.css");
 @import url("./public-rework.css");
 @import url("../../packages/shared/design-system.css");
@@ -13,7 +12,7 @@
 .public-topbar .public-nav{background:#fff;border:1px solid #e2edf2;border-radius:999px;padding:8px 14px;gap:22px}
 .public-topbar .public-nav a{font-size:.76rem;font-weight:800;color:#31536a}
 .public-topbar__actions{gap:8px}
-.public-account-link,.public-passenger-link{border-radius:10px;font-size:.75rem;font-weight:900;padding:10px 14px}
+.public-account-link,.public-passenger-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;box-sizing:border-box;border-radius:var(--et-radius-control);font-size:.75rem;font-weight:900;padding:0 14px}
 .public-account-link{border:1px solid #b9d5e3;background:#fff;color:#0b4160}
 .public-passenger-link{background:#078fd0;color:#fff}
 .public-hero{position:relative;isolation:isolate;overflow:hidden;min-height:540px;margin-top:22px;border-radius:26px;background:linear-gradient(100deg,#072c45 0%,#0b5270 58%,#073149 100%);box-shadow:0 24px 56px rgba(4,34,52,.2)}

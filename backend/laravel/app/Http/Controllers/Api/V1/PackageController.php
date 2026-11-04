@@ -7,8 +7,10 @@ use App\Models\TransportPackage;
 use App\Models\Trip;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class PackageController extends Controller
 {
@@ -93,48 +95,61 @@ class PackageController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        $updated = DB::transaction(function () use ($data, $request, $package): array {
-            // Serialize retries so two requests cannot append competing custody events.
-            $locked = TransportPackage::query()->lockForUpdate()->findOrFail($package->id);
-            $nextStatus = $data['status'];
+        $createdPhotoPath = null;
 
-            if ($nextStatus === $locked->status) {
+        try {
+            $updated = DB::transaction(function () use ($data, $request, $package, &$createdPhotoPath): array {
+                // Serialize retries so two requests cannot append competing custody events.
+                $locked = TransportPackage::query()->lockForUpdate()->findOrFail($package->id);
+                $nextStatus = $data['status'];
+
+                if ($nextStatus === $locked->status) {
+                    return [$locked->fresh(['trip.route', 'events'])];
+                }
+
+                if (!in_array($nextStatus, self::STATUS_TRANSITIONS[$locked->status] ?? [], true)) {
+                    throw ValidationException::withMessages([
+                        'status' => 'Invalid package status transition.',
+                    ]);
+                }
+
+                if ($nextStatus === 'delivered'
+                    && (!$request->boolean('recipient_verified') || !$request->hasFile('delivery_photo'))) {
+                    throw ValidationException::withMessages([
+                        'status' => 'Delivery requires recipient verification and a delivery photo.',
+                    ]);
+                }
+
+                // Keep the upload inside the transaction boundary, but remember its path so
+                // the outer catch can remove it if any subsequent persistence step rolls back.
+                $photoPath = $request->hasFile('delivery_photo')
+                    ? $request->file('delivery_photo')->store('package-deliveries', 'local')
+                    : $locked->delivery_photo_path;
+                $createdPhotoPath = $photoPath !== $locked->delivery_photo_path ? $photoPath : null;
+
+                $locked->forceFill([
+                    'status' => $nextStatus,
+                    'delivered_at' => $nextStatus === 'delivered' ? now() : $locked->delivered_at,
+                    'recipient_verified_at' => $nextStatus === 'delivered' ? now() : $locked->recipient_verified_at,
+                    'delivery_photo_path' => $photoPath,
+                ])->save();
+
+                $locked->events()->create([
+                    'user_id' => $request->user()?->id,
+                    'status' => $nextStatus,
+                    'notes' => $data['notes'] ?? null,
+                    'occurred_at' => now(),
+                ]);
+
                 return [$locked->fresh(['trip.route', 'events'])];
+            });
+        } catch (Throwable $exception) {
+            if ($createdPhotoPath) {
+                Storage::disk('local')->delete($createdPhotoPath);
             }
 
-            if (!in_array($nextStatus, self::STATUS_TRANSITIONS[$locked->status] ?? [], true)) {
-                throw ValidationException::withMessages([
-                    'status' => 'Invalid package status transition.',
-                ]);
-            }
-
-            if ($nextStatus === 'delivered'
-                && (!$request->boolean('recipient_verified') || !$request->hasFile('delivery_photo'))) {
-                throw ValidationException::withMessages([
-                    'status' => 'Delivery requires recipient verification and a delivery photo.',
-                ]);
-            }
-
-            $photoPath = $request->hasFile('delivery_photo')
-                ? $request->file('delivery_photo')->store('package-deliveries', 'local')
-                : $locked->delivery_photo_path;
-
-            $locked->forceFill([
-                'status' => $nextStatus,
-                'delivered_at' => $nextStatus === 'delivered' ? now() : $locked->delivered_at,
-                'recipient_verified_at' => $nextStatus === 'delivered' ? now() : $locked->recipient_verified_at,
-                'delivery_photo_path' => $photoPath,
-            ])->save();
-
-            $locked->events()->create([
-                'user_id' => $request->user()?->id,
-                'status' => $nextStatus,
-                'notes' => $data['notes'] ?? null,
-                'occurred_at' => now(),
-            ]);
-
-            return [$locked->fresh(['trip.route', 'events'])];
-        });
+            throw $exception;
+        }
 
         [$package] = $updated;
         return response()->json(['data' => $package]);

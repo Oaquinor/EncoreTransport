@@ -1,6 +1,16 @@
 # Auditoría completa de acciones y controles
 
-Generado desde controles declarados y listeners detectables en 41 archivos de aplicaciones, más los controles de búsqueda server-side, ficha administrativa, lifecycle de boletos y custodia Driver añadidos en esta revisión. Filas: 490. Cada fila conserva la evidencia de origen; `DECLARADO` y `DINÁMICO` no equivalen a aceptación funcional.
+## Revalidación de coherencia de controles públicos — 2026-11-03
+
+Los controles heredados del Website (`btn`, `btn-primary`, `btn-secondary` y sus variantes dinámicas) conservan sus estilos, pero ahora exponen también las clases canónicas compartidas con Passenger, Admin y Driver. La verificación estática cubre los nueve documentos públicos y sus renderizadores dinámicos; la verificación browser cubre 19 destinos internos y los estados de búsqueda, error, recuperación, selección de ruta y última búsqueda.
+
+Generado desde controles declarados y listeners detectables en 41 archivos de aplicaciones, más los controles de búsqueda server-side, ficha administrativa, lifecycle de boletos y custodia Driver añadidos en esta revisión. Filas: 493. Cada fila conserva la evidencia de origen; `DECLARADO` y `DINÁMICO` no equivalen a aceptación funcional.
+
+## Revalidación runtime de superficies públicas
+
+El nuevo `npm run test:control-runtime-audit` recorrió 14 rutas de Website, seguimiento, registro de paquetes, login, Driver y Admin y levantó 330 controles visibles. No encontró botones/summary sin nombre, controles con geometría inutilizable ni anclas sin destino; los hashes válidos de skip-link se validan contra su destino en la misma pantalla. La evidencia machine-readable queda en `artifacts/control-audit/runtime-controls.json`. Esta pasada cubre superficies sin sesión; la aceptación de módulos autenticados continúa separada y requiere credenciales de cada rol.
+
+La última pasada también alineó los controles propietarios de Login/Admin (submit de autenticación, toggle de sidebar, notificaciones y menú de usuario) con el contrato visual compartido, conservando las variantes específicas de cada superficie. El contrato estático verifica que no vuelvan a divergir.
 
 ## Criterio de estado
 
@@ -170,10 +180,10 @@ Generado desde controles declarados y listeners detectables en 41 archivos de ap
 | 155 | admin-dashboard | apps/admin-dashboard/app.mjs | button ${icon('edit')} | Acción interactiva | runtime/inline | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:817 |
 | 156 | admin-dashboard | apps/admin-dashboard/app.mjs | button Back to dashboard | Acción interactiva | profileClose | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:826 |
 | 157 | admin-dashboard | apps/admin-dashboard/app.mjs | button ${icon('user')}Personal information | Acción interactiva | runtime/inline | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:827 |
-| 158 | admin-dashboard | apps/admin-dashboard/app.mjs | button ${icon('save')}Security Unavailable | Ejecutar operación o enviar datos | runtime/inline | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:827 |
-| 159 | admin-dashboard | apps/admin-dashboard/app.mjs | button ${icon('settings')}Preferences Unavailable | Abrir, cerrar o cambiar una superficie contextual | runtime/inline | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:827 |
-| 160 | admin-dashboard | apps/admin-dashboard/app.mjs | button ${icon('view')}Devices Unavailable | Acción interactiva | runtime/inline | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:827 |
-| 161 | admin-dashboard | apps/admin-dashboard/app.mjs | button ${icon('report')}Activity Unavailable | Acción interactiva | runtime/inline | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:827 |
+| 158 | admin-dashboard | apps/admin-dashboard/app.mjs | Perfil — sección contextual Personal information | Identificar la sección implementada actualmente | `profile-context-bar` | Autenticado/rol | IMPLEMENTADO; no es una acción | fuente:apps/admin-dashboard/app.mjs:827 |
+| 159 | admin-dashboard | apps/admin-dashboard/app.mjs | Security — control retirado | No exponer una pestaña sin endpoint funcional | — | Autenticado/rol | RETIRADO; no se renderiza | corrección:apps/admin-dashboard/app.mjs |
+| 160 | admin-dashboard | apps/admin-dashboard/app.mjs | Preferences — control retirado | No exponer una pestaña sin endpoint funcional | — | Autenticado/rol | RETIRADO; no se renderiza | corrección:apps/admin-dashboard/app.mjs |
+| 161 | admin-dashboard | apps/admin-dashboard/app.mjs | Devices / Activity — controles retirados | No exponer pestañas sin endpoint funcional | — | Autenticado/rol | RETIRADO; no se renderiza | corrección:apps/admin-dashboard/app.mjs |
 | 162 | admin-dashboard | apps/admin-dashboard/app.mjs | button ${icon('view')} | Acción interactiva | changeProfilePhoto | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:829 |
 | 163 | admin-dashboard | apps/admin-dashboard/app.mjs | button ${icon('view')}Change photo | Acción interactiva | changeProfilePhotoSecondary | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:829 |
 | 164 | admin-dashboard | apps/admin-dashboard/app.mjs | input name | Introducir datos | runtime/inline | Autenticado/rol | DINÁMICO; requiere recorrido runtime | fuente:apps/admin-dashboard/app.mjs:830 |
@@ -353,9 +363,9 @@ Generado desde controles declarados y listeners detectables en 41 archivos de ap
 | 338 | package-tracking | apps/package-tracking/index.html | input token | Introducir datos | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/package-tracking/index.html:51 |
 | 339 | package-tracking | apps/package-tracking/index.html | button Track package | Acción interactiva | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/package-tracking/index.html:62 |
 | 340 | passenger-pwa | apps/passenger-pwa/index.html | a Open the real Passenger app | Navegar al destino declarado | /passenger/ | Público | DECLARADO; requiere recorrido runtime | fuente:apps/passenger-pwa/index.html:1 |
-| 341 | passenger | apps/passenger/src/passenger-app.tsx | button CHOOSE SEATS → | Acción interactiva | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1079 |
-| 342 | passenger | apps/passenger/src/passenger-app.tsx | button CONTINUE → | Ejecutar operación o enviar datos | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1163 |
-| 343 | passenger | apps/passenger/src/passenger-app.tsx | button REVIEW TRIP → | Acción interactiva | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1252 |
+| 341 | passenger | apps/passenger/src/passenger-app.tsx | button CHOOSE SEATS | Acción interactiva | runtime/inline | Público | VERIFIED; visual-browser 1440 | fuente:apps/passenger/src/passenger-app.tsx:1079; visual-browser:click |
+| 342 | passenger | apps/passenger/src/passenger-app.tsx | button CONTINUE | Ejecutar operación o enviar datos | runtime/inline | Público | VERIFIED; visual-browser 1440 | fuente:apps/passenger/src/passenger-app.tsx:1163; visual-browser:click |
+| 343 | passenger | apps/passenger/src/passenger-app.tsx | button REVIEW TRIP | Acción interactiva | runtime/inline | Público | VERIFIED; visual-browser 1440 | fuente:apps/passenger/src/passenger-app.tsx:1252; visual-browser:click |
 | 344 | passenger | apps/passenger/src/passenger-app.tsx | button setCheckoutMode('guest')}> Continue as guest Reserve without creating a password. | Ejecutar operación o enviar datos | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1348 |
 | 345 | passenger | apps/passenger/src/passenger-app.tsx | button setCheckoutMode('register')}> Create an account Save your name and view future bookings. | Ejecutar operación o enviar datos | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1349 |
 | 346 | passenger | apps/passenger/src/passenger-app.tsx | input name | Introducir datos | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1356 |
@@ -363,8 +373,8 @@ Generado desde controles declarados y listeners detectables en 41 archivos de ap
 | 348 | passenger | apps/passenger/src/passenger-app.tsx | input phone | Introducir datos | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1358 |
 | 349 | passenger | apps/passenger/src/passenger-app.tsx | input password | Introducir datos | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1359 |
 | 350 | passenger | apps/passenger/src/passenger-app.tsx | input password_confirmation | Ejecutar operación o enviar datos | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1360 |
-| 351 | passenger | apps/passenger/src/passenger-app.tsx | button {loading ? 'CREATING ACCOUNT…' : 'CREATE ACCOUNT & RESERVE →'} | Ejecutar operación o enviar datos | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1362 |
-| 352 | passenger | apps/passenger/src/passenger-app.tsx | button onReserve()}>{loading ? 'RESERVING…' : signed ? 'RESERVE WITH ACCOUNT →' : 'CONTINUE AS GUEST →'} | Ejecutar operación o enviar datos | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1380 |
+| 351 | passenger | apps/passenger/src/passenger-app.tsx | button {loading ? 'CREATING ACCOUNT…' : 'CREATE ACCOUNT & RESERVE'} | Ejecutar operación o enviar datos | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1362 |
+| 352 | passenger | apps/passenger/src/passenger-app.tsx | button onReserve()}>{loading ? 'RESERVING…' : signed ? 'RESERVE WITH ACCOUNT' : 'CONTINUE AS GUEST'} | Ejecutar operación o enviar datos | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1380 |
 | 353 | passenger | apps/passenger/src/passenger-app.tsx | button {loading ? 'CANCELLING…' : 'CANCEL HOLD'} | Acción interactiva | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1439 |
 | 354 | passenger | apps/passenger/src/passenger-app.tsx | button NEW SEARCH | Ejecutar operación o enviar datos | runtime/inline | Público | DINÁMICO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:1448 |
 | 355 | passenger | apps/passenger/src/passenger-app.tsx | a encore transport · passenger | Navegar al destino declarado | /website/ | Público | DECLARADO; requiere recorrido runtime | fuente:apps/passenger/src/passenger-app.tsx:534 |
@@ -498,7 +508,7 @@ Generado desde controles declarados y listeners detectables en 41 archivos de ap
 | 483 | driver-mobile | apps/driver-mobile/App.tsx | button Escanear QR | Abrir cámara y consultar custodia por QR | `driver/packages/scan` | packages.view | DINÁMICO; código nativo implementado; dispositivo pendiente | fuente:apps/driver-mobile/App.tsx:949 |
 | 484 | driver-mobile | apps/driver-mobile/App.tsx | button Consultar token | Consultar custodia por token manual | `driver/packages/scan` | packages.view | DINÁMICO; backend conectado | fuente:apps/driver-mobile/App.tsx:949 |
 | 485 | driver-mobile | apps/driver-mobile/App.tsx | button Cargar | Registrar carga | `driver/packages/{package}/status` | packages.update | DINÁMICO; backend conectado | fuente:apps/driver-mobile/App.tsx:949 |
-| 486 | driver-mobile | apps/driver-mobile/App.tsx | button Tomar evidencia de entrega | Abrir cámara y preparar evidencia privada | cámara nativa/local → multipart | packages.update | DINÁMICO; código nativo implementado; dispositivo pendiente | fuente:apps/driver-mobile/App.tsx:950 |
+| 486 | driver-mobile | apps/driver-mobile/App.tsx | button Tomar evidencia de entrega | Abrir cámara y preparar evidencia privada | cámara nativa/local → multipart | packages.update | DINÁMICO; permiso y pantalla nativa aceptados en AVD; captura multipart pendiente | fuente:apps/driver-mobile/App.tsx:950 |
 | 487 | driver-mobile | apps/driver-mobile/App.tsx | button Verificar destinatario | Confirmar explícitamente al receptor | estado local requerido por backend | packages.update | DINÁMICO; no vincula cuenta automáticamente | fuente:apps/driver-mobile/App.tsx:951 |
 | 488 | driver-mobile | apps/driver-mobile/App.tsx | button Validar entrega | Entregar con evidencia y receptor verificado | `driver/packages/{package}/status` multipart | packages.update | DINÁMICO; backend conectado; dispositivo pendiente | fuente:apps/driver-mobile/App.tsx:952 |
 | 489 | driver-mobile | apps/driver-mobile/App.tsx | button Crear manifiesto | Crear manifiesto del viaje | `driver/manifests` | packages.update | DINÁMICO; backend conectado | fuente:apps/driver-mobile/App.tsx:954 |
@@ -509,10 +519,108 @@ Generado desde controles declarados y listeners detectables en 41 archivos de ap
 
 ## Addendum de cierre premium
 
-La auditoría existente es un inventario estático amplio (493 filas) y no equivale por sí sola a una aceptación de cada control en pantallas autenticadas. En esta iteración se añadió la navegación Admin como controles explícitos: toggle de sidebar, expansión/colapso global, seis grupos por dominio, controles de módulo con permiso, `aria-current`, `title` y destinos internos. También se separaron los controles nativos de QR/evidencia de Driver Mobile. El contrato dedicado es `tests/admin-navigation-contract.test.mjs` y pasa localmente.
+La auditoría existente es un inventario estático amplio (493 filas, incluyendo controles retirados explícitamente) y no equivale por sí sola a una aceptación de cada control en pantallas autenticadas. En esta iteración se añadió la navegación Admin como controles explícitos: toggle de sidebar, expansión/colapso global, seis grupos por dominio, controles de módulo con permiso, `aria-current`, `title` y destinos internos. También se retiraron cuatro pestañas de perfil que solo mostraban `Unavailable` sin implementación backend; la pantalla conserva la sección Personal information y el estado real de dispositivos conectados. También se separaron los controles nativos de QR/evidencia de Driver Mobile; el smoke test nativo de Driver ya ejecutó login, viaje, QR, permisos, GPS background y outbox GPS en AVD; la fotografía multipart y la aceptación en dispositivo físico siguen pendientes. El contrato dedicado es `tests/admin-navigation-contract.test.mjs` y pasa localmente.
+
+## Revalidación de controles implementados — 2026-11-03
+
+- La aceptación browser autenticada de Passenger, Admin y Driver pasó en una corrida integrada de 1440 px; los controles de reportes Admin y las nueve acciones de custodia Driver se validaron con etiqueta, `type="button"`, icono visible y geometría utilizable.
+- El inventario runtime público permanece separado del inventario estático: `artifacts/control-audit/runtime-controls.json` registra 330 controles visibles y `ALL_ACTIONS_AUDIT.md` conserva 493 filas de fuente, incluyendo controles dinámicos y autenticados que requieren permisos o datos reales.
+- Tracking añade una acción verificable `Show QR code` que genera el QR del enlace público sólo bajo demanda; no se marca como aceptación de cámara nativa o dispositivo físico.
+
+## Estandarización de Passenger y Tracking — 2026-11-03
+
+- Passenger: búsqueda, swap de ruta, navegación de flujo, selección de salida, asientos, pasajeros, revisión, reserva, historial y cuenta usan botones con `type` explícito, etiqueta accesible y tokens visuales canónicos. Los pasos de reserva son indicadores (`span`) y ya no simulan acciones deshabilitadas.
+- Tracking: `Copy tracking link`, `Show QR code` y `Refresh status` son controles reales con icono, estado disabled verificable y captura de resultado QR. La prueba `tests/package-tracking-browser.test.mjs` valida el enlace público codificado y la no exposición de datos personales en la interfaz.
+- Evidencia runtime nueva: `artifacts/visual/package-tracking-qr-390.png`; evidencia autenticada: `artifacts/visual/passenger-booking-status-1440.png`, `admin-vehicle-report-1440.png` y `driver-1440.png`.
 
 Pendiente real: recorrer cada fila dinámica en browser autenticado por rol, incluir modales/dropdowns creados tras cada carga y adjuntar evidencia por pantalla. No se marca esta auditoría como exhaustivamente aceptada sólo por expresiones regulares.
+
+## Cierre visual adicional — 2026-11-03
+
+La auditoría runtime y visual se revalidó después de la última normalización de controles: 330 controles visibles en 14 rutas y 36 verificaciones responsive en seis superficies. Admin conserva expansión/colapso global y actualización de reportes con iconos, etiquetas y dimensiones explícitas. Esta evidencia no convierte en aceptadas las integraciones externas ni las acciones que requieren dispositivo físico o proveedor configurado.
+
+La última pasada también normalizó los controles públicos de búsqueda: fecha y pasajeros tienen nombre accesible estable en Website, el selector EN/ES se verificó con cambio real de idioma/SEO y el flujo de paquetería enlaza cada pestaña con su panel mediante `aria-controls`/`aria-labelledby`, incluyendo navegación por teclado.
+
+En Admin se normalizaron las acciones de alto nivel de filtros, búsqueda de cuentas/clientes, alta de usuario y agenda: usan icono, etiqueta visible, `type="button|submit"` explícito y el mismo espaciado del sistema. La aceptación browser autenticada recorrió nuevamente CMS, rutas, flota, viajes, usuarios, clientes, boletos, roles, horarios, reportes, paquetería e incidencias.
+
+El directorio público de rutas también incorpora un control verificable `Clear search`: sólo aparece con una consulta activa, limpia el filtro y devuelve el foco al campo. La prueba browser cubre su estado visible/oculto y evita que el estilo genérico de botones reintroduzca controles visualmente presentes pero inactivos.
+
+La prueba funcional `tests/website-controls-browser.test.mjs` añade cobertura de comportamiento para las nueve páginas públicas: menús desktop y móvil, enlaces internos, búsqueda, intercambio de rutas, flujo de paquetería y FAQ. El control de intercambio queda protegido contra selecciones sin trayecto inverso publicado.
+
+La aceptación autenticada de Admin se repitió con datos preparados por `scripts/prepare-visual-demo.mjs` y pasó a 1440/390 px. Las pestañas de usuario y la acción de notificaciones fueron incluidas en la misma normalización de tipos, estados ARIA, iconos y geometría.
 
 ## Cierre de auditoría
 
 Esta matriz no convierte automáticamente un control en correcto: los estados pendientes requieren browser/E2E autenticado cuando la pantalla depende de sesión, permisos, backend, datos sembrados, modales o errores de red. Los recorridos que sí están cubiertos por la suite se mantienen referenciados en `TEST_RESULTS.md`; los bloqueos restantes de pagos, mobile/dispositivo y proveedores externos permanecen explícitos.
+## Revalidación de controles — 2026-11-03
+
+- Auditoría runtime: 330 controles visibles en 14 rutas.
+- Auditoría estática: 55 archivos fuente; botones con `type` explícito y controles con icono/etiqueta accesible verificados.
+- Website: 18 capturas responsive, navegación profunda, refresh, menús, FAQ, tabs de paquetería y transferencia de parámetros a Passenger verificados.
+- Passenger: build de producción y controles principales con iconografía/semántica consistente verificados.
+- Tracking: copiar enlace, QR y actualizar estado verificados.
+- Sigue pendiente el inventario browser exhaustivo de cada fila dinámica en todas las pantallas autenticadas y la aceptación nativa de cámara/GPS/push.
+## Corrección de consistencia del Website — 2026-11-03
+
+- El buscador de portada y de viajes conserva icono y etiqueta separados durante el estado de carga.
+- El icono de cuenta del header ya no depende de un símbolo textual temporal.
+- El menú móvil anuncia `Abrir navegación`/`Cerrar navegación` en español y sus equivalentes en inglés.
+- La cobertura browser de controles públicos y la auditoría estática se ejecutaron después de estos cambios; no se encontraron controles rotos en las rutas verificadas.
+- Encore Live quedó cubierto con selección de ruta y selección de unidad usando datos de prueba explícitos; no se inventan posiciones fuera del fixture.
+- Package Register quedó cubierto browser: `Register package` conserva su icono durante la mutación y `Copy link` actualiza solo su etiqueta, conservando el control visual.
+
+## Evidencia dinámica adicional — 2026-11-03
+
+La prueba browser del Website generó `artifacts/control-audit/website-button-matrix.json` con 48 filas. Cada control visible queda asociado a pantalla, mecanismo, identificador y estado de verificación, incluyendo búsqueda reciente, limpieza de filtros y recuperación de errores de rutas y Encore Live. Esta matriz cubre el Website público y no sustituye el inventario E2E autenticado por rol.
+
+## Matriz autenticada por rol — 2026-11-03
+
+La aceptación visual autenticada generó `artifacts/control-audit/authenticated-control-matrix.json` con 201 filas para Passenger, Admin y Driver en 1440 y 390 px. Registra propósito, destino, permiso, estado y prueba; 123 controles fueron observados en clic real durante los recorridos. La evidencia cubre las superficies y datos demo ejecutados, pero no reemplaza la aceptación física de Mobile ni las integraciones productivas.
+
+## Revalidación QR y acciones de Tracking — 2026-11-03
+
+- `Copy tracking link`, `Show/Hide QR code` y `Refresh status` conservan icono, etiqueta visible, `type="button"` y estados verificables.
+- El control QR conserva el enlace público del paquete, no expone cuenta ni datos privados y muestra un estado de error recuperable si QuickChart no responde.
+- `tests/package-tracking-browser.test.mjs` y `tests/package-register-browser.test.mjs` pasan; la auditoría dinámica sigue separando evidencia browser de aceptación física de cámara/dispositivo.
+
+## Fuente única de iconos operativos — 2026-11-03
+
+- Admin ya no contiene un catálogo SVG local paralelo en `src/views.mjs`; la vista importa `packages/shared/icons.mjs` y el contrato `admin-navigation-contract.test.mjs` verifica esa dependencia.
+- Esto evita que `Generate`, `View`, `Report`, `QR`, `Refresh`, `Save` y las acciones de tabla se dibujen con variantes distintas entre módulos.
+
+## Evidencia pública vigente — 2026-11-04
+
+La revalidación browser de las nueve páginas públicas volvió a pasar: 19 destinos internos válidos, 330 controles visibles en 14 rutas y 18 capturas responsive con geometría. La matriz dinámica vigente está en `artifacts/control-audit/website-button-matrix.json` e incluye menús desktop/móvil, búsqueda y restauración de búsquedas recientes, limpieza del directorio de rutas, tabs de paquetería, estados de error/recuperación y selección de ruta/unidad en Encore Live. Este inventario prueba el Website público; no se interpreta como aceptación de filas dinámicas autenticadas, proveedores externos o dispositivos físicos.
+
+Revalidación posterior al rediseño del footer: la corrida completa del 2026-11-04 registró 336 controles visibles en 14 rutas. El incremento corresponde a los enlaces reales de mapa del sitio, servicios, contacto y acceso discreto de personal incorporados al cierre público; no se detectaron controles sin nombre, destinos vacíos ni geometría inutilizable.
+
+El inventario público posterior al footer quedó en **606 filas** en `artifacts/control-audit/website-control-inventory.json`; mantiene 49 acciones y 16 comportamientos con evidencia en `website-control-coverage.json`.
+
+La ejecución posterior añadió el envío del formulario de `/website/trips/` como acción real hacia Passenger: origen, destino, fecha y pasajeros se conservaron en la URL de destino. La matriz vigente contiene **49 acciones ejercitadas** y el inventario público conserva **597 controles**.
+
+El artefacto `artifacts/control-audit/website-control-coverage.json` añade la cobertura por comportamiento: 16 contratos requeridos con evidencia de navegación, disclosure, menú desktop, menú móvil, teclado, intercambio de rutas, campos/formularios, idioma, búsquedas recientes, filtro, recuperación, tabs y selección/reintento de Encore Live. Así se distingue un control meramente encontrado de una interacción ejercitada.
+
+La auditoría pública se amplió con `artifacts/control-audit/website-control-inventory.json`: la corrida vigente generó 597 filas, una por control interactivo de las nueve pantallas públicas, incluyendo enlaces de navegación, campos, selects, disclosures legales/FAQ, menús desktop/móvil, formularios, tabs y acciones de recuperación. Cada fila contiene aplicación, pantalla, control, propósito, destino, permisos, estado y prueba; las filas ocultas por el estado inicial se conservan como `available-hidden` para no perder controles de navegación desplegables.
+
+La selección de unidad de Encore Live no queda fuera de la normalización por ser una acción contextual: al seleccionar una ruta, el control visible fue comprobado con altura mínima de 40 px, radio `12px` y `border-box`, además de activar el marcador real correspondiente.
+
+El contrato visual computado `tests/website-control-visual-contract.test.mjs` añade una comprobación que la matriz funcional no podía demostrar: altura táctil, radio, `border-box`, display y firma visual de los controles en 390/768/1440 px. La prueba encontró y corrigió el CTA pequeño del footer y las pestañas de Paquetería; después de la corrección quedaron 7 firmas visuales estables y ninguna acción pública visible por debajo de 36 px.
+
+La auditoría cross-surface `tests/control-cross-surface-visual.test.mjs` verifica además que los controles canónicos no cambien de radio o caja entre aplicaciones. La corrida vigente observó 38 controles en Website, Viajes, Tracking, Package Register, Login, Driver y Admin a 390/1440 px; todos resolvieron a `12px` y `border-box`. Se excluyen deliberadamente navegación, badges, tabs y el swap circular porque son variantes semánticas, no botones de acción equivalentes.
+
+## Revalidación autenticada de Admin — 2026-11-04
+
+Con `prepare:visual-demo` y Laravel/MySQL de Laragon activos, `test:visual-browser` pasó Admin a 1440 px. La evidencia ejercitó navegación por grupos, teclado, sidebar compacta, Expand/Collapse all, CMS, rutas, flota, usuarios, clientes, boletos, roles, horarios, paquetería, incidencias y reportes. En reportes se verificaron las descargas CSV/JSON y el orden persistente de los widgets del dashboard ejecutivo; los informes especializados se mantienen como tablas enfocadas y no se contabilizan erróneamente como widgets.
+## Revalidación de referencias de controles públicos — 2026-11-04
+
+La matriz dinámica de las nueve rutas públicas del Website contiene **606 filas** y **49 acciones ejercitadas**. Todos los controles tienen etiqueta; después de identificar los disclosures como referencias funcionales (`disclosure:#id`), la auditoría también registra **0 destinos vacíos**. FAQ, privacidad, términos y accesibilidad conservan su apertura nativa y ahora exponen explícitamente el panel que controlan mediante `aria-controls`/`id`.
+
+La corrida browser confirmó **16 destinos internos**, navegación desktop por clic/hover/teclado, acordeones móviles, búsqueda y transferencia de parámetros a Passenger, búsquedas recientes, reintentos, selección Live, estados de error y disclosures. La cobertura pública no sustituye la aceptación autenticada de cada rol ni las integraciones productivas.
+
+## Inventario autenticado acumulativo de Admin — 2026-11-04
+
+La aceptación visual autenticada ya no conserva únicamente los controles de la última pantalla abierta: captura los estados de cada módulo durante la sesión y los consolida por pantalla, viewport y control. La matriz vigente contiene **964 filas en 15 pantallas Admin** y **326 clics observados** a 390 y 1440 px: Dashboard, Bookings, Website content, Routes, Vehicles, Drivers, Trips, Users, Customers, Tickets, Roles, Driver schedules, Reports, Packages e Incidents. Cada fila conserva etiqueta, propósito, destino, permisos, estado y evidencia; la aceptación nativa y los proveedores productivos siguen siendo gates separados.
+
+La prueba de contrato de controles también reconoce etiquetas HTML implícitas (`label`), referencias `aria-labelledby` y los identificadores de campo CMS (`data-cms-key`/`data-cms-field`). En la tabla reutilizable de Admin, el buscador y el selector de filas exponen ahora `id`, `name` y etiquetas explícitas; la aceptación visual autenticada pasó en 390 y 1440 px.
+
+El dashboard ejecutivo de Reportes ya no depende sólo del arrastre: cada widget expone controles accesibles para moverlo arriba o abajo, con iconos de la fuente compartida, límites de orden y persistencia local. El contrato de gráficos y la aceptación autenticada verifican esos controles.

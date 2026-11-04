@@ -190,6 +190,11 @@ try {
   );
 
   await expectOk(
+    '/assets/media/encore-loader.gif',
+    /image\/gif/,
+  );
+
+  await expectOk(
     '/packages/shared/api.mjs',
     /text\/javascript/,
   );

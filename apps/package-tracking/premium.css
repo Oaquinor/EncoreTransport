@@ -98,7 +98,7 @@ body {
 .premium-tracking-form button {
   min-height: 50px;
   border: 0;
-  border-radius: 11px;
+  border-radius: var(--et-radius-control);
   padding: 0 18px;
   background: var(--et-navy-900);
   color: #fff;

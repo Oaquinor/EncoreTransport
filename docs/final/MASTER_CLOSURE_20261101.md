@@ -1,7 +1,7 @@
 # EncoreTransport — cierre maestro verificable
 
-Fecha: 2026-11-01  
-Rama: `main`  
+Fecha: 2026-11-04
+Rama: `main`
 Commit de referencia: `0174468fdcdb71a5e28f7bcb9ed51e1f7bfed184`
 Commit final: no creado; los cambios de esta revisión permanecen sin confirmar.
 
@@ -9,7 +9,9 @@ Commit final: no creado; los cambios de esta revisión permanecen sin confirmar.
 
 `PARTIALLY_COMPLETE`
 
-La plataforma tiene una base funcional demostrable para Website, reservas, asientos, Passenger web, Driver PWA, Admin, mapas, tracking y contratos de seguridad. No se declara lista para producción porque pagos externos, dispositivos móviles reales, notificaciones externas y la integración operativa completa de custodia siguen sin aceptación completa.
+En la revalidación del 2026-11-02 se localizaron PHP 8.3.30 y MySQL de Laragon fuera del `PATH`; la suite Laravel se ejecutó con esos binarios y la base local activa.
+
+La plataforma tiene una base funcional demostrable para Website, reservas, asientos, Passenger web, Driver PWA, Admin, mapas, tracking y contratos de seguridad. Passenger y Driver Mobile ya compilan, se instalan y arrancan en un AVD Android con la API local conectada; Driver además acepta el login demo, carga un viaje asignado real, abre el escáner QR y activa GPS background. Se reprodujo y corrigió el crash nativo de mapas por ausencia de clave Google con un fallback de ruta real y configuración del plugin para una clave autorizada. No se declara lista para producción porque la aceptación móvil completa, pagos externos, notificaciones externas, mapa nativo con proveedor configurado y la integración operativa completa de custodia siguen sin aceptación completa.
 
 ## Trabajo realizado en esta revisión
 
@@ -33,6 +35,7 @@ La plataforma tiene una base funcional demostrable para Website, reservas, asien
 - Driver PWA y Driver Mobile ya consumen los flujos de escaneo, carga, manifiesto, discrepancia y transferencia; las respuestas y errores provienen del backend.
 - Encore Live incorpora polling adaptativo, recuperación al volver online/visible, interpolación de posiciones reales, marcadores stale y cleanup de animaciones; no se introduce WebSocket/SSE sin contrato backend.
 - Driver Mobile incorpora permisos y tarea de GPS background, cámara QR, fotografía privada y validación explícita del destinatario; Passenger Mobile falla de forma segura sin red.
+- La aceptación AVD posterior verificó login, viaje demo, permiso/cámara QR y GPS background con envío real a Operaciones. Sin `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`, Driver Mobile muestra el recorrido real como fallback y evita el crash nativo; la clave no se inventa ni se incluye en el repositorio.
 - El Website público sirve inglés por defecto y ofrece EN/ES desde header desktop y móvil; `locale-data.mjs` centraliza navegación, contenido estático/dinámico y SEO por variante. Las páginas tienen composiciones visuales diferenciadas y el CMS rechaza términos técnicos antes de guardar o publicar.
 - El CMS admite campos bilingües `*_en`/`*_es` para secciones y FAQ, con validación editorial compartida y selección por locale en el Website.
 - El servidor admite convertir canonical y `og:url` relativos en URLs absolutas cuando se configura `PUBLIC_SITE_URL` con un dominio público no local; no convierte el dominio de desarrollo en canonical de producción.
@@ -47,4 +50,24 @@ Proveedor y credenciales de pago, aceptación de evidencia/cámara y GPS backgro
 
 ## Evidencia
 
-`npm test` pasa; los typechecks de API, Passenger web, Passenger Mobile y Driver Mobile pasan; el build de Passenger pasa; browser visual pasa con 36 checks y capturas en 360, 390, 768, 1024, 1440 y 1920 px, incluyendo cambio EN/ES y transferencia de búsqueda; los flujos Admin y Driver autenticados focalizados pasan a 1440 px. `php artisan test` pasa con 83 pruebas y 545 aserciones usando PHP 8.3.30 y MySQL de Laragon, incluyendo `WebsiteContentAndRouteImageTest`, `AdminUserSearchTest` y `AdminTicketLifecycleTest`. Las pruebas en dispositivos reales y las integraciones externas siguen bloqueadas.
+La revalidación actual de Node/browser pasa (`npm test`), junto con typechecks, builds móviles, browser responsive, cambio EN/ES, transferencia de búsqueda y métricas de mapas. Laravel pasó con **86 pruebas y 610 aserciones** usando PHP 8.3.30 y MySQL de Laragon, incluyendo `WebsiteContentAndRouteImageTest`, `AdminUserSearchTest`, `AdminTicketLifecycleTest`, custodia, caché TomTom y concurrencia. Admin y Driver también pasaron recorridos autenticados combinados a 1440 px después de sembrar el entorno demo. Passenger Mobile y Driver Mobile construyeron APK debug `x86_64`, se instalaron y se lanzaron en `emulator-5554`; con ADB reverse se verificaron la selección contextual/búsqueda de Passenger y en Driver el login, viaje, fallback de mapa, QR, GPS background, outbox GPS y arranque del APK final. La evidencia móvil nueva está en `artifacts/mobile/driver-final-apk-start.png`, `artifacts/mobile/driver-emulator-offline-queued-real.png`, `artifacts/mobile/driver-emulator-camera-qr.png`, `artifacts/mobile/driver-emulator-gps-after-settings.png` y `artifacts/mobile/driver-emulator-custody-top.png`, además de las capturas previas de Passenger. La aceptación móvil completa y las integraciones externas siguen pendientes.
+
+## Revalidación final local — 2026-11-03
+
+PHP 8.3.30 y MySQL de Laragon se ejecutaron mediante rutas explícitas fuera del `PATH`. La suite Laravel más reciente pasó con **86 pruebas y 610 aserciones**. Tras sembrar el entorno demo, la aceptación visual Admin autenticada pasó a 1440 y 390 px y produjo capturas actualizadas de todos los módulos operativos. El estado global permanece `PARTIALLY_COMPLETE` por las dependencias que requieren proveedor, credenciales externas, dispositivo físico o E2E completo por rol.
+
+## Revalidación nativa final — 2026-11-03
+
+Los APK actuales de Passenger Mobile y Driver Mobile terminaron `BUILD SUCCESSFUL` con Gradle/JDK 17, fueron instalados en `emulator-5554` y arrancaron sus actividades reales con `Status: ok`. El log de ambos mostró `ReactNativeJS: Running "main"` y no reportó `FATAL EXCEPTION`. Esto completa la evidencia de compilación, instalación y arranque de las dos apps móviles; no declara completa la aceptación nativa funcional ni cambia la clasificación global `PARTIALLY_COMPLETE`.
+
+La última revalidación corrigió además la limpieza de archivos temporales de evidencia cuando falla una transacción de entrega y amplió el lifecycle terminal de boletos. La suite Laravel terminó con **86 pruebas/610 aserciones**; `npm test` pasó nuevamente con Website, las aplicaciones web, contratos móviles y métricas de mapas. La clasificación permanece `PARTIALLY_COMPLETE` por los bloqueos externos, el dispositivo físico y los recorridos nativos aún no aceptados.
+
+## Revalidación offline Driver Mobile — 2026-11-03
+
+La app Driver ahora puede dejar en cola de forma controlada únicamente el inicio de una carga (`in_progress`) cuando no hay red; muestra que sigue pendiente, reintenta al reconectar y elimina acciones rechazadas sin presentarlas como confirmadas. Entregas con foto y transferencias no se encolan offline. Los contratos y typechecks pasaron. El build Android incremental terminó correctamente y el smoke con Metro cargó el JavaScript actual con arranque real y sin excepción fatal; todavía no se acepta la transición offline completa dentro del emulador y no se eleva el estado global.
+
+## Revalidación Laravel y Admin — 2026-11-04
+
+Con Laragon activo, MySQL respondió en `127.0.0.1:3306` y Laravel terminó **86 pruebas y 610 aserciones PASS** con PHP 8.3.30. El seeder `EncoreTransportDemoSeeder` dejó reproducible el usuario administrador y los datos de aceptación; el login visual pasó sin cambios de seguridad.
+
+La prueba visual autenticada de Admin a 1440 px pasó CMS, navegación por grupos, teclado, sidebar compacta, Expand/Collapse all, rutas, flota, usuarios, clientes, boletos, roles, horarios, paquetería, incidencias y reportes. Reportes validó exportación CSV/JSON y orden persistente del dashboard ejecutivo; los reportes especializados mantienen su presentación tabular. La clasificación continúa `PARTIALLY_COMPLETE` por integraciones externas, dispositivo físico y aceptación nativa/E2E aún pendientes.

@@ -1,0 +1,68 @@
+# Plantilla. Reemplazar todos los valores YOUR_* antes de instalarla.
+# El socket PHP-FPM puede ser /run/php/php8.2-fpm.sock, php8.3-fpm.sock, etc.
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name YOUR_PRODUCTION_DOMAIN www.YOUR_PRODUCTION_DOMAIN;
+
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name YOUR_PRODUCTION_DOMAIN www.YOUR_PRODUCTION_DOMAIN;
+
+    ssl_certificate /etc/letsencrypt/live/YOUR_PRODUCTION_DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/YOUR_PRODUCTION_DOMAIN/privkey.pem;
+
+    client_max_body_size 25m;
+    root /var/www/encoretransport/current/backend/laravel/public;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    # Laravel API and health route. API secrets remain server-side.
+    location ^~ /api/ {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /up {
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root/index.php;
+        fastcgi_param SCRIPT_NAME /index.php;
+        fastcgi_param HTTP_PROXY "";
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+    }
+
+    location ~ ^/index\.php(/|$) {
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param HTTP_PROXY "";
+        fastcgi_read_timeout 60s;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+    }
+
+    # Public uploaded media only. Private evidence must not be placed here.
+    location ^~ /storage/ {
+        try_files $uri =404;
+        access_log off;
+        expires 1h;
+    }
+
+    # All public applications are served by the Node entry point.
+    location / {
+        proxy_pass http://127.0.0.1:4173;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 30s;
+        proxy_send_timeout 30s;
+    }
+
+    location ~ /\. {
+        deny all;
+    }
+}

@@ -18,11 +18,19 @@
 @import url("./passenger-polish.css");
 
 .checkout-account { display: grid; gap: 12px; grid-column: 1 / -1; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: #f8fbfc; }
-.passenger-boot-screen { min-height:100vh; display:grid; place-content:center; justify-items:center; gap:10px; padding:24px; background:#f4f8fa; color:#123246; text-align:center; }
-.passenger-boot-screen > span:last-child { color:#607b8b; font-size:.82rem; }
-.passenger-boot-screen__spinner { width:34px; height:34px; border:3px solid #cce4ec; border-top-color:#0c8db9; border-radius:50%; animation:passenger-boot-spin .7s linear infinite; }
-@keyframes passenger-boot-spin { to { transform:rotate(360deg); } }
-@media (prefers-reduced-motion:reduce) { .passenger-boot-screen__spinner { animation:none; } }
+.passenger-boot-screen { min-height:100vh; display:grid; place-items:center; padding:24px; background:radial-gradient(circle at 18% 12%,rgba(45,169,223,.22),transparent 28%),linear-gradient(145deg,#071f31,#103f56); color:#fff; text-align:center; }
+.passenger-boot-screen__inner { position:relative; display:grid; justify-items:center; gap:9px; width:min(380px,100%); padding:34px 28px 28px; border:1px solid rgba(142,224,251,.28); border-radius:26px; background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.04)); box-shadow:0 26px 70px rgba(2,20,32,.28),inset 0 1px rgba(255,255,255,.1); }
+.passenger-boot-screen__brand { display:grid; justify-items:center; gap:5px; }
+.passenger-boot-screen__brand img { display:block; width:160px; height:160px; object-fit:contain; }
+.passenger-boot-screen__brand span { color:#8ee0fb; font-size:.63rem; font-weight:900; letter-spacing:.18em; }
+.passenger-boot-screen strong { font-size:1.05rem; letter-spacing:-.02em; }
+.passenger-boot-screen > .passenger-boot-screen__inner > span { color:#b9d7e1; font-size:.82rem; }
+.passenger-boot-screen__progress { display:flex; align-items:center; gap:7px; margin-top:8px; }
+.passenger-boot-screen__progress::before { position:absolute; right:62px; left:62px; height:1px; content:""; background:linear-gradient(90deg,transparent,#68d7f1,transparent); opacity:.5; }
+.passenger-boot-screen__progress i { position:relative; z-index:1; width:7px; height:7px; border:1px solid #68d7f1; border-radius:50%; background:#0b2b40; animation:passenger-boot-pulse 1.4s ease-in-out infinite; }
+.passenger-boot-screen__progress i:nth-child(2) { animation-delay:.14s; }.passenger-boot-screen__progress i:nth-child(3) { animation-delay:.28s; }.passenger-boot-screen__progress i:nth-child(4) { animation-delay:.42s; }
+@keyframes passenger-boot-pulse { 0%,100% { opacity:.35; transform:scale(.82); } 50% { opacity:1; transform:scale(1.18); background:#68d7f1; } }
+@media (prefers-reduced-motion:reduce) { .passenger-boot-screen__progress i { animation:none; } }
 .checkout-account h3 { margin: 0; font-size: 1rem; }
 .checkout-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .checkout-choice button { display: grid; gap: 5px; min-height: 78px; padding: 13px; text-align: left; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); cursor: pointer; }
@@ -202,4 +210,76 @@
   background: #fee7e8;
   border-color: #f29da1;
   color: #b52023;
+}
+
+/* Canonical Passenger controls: every actionable button shares the same
+ * geometry, focus treatment and icon rhythm. Legacy .primary/.ghost aliases
+ * remain on the main flow only so older layout rules cannot change responsive
+ * placement while the visual contract migrates to button--* tokens. */
+.button--with-icon { gap: 8px; }
+.button--with-icon .ui-icon { width: 16px; height: 16px; flex: 0 0 auto; }
+.button--icon {
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0;
+  border-radius: 12px;
+}
+.button--subtle {
+  min-height: 34px;
+  padding: 0 11px;
+  border-radius: 10px;
+  background: #f7fbfc;
+  color: #24617a;
+  font-size: .68rem;
+}
+.button--tab {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #fff;
+  color: #577181;
+  font-size: .74rem;
+}
+.button--tab.is-active {
+  border-color: #0c8db9;
+  background: #0c8db9;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(12, 141, 185, .18);
+}
+.button--primary:not(:disabled):hover,
+.button--ghost:not(:disabled):hover,
+.button--subtle:not(:disabled):hover,
+.button--tab:not(:disabled):hover { transform: translateY(-1px); }
+.button--primary:not(:disabled):active,
+.button--ghost:not(:disabled):active,
+.button--subtle:not(:disabled):active,
+.button--tab:not(:disabled):active { transform: translateY(1px); }
+.topbar nav .button {
+  min-height: 40px;
+  padding: 0 13px;
+  border-radius: 11px;
+  font-size: .7rem;
+  letter-spacing: .02em;
+}
+.account-trip-tabs .button--tab { border-color: #c9dde5; }
+.account-booking__actions .button--subtle .ui-icon { width: 14px; height: 14px; }
+.journey-steps .journey-step {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  border-right: 1px solid var(--line);
+  background: #fff;
+  padding: 10px;
+  color: #9babb4;
+  font-size: 10px;
+}
+.journey-steps .journey-step:last-child { border-right: 0; }
+.journey-steps .journey-step.active { background: #eaf7fb; color: var(--ink); font-weight: 900; }
+.journey-steps .journey-step em { flex: 0 0 auto; }
+@media (prefers-reduced-motion: reduce) {
+  .button--primary:not(:disabled):hover,
+  .button--ghost:not(:disabled):hover,
+  .button--subtle:not(:disabled):hover,
+  .button--tab:not(:disabled):hover { transform: none; }
 }

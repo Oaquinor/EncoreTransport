@@ -28,14 +28,52 @@ const pages = [
   ['help', '/website/help/'],
 ];
 
-for (const width of [390, 768, 1440]) {
+const assertHorizontalGeometry = async (name, width) => {
+  const result = await page.evaluate((viewportWidth) => {
+    const selectors = [
+      'main > .shell',
+      'main .site-page__hero',
+      'main .site-page__section',
+      'main .public-booking',
+      'main .site-live-map',
+      'footer > .shell',
+    ];
+    const overflowing = [];
+    for (const selector of selectors) {
+      for (const element of document.querySelectorAll(selector)) {
+        const rect = element.getBoundingClientRect();
+        if (rect.width > 0 && (rect.left < -1 || rect.right > viewportWidth + 1)) {
+          overflowing.push({ selector, left: Math.round(rect.left), right: Math.round(rect.right), width: Math.round(rect.width) });
+        }
+      }
+    }
+    const unusableControls = [...document.querySelectorAll('a,button,input,select,summary')]
+      .filter((element) => {
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return element.getClientRects().length > 0 && style.display !== 'none' && style.visibility !== 'hidden' && (rect.width < 1 || rect.height < 1);
+      })
+      .slice(0, 8)
+      .map((element) => ({ tag: element.tagName, text: element.textContent?.trim().slice(0, 60) }));
+    return {
+      scrollWidth: document.documentElement.scrollWidth,
+      overflowing,
+      unusableControls,
+    };
+  }, width);
+  assert.ok(result.scrollWidth <= width + 1, `${name} must not overflow at ${width}px`);
+  assert.deepEqual(result.overflowing, [], `${name} has horizontally misaligned regions at ${width}px`);
+  assert.deepEqual(result.unusableControls, [], `${name} has visible controls without usable geometry at ${width}px`);
+};
+
+for (const width of [320, 360, 375, 390, 414, 768, 1024, 1280, 1440, 1920]) {
   await page.setViewportSize({ width, height: 900 });
   for (const [name, pathname] of pages) {
     const response = await page.goto(`http://${host}:${port}${pathname}`, { waitUntil: 'domcontentloaded' });
     assert.equal(response?.status(), 200, `${name} must load at ${width}px`);
-    await page.waitForTimeout(150);
+    await page.waitForTimeout(75);
     assert.ok(await page.title(), `${name} must have a title`);
-    assert.ok((await page.evaluate(() => document.documentElement.scrollWidth)) <= width + 1, `${name} must not overflow at ${width}px`);
+    await assertHorizontalGeometry(name, width);
     const primaryShell = page.locator('main > .shell').first();
     if (await primaryShell.count()) {
       const shellBox = await primaryShell.boundingBox();
@@ -75,10 +113,25 @@ await page.locator('#primaryNav [data-menu-button]').first().click();
 await page.screenshot({ path: 'artifacts/visual/website-navigation-desktop-1440.png', fullPage: false });
 await page.locator('#primaryNav [data-menu-button]').first().hover();
 const routeMenuLink = page.locator('#travelMenu a').first();
+const menuGeometry = await page.locator('#primaryNav [data-menu-button]').first().evaluate((button) => {
+  const panel = button.closest('[data-menu]')?.querySelector('[data-menu-panel]');
+  const buttonRect = button.getBoundingClientRect();
+  const panelRect = panel?.getBoundingClientRect();
+  return { buttonBottom: buttonRect.bottom, panelTop: panelRect?.top ?? Number.POSITIVE_INFINITY };
+});
+assert.ok(menuGeometry.panelTop <= menuGeometry.buttonBottom + 1, 'Desktop dropdown must touch its trigger so the pointer cannot fall through a gap');
 await routeMenuLink.hover();
 assert.equal(await routeMenuLink.isVisible(), true, 'Desktop dropdown must remain selectable while crossing to its panel');
 await routeMenuLink.click();
 await page.waitForURL('**/website/routes/**');
+await page.goto(`http://${host}:${port}/website/`, { waitUntil: 'domcontentloaded' });
+const keyboardTravelMenu = page.locator('#primaryNav [data-menu-button]').first();
+await keyboardTravelMenu.focus();
+await page.keyboard.press('ArrowDown');
+assert.equal(await page.locator('#travelMenu').getAttribute('hidden'), null, 'Desktop dropdown must open with ArrowDown');
+assert.equal(await page.locator('#travelMenu a').first().evaluate((element) => document.activeElement === element), true, 'ArrowDown must move focus into the dropdown');
+await page.keyboard.press('Escape');
+assert.notEqual(await page.locator('#travelMenu').getAttribute('hidden'), null, 'Escape must close the keyboard-open dropdown');
 await page.setViewportSize({ width: 390, height: 900 });
 await page.goto(`http://${host}:${port}/website/`, { waitUntil: 'domcontentloaded' });
 await page.locator('#mobileMenuToggle').click();
@@ -99,6 +152,25 @@ assert.ok(await page.locator('[name="date"]').inputValue(), 'search date must re
 await page.reload({ waitUntil: 'domcontentloaded' });
 await page.waitForFunction(() => document.querySelector('[name="origin"]')?.value === 'Georgetown');
 assert.equal(await page.locator('[name="destination"]').inputValue(), 'New Amsterdam', 'deep refresh must preserve URL search parameters');
+
+await page.goto(`http://${host}:${port}/website/routes/`, { waitUntil: 'domcontentloaded' });
+await page.locator('#routeFilter').fill('Georgetown');
+await page.locator('#routeFilterClear').waitFor({ state: 'visible' });
+assert.equal(await page.locator('#routesPageGrid .route-directory-card').count(), 1, 'route search must filter the published directory');
+await page.locator('#routeFilterClear').click();
+assert.equal(await page.locator('#routeFilter').inputValue(), '', 'route search clear must reset the query');
+assert.equal(await page.locator('#routeFilterClear').isHidden(), true, 'route search clear must hide when there is no query');
+
+await page.goto(`http://${host}:${port}/website/packages/`, { waitUntil: 'domcontentloaded' });
+const packageSteps = page.locator('[data-package-step]');
+assert.equal(await packageSteps.count(), 3, 'parcel induction must expose three navigable stages');
+await packageSteps.nth(0).focus();
+await page.keyboard.press('ArrowRight');
+assert.equal(await packageSteps.nth(1).getAttribute('aria-selected'), 'true', 'parcel stages must support ArrowRight navigation');
+assert.equal(await page.locator('[data-package-title]').textContent(), 'Hand over', 'ArrowRight must update the active parcel stage');
+assert.equal(await page.evaluate(() => document.activeElement?.matches('[data-package-step="1"]')), true, 'keyboard navigation must move focus to the active parcel stage');
+await page.keyboard.press('End');
+assert.equal(await packageSteps.nth(2).getAttribute('aria-selected'), 'true', 'parcel stages must support End navigation');
 
 await page.goto(`http://${host}:${port}/website/help/`, { waitUntil: 'domcontentloaded' });
 const faqItems = page.locator('.site-page--help .help-faq-list details');

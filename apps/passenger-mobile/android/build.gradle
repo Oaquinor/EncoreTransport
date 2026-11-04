@@ -22,3 +22,16 @@ allprojects {
 
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
+
+// Expo Modules Core requests libc++_shared through CMake, but some AGP/NDK
+// combinations omit it for one ABI during parallel native configuration.
+// Keep the fix at the app-project level so it survives dependency reinstalls.
+subprojects { subproject ->
+  if (subproject.name == "expo-modules-core") {
+    subproject.plugins.withId("com.android.library") {
+      subproject.android.defaultConfig.externalNativeBuild.cmake.arguments(
+        "-DCMAKE_CXX_STANDARD_LIBRARIES=-lc++_shared -latomic -lm"
+      )
+    }
+  }
+}

@@ -96,6 +96,14 @@ android {
         versionName "0.1.0"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
+
+        externalNativeBuild {
+            cmake {
+                // Keep generated React Native CMake targets linked against the
+                // same shared C++ runtime as Expo Modules Core on every ABI.
+                arguments "-DCMAKE_CXX_STANDARD_LIBRARIES=-lc++_shared -latomic -lm"
+            }
+        }
     }
     signingConfigs {
         debug {

@@ -11,6 +11,7 @@ const terminalList = document.querySelector('#terminalsList');
 const terminalCount = document.querySelector('#terminalCount');
 const routeCount = document.querySelector('#routeCount');
 const filter = document.querySelector('#routeFilter');
+const filterClear = document.querySelector('#routeFilterClear');
 
 const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[character]));
 const routeOrigin = (route) => route.origin ?? route.segments?.[0]?.origin ?? '';
@@ -37,6 +38,7 @@ function renderPreview(routes) {
 
 function renderDirectory() {
   const query = filter?.value.trim().toLocaleLowerCase() ?? '';
+  if (filterClear) filterClear.hidden = !query;
   const routes = publishedRoutes.filter((route) => `${routeOrigin(route)} ${routeDestination(route)} ${(route.stops ?? []).map((stop) => stop.name).join(' ')}`.toLocaleLowerCase().includes(query));
   if (state) state.textContent = routes.length
     ? copy(`${routes.length} route${routes.length === 1 ? '' : 's'} shown.`, `${routes.length} ruta${routes.length === 1 ? '' : 's'} mostrada${routes.length === 1 ? '' : 's'}.`)
@@ -47,7 +49,7 @@ function renderDirectory() {
     const destination = routeDestination(route);
     const segments = (route.segments ?? []).filter((segment) => segment.active !== false);
     const queryParams = new URLSearchParams({ origin, destination, passengers: '1' });
-    return `<article class="route-directory-card"><div class="route-directory-card__top"><span class="site-kicker">${copy('Published route', 'Ruta publicada')}</span><span>${route.distance_km ? `${escapeHtml(route.distance_km)} km` : copy('Distance pending', 'Distancia pendiente')}</span></div><h3>${escapeHtml(origin)} <span aria-hidden="true">→</span> ${escapeHtml(destination)}</h3><p>${segments.length ? copy(`${segments.length} segment${segments.length === 1 ? '' : 's'} to review.`, `${segments.length} tramo${segments.length === 1 ? '' : 's'} para consultar.`) : copy('Review departures available for this route.', 'Consulta las salidas disponibles para este recorrido.')}</p><a class="btn btn-secondary" href="/website/trips/?${queryParams}">${copy('Find departures', 'Buscar salidas')} <span aria-hidden="true">→</span></a></article>`;
+    return `<article class="route-directory-card"><div class="route-directory-card__top"><span class="site-kicker">${copy('Published route', 'Ruta publicada')}</span><span>${route.distance_km ? `${escapeHtml(route.distance_km)} km` : copy('Distance pending', 'Distancia pendiente')}</span></div><h3>${escapeHtml(origin)} <span aria-hidden="true">→</span> ${escapeHtml(destination)}</h3><p>${segments.length ? copy(`${segments.length} segment${segments.length === 1 ? '' : 's'} to review.`, `${segments.length} tramo${segments.length === 1 ? '' : 's'} para consultar.`) : copy('Review departures available for this route.', 'Consulta las salidas disponibles para este recorrido.')}</p><a class="button button--ghost btn btn-secondary" href="/website/trips/?${queryParams}">${copy('Find departures', 'Buscar salidas')} <span aria-hidden="true">→</span></a></article>`;
   }).join('') : `<div class="routes-empty"><strong>${copy('No routes match your search.', 'No hay rutas que coincidan con tu búsqueda.')}</strong><span>${copy('Try another origin or destination.', 'Prueba con otro origen o destino.')}</span></div>`;
 }
 
@@ -61,6 +63,12 @@ function renderTerminals(routes) {
 }
 
 filter?.addEventListener('input', renderDirectory);
+filterClear?.addEventListener('click', () => {
+  if (!filter) return;
+  filter.value = '';
+  renderDirectory();
+  filter.focus();
+});
 
 try {
   publishedRoutes = await fetchRoutes();

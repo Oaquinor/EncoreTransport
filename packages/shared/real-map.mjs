@@ -157,8 +157,17 @@ function ensureSharedStyles() {
   const style = document.createElement('style');
   style.dataset.encoreMapStyles = 'true';
   style.textContent = `
-    .encore-real-map{position:relative;min-height:320px;width:100%;height:100%;background:#dcebf2}
-    .encore-real-map .leaflet-container{width:100%;height:100%;min-height:inherit;font:inherit}
+    .encore-real-map{position:relative;min-height:320px;width:100%;height:100%;background:
+      radial-gradient(circle at 72% 34%,rgba(64,190,220,.22),transparent 19rem),
+      linear-gradient(rgba(68,171,197,.12) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(68,171,197,.12) 1px,transparent 1px),
+      linear-gradient(145deg,#d9edf3,#f5fafb);background-size:auto,42px 42px,42px 42px,auto}
+    .encore-real-map .leaflet-container{width:100%;height:100%;min-height:inherit;font:inherit;background:transparent !important}
+    .encore-real-map.leaflet-container{width:100%;height:100%;min-height:inherit;font:inherit;background:
+      radial-gradient(circle at 72% 34%,rgba(64,190,220,.22),transparent 19rem),
+      linear-gradient(rgba(68,171,197,.12) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(68,171,197,.12) 1px,transparent 1px),
+      linear-gradient(145deg,#d9edf3,#f5fafb) !important;background-size:auto,42px 42px,42px 42px,auto !important}
     .encore-map-marker{display:grid;place-items:center;width:34px;height:34px;border-radius:50% 50% 50% 0;background:#1e3140;color:#fff;border:3px solid #fff;box-shadow:0 6px 18px rgba(15,34,50,.28);transform:rotate(-45deg)}
     .encore-map-marker span{font-size:13px;font-weight:900;transform:rotate(45deg)}
     .encore-map-marker--destination{background:#1f9d74}
@@ -574,7 +583,8 @@ export async function renderJourneyMap(container, journey, options = {}) {
 
   tileLayer.on('load', () => {
     tileFailures = 0;
-    clearRuntimeStatus(container);
+    if ((metrics.tiles.loaded ?? 0) > 0) clearRuntimeStatus(container);
+    else runtimeStatus(container, 'Map tiles are still unavailable.', 'The route information is ready; the visual map will appear when the map service responds.');
   });
 
   tileLayer.addTo(map);
@@ -751,8 +761,23 @@ export async function renderLiveNetworkMap(container, network, options = {}) {
     }).setView([6.8013, -58.1551], 8);
     const tileLayer = L.tileLayer(tileLayerUrl(), tileLayerOptions).addTo(map);
     installMapMetrics(map, tileLayer, metrics);
-    tileLayer.on('tileerror', () => runtimeStatus(container, 'Map tiles unavailable.', 'Live vehicle data will continue updating when the map service recovers.'));
-    tileLayer.on('load', () => clearRuntimeStatus(container));
+    tileLayer.on('tileerror', () => runtimeStatus(
+      container,
+      'Map tiles unavailable.',
+      options.mode === 'static'
+        ? 'Published route information remains available while the map service recovers.'
+        : 'Live vehicle data will continue updating when the map service recovers.',
+    ));
+    tileLayer.on('load', () => {
+      if ((metrics.tiles.loaded ?? 0) > 0) clearRuntimeStatus(container);
+      else runtimeStatus(
+        container,
+        'Map tiles are still unavailable.',
+        options.mode === 'static'
+          ? 'Published route information is ready; the visual map will appear when the map service responds.'
+          : 'Live vehicle data will continue updating when the map service recovers.',
+      );
+    });
     state = {
       map,
       vehicleMarkers: new Map(),

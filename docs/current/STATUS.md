@@ -16,7 +16,7 @@
 | Live network map | VERIFIED | Public endpoint responds through Laravel HTTP with the compact privacy-safe payload; browser contract and marker reuse tests pass. |
 | Browser/mobile E2E | PARTIAL | Playwright visual validation passed 30 viewport checks and screenshots; full authenticated passenger/admin/driver flows and physical mobile devices remain pending. |
 | Production SEO hostname | BLOCKED | Final public domain has not been supplied. |
-| Production deployment | BLOCKED | Payment, mail, WhatsApp/OpenClaw credentials and final infrastructure secrets are external inputs. |
+| Production deployment | PREPARED / BLOCKED | Nginx, systemd, release-build and health-check templates now live in `deploy/`; application is not applied because SSH authentication to the known VPS host was rejected and the final domain/secrets are still external inputs. |
 
 ## Performance closure
 

@@ -1,4 +1,5 @@
 import { formatMoney } from '../../../packages/shared/formatters.mjs';
+import { icon } from '../../../packages/shared/icons.mjs';
 
 function esc(value = '') {
   return String(value).replace(/[&<>'"]/g, (character) => ({
@@ -10,25 +11,11 @@ function esc(value = '') {
   }[character]));
 }
 
-export function icon(name) {
-  const paths = {
-    plus: '<path d="M12 5v14M5 12h14"/>',
-    view: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
-    edit: '<path d="m4 16-.8 4.8L8 20l10.8-10.8a2.1 2.1 0 0 0-3-3L5 17z"/><path d="m14.5 7.5 2 2"/>',
-    archive: '<path d="M4 7h16M6 7v12h12V7M9 11h6"/><path d="m5 4h14v3H5z"/>',
-    ticket: '<path d="M4 7a2 2 0 0 0 0-4h16a2 2 0 0 0 0 4v10a2 2 0 0 0 0 4H4a2 2 0 0 0 0-4Z"/><path d="M12 7v2m0 3v2"/>',
-    bus: '<path d="M5 18V7c0-2 2-3 7-3s7 1 7 3v11M5 12h14M8 18v2m8-2v2"/><circle cx="8" cy="16" r="1"/><circle cx="16" cy="16" r="1"/>',
-    package: '<path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/>',
-    save: '<path d="M5 4h12l2 2v14H5z"/><path d="M8 4v6h8V4M8 20v-6h8v6"/>',
-    close: '<path d="m6 6 12 12M18 6 6 18"/>',
-    user: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.7-3.3 3.2-5 7-5s6.3 1.7 7 5"/>',
-    dashboard: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',
-    route: '<circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h3a4 4 0 0 0 4-4V10a4 4 0 0 1 4-4"/>',
-    calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
-    report: '<path d="M5 20V10M12 20V4M19 20v-7"/><path d="M3 20h18"/>',
-    settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.1h-2.6v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1A1.7 1.7 0 0 0 8 15a1.7 1.7 0 0 0-1.5-1H6v-2.6h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.1h2.6v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.1V14h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
-  };
-  return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] ?? ''}</svg>`;
+export { icon };
+
+export function actionButton({ label, iconName, className = 'button--ghost', id = '', data = '', type = 'button', disabled = false } = {}) {
+  const safeLabel = esc(label ?? 'Action');
+  return `<button type="${esc(type)}" class="button ${esc(className)} button--with-icon"${id ? ` id="${esc(id)}"` : ''}${data ? ` ${data}` : ''}${disabled ? ' disabled' : ''}>${icon(iconName)}<span>${safeLabel}</span></button>`;
 }
 
 export const money = (value) =>
@@ -40,6 +27,7 @@ function cellValue(value) {
 
 export function table(title, headers, rows, options = {}) {
   const id = options.id ?? title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const serverPaginated = options.serverPaginated === true;
 
   return `
     <section class="admin-panel admin-panel--pad module-view" data-table-shell="${esc(id)}">
@@ -51,10 +39,12 @@ export function table(title, headers, rows, options = {}) {
         <span class="badge badge--neutral">${rows.length} ${rows.length === 1 ? 'record' : 'records'}</span>
       </div>
 
-      <div class="premium-table-toolbar">
+      ${serverPaginated ? '' : `<div class="premium-table-toolbar">
         <label class="premium-table-search">
           <span class="sr-only">Search ${esc(title)}</span>
           <input
+            id="table-search-${esc(id)}"
+            name="table_search_${esc(id)}"
             type="search"
             placeholder="Search ${esc(title.toLowerCase())}…"
             data-table-search="${esc(id)}"
@@ -62,14 +52,14 @@ export function table(title, headers, rows, options = {}) {
         </label>
 
         <label class="premium-table-size">
-          <span>Rows</span>
-          <select data-table-size="${esc(id)}">
+          <span>Rows per page</span>
+          <select id="table-size-${esc(id)}" name="table_size_${esc(id)}" aria-label="Rows per page for ${esc(title)}" data-table-size="${esc(id)}">
             <option value="10">10</option>
             <option value="25" selected>25</option>
             <option value="50">50</option>
           </select>
         </label>
-      </div>
+      </div>`}
 
       <div class="table-wrap">
         <table class="table admin-table" data-admin-table="${esc(id)}">
@@ -94,14 +84,14 @@ export function table(title, headers, rows, options = {}) {
         </table>
       </div>
 
-      <footer class="premium-table-footer" data-table-footer="${esc(id)}">
+      ${serverPaginated ? '' : `<footer class="premium-table-footer" data-table-footer="${esc(id)}">
         <span data-table-count>${rows.length} ${rows.length === 1 ? 'record' : 'records'}</span>
         <div>
-          <button type="button" data-table-prev>Previous</button>
+          <button type="button" class="button button--ghost button--with-icon" data-table-prev>${icon('arrowLeft')}<span>Previous</span></button>
           <span data-table-page>1 / 1</span>
-          <button type="button" data-table-next>Next</button>
+          <button type="button" class="button button--ghost button--with-icon" data-table-next><span>Next</span>${icon('arrowRight')}</button>
         </div>
-      </footer>
+      </footer>`}
     </section>`;
 }
 
@@ -275,14 +265,33 @@ export function schedulesView(items, dashboard) {
 }
 
 function reportWidget(id, title, body, className = '') {
-  return `<article class="report-widget ${className}" draggable="true" data-report-widget="${esc(id)}"><header><div><span class="eyebrow">${esc(title)}</span><span class="report-drag-hint" aria-label="Drag to reorder">⋮⋮</span></div></header>${body}</article>`;
+  const safeTitle = esc(title);
+  return `<article class="report-widget ${className}" draggable="true" data-report-widget="${esc(id)}"><header><div><span class="eyebrow">${safeTitle}</span><span class="report-drag-hint" aria-hidden="true">⋮⋮</span></div><div class="report-widget__actions" role="group" aria-label="${safeTitle} controls"><button type="button" class="button button--icon report-widget-move" data-report-move="up" aria-label="Move ${safeTitle} up" title="Move ${safeTitle} up">${icon('arrowUp')}</button><button type="button" class="button button--icon report-widget-move" data-report-move="down" aria-label="Move ${safeTitle} down" title="Move ${safeTitle} down">${icon('arrowDown')}</button></div></header>${body}</article>`;
 }
 
 const reportColors = ['#078cbd', '#22a06b', '#f2ae38', '#e45c62', '#596bd8'];
 
+function reportEmptyState(title, detail = 'Try another date range to compare operational activity.') {
+  return `<div class="report-empty-state"><span class="report-empty-state__icon" aria-hidden="true">—</span><div><strong>${esc(title)}</strong><p>${esc(detail)}</p></div></div>`;
+}
+
+function reportPeriodLabel(data = {}) {
+  const from = data.period?.from;
+  const to = data.period?.to;
+  return from && to ? `${from} → ${to}` : 'Selected period';
+}
+
+function reportContext(data = {}) {
+  const activity = Number(data.trips?.total ?? 0) + Number(data.bookings?.total ?? 0) + Number(data.payments?.paid ?? 0) + Number(data.incidents ?? 0) + Number(data.cargo?.received ?? 0);
+  const status = activity > 0 ? 'Activity recorded in this window' : 'No activity recorded in this window';
+  const upcomingCount = Array.isArray(data.upcoming) ? data.upcoming.length : 0;
+  return `<div class="report-context-bar" role="note"><div><span>Activity window</span><strong>${esc(reportPeriodLabel(data))}</strong></div><div><span>Window status</span><strong class="${activity > 0 ? 'is-positive' : 'is-muted'}"><i aria-hidden="true"></i>${esc(status)}</strong></div><div><span>Next departures</span><strong>${upcomingCount ? `${upcomingCount} scheduled` : 'None scheduled'}</strong></div></div>`;
+}
+
 function activityChart(days = []) {
   const points = days.slice(-14);
   if (!points.length) return '<p class="report-empty">No activity in this period.</p>';
+  if (!points.some((point) => Number(point.trips ?? 0) > 0 || Number(point.bookings ?? 0) > 0)) return reportEmptyState('No trip or booking activity in the selected window.');
   const width = 760;
   const height = 250;
   const left = 42;
@@ -317,6 +326,7 @@ function activityChart(days = []) {
 function revenueChart(days = []) {
   const points = days.slice(-14);
   if (!points.length) return '<p class="report-empty">No revenue recorded in this period.</p>';
+  if (!points.some((point) => Number(point.revenue_minor ?? 0) > 0)) return reportEmptyState('No paid revenue in the selected window.');
   const width = 760;
   const height = 220;
   const left = 48;
@@ -380,7 +390,7 @@ function executiveReport(data, widgetOrder = []) {
     cargo: reportWidget('cargo', 'Cargo activity', `<div class="report-mini-grid"><div><span>Received</span><strong>${data.cargo?.received ?? 0}</strong></div><div><span>In transit</span><strong>${data.cargo?.in_transit ?? 0}</strong></div><div><span>Delivered</span><strong>${data.cargo?.delivered ?? 0}</strong></div><div><span>Cancelled trips</span><strong>${data.trips?.cancelled ?? 0}</strong></div></div>`),
   };
   const order = [...new Set([...(widgetOrder ?? []), 'kpis', 'occupancy', 'trend', 'revenue', 'bookingMix', 'incidentMix', 'upcoming', 'cargo'])];
-  return `<div class="report-dashboard"><div class="report-dashboard__hint">Drag the panels to arrange your workspace. Your layout is saved on this device.</div><div class="report-widget-grid">${order.map((id) => widgets[id]).filter(Boolean).join('')}</div></div>`;
+  return `<div class="report-dashboard">${reportContext(data)}<div class="report-dashboard__hint">Drag the panels to arrange your workspace. Your layout is saved on this device. Upcoming departures are shown separately from the selected activity window.</div><div class="report-widget-grid">${order.map((id) => widgets[id]).filter(Boolean).join('')}</div></div>`;
 }
 
 export function reportView(kind, data, options = {}) {

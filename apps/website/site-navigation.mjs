@@ -3,6 +3,9 @@ const mobileToggle = document.querySelector('#mobileMenuToggle');
 const mobileNavigation = document.querySelector('#mobileNavigation');
 const menus = [...document.querySelectorAll('[data-menu]')];
 const closeTimers = new WeakMap();
+const navigationCopy = document.documentElement.lang === 'es'
+  ? { open: 'Abrir navegación', close: 'Cerrar navegación' }
+  : { open: 'Open navigation', close: 'Close navigation' };
 
 function cancelClose(menu) {
   const timer = closeTimers.get(menu);
@@ -12,7 +15,7 @@ function cancelClose(menu) {
 
 function scheduleClose(menu) {
   cancelClose(menu);
-  closeTimers.set(menu, window.setTimeout(() => closeMenu(menu), 180));
+  closeTimers.set(menu, window.setTimeout(() => closeMenu(menu), 110));
 }
 
 function closeMenu(menu, { focus = false } = {}) {
@@ -45,7 +48,7 @@ function closeMobileNavigation({ restoreFocus = false } = {}) {
   if (!mobileToggle || !mobileNavigation) return;
   mobileNavigation.hidden = true;
   mobileToggle.setAttribute('aria-expanded', 'false');
-  mobileToggle.setAttribute('aria-label', 'Open navigation');
+  mobileToggle.setAttribute('aria-label', navigationCopy.open);
   document.body.classList.remove('mobile-menu-open');
   if (restoreFocus) mobileToggle.focus();
 }
@@ -54,7 +57,7 @@ function openMobileNavigation() {
   if (!mobileToggle || !mobileNavigation) return;
   mobileNavigation.hidden = false;
   mobileToggle.setAttribute('aria-expanded', 'true');
-  mobileToggle.setAttribute('aria-label', 'Close navigation');
+  mobileToggle.setAttribute('aria-label', navigationCopy.close);
   document.body.classList.add('mobile-menu-open');
   mobileNavigation.querySelector('a, button')?.focus();
 }
@@ -66,6 +69,14 @@ menus.forEach((menu) => {
     if (expanded && menu.dataset.openReason === 'hover') menu.dataset.openReason = 'click';
     else if (expanded) closeMenu(menu);
     else openMenu(menu);
+  });
+  button?.addEventListener('keydown', (event) => {
+    if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+    event.preventDefault();
+    openMenu(menu, 'keyboard');
+    const links = menu.querySelectorAll('[data-menu-panel] a');
+    const target = event.key === 'ArrowUp' ? links[links.length - 1] : links[0];
+    target?.focus();
   });
 
   menu.addEventListener('pointerenter', () => {
@@ -79,6 +90,16 @@ menus.forEach((menu) => {
     if (!menu.contains(event.relatedTarget)) closeMenu(menu);
   });
 });
+
+document.addEventListener('pointermove', (event) => {
+  if (!window.matchMedia('(min-width: 981px) and (pointer: fine)').matches) return;
+  menus.forEach((menu) => {
+    // Keep a small hand-off window while the pointer crosses the gap from
+    // the trigger to the panel. Immediate closure makes submenu items
+    // impossible to reach on slower or diagonal pointer movement.
+    if (menu.dataset.openReason === 'hover' && !menu.contains(event.target)) scheduleClose(menu);
+  });
+}, { passive: true });
 
 mobileToggle?.addEventListener('click', () => {
   if (mobileToggle.getAttribute('aria-expanded') === 'true') closeMobileNavigation();

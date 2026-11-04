@@ -1,6 +1,6 @@
 # Entrega final de EncoreTransport
 
-Actualizado: 2026-11-01. Ver `MASTER_CLOSURE_20261101.md` para el cierre ampliado.
+Actualizado: 2026-11-02. Ver `MASTER_CLOSURE_20261101.md` para el cierre ampliado.
 
 ## A. Estado general
 
@@ -14,7 +14,7 @@ Parciales o pendientes: aceptación en dispositivo de la evidencia nativa de ent
 
 ## C. Aplicaciones
 
-Website y Passenger cargan y pasan contratos frontend; Admin tiene perfil, navegación por dominios y notificaciones conectadas; Driver PWA tiene GPS foreground y Driver Mobile incorpora GPS background, QR y evidencia; Auth y Package Register mantienen sus rutas; Mobile requiere validación en dispositivo.
+Website y Passenger cargan y pasan contratos frontend; Admin tiene perfil, navegación por dominios y notificaciones conectadas; Driver PWA tiene GPS foreground y Driver Mobile incorpora GPS background, QR y evidencia; Passenger y Driver Mobile ya tienen APK debug probado en AVD para arranque, y Driver tiene login demo, viaje asignado, fallback de mapa, escáner QR y GPS background con envío real; Auth y Package Register mantienen sus rutas. La validación nativa completa sigue pendiente.
 
 ## D. Código
 
@@ -26,7 +26,7 @@ Se ajustó el Website al lenguaje navy/blue del tablero, se compactó el registr
 
 ## F. Pruebas
 
-`npm test` pasó completo después de la corrección de custodia; también pasaron los typechecks web/móviles, build de Passenger y browser visual. Laravel pasó con 82 pruebas y 541 aserciones usando PHP 8.3.30 y MySQL de Laragon. Las pruebas en dispositivos reales siguen pendientes.
+`npm test` pasó completo después de la corrección de custodia y la regresión del menú; también pasaron los typechecks web/móviles, builds Android debug de Passenger/Driver y browser visual. Laravel pasó con **86 pruebas y 610 aserciones** usando PHP 8.3.30 y MySQL de Laragon. La aceptación en dispositivo físico, permisos nativos y recorridos operativos completos siguen pendientes.
 
 ## G. Integraciones
 
@@ -38,7 +38,7 @@ No activar producción hasta completar custodia de paquetes, credenciales extern
 
 ## I. Preparación
 
-`PARTIALLY_COMPLETE`: apto para revisión técnica local, no autorizado todavía como producción. La reorganización premium del sidebar Admin tiene captura browser autenticada posterior; los dispositivos e integraciones externas siguen bloqueando el lanzamiento.
+`PARTIALLY_COMPLETE`: apto para revisión técnica local, no autorizado todavía como producción. La reorganización premium del sidebar Admin tiene captura browser autenticada posterior; el crash nativo por falta de clave de Google Maps quedó protegido por fallback, pero la experiencia de mapa nativo, evidencia fotográfica, offline y las integraciones externas siguen bloqueando el lanzamiento.
 
 ## J. Conclusión
 

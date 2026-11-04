@@ -66,6 +66,16 @@ body {
   box-shadow: 0 10px 30px rgba(7,23,34,.06);
 }
 
+.driver-loading-state { display:grid; justify-items:center; gap:9px; min-height:260px; padding:32px; text-align:center; background:radial-gradient(circle at 50% 0,rgba(45,169,223,.1),transparent 42%),linear-gradient(145deg,#fff,#edf8fb); }
+.driver-loading-state img { display:block; width:128px; height:128px; object-fit:contain; }
+.driver-loading-state strong { color:var(--ink); font-size:1.05rem; }
+.driver-loading-state > span { color:var(--muted); font-size:.78rem; }
+.driver-loading-state__progress { display:flex; gap:7px; margin-top:5px; }
+.driver-loading-state__progress i { width:7px; height:7px; border:1px solid #168dcc; border-radius:50%; background:#fff; animation:driver-loader-pulse 1.3s ease-in-out infinite; }
+.driver-loading-state__progress i:nth-child(2){animation-delay:.16s}.driver-loading-state__progress i:nth-child(3){animation-delay:.32s}
+@keyframes driver-loader-pulse { 0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.15);background:#2da9df} }
+@media(prefers-reduced-motion:reduce){.driver-loading-state__progress i{animation:none}}
+
 .driver-card:hover {
   transform: none;
 }

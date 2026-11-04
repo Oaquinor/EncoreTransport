@@ -20,3 +20,5 @@ Los estados base siguen siendo (`received`, `in_progress`, `delivered`) y ahora 
 ## Criterio de cierre
 
 Cada transferencia debe crear un evento inmutable con actor, viaje/vehículo anterior y nuevo, terminal, estado anterior/nuevo y evidencia. Un manifiesto debe poder reconciliar sus paquetes sin permitir doble carga simultánea. La entrega debe cerrar la cadena y notificar solo por un canal autorizado y confirmado.
+
+Revalidación del 2026-11-03: `PackageController` elimina la fotografía temporal si falla la persistencia posterior dentro de la transacción. Laravel terminó con 86 pruebas y 610 aserciones, incluida una prueba de fallo forzado que confirma que no quedan archivos huérfanos y que el estado del paquete no avanza falsamente.

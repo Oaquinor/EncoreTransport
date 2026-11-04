@@ -1,0 +1,20 @@
+[Unit]
+Description=EncoreTransport Laravel queue worker
+After=network-online.target mysql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/encoretransport/current/backend/laravel
+EnvironmentFile=-/etc/encoretransport/laravel.env
+ExecStart=/usr/bin/php artisan queue:work --sleep=3 --tries=3 --timeout=90 --max-time=3600
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+PrivateTmp=true
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

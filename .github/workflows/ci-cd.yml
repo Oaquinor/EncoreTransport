@@ -1,0 +1,158 @@
+name: EncoreTransport CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: encoretransport-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install browser runtime
+        run: npx playwright install --with-deps chromium
+
+      - name: Run frontend and browser regression suite
+        run: npm test --silent
+
+      - name: Run typechecks
+        run: |
+          npm run typecheck:api-client --silent
+          npm run typecheck:passenger --silent
+
+      - name: Build Passenger
+        run: npm run build:passenger --silent
+
+  backend:
+    name: Laravel tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: bcmath, curl, dom, fileinfo, mbstring, pdo_mysql, xml, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Install Laravel dependencies
+        working-directory: backend/laravel
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run Laravel feature and unit tests
+        working-directory: backend/laravel
+        run: php artisan test --no-interaction
+
+  deploy:
+    name: Deploy to VPS
+    needs: [frontend, backend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true' && vars.TLS_READY == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    steps:
+      - name: Configure SSH
+        env:
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          test -n "$VPS_KNOWN_HOSTS"
+          test -n "$VPS_SSH_KEY"
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+
+      - name: Deploy tested commit
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
+          PHP_FPM_SOCKET: ${{ vars.PHP_FPM_SOCKET || '/run/php/php8.3-fpm.sock' }}
+          TLS_READY: ${{ vars.TLS_READY }}
+          AUTO_MIGRATE: ${{ vars.AUTO_MIGRATE }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          test -n "$VPS_HOST"
+          test -n "$VPS_USER"
+          test -n "$PRODUCTION_DOMAIN"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" \
+            "GITHUB_SHA='$GITHUB_SHA' PRODUCTION_DOMAIN='$PRODUCTION_DOMAIN' PHP_FPM_SOCKET='$PHP_FPM_SOCKET' TLS_READY='$TLS_READY' AUTO_MIGRATE='$AUTO_MIGRATE' bash -s" <<'REMOTE'
+          set -Eeuo pipefail
+
+          root=/var/www/encoretransport
+          release="$root/releases/$GITHUB_SHA"
+          mkdir -p "$root/releases" "$root/shared"
+          test ! -e "$release"
+          test -f "$root/shared/laravel.env"
+          test -d "$root/shared/storage" || mkdir -p "$root/shared/storage"
+
+          git clone --depth 1 --branch main https://github.com/Oaquinor/EncoreTransport.git "$release"
+          ln -s "$root/shared/laravel.env" "$release/backend/laravel/.env"
+          rm -rf "$release/backend/laravel/storage"
+          ln -s "$root/shared/storage" "$release/backend/laravel/storage"
+          chown -R encoreapp:www-data "$release"
+
+          runuser -u encoreapp -- bash -lc "cd '$release' && npm ci --no-audit --no-fund && npm install-scripts approve esbuild && npm run build:passenger --silent"
+          runuser -u encoreapp -- bash -lc "cd '$release/backend/laravel' && composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction"
+          runuser -u www-data -- bash -lc "cd '$release/backend/laravel' && php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache"
+
+          if [ "$AUTO_MIGRATE" = "true" ]; then
+              runuser -u www-data -- bash -lc "cd '$release/backend/laravel' && php artisan migrate --force"
+          fi
+
+          install -o root -g root -m 0644 "$release/deploy/systemd/encore-web.service" /etc/systemd/system/encore-web.service
+          install -o root -g root -m 0644 "$release/deploy/systemd/encore-queue.service" /etc/systemd/system/encore-queue.service
+          install -o root -g root -m 0644 "$release/deploy/systemd/encore-schedule.service" /etc/systemd/system/encore-schedule.service
+          install -o root -g root -m 0644 "$release/deploy/systemd/encore-schedule.timer" /etc/systemd/system/encore-schedule.timer
+
+          if [ -e "$root/current" ] && [ ! -L "$root/current" ]; then
+              mv "$root/current" "$root/legacy-$(date -u +%Y%m%d%H%M%S)"
+          fi
+          ln -sfn "$release" "$root/current.next"
+          mv -Tf "$root/current.next" "$root/current"
+
+          systemctl daemon-reload
+          systemctl enable encore-web encore-queue encore-schedule.timer
+          systemctl restart encore-web encore-queue
+          systemctl restart encore-schedule.timer
+
+          if [ "$TLS_READY" = "true" ]; then
+              sed \
+                  -e "s/YOUR_PRODUCTION_DOMAIN/$PRODUCTION_DOMAIN/g" \
+                  -e "s#/run/php/php8.3-fpm.sock#$PHP_FPM_SOCKET#g" \
+                  "$release/deploy/nginx/encoretransport.conf.example" \
+                  > /etc/nginx/sites-available/encoretransport
+              ln -sfn /etc/nginx/sites-available/encoretransport /etc/nginx/sites-enabled/encoretransport
+              nginx -t
+              systemctl reload nginx
+          fi
+
+          "$root/current/deploy/scripts/healthcheck.sh" "https://$PRODUCTION_DOMAIN"
+          REMOTE

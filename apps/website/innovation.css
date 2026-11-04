@@ -24,7 +24,8 @@ body:has(.story-network), body:has(.site-page) {
 .story-network__copy p { max-width: 430px; color: #accbd6; line-height: 1.75; }
 .story-network__copy .public-section-label { color: #74ddf7; }
 .story-network__copy .btn-secondary { border-color: rgba(255,255,255,.3); color: #fff; background: rgba(255,255,255,.08); }
-.story-network__signal { display: inline-flex; align-items: center; gap: 9px; margin: 24px 0; color: #c9e8ef; font-size: .72rem; font-weight: 850; text-transform: uppercase; letter-spacing: .1em; }
+.story-network__signal { display: flex; width: max-content; align-items: center; gap: 9px; margin: 24px 0 12px; color: #c9e8ef; font-size: .72rem; font-weight: 850; text-transform: uppercase; letter-spacing: .1em; }
+.story-network__copy > .btn { display: inline-flex; }
 .story-network__signal i { width: 8px; height: 8px; border-radius: 50%; background: #45d79b; box-shadow: 0 0 0 6px rgba(69, 215, 155, .12); }
 .route-orbit { position: relative; width: min(100%, 650px); min-height: 520px; margin-inline: auto; overflow: hidden; }
 .route-orbit__grid { position: absolute; inset: 0; opacity: .34; background-image: linear-gradient(rgba(137,224,243,.13) 1px, transparent 1px), linear-gradient(90deg, rgba(137,224,243,.13) 1px, transparent 1px); background-size: 42px 42px; mask-image: radial-gradient(circle at 50% 50%, #000, transparent 72%); }
@@ -173,6 +174,44 @@ body:has(.story-network), body:has(.site-page) {
 @media (max-width: 640px) { .trips-hero { padding-block: 58px 72px; }.trips-hero h1 { font-size: clamp(3.2rem, 15vw, 5rem); }.trip-search-section { padding-block: 58px 72px; }.trip-search-card { padding: 18px; border-radius: 22px; }.trip-steps-grid { margin-top: 28px; padding: 10px; border-radius: 20px; }.trip-steps-grid article { min-height: 0; } }
 @media (max-width: 980px) { .packages-hero__layout, .package-requirements-layout { grid-template-columns: 1fr; }.package-journey-visual { max-width: 700px; }.package-pricing { align-items: flex-start; flex-direction: column; }.package-pricing__action { min-width: min(100%, 360px); } }
 @media (max-width: 640px) { .packages-hero { padding-block: 58px 72px; }.packages-hero__copy h1 { font-size: clamp(3.1rem, 15vw, 5rem); }.package-journey-visual { min-height: 300px; padding: 20px; border-radius: 22px; }.package-journey-visual__line { gap: 6px; font-size: .62rem; }.package-flow { margin-top: 28px; padding: 20px; border-radius: 20px; }.package-flow__body { align-items: flex-start; flex-direction: column; gap: 16px; padding-block: 18px; }.package-flow__steps { justify-content: space-between; gap: 8px; }.package-flow__steps button span { display: none; }.package-checklist { grid-template-columns: 1fr; }.package-pricing__action { width: 100%; }.package-pricing__action .btn { width: 100%; } }
+
+/* Meaningful markers replace decorative numbering so the public pages read as journeys, not slides. */
+.public-services-section .public-service-card > div { grid-column: 1 / -1; align-self: end; }
+.package-journey-visual__status, .package-flow__state { color: #6c8794; font-size: .66rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.package-checklist article { grid-template-columns: 18px 1fr; }
+.package-checklist__mark { display: block; width: 12px; height: 12px; margin-top: 4px; border: 2px solid #159ac0; border-radius: 50%; background: #e8f7fb; box-shadow: 0 0 0 5px rgba(21,154,192,.08); }
+.about-intro__caption-mark { width: 8px; height: 8px; border: 2px solid #159ac0; border-radius: 50%; background: #e8f7fb; box-shadow: 0 0 0 4px rgba(21,154,192,.1); }
+.about-intro__caption span:first-child { color: inherit; }
+.about-principle__mark { position: relative; z-index: 1; display: block; width: 54px; height: 54px; border: 1px solid #b6dce7; border-radius: 50%; background: #f5fbfc; }
+.about-principle__mark::after { content: ""; position: absolute; inset: 17px; border: 2px solid #38b88c; border-radius: 50%; background: #fff; }
+.contact-path__icon { position: relative; }
+.contact-path__icon::before { content: ""; width: 16px; height: 16px; border: 2px solid currentColor; border-radius: 50%; }
+.contact-path--travel .contact-path__icon::after { content: ""; position: absolute; width: 2px; height: 24px; background: currentColor; transform: rotate(45deg); }
+.contact-path--parcel .contact-path__icon::before { width: 20px; height: 16px; border-radius: 4px; }
+.contact-path--parcel .contact-path__icon::after { content: ""; position: absolute; width: 10px; height: 2px; background: currentColor; }
+.contact-path--help .contact-path__icon::before { border-radius: 5px 5px 5px 1px; }
+.contact-path--help .contact-path__icon::after { content: "?"; position: absolute; color: currentColor; font-size: .85rem; font-weight: 900; }
+.help-topic-index a { gap: 12px; }
+.help-topic-index__mark { width: 8px; height: 8px; border: 2px solid #159ac0; border-radius: 50%; background: #e8f7fb; box-shadow: 0 0 0 4px rgba(21,154,192,.08); }
+.package-flow__steps button span { display: inline; }
+@media (max-width: 640px) { .about-principle__mark { width: 48px; height: 48px; }.about-principle__mark::after { inset: 14px; }.package-flow__steps button span { display: inline; } }
+
+/* The journey tabs are real touch controls, not decorative progress labels. */
+.package-flow__steps button {
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid #efc792;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.package-flow__steps button.is-active,
+.package-flow__steps button:hover,
+.package-flow__steps button:focus-visible {
+  border-color: #bb6d21;
+  background: #fff0da;
+  color: #bb6d21;
+}
 .site-page--trips { overflow: hidden; }
 .site-page--trips .trips-hero { overflow: hidden; }
 .site-page--trips .trips-hero__inner { width: min(100% - 40px, 1200px); padding-inline: 18px; }
@@ -363,4 +402,26 @@ html[lang="es"] .site-page--trips .trips-hero h1 { max-width: 680px; font-size: 
   .site-page--live .site-live-map .public-real-map { height: 340px; min-height: 340px; }
   .site-page--live .site-live-map .encore-map-runtime-status { left: 14px; right: 14px; bottom: 14px; max-width: none; }
   .site-page--live .site-card { min-height: 0; padding: 24px; }
+}
+
+/* Keep the booking-flow signal legible when the hero's light diagonal passes behind it. */
+.site-page--trips .trips-hero__signal {
+  border-color: rgba(130, 222, 245, .42);
+  background: rgba(6, 29, 46, .88);
+  box-shadow: 0 18px 42px rgba(3, 24, 37, .2);
+  backdrop-filter: blur(10px);
+}
+
+.site-page--trips .trips-hero__signal strong { color: #fff; }
+
+/* Route search is a real control group: the reset action appears only when it can do useful work. */
+.routes-filter__controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.routes-filter__controls .btn { min-height: 52px; padding-inline: 14px; white-space: nowrap; }
+.routes-filter__controls .btn[hidden] { display: none; }
+@media (max-width: 640px) {
+  .routes-filter__controls { grid-template-columns: 1fr; }
+  .routes-filter__controls .btn { justify-self: start; }
+}
+.trip-search-card .booking-submit {
+  border-radius: var(--et-radius-control);
 }

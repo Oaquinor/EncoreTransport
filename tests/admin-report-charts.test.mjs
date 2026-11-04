@@ -29,4 +29,22 @@ assert.match(html, /Confirmed/);
 assert.match(html, /high/);
 assert.match(html, /2026-10-25/);
 assert.match(html, /class="revenue-bar"/);
+assert.match(html, /data-report-move="up"/);
+assert.match(html, /data-report-move="down"/);
+assert.match(html, /aria-label="Move At a glance up"/);
+
+const emptyHtml = reportView('executive', {
+  period: { from: '2026-11-01', to: '2026-11-07' },
+  trips: { total: 0, completed: 0, cancelled: 0 },
+  bookings: { total: 0, confirmed: 0, pending: 0, cancelled: 0 },
+  payments: { paid: 0, revenue_minor: 0 },
+  occupancy: { occupied: 0, available: 0, capacity: 0, rate: null },
+  incidents: 0,
+  daily: [{ date: '2026-11-01', trips: 0, bookings: 0, revenue_minor: 0 }],
+  upcoming: [{ date: '2026-11-08', time: '08:00', route: 'Georgetown → New Amsterdam' }],
+});
+assert.match(emptyHtml, /Activity window/);
+assert.match(emptyHtml, /No trip or booking activity in the selected window/);
+assert.match(emptyHtml, /No paid revenue in the selected window/);
+assert.match(emptyHtml, /1 scheduled/);
 console.log('admin-report-charts.test.mjs: OK');

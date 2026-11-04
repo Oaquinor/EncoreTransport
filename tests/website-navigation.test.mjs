@@ -25,6 +25,7 @@ assert.match(shell, /data-locale-switcher/);
 assert.match(shell, /encore_site_locale_v1/);
 assert.match(shell, /hreflang/);
 assert.match(navigation, /pointerenter/);
+assert.match(navigation, /openReason === 'hover' && !menu\.contains\(event\.target\)\) scheduleClose\(menu\)/, 'hover menus must allow the pointer to reach the panel before closing');
 assert.match(navigation, /event\.key !== 'Escape'/);
 assert.match(navigation, /focusout/);
 assert.match(app, /new URLSearchParams\(window\.location\.search\)/);

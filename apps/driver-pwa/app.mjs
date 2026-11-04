@@ -79,7 +79,7 @@ function render() {
     <div class="driver-screen">
       <div class="driver-shell">
         ${state.screen === 'loading'
-          ? '<section class="driver-card"><h2>Loading operational data…</h2></section>'
+          ? '<section class="driver-card driver-loading-state" role="status" aria-live="polite"><img src="/assets/media/encore-loader.gif" alt="" width="128" height="128" /><strong>Loading operational data…</strong><span>Preparing your route and operational tools.</span><div class="driver-loading-state__progress" aria-hidden="true"><i></i><i></i><i></i></div></section>'
           : renderDashboard()}
       </div>
     </div>`;
@@ -106,7 +106,7 @@ function renderDashboard() {
         </div>
         <div class="driver-header__actions">
           <span class="badge badge--primary">${esc(status.replaceAll('_', ' ').toUpperCase())}</span>
-          <button class="button button--ghost button--with-icon" id="logout">${icon('logout')}Logout</button>
+          <button type="button" class="button button--ghost button--with-icon" id="logout">${icon('logout')}Logout</button>
         </div>
       </header>
 
@@ -120,7 +120,7 @@ function renderDashboard() {
         ? `<section class="driver-card">
             <h2>No active or upcoming trip assigned.</h2>
             <p class="driver-copy">Refresh after Operations assigns a trip.</p>
-            <button id="refresh" class="button button--primary button--with-icon">${icon('refresh')}Refresh</button>
+            <button type="button" id="refresh" class="button button--primary button--with-icon">${icon('refresh')}Refresh</button>
           </section>`
         : renderTrip(trip)}
     </section>`;
@@ -195,7 +195,8 @@ function renderTrip(trip) {
                   <small>${esc(passenger.booking?.reference ?? '')}</small>
                 </div>
                 <button
-                  class="button button--ghost"
+                  type="button"
+                  class="button button--ghost button--with-icon"
                   data-board="${passenger.id}"
                   ${passenger.boarded_at ? 'disabled' : ''}>
                   ${icon(passenger.boarded_at ? 'user' : 'seat')}${passenger.boarded_at ? 'Boarded' : 'Mark boarded'}
@@ -232,7 +233,7 @@ function renderTrip(trip) {
           </select>
         </label>
       </div>
-      <button class="button button--ghost button--with-icon" id="saveVehicleStatus">${icon('refresh')}Save vehicle status</button>
+      <button type="button" class="button button--ghost button--with-icon" id="saveVehicleStatus">${icon('refresh')}Save vehicle status</button>
     </section>
 
     <section class="driver-card">
@@ -243,17 +244,17 @@ function renderTrip(trip) {
         <label><span class="muted-copy">Email</span><input class="field" id="pkgEmail" type="email"></label>
         <label><span class="muted-copy">Description</span><textarea class="field" id="pkgDescription"></textarea></label>
       </div>
-      <button class="button button--ghost button--with-icon" id="createPackage">${icon('package')}Register package</button>
+      <button type="button" class="button button--ghost button--with-icon" id="createPackage">${icon('package')}Register package</button>
       <div id="packageResult">${state.packageTrackingUrl ? `<div class="feed-item"><strong>${esc(state.package?.reference ?? 'Package registered')}</strong><div>Tracking link: <a href="${esc(state.packageTrackingUrl)}" target="_blank" rel="noopener">${esc(state.packageTrackingUrl)}</a></div></div>` : ''}</div>
       <div class="driver-custody-tools">
         <h4>Custody controls</h4>
         <label><span class="muted-copy">Package QR token</span><input class="field" id="packageQrToken" value="${esc(state.packageQrToken)}" placeholder="Paste or scan the opaque QR token"></label>
-        <div class="driver-actions"><button class="button button--ghost" id="scanPackageQr" type="button">Scan / query custody</button><button class="button button--ghost" id="loadPackage" type="button" ${state.package?.id ? '' : 'disabled'}>Load</button><button class="button button--ghost" id="unloadPackage" type="button" ${state.package?.id ? '' : 'disabled'}>Unload / deliver</button></div>
+        <div class="driver-actions"><button class="button button--ghost button--with-icon" id="scanPackageQr" type="button">${icon('qr')}Scan / query custody</button><button class="button button--ghost button--with-icon" id="loadPackage" type="button" ${state.package?.id ? '' : 'disabled'}>${icon('package')}Load</button><button class="button button--ghost button--with-icon" id="unloadPackage" type="button" ${state.package?.id ? '' : 'disabled'}>${icon('package')}Unload / deliver</button></div>
         <div class="driver-grid"><label><span class="muted-copy">Discrepancy type</span><input class="field" id="discrepancyType" value="${esc(state.discrepancyType)}"></label><label><span class="muted-copy">Discrepancy notes</span><input class="field" id="discrepancyNotes" value="${esc(state.discrepancyNotes)}"></label></div>
-        <button class="button button--ghost" id="recordDiscrepancy" type="button" ${state.package?.id ? '' : 'disabled'}>Record discrepancy</button>
+        <button class="button button--ghost button--with-icon" id="recordDiscrepancy" type="button" ${state.package?.id ? '' : 'disabled'}>${icon('report')}Record discrepancy</button>
         <div class="driver-grid"><label><span class="muted-copy">Receiving driver ID</span><input class="field" id="transferDriverId" value="${esc(state.transferDriverId)}"></label><label><span class="muted-copy">Transfer ID to accept</span><input class="field" id="transferId" value="${esc(state.transferId)}"></label></div>
-        <div class="driver-actions"><button class="button button--ghost" id="requestPackageTransfer" type="button" ${state.package?.id ? '' : 'disabled'}>Transfer package</button><button class="button button--ghost" id="acceptPackageTransfer" type="button">Accept transfer</button></div>
-        <div class="driver-actions"><button class="button button--ghost" id="createManifest" type="button" ${state.package?.id ? '' : 'disabled'}>Create manifest</button><button class="button button--ghost" id="refreshManifest" type="button" ${state.manifest?.id ? '' : 'disabled'}>Refresh manifest</button><button class="button button--ghost" id="reconcileManifest" type="button" ${state.manifest?.id ? '' : 'disabled'}>Reconcile manifest</button></div>
+        <div class="driver-actions"><button class="button button--ghost button--with-icon" id="requestPackageTransfer" type="button" ${state.package?.id ? '' : 'disabled'}>${icon('route')}Transfer package</button><button class="button button--ghost button--with-icon" id="acceptPackageTransfer" type="button">${icon('save')}Accept transfer</button></div>
+        <div class="driver-actions"><button class="button button--ghost button--with-icon" id="createManifest" type="button" ${state.package?.id ? '' : 'disabled'}>${icon('plus')}Create manifest</button><button class="button button--ghost button--with-icon" id="refreshManifest" type="button" ${state.manifest?.id ? '' : 'disabled'}>${icon('refresh')}Refresh manifest</button><button class="button button--ghost button--with-icon" id="reconcileManifest" type="button" ${state.manifest?.id ? '' : 'disabled'}>${icon('report')}Reconcile manifest</button></div>
         ${state.package ? `<div class="feed-item"><strong>${esc(state.package.reference)} · ${esc(state.package.status)}</strong><small>${esc(state.package.events?.at(-1)?.status ?? 'No custody events')}</small></div>` : ''}
         ${state.manifest ? `<div class="feed-item"><strong>Manifest ${esc(state.manifest.reference)}</strong><small>${Number(state.manifest.scanned_count ?? 0)} / ${Number(state.manifest.expected_count ?? 0)} scanned · ${esc(state.manifest.status)}</small></div>` : ''}
       </div>
@@ -265,10 +266,11 @@ function renderTrip(trip) {
       <textarea class="field" id="incidentNotes" placeholder="Describe the incident"></textarea>
 
       <div class="driver-actions">
-        <button class="button button--ghost button--with-icon" id="sendGps">${icon('route')}Send current GPS</button>
-        <button class="button button--ghost button--with-icon" id="reportIncident">${icon('info')}Report incident</button>
+        <button type="button" class="button button--ghost button--with-icon" id="sendGps">${icon('route')}Send current GPS</button>
+        <button type="button" class="button button--ghost button--with-icon" id="reportIncident">${icon('info')}Report incident</button>
         <button
-          class="button button--primary"
+          type="button"
+          class="button button--primary button--with-icon"
           id="tripAction"
           ${!['scheduled', 'boarding', 'in_progress'].includes(status) ? 'disabled' : ''}>
           ${icon(status === 'in_progress' ? 'route' : 'arrowRight')}${status === 'in_progress' ? 'Complete trip' : 'Start trip'}

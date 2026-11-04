@@ -40,8 +40,9 @@ form.addEventListener('submit', async (event) => {
   formError.hidden = true;
   successCard.hidden = true;
   submitButton.disabled = true;
-  submitButton.textContent = 'Registering…';
+  submitButton.querySelector('[data-action-label]')?.replaceChildren('Registering…');
   const data = new FormData(form);
+  let registrationSucceeded = false;
   try {
     const result = await createPackage(Object.fromEntries(data.entries()));
     const pkg = result?.package ?? result;
@@ -50,7 +51,7 @@ form.addEventListener('submit', async (event) => {
     const link = document.querySelector('#trackingLink');
     link.href = token ? `/track-package/?token=${encodeURIComponent(token)}` : '/track-package/';
     if (copyTrackingLink) copyTrackingLink.dataset.url = new URL(link.href, location.origin).href;
-    successCard.hidden = false;
+    registrationSucceeded = true;
     form.reset();
     tripId.value = pkg?.trip_id ?? tripId.value;
   } catch (error) {
@@ -58,17 +59,18 @@ form.addEventListener('submit', async (event) => {
     formError.hidden = false;
   } finally {
     submitButton.disabled = !tripId.value;
-  submitButton.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Register package';
+    submitButton.querySelector('[data-action-label]')?.replaceChildren('Register package');
+    if (registrationSucceeded) successCard.hidden = false;
   }
 });
 
 copyTrackingLink?.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(copyTrackingLink.dataset.url || `${location.origin}/track-package/`);
-    copyTrackingLink.textContent = 'Copied';
-    setTimeout(() => { copyTrackingLink.textContent = 'Copy link'; }, 1800);
+    copyTrackingLink.querySelector('[data-action-label]')?.replaceChildren('Copied');
+    setTimeout(() => { copyTrackingLink.querySelector('[data-action-label]')?.replaceChildren('Copy link'); }, 1800);
   } catch {
-    copyTrackingLink.textContent = 'Copy unavailable';
+    copyTrackingLink.querySelector('[data-action-label]')?.replaceChildren('Copy unavailable');
   }
 });
 

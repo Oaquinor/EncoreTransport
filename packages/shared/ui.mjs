@@ -49,7 +49,7 @@ export function renderEmptyState(
       <p>${escapeHtml(detail)}</p>
       ${
         actionLabel
-          ? `<button class="et-ui-button button button--primary">${escapeHtml(actionLabel)}</button>`
+          ? `<button type="button" class="et-ui-button button button--primary">${escapeHtml(actionLabel)}</button>`
           : ''
       }
     </div>`;

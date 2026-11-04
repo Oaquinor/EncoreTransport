@@ -1,4 +1,5 @@
 import { applyStaticLocale, copy, DEFAULT_LOCALE, getPageKey, pageSeo } from './locale-data.mjs';
+import { icon } from '../../packages/shared/icons.mjs';
 
 const siteLoader = document.createElement('div');
 siteLoader.className = 'site-loader';
@@ -24,11 +25,11 @@ const locale = queryLocale === 'es' || queryLocale === 'en' ? queryLocale : (sto
 const labels = copy(locale);
 
 function desktopMenu(label, id, links) {
-  return `<div class="site-menu" data-menu><button class="site-menu__button" data-menu-button type="button" aria-expanded="false" aria-controls="${id}">${label}</button><div class="site-menu__panel" data-menu-panel id="${id}" hidden>${links}</div></div>`;
+  return `<div class="site-menu" data-menu><button class="button site-menu__button" data-menu-button type="button" aria-expanded="false" aria-controls="${id}">${label}</button><div class="site-menu__panel" data-menu-panel id="${id}" hidden>${links}</div></div>`;
 }
 
 function mobileMenu(label, id, links) {
-  return `<div class="site-mobile-menu" data-mobile-menu><button class="site-mobile-menu__button" data-mobile-menu-button type="button" aria-expanded="false" aria-controls="${id}">${label}</button><div class="site-mobile-menu__panel" data-mobile-menu-panel id="${id}" hidden>${links}</div></div>`;
+  return `<div class="site-mobile-menu" data-mobile-menu><button class="button site-mobile-menu__button" data-mobile-menu-button type="button" aria-expanded="false" aria-controls="${id}">${label}</button><div class="site-mobile-menu__panel" data-mobile-menu-panel id="${id}" hidden>${links}</div></div>`;
 }
 
 const travelLinks = `
@@ -67,10 +68,10 @@ if (headerTarget) {
       ${desktopMenu(labels.nav.company, 'companyMenu', companyLinks)}
     </nav>
     <div class="public-topbar__actions">${languageSwitcher('desktopLocale')}
-      <a class="public-account-link" id="publicAccountAction" href="/login/?return=/passenger/"><span aria-hidden="true">◎</span><span>${labels.nav.signIn}</span></a>
-      <a class="public-passenger-link" id="publicMyTrips" href="/passenger/?screen=account" hidden>${labels.nav.myTrips}</a>
+      <a class="button button--ghost button--with-icon public-account-link" id="publicAccountAction" href="/login/?return=/passenger/">${icon('user')}<span>${labels.nav.signIn}</span></a>
+      <a class="button button--primary public-passenger-link" id="publicMyTrips" href="/passenger/?screen=account" hidden>${labels.nav.myTrips}</a>
     </div>
-    <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="${labels.nav.open}" aria-controls="mobileNavigation" aria-expanded="false"><span></span><span></span><span></span></button>`;
+    <button class="button mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="${labels.nav.open}" aria-controls="mobileNavigation" aria-expanded="false"><span></span><span></span><span></span></button>`;
 }
 
 if (mobileTarget) {
@@ -92,13 +93,15 @@ if (mobileTarget) {
 if (footerTarget) {
   footerTarget.className = 'footer public-footer';
   footerTarget.innerHTML = `
+    <div class="public-footer__rail" aria-hidden="true"><span></span><i></i><span></span><i></i><span></span></div>
+    <div class="shell public-footer__intro"><span class="public-footer__eyebrow"><i aria-hidden="true"></i>${labels.footer.signature}</span><span class="public-footer__intro-line">${labels.footer.intro}</span></div>
     <div class="shell public-footer__grid">
-      <div class="public-footer__brand-block"><a class="encore-lockup encore-lockup--footer" href="/website/" aria-label="Encore Transport, ${labels.nav.home}"><img class="encore-lockup__logo" src="/logo.svg" alt="" aria-hidden="true" /><span class="encore-lockup__copy"><strong>encore</strong><small>transport</small></span></a><p>${labels.footer.lead}</p><a class="public-footer__primary-link" href="/website/trips/">${labels.footer.plan} <span aria-hidden="true">→</span></a></div>
-      <div class="public-footer__column"><strong>${labels.footer.travel}</strong><nav class="public-footer__nav" aria-label="${labels.footer.travel}"><a href="/website/routes/">${labels.travel.routes}</a><a href="/website/trips/">${labels.travel.search}</a><a href="/website/routes/#terminals">${labels.travel.terminals}</a></nav></div>
-      <div class="public-footer__column"><strong>${labels.footer.packages}</strong><nav class="public-footer__nav" aria-label="${labels.footer.packages}"><a href="/website/packages/">${labels.footer.information}</a><a href="/website/services/">${labels.packages.services}</a><a href="/track-package/">${labels.packages.track}</a></nav></div>
-      <div class="public-footer__column"><strong>${labels.footer.company}</strong><nav class="public-footer__nav" aria-label="${labels.footer.company}"><a href="/website/about/">${labels.company.about}</a><a href="/website/contact/">${labels.company.contact}</a><a href="/website/help/">${labels.company.help}</a><a href="/login/">${labels.footer.staff}</a></nav></div>
+      <div class="public-footer__brand-block"><a class="encore-lockup encore-lockup--footer" href="/website/" aria-label="Encore Transport, ${labels.nav.home}"><img class="encore-lockup__logo" src="/logo.svg" alt="" aria-hidden="true" /><span class="encore-lockup__copy"><strong>encore</strong><small>transport</small></span></a><p>${labels.footer.lead}</p><div class="public-footer__contact"><span>${labels.footer.contactLabel}</span><a href="/website/contact/">${labels.footer.contactAction} <span aria-hidden="true">↗</span></a></div></div>
+      <div class="public-footer__column"><strong>${labels.footer.sitemap}</strong><nav class="public-footer__nav" aria-label="${labels.footer.sitemap}"><a href="/website/">${labels.nav.home}</a><a href="/website/routes/">${labels.travel.routes}</a><a href="/website/trips/">${labels.travel.search}</a><a href="/website/live/">${labels.tracking.live}</a></nav></div>
+      <div class="public-footer__column"><strong>${labels.footer.services}</strong><nav class="public-footer__nav" aria-label="${labels.footer.services}"><a href="/website/packages/">${labels.footer.information}</a><a href="/website/services/">${labels.packages.services}</a><a href="/track-package/">${labels.packages.track}</a><a href="/website/help/">${labels.company.help}</a><a href="/login/">${labels.footer.staff}</a></nav></div>
+      <div class="public-footer__community"><span class="public-footer__community-label">${labels.footer.nextLabel}</span><h2>${labels.footer.nextTitle}</h2><p>${labels.footer.nextText}</p><div class="public-footer__community-actions"><a class="button button--primary button--with-icon public-footer__primary-link" href="/website/trips/">${labels.footer.plan} <span aria-hidden="true">→</span></a><a class="public-footer__text-link" href="/website/contact/">${labels.company.contact} <span aria-hidden="true">↗</span></a></div></div>
     </div>
-    <div class="shell public-footer__legal"><details><summary>${labels.footer.privacy}</summary><p>${labels.footer.privacyText}</p></details><details><summary>${labels.footer.terms}</summary><p>${labels.footer.termsText}</p></details><details><summary>${labels.footer.accessibility}</summary><p>${labels.footer.accessibilityText}</p></details></div>
+    <div class="shell public-footer__legal"><details id="footerPrivacyDisclosure"><summary aria-controls="footerPrivacyText">${labels.footer.privacy}</summary><p id="footerPrivacyText">${labels.footer.privacyText}</p></details><details id="footerTermsDisclosure"><summary aria-controls="footerTermsText">${labels.footer.terms}</summary><p id="footerTermsText">${labels.footer.termsText}</p></details><details id="footerAccessibilityDisclosure"><summary aria-controls="footerAccessibilityText">${labels.footer.accessibility}</summary><p id="footerAccessibilityText">${labels.footer.accessibilityText}</p></details></div>
     <div class="shell public-footer__bottom"><span>© <span id="copyrightYear"></span> Encore Transport.</span><span>${labels.footer.bottom}</span><nav aria-label="${labels.footer.accessibility}"><a href="/website/help/">${labels.footer.accessibility}</a><a href="/website/contact/">${labels.company.contact}</a></nav></div>`;
 }
 

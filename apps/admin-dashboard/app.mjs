@@ -22,9 +22,11 @@ import {
   incidentsView,
   bookingDetailsView,
   icon,
+  actionButton,
 } from './src/views.mjs';
 
 const root = document.querySelector('#app');
+let latestLoadRequest = 0;
 
 const state = {
   module: 'dashboard',
@@ -212,15 +214,15 @@ function blankWebsiteContent() {
     tracking: ['Every shipment has a clear next step.','','Use the tracking reference from your team to see the latest recorded update, from receipt to delivery.','Track my package','/track-package/'],
     routes: ['See where Encore can take you.','','Browse the routes currently available and continue straight to matching departures.','',''],
     faq: ['A few things you may want to know.','','Quick answers for planning a trip, choosing seats and tracking a package.','',''],
-    about: ['A clearer way to move people and packages.','','Encore Transport is building a connected travel experience for passengers, operations teams and future cargo services.','',''],
-    contact: ['Need a hand before you travel?','','Use the help answers first, then return to Passenger when you are ready to review your trip.','Read travel help','#faq'],
+    about: ['A clearer way to move people and packages.','','Encore Transport is building a connected travel experience for travelers, operations teams and future cargo services.','',''],
+    contact: ['Need a hand before you travel?','','Use the help answers first, then return to your trip when you are ready to review it.','Read travel help','#faq'],
     final_cta: ['Your next journey, clearly planned.','','Find a departure, choose your seat and keep every trip detail close at hand.','Book a trip','#book'],
   };
   return {
     sections: Object.fromEntries(cmsSections.map((key, order) => [key, { title: source[key][0], subtitle: source[key][1], description: source[key][2], button_label: source[key][3], button_url: source[key][4], enabled: true, order }])),
     faqs: [
       { question: 'How do I find an Encore Transport trip?', answer: 'Choose your departure city, destination, travel date and number of passengers. We’ll show the departures currently available for that search.', enabled: true },
-      { question: 'Can I choose my seat before I travel?', answer: 'Yes. After choosing a departure, continue to Passenger to see the seats currently available for that bus and select the seats you want.', enabled: true },
+      { question: 'Can I choose my seat before I travel?', answer: 'Yes. After choosing a departure, continue to your booking to see the seats currently available for that bus and select the seats you want.', enabled: true },
       { question: 'Can I see the route before booking?', answer: 'Yes. When route information is available, you can review the trip map and estimated travel time before continuing.', enabled: true },
       { question: 'How do I track a package?', answer: 'Open Package Tracking and enter the tracking number provided for your shipment to see its latest recorded status.', enabled: true },
     ],
@@ -451,12 +453,12 @@ function sidebar() {
           <small>transport · operations</small>
         </div>
       </a>
-      <button class="admin-sidebar-toggle" type="button" data-sidebar-toggle aria-expanded="${!state.sidebarCollapsed}" aria-label="${state.sidebarCollapsed ? 'Show navigation menu' : 'Hide navigation menu'}">
+      <button class="button admin-sidebar-toggle" type="button" data-sidebar-toggle aria-expanded="${!state.sidebarCollapsed}" aria-label="${state.sidebarCollapsed ? 'Show navigation menu' : 'Hide navigation menu'}">
         ${icon(state.sidebarCollapsed ? 'arrowRight' : 'arrowLeft')}<b>${state.sidebarCollapsed ? 'Show menu' : 'Hide menu'}</b>
       </button>
       <div class="admin-nav-tools" role="group" aria-label="Navigation section controls">
-        <button type="button" data-nav-expand-all>${icon('arrowRight')}Expand all</button>
-        <button type="button" data-nav-collapse-all>${icon('close')}Collapse all</button>
+        <button class="button button--ghost button--with-icon" type="button" data-nav-expand-all>${icon('arrowRight')}<span>Expand all</span></button>
+        <button class="button button--ghost button--with-icon" type="button" data-nav-collapse-all>${icon('close')}<span>Collapse all</span></button>
       </div>
 
       <nav class="admin-nav" aria-label="Admin operations navigation">
@@ -522,9 +524,9 @@ function initialsForUser(user = {}) {
 
 function profileDialogMarkup() {
   const draft = state.profilePhotoDraftUrl;
-  if (state.profileDialog === 'photo') return `<dialog class="profile-dialog" open aria-labelledby="photoDialogTitle"><form method="dialog" class="profile-dialog__panel" id="profilePhotoDialog"><div class="eyebrow">Profile photo</div><div class="profile-dialog__heading"><h3 id="photoDialogTitle">Change profile photo</h3><button class="button button--icon" value="cancel" aria-label="Close">${icon('close')}</button></div><div class="photo-dialog-grid"><div class="photo-dialog-preview" style="--photo-zoom:${state.profilePhotoZoom}">${draft ? `<img src="${esc(draft)}" alt="Selected profile preview" />` : `<span>${icon('user')}</span>`}</div><label class="photo-dropzone"><input id="profilePhotoDialogInput" type="file" accept="image/jpeg,image/png,image/webp" /><span>${icon('view')}Choose a photo</span><small>JPG, PNG or WebP · maximum 5 MB</small></label></div><label class="photo-zoom"><span>Adjust framing</span><input id="profilePhotoZoom" type="range" min="1" max="2" step="0.05" value="${state.profilePhotoZoom}" ${draft ? '' : 'disabled'} /></label><div class="profile-dialog__actions"><button class="button button--ghost" value="cancel">Cancel</button><button class="button button--primary" id="applyProfilePhoto" type="button" ${draft ? '' : 'disabled'}>${icon('save')}Save photo</button></div><p id="profilePhotoDialogMessage" class="profile-dialog__message" aria-live="polite"></p></form></dialog>`;
-  if (state.profileDialog === 'delete') return `<dialog class="profile-dialog profile-dialog--danger" open aria-labelledby="deleteDialogTitle"><form method="dialog" class="profile-dialog__panel" id="deleteProfileDialog"><div class="profile-danger-icon">${icon('close')}</div><div class="profile-dialog__heading"><h3 id="deleteDialogTitle">Delete account?</h3><button class="button button--icon" value="cancel" aria-label="Close">${icon('close')}</button></div><p>This action cannot be undone. Historical bookings will be preserved and personal data will be anonymized where required.</p><label><span>Type DELETE to confirm</span><input id="deleteConfirmation" autocomplete="off" placeholder="DELETE" /></label><div class="profile-dialog__actions"><button class="button button--ghost" value="cancel">Cancel</button><button class="button button--danger" id="confirmDeleteProfile" type="button" disabled>Delete account</button></div><p id="deleteProfileMessage" class="profile-dialog__message" aria-live="polite"></p></form></dialog>`;
-  if (state.profileDialog === 'saved') return `<dialog class="profile-dialog profile-dialog--success" open aria-labelledby="savedDialogTitle"><form method="dialog" class="profile-dialog__panel"><div class="profile-success-icon">${icon('save')}</div><h3 id="savedDialogTitle">Profile updated</h3><p>Your information was saved successfully.</p><button class="button button--primary" value="cancel">Done</button></form></dialog>`;
+  if (state.profileDialog === 'photo') return `<dialog class="profile-dialog" open aria-labelledby="photoDialogTitle"><form method="dialog" class="profile-dialog__panel" id="profilePhotoDialog"><div class="eyebrow">Profile photo</div><div class="profile-dialog__heading"><h3 id="photoDialogTitle">Change profile photo</h3><button type="submit" class="button button--icon" value="cancel" aria-label="Close">${icon('close')}</button></div><div class="photo-dialog-grid"><div class="photo-dialog-preview" style="--photo-zoom:${state.profilePhotoZoom}">${draft ? `<img src="${esc(draft)}" alt="Selected profile preview" />` : `<span>${icon('user')}</span>`}</div><label class="photo-dropzone"><input id="profilePhotoDialogInput" type="file" accept="image/jpeg,image/png,image/webp" /><span>${icon('view')}Choose a photo</span><small>JPG, PNG or WebP · maximum 5 MB</small></label></div><label class="photo-zoom"><span>Adjust framing</span><input id="profilePhotoZoom" type="range" min="1" max="2" step="0.05" value="${state.profilePhotoZoom}" ${draft ? '' : 'disabled'} /></label><div class="profile-dialog__actions"><button type="submit" class="button button--ghost" value="cancel">Cancel</button><button class="button button--primary" id="applyProfilePhoto" type="button" ${draft ? '' : 'disabled'}>${icon('save')}Save photo</button></div><p id="profilePhotoDialogMessage" class="profile-dialog__message" aria-live="polite"></p></form></dialog>`;
+  if (state.profileDialog === 'delete') return `<dialog class="profile-dialog profile-dialog--danger" open aria-labelledby="deleteDialogTitle"><form method="dialog" class="profile-dialog__panel" id="deleteProfileDialog"><div class="profile-danger-icon">${icon('close')}</div><div class="profile-dialog__heading"><h3 id="deleteDialogTitle">Delete account?</h3><button type="submit" class="button button--icon" value="cancel" aria-label="Close">${icon('close')}</button></div><p>This action cannot be undone. Historical bookings will be preserved and personal data will be anonymized where required.</p><label><span>Type DELETE to confirm</span><input id="deleteConfirmation" autocomplete="off" placeholder="DELETE" /></label><div class="profile-dialog__actions"><button type="submit" class="button button--ghost" value="cancel">Cancel</button><button class="button button--danger" id="confirmDeleteProfile" type="button" disabled>Delete account</button></div><p id="deleteProfileMessage" class="profile-dialog__message" aria-live="polite"></p></form></dialog>`;
+  if (state.profileDialog === 'saved') return `<dialog class="profile-dialog profile-dialog--success" open aria-labelledby="savedDialogTitle"><form method="dialog" class="profile-dialog__panel"><div class="profile-success-icon">${icon('save')}</div><h3 id="savedDialogTitle">Profile updated</h3><p>Your information was saved successfully.</p><button type="submit" class="button button--primary" value="cancel">Done</button></form></dialog>`;
   return '';
 }
 
@@ -602,7 +604,7 @@ function userDetailPanel() {
     ['packages', 'Authorized packages'], ['activity', 'Activity'], ['permissions', 'Permissions'],
   ];
   const body = state.userDetailLoading
-    ? '<div class="admin-loading-state">Loading selected account…</div>'
+    ? '<div class="admin-loading-state admin-loading-state--inline" role="status"><img src="/assets/media/encore-loader.gif" alt="" width="92" height="92" /><span>Loading selected account…</span></div>'
     : state.userDetailError
       ? `<div class="admin-error-state" role="alert">${esc(state.userDetailError)}</div>`
       : detail.tab === 'general' || detail.tab === 'profile'
@@ -612,14 +614,20 @@ function userDetailPanel() {
           : `<div class="user-detail-table-wrap"><table class="table admin-table"><thead><tr>${(detail.tab === 'bookings' ? ['Reference', 'Status', 'Trip', 'Ticket', 'Payment'] : detail.tab === 'tickets' ? ['Ticket', 'Lifecycle', 'Booking', 'Payment', 'Boarding'] : detail.tab === 'packages' ? ['Reference', 'Status', 'Route', 'Authorized'] : ['Action', 'Subject', 'Date']).map((header) => `<th>${header}</th>`).join('')}</tr></thead><tbody>${(detail.data ?? []).length ? (detail.data ?? []).map((item) => `<tr>${detail.tab === 'bookings' ? `<td>${esc(item.reference)}</td><td>${esc(item.status)}</td><td>${esc(item.trip?.route ?? '—')}</td><td>${esc(item.ticket_status ?? '—')}</td><td>${esc(item.payment_status ?? '—')}</td>` : detail.tab === 'tickets' ? `<td>${esc(item.public_id)}</td><td>${esc(item.lifecycle_status)}</td><td>${esc(item.booking_reference ?? '—')}</td><td>${esc(item.payment_status ?? '—')}</td><td>${esc(item.boarding_status)}</td>` : detail.tab === 'packages' ? `<td>${esc(item.reference ?? '—')}</td><td>${esc(item.status ?? '—')}</td><td>${esc(item.route ?? '—')}</td><td>${esc(String(item.authorized_at ?? '').slice(0, 10) || '—')}</td>` : `<td>${esc(item.action)}</td><td>${esc(item.subject_type ? `${item.subject_type}#${item.subject_id ?? ''}` : '—')}</td><td>${esc(String(item.created_at ?? '').slice(0, 19) || '—')}</td>`}</tr>`).join('') : `<tr><td colspan="5">No records found.</td></tr>`}</tbody></table></div>`;
   const meta = state.userDetailMeta;
   const paginated = !['general', 'profile', 'permissions'].includes(detail.tab);
-  return `<section class="admin-panel admin-panel--pad user-detail-panel" id="userDetailPanel"><div class="module-view__header"><div><div class="eyebrow">Account detail</div><h2>${esc(user.name)}</h2><p class="module-subtitle">Each tab loads its own authorized data source.</p></div><button class="button button--ghost" type="button" id="closeUserDetail">Close detail</button></div><nav class="user-detail-tabs" aria-label="User detail tabs">${tabs.map(([id, label]) => `<button type="button" data-user-detail-tab="${id}" class="${detail.tab === id ? 'is-active' : ''}">${label}</button>`).join('')}</nav>${body}${paginated ? `<footer class="server-pagination"><span>Showing ${(detail.data ?? []).length} of ${meta.total ?? 0}</span><div><button class="button button--ghost" type="button" data-user-detail-page="prev" ${(meta.current_page ?? 1) <= 1 ? 'disabled' : ''}>Previous</button><span>Page ${meta.current_page ?? 1} of ${meta.last_page ?? 1}</span><button class="button button--ghost" type="button" data-user-detail-page="next" ${(meta.current_page ?? 1) >= (meta.last_page ?? 1) ? 'disabled' : ''}>Next</button></div></footer>` : ''}</section>`;
+  return `<section class="admin-panel admin-panel--pad user-detail-panel" id="userDetailPanel" aria-busy="${state.userDetailLoading ? 'true' : 'false'}"><div class="module-view__header"><div><div class="eyebrow">Account detail</div><h2>${esc(user.name)}</h2><p class="module-subtitle">Each tab loads its own authorized data source.</p></div><button class="button button--ghost" type="button" id="closeUserDetail">Close detail</button></div><nav class="user-detail-tabs" role="tablist" aria-label="User detail tabs">${tabs.map(([id, label]) => `<button type="button" role="tab" data-user-detail-tab="${id}" class="button button--tab ${detail.tab === id ? 'is-active' : ''}" aria-selected="${detail.tab === id}" ${state.userDetailLoading || !detail.user?.id ? 'disabled' : ''}>${label}</button>`).join('')}</nav>${body}${paginated ? `<footer class="server-pagination"><span>Showing ${(detail.data ?? []).length} of ${meta.total ?? 0}</span><div><button class="button button--ghost" type="button" data-user-detail-page="prev" ${(meta.current_page ?? 1) <= 1 ? 'disabled' : ''}>Previous</button><span>Page ${meta.current_page ?? 1} of ${meta.last_page ?? 1}</span><button class="button button--ghost" type="button" data-user-detail-page="next" ${(meta.current_page ?? 1) >= (meta.last_page ?? 1) ? 'disabled' : ''}>Next</button></div></footer>` : ''}</section>`;
+}
+
+function userDirectoryFilters() {
+  return state.module === 'customers'
+    ? { ...state.userFilters, role: 'passenger' }
+    : state.userFilters;
 }
 
 function content() {
   if (state.loading) {
     return `
       <section class="admin-panel admin-panel--pad admin-loading-state" aria-live="polite">
-        <span class="admin-loading-state__spinner" aria-hidden="true"></span>
+        <img class="admin-loading-state__brand" src="/assets/media/encore-loader.gif" alt="" width="112" height="112" />
         <div>
           <h2>Loading Operations…</h2>
           <p>Checking your access and retrieving current data.</p>
@@ -636,7 +644,7 @@ function content() {
 
         <div class="admin-access-denied__actions">
           <a class="button button--primary" href="${roleHome(state.user)}">Go to my area</a>
-          <button class="button button--ghost" id="logout">Sign out</button>
+          <button type="button" class="button button--ghost" id="logout">Sign out</button>
         </div>
       </section>`;
   }
@@ -647,7 +655,7 @@ function content() {
         <div class="eyebrow">Unable to load</div>
         <h2>Operations data could not be loaded.</h2>
         <p>${esc(state.error)}</p>
-        <button class="button button--primary" id="retry">Retry</button>
+        <button type="button" class="button button--primary" id="retry">Retry</button>
       </section>`;
   }
 
@@ -716,10 +724,10 @@ function content() {
   if (state.module === 'tickets') {
     const filter = state.ticketFilters;
     const meta = state.ticketMeta;
-    const filters = `<form class="admin-filter-bar" id="ticketFilters"><label><span>Search ticket</span><input name="q" type="search" placeholder="Ticket, booking or email" value="${esc(filter.q)}"></label><label><span>Lifecycle</span><select name="lifecycle"><option value="">All states</option>${['valid','used','not_used','no_show','expired','cancelled','refunded'].map((status) => `<option value="${status}" ${filter.lifecycle === status ? 'selected' : ''}>${status.replaceAll('_', ' ')}</option>`).join('')}</select></label><label><span>Stored status</span><select name="status"><option value="">All stored statuses</option>${['active','used','no_show','expired','cancelled','refunded'].map((status) => `<option value="${status}" ${filter.status === status ? 'selected' : ''}>${status.replaceAll('_', ' ')}</option>`).join('')}</select></label><button class="button button--primary" type="submit">Filter tickets</button><button class="button button--ghost" id="clearTicketFilters" type="button">Clear</button></form>`;
+    const filters = `<form class="admin-filter-bar" id="ticketFilters"><label><span>Search ticket</span><input name="q" type="search" placeholder="Ticket, booking or email" value="${esc(filter.q)}"></label><label><span>Lifecycle</span><select name="lifecycle"><option value="">All states</option>${['valid','used','not_used','no_show','expired','cancelled','refunded'].map((status) => `<option value="${status}" ${filter.lifecycle === status ? 'selected' : ''}>${status.replaceAll('_', ' ')}</option>`).join('')}</select></label><label><span>Stored status</span><select name="status"><option value="">All stored statuses</option>${['active','used','no_show','expired','cancelled','refunded'].map((status) => `<option value="${status}" ${filter.status === status ? 'selected' : ''}>${status.replaceAll('_', ' ')}</option>`).join('')}</select></label><button class="button button--primary button--with-icon" type="submit">${icon('filter')}<span>Filter tickets</span></button><button class="button button--ghost button--with-icon" id="clearTicketFilters" type="button">${icon('close')}<span>Clear</span></button></form>`;
     const rows = state.tickets.map((ticket) => [ticket.public_id, ticket.lifecycle_status, ticket.booking_reference ?? '—', ticket.payment_status ?? '—', ticket.boarding_status, { html: `<div class="table-actions"><button class="button button--icon" data-view-ticket="${esc(ticket.id)}" type="button" aria-label="View ticket">${icon('view')}</button>${ticket.status === 'active' ? `<button class="button button--ghost" data-ticket-transition="${esc(ticket.id)}" data-ticket-status="no_show" type="button">No show</button>` : ''}</div>` }]);
     const detail = state.ticketDetail ? `<section class="admin-panel admin-panel--pad user-detail-panel"><div class="module-view__header"><div><div class="eyebrow">Ticket detail</div><h2>${esc(state.ticketDetail.public_id)}</h2><p class="module-subtitle">Reservation, payment, ticket and boarding states remain separate.</p></div><button class="button button--ghost" id="closeTicketDetail" type="button">Close detail</button></div><div class="user-detail-grid"><article><span>Ticket state</span><strong>${esc(state.ticketDetail.status)}</strong></article><article><span>Lifecycle</span><strong>${esc(state.ticketDetail.lifecycle_status)}</strong></article><article><span>Payment</span><strong>${esc(state.ticketDetail.payment_status ?? '—')}</strong></article><article><span>Reservation</span><strong>${esc(state.ticketDetail.booking_status ?? '—')}</strong></article><article><span>Boarding</span><strong>${esc(state.ticketDetail.boarding_status)}</strong></article><article><span>Trip</span><strong>${esc(state.ticketDetail.trip?.route ?? '—')}</strong></article></div><h3>History</h3><div class="user-detail-table-wrap"><table class="table admin-table"><thead><tr><th>Action</th><th>Date</th><th>Context</th></tr></thead><tbody>${(state.ticketDetail.history ?? []).map((entry) => `<tr><td>${esc(entry.action)}</td><td>${esc(String(entry.created_at ?? '').slice(0, 19))}</td><td>${esc(JSON.stringify(entry.context ?? {}))}</td></tr>`).join('') || '<tr><td colspan="3">No history recorded.</td></tr>'}</tbody></table></div></section>` : '';
-    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Operations control</div><h2>Tickets</h2><p class="module-subtitle">Manage valid, used, not used, no-show, expired, cancelled and refunded states without inferring boarding from trip completion.</p></div><span class="badge badge--neutral">${meta.total} tickets</span></div>${filters}</section>${table('Ticket lifecycle', ['Ticket', 'Lifecycle', 'Booking', 'Payment', 'Boarding', 'Actions'], rows, { id: 'admin-tickets' })}<footer class="server-pagination"><span>Showing ${state.tickets.length} of ${meta.total}</span><div><button class="button button--ghost" type="button" data-tickets-page="prev" ${meta.current_page <= 1 ? 'disabled' : ''}>Previous</button><span>Page ${meta.current_page} of ${meta.last_page}</span><button class="button button--ghost" type="button" data-tickets-page="next" ${meta.current_page >= meta.last_page ? 'disabled' : ''}>Next</button></div></footer>${detail}`;
+    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Operations control</div><h2>Tickets</h2><p class="module-subtitle">Manage valid, used, not used, no-show, expired, cancelled and refunded states without inferring boarding from trip completion.</p></div><span class="badge badge--neutral">${meta.total} tickets</span></div>${filters}</section>${table('Ticket lifecycle', ['Ticket', 'Lifecycle', 'Booking', 'Payment', 'Boarding', 'Actions'], rows, { id: 'admin-tickets', serverPaginated: true })}<footer class="server-pagination"><span>Showing ${state.tickets.length} of ${meta.total}</span><div><button class="button button--ghost" type="button" data-tickets-page="prev" ${meta.current_page <= 1 ? 'disabled' : ''}>Previous</button><span>Page ${meta.current_page} of ${meta.last_page}</span><button class="button button--ghost" type="button" data-tickets-page="next" ${meta.current_page >= meta.last_page ? 'disabled' : ''}>Next</button></div></footer>${detail}`;
   }
 
   if (state.module === 'vehicles') {
@@ -796,7 +804,7 @@ function content() {
       ]);
     return `
       <section class="admin-panel admin-panel--pad">
-        <div class="module-view__header"><div><div class="eyebrow">Operations planning</div><h2>Driver schedules</h2><p class="module-subtitle">Assign drivers, vehicles and trips without overlapping work.</p></div>${canManage ? `<button class="button button--primary" id="addSchedule" type="button">Add schedule</button>` : ''}</div>
+        <div class="module-view__header"><div><div class="eyebrow">Operations planning</div><h2>Driver schedules</h2><p class="module-subtitle">Assign drivers, vehicles and trips without overlapping work.</p></div>${canManage ? `<button class="button button--primary button--with-icon" id="addSchedule" type="button">${icon('calendar')}<span>Add schedule</span></button>` : ''}</div>
         ${form}
       </section>
       ${table('Schedule records', ['Date', 'Driver', 'Vehicle', 'Start', 'End', 'Status', ...(canManage ? ['Actions'] : [])], rows, { id: 'driver-schedules' })}`;
@@ -820,14 +828,15 @@ function content() {
 
   if (state.module === 'reports') {
     return `
-      <section class="admin-panel admin-panel--pad">
-        <div class="module-view__header">
-          <div>
+      <section class="admin-panel admin-panel--pad report-control-panel">
+        <div class="module-view__header report-module-header">
+          <div class="report-module-heading">
             <div class="eyebrow">Reports</div>
             <h2>Choose a business question</h2>
+            <p class="module-subtitle">Turn operational records into a focused view for the decision in front of you.</p>
           </div>
 
-          <select id="reportType" class="select">
+          <label class="report-type-control"><span>Report view</span><select id="reportType" class="select">
             <option value="executive" ${state.reportType === 'executive' ? 'selected' : ''}>Executive dashboard</option>
             <option value="travel" ${state.reportType === 'travel' ? 'selected' : ''}>Travel Report</option>
             <option value="vehicles" ${state.reportType === 'vehicles' ? 'selected' : ''}>Vehicle Report</option>
@@ -838,9 +847,9 @@ function content() {
             <option value="packages" ${state.reportType === 'packages' ? 'selected' : ''}>Packages Report</option>
             <option value="schedules" ${state.reportType === 'schedules' ? 'selected' : ''}>Schedules Report</option>
             <option value="trip-costs" ${state.reportType === 'trip-costs' ? 'selected' : ''}>Trip Cost Summary</option>
-          </select>
-          <div class="report-filters"><label><span>From</span><input id="reportFrom" type="date" value="${esc(state.reportFrom)}" /></label><label><span>To</span><input id="reportTo" type="date" value="${esc(state.reportTo)}" /></label><button class="button button--primary" id="applyReportFilters" type="button">Update report</button></div>
-          ${state.reportData ? '<div class="report-outputs" aria-label="Report output options"><span>Export current report</span><button class="button button--ghost" id="exportReportCsv" type="button">Download CSV</button><button class="button button--ghost" id="exportReportJson" type="button">Download JSON</button><button class="button button--ghost" id="printReport" type="button">Print / Save PDF</button></div>' : ''}
+          </select></label>
+          <div class="report-filters"><label><span>From</span><input id="reportFrom" type="date" value="${esc(state.reportFrom)}" /></label><label><span>To</span><input id="reportTo" type="date" value="${esc(state.reportTo)}" /></label><button class="button button--primary button--with-icon" id="applyReportFilters" type="button">${icon('refresh')}<span>Update report</span></button></div>
+          ${state.reportData ? `<div class="report-outputs" aria-label="Report output options"><div class="report-output-heading"><span>Report actions</span><small>Export the data currently shown, with the selected date range.</small></div>${actionButton({ label: 'Download CSV', iconName: 'download', id: 'exportReportCsv' })}${actionButton({ label: 'Download JSON', iconName: 'download', id: 'exportReportJson' })}${actionButton({ label: 'Print / Save PDF', iconName: 'print', id: 'printReport' })}</div>` : ''}
         </div>
       </section>
 
@@ -857,17 +866,20 @@ function content() {
     const filter = state.userFilters;
     const meta = state.userMeta;
     const roleFilter = [...new Map(state.roles.map((role) => [role.name, role])).values()];
-    const filters = `<form class="admin-filter-bar" id="userFilters"><label><span>Search account</span><input name="q" type="search" placeholder="ID, name, email or phone" value="${esc(filter.q)}" /></label><label><span>Role</span><select name="role"><option value="">All roles</option>${roleFilter.map((role) => `<option value="${esc(role.name)}" ${filter.role === role.name ? 'selected' : ''}>${esc(role.label ?? role.name)}</option>`).join('')}</select></label><label><span>Status</span><select name="active"><option value="">All statuses</option><option value="1" ${filter.active === '1' ? 'selected' : ''}>Active</option><option value="0" ${filter.active === '0' ? 'selected' : ''}>Disabled</option></select></label><label><span>Registered from</span><input name="date_from" type="date" value="${esc(filter.date_from)}" /></label><label><span>Registered to</span><input name="date_to" type="date" value="${esc(filter.date_to)}" /></label><button class="button button--primary" type="submit">Search accounts</button><button class="button button--ghost" id="clearUserFilters" type="button">Clear</button></form>`;
+    const filters = `<form class="admin-filter-bar" id="userFilters"><label><span>Search account</span><input name="q" type="search" placeholder="ID, name, email or phone" value="${esc(filter.q)}" /></label><label><span>Role</span><select name="role"><option value="">All roles</option>${roleFilter.map((role) => `<option value="${esc(role.name)}" ${filter.role === role.name ? 'selected' : ''}>${esc(role.label ?? role.name)}</option>`).join('')}</select></label><label><span>Status</span><select name="active"><option value="">All statuses</option><option value="1" ${filter.active === '1' ? 'selected' : ''}>Active</option><option value="0" ${filter.active === '0' ? 'selected' : ''}>Disabled</option></select></label><label><span>Registered from</span><input name="date_from" type="date" value="${esc(filter.date_from)}" /></label><label><span>Registered to</span><input name="date_to" type="date" value="${esc(filter.date_to)}" /></label><button class="button button--primary button--with-icon" type="submit">${icon('search')}<span>Search accounts</span></button><button class="button button--ghost button--with-icon" id="clearUserFilters" type="button">${icon('close')}<span>Clear</span></button></form>`;
     const pagination = `<footer class="server-pagination"><span>Showing ${state.users.length} of ${meta.total} accounts</span><div><button class="button button--ghost" type="button" data-users-page="prev" ${meta.current_page <= 1 ? 'disabled' : ''}>Previous</button><span>Page ${meta.current_page} of ${meta.last_page}</span><button class="button button--ghost" type="button" data-users-page="next" ${meta.current_page >= meta.last_page ? 'disabled' : ''}>Next</button></div></footer>`;
-    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Access control</div><h2>Users</h2><p class="module-subtitle">Search only the accounts you are permitted to manage. Results are paginated by the server.</p></div><button class="button button--primary" id="addUser" type="button">Add user</button></div>${filters}${userForm}</section>${table('Users', ['Name', 'Email', 'Roles', 'Effective permissions', 'Status', 'Actions'], state.users.map((item) => [item.name, item.email, (item.roles ?? []).map((role) => role.label ?? role.name).join(', ') || item.role, (item.permissions ?? []).length, item.active ? 'Active' : 'Disabled', { html: `<div class="table-actions"><button class="button button--icon" data-open-user="${esc(item.id)}" type="button" aria-label="Open user detail">${icon('view')}</button><button class="button button--icon" data-edit-user="${esc(item.id)}" type="button" aria-label="Edit user">${icon('edit')}</button><button class="button button--icon" data-disable-user="${esc(item.id)}" type="button" aria-label="Disable user" ${item.active ? '' : 'disabled'}>${icon('archive')}</button></div>` }]))}${pagination}${userDetailPanel()}`;
+    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Access control</div><h2>Users</h2><p class="module-subtitle">Search only the accounts you are permitted to manage. Results are paginated by the server.</p></div><button class="button button--primary button--with-icon" id="addUser" type="button">${icon('plus')}<span>Add user</span></button></div>${filters}${userForm}</section>${table('Users', ['Name', 'Email', 'Roles', 'Effective permissions', 'Status', 'Actions'], state.users.map((item) => [item.name, item.email, (item.roles ?? []).map((role) => role.label ?? role.name).join(', ') || item.role, (item.permissions ?? []).length, item.active ? 'Active' : 'Disabled', { html: `<div class="table-actions"><button class="button button--icon" data-open-user="${esc(item.id)}" type="button" aria-label="Open user detail">${icon('view')}</button><button class="button button--icon" data-edit-user="${esc(item.id)}" type="button" aria-label="Edit user">${icon('edit')}</button><button class="button button--icon" data-disable-user="${esc(item.id)}" type="button" aria-label="Disable user" ${item.active ? '' : 'disabled'}>${icon('archive')}</button></div>` }]), { id: 'admin-users', serverPaginated: true })}${pagination}${userDetailPanel()}`;
   }
   if (state.module === 'customers') {
-    const customers = state.users.filter((user) => user.role === 'passenger' || (user.roles ?? []).some((role) => role.name === 'passenger'));
+    // Laravel already applies the passenger role filter before pagination. Do not
+    // filter the current page again: that would hide valid customers and corrupt
+    // the server-provided count when a page contains mixed legacy/role data.
+    const customers = state.users;
     const filter = state.userFilters;
     const meta = state.userMeta;
-    const customerFilters = `<form class="admin-filter-bar" id="customerFilters"><label><span>Search customer</span><input name="q" type="search" placeholder="Name, email or phone" value="${esc(filter.q)}" /></label><label><span>Status</span><select name="active"><option value="">All statuses</option><option value="1" ${filter.active === '1' ? 'selected' : ''}>Active</option><option value="0" ${filter.active === '0' ? 'selected' : ''}>Disabled</option></select></label><button class="button button--primary" type="submit">Search customers</button><button class="button button--ghost" id="clearCustomerFilters" type="button">Clear</button></form>`;
+    const customerFilters = `<form class="admin-filter-bar" id="customerFilters"><label><span>Search customer</span><input name="q" type="search" placeholder="Name, email or phone" value="${esc(filter.q)}" /></label><label><span>Status</span><select name="active"><option value="">All statuses</option><option value="1" ${filter.active === '1' ? 'selected' : ''}>Active</option><option value="0" ${filter.active === '0' ? 'selected' : ''}>Disabled</option></select></label><button class="button button--primary button--with-icon" type="submit">${icon('search')}<span>Search customers</span></button><button class="button button--ghost button--with-icon" id="clearCustomerFilters" type="button">${icon('close')}<span>Clear</span></button></form>`;
     const customerPagination = `<footer class="server-pagination"><span>Showing ${customers.length} of ${meta.total} customers</span><div><button class="button button--ghost" type="button" data-customers-page="prev" ${meta.current_page <= 1 ? 'disabled' : ''}>Previous</button><span>Page ${meta.current_page} of ${meta.last_page}</span><button class="button button--ghost" type="button" data-customers-page="next" ${meta.current_page >= meta.last_page ? 'disabled' : ''}>Next</button></div></footer>`;
-    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Customer service</div><h2>Customers</h2><p class="module-subtitle">Passenger accounts are filtered and paginated by Laravel. Guest bookings remain visible in Bookings.</p></div><span class="badge badge--neutral">${meta.total} accounts</span></div>${customerFilters}</section>${table('Registered Customers', ['Name', 'Email', 'Phone', 'Bookings', 'Account status', 'Joined', 'Actions'], customers.map((user) => [user.name, user.email, user.phone || '—', user.booking_count ?? 0, user.active ? 'Active' : 'Disabled', String(user.created_at ?? '').slice(0, 10) || '—', { html: `<button class="button button--icon" data-open-user="${esc(user.id)}" type="button" aria-label="Open customer detail">${icon('view')}</button>` }]))}${customerPagination}${userDetailPanel()}`;
+    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Customer service</div><h2>Customers</h2><p class="module-subtitle">Passenger accounts are filtered and paginated by Laravel. Guest bookings remain visible in Bookings.</p></div><span class="badge badge--neutral">${meta.total} accounts</span></div>${customerFilters}</section>${table('Registered Customers', ['Name', 'Email', 'Phone', 'Bookings', 'Account status', 'Joined', 'Actions'], customers.map((user) => [user.name, user.email, user.phone || '—', user.booking_count ?? 0, user.active ? 'Active' : 'Disabled', String(user.created_at ?? '').slice(0, 10) || '—', { html: `<button class="button button--icon" data-open-user="${esc(user.id)}" type="button" aria-label="Open customer detail">${icon('view')}</button>` }]), { id: 'admin-customers', serverPaginated: true })}${customerPagination}${userDetailPanel()}`;
   }
   if (state.module === 'roles') {
     const editing = state.roles.find((role) => String(role.id) === String(state.roleEditingId));
@@ -882,12 +894,12 @@ function content() {
     return `<section class="admin-panel admin-panel--pad profile-module">
       <div class="profile-breadcrumb"><span>${icon('dashboard')}Operations</span><b>›</b><span>${icon('settings')}Configuration</span><b>›</b><strong>Account</strong></div>
       <div class="module-view__header profile-heading"><div><div class="eyebrow">Account settings</div><h2>Account configuration</h2><p class="module-subtitle">Manage your identity, access and preferences from one secure workspace.</p></div><button class="button button--ghost" id="profileClose" type="button">Back to dashboard</button></div>
-      <nav class="profile-tabs" aria-label="Account sections"><button class="is-active" type="button">${icon('user')}Personal information</button><button type="button" disabled title="Security API not available">${icon('save')}Security<span>Unavailable</span></button><button type="button" disabled title="Preferences API not available">${icon('settings')}Preferences<span>Unavailable</span></button><button type="button" disabled title="Device sessions API not available">${icon('view')}Devices<span>Unavailable</span></button><button type="button" disabled title="Activity API not available">${icon('report')}Activity<span>Unavailable</span></button></nav>
+      <div class="profile-context-bar" role="status">${icon('user')}<span><strong>Personal information</strong><small>Your identity and access details</small></span></div>
       <div class="profile-grid">
         <section class="profile-card profile-photo-card"><div class="profile-card-heading">${icon('user')}<div><h3>Profile photo</h3><p>Use a clear image for your account.</p></div></div><div class="profile-avatar-large">${avatar ? `<img src="${esc(avatar)}" alt="Current profile photo" />` : `<span>${esc(initialsForUser(user))}</span>`}<button type="button" id="changeProfilePhoto" aria-label="Change profile photo">${icon('view')}</button></div><button class="button button--ghost profile-photo-button" id="changeProfilePhotoSecondary" type="button">${icon('view')}Change photo</button><small class="profile-help">JPG, PNG or WebP · maximum 5 MB</small></section>
         <section class="profile-card profile-info-card"><div class="profile-card-heading">${icon('user')}<div><h3>Personal information</h3><p>Keep your account details current.</p></div></div><form id="profileForm" class="profile-form"><label><span>Full name</span><input name="name" required maxlength="150" value="${esc(user.name ?? '')}" /></label><label><span>Phone number</span><input name="phone" maxlength="40" value="${esc(user.phone ?? '')}" /></label>${user.email ? `<label><span>Email address</span><input value="${esc(user.email)}" disabled /></label>` : ''}<label><span>Account role</span><input value="${esc(user.role ?? 'Staff account')}" disabled /></label><div class="profile-form-actions"><span id="profileMessage" aria-live="polite">${state.profileDirty ? 'Unsaved changes' : ''}</span><button class="button button--primary button--with-icon" type="submit" ${state.profileDirty ? '' : 'disabled'}>${icon('save')}Save changes</button></div></form></section>
       </div>
-      <div class="profile-grid profile-grid-bottom"><section class="profile-card profile-access-card"><div class="profile-card-heading">${icon('save')}<div><h3>Account access</h3><p>Manage this session and account lifecycle.</p></div></div><div class="profile-access-row"><button class="button button--ghost" id="profileLogout" type="button">${icon('logout')}Sign out</button><span>End the current authenticated session.</span></div><div class="profile-access-row profile-access-danger"><button class="button button--danger" id="deleteProfile" type="button">${icon('close')}Delete account</button><span>Requires explicit confirmation and preserves historical records.</span></div></section><section class="profile-card profile-status-card"><div class="profile-card-heading">${icon('view')}<div><h3>Connected devices</h3><p>Device-session inventory is not available from the current API.</p></div></div><div class="profile-unavailable"><span>${icon('view')}</span><div><strong>Not available</strong><small>The backend does not expose active device sessions yet.</small></div></div></section></div>
+      <div class="profile-grid profile-grid-bottom"><section class="profile-card profile-access-card"><div class="profile-card-heading">${icon('save')}<div><h3>Account access</h3><p>Manage this authenticated session and account lifecycle.</p></div></div><div class="profile-session-summary" role="status"><span class="profile-session-summary__dot" aria-hidden="true"></span><div><strong>Authenticated workspace</strong><small>${esc(user.email ?? 'Staff account')} · ${esc(user.role ?? 'Staff account')}</small></div></div><div class="profile-access-row"><button class="button button--ghost" id="profileLogout" type="button">${icon('logout')}Sign out</button><span>End the current authenticated session.</span></div><div class="profile-access-row profile-access-danger"><button class="button button--danger" id="deleteProfile" type="button">${icon('close')}Delete account</button><span>Requires explicit confirmation and preserves historical records.</span></div></section></div>
       ${profileDialogMarkup()}
     </section>`;
   }
@@ -920,6 +932,25 @@ function downloadReport(format) {
   window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
 }
 
+function saveReportWidgetOrder(order) {
+  state.reportWidgetOrder = order;
+  localStorage.setItem('encore_report_widgets', JSON.stringify(order));
+  render();
+}
+
+function moveReportWidget(widget, direction) {
+  const widgets = [...document.querySelectorAll('[data-report-widget]')];
+  const order = widgets.map((item) => item.dataset.reportWidget).filter(Boolean);
+  const source = widget.dataset.reportWidget;
+  const from = order.indexOf(source);
+  const to = from + direction;
+  if (from < 0 || to < 0 || to >= order.length) return;
+  order.splice(from, 1);
+  order.splice(to, 0, source);
+  saveReportWidgetOrder(order);
+  window.requestAnimationFrame(() => document.querySelector(`[data-report-widget="${CSS.escape(source)}"] [data-report-move]`)?.focus());
+}
+
 function render() {
   root.innerHTML = `
     <div class="admin-layout ${state.sidebarCollapsed ? 'is-sidebar-collapsed' : ''}">
@@ -933,12 +964,12 @@ function render() {
           </div>
 
           <div class="admin-controls">
-            <button class="admin-notification-button" id="adminNotificationsToggle" type="button" aria-expanded="${state.notificationsOpen}" aria-label="Open notifications">${icon('report')}${state.notificationsUnread ? `<b>${state.notificationsUnread}</b>` : ''}</button>
-            ${state.notificationsOpen ? `<div class="admin-notifications-panel" role="dialog" aria-label="Notifications"><header><strong>Notifications</strong><button id="markAllNotifications" type="button" ${state.notificationsUnread ? '' : 'disabled'}>Mark all read</button></header>${state.notifications.length ? state.notifications.map((notification) => `<button class="admin-notification-item ${notification.read_at ? '' : 'is-unread'}" data-notification-id="${esc(notification.id)}" type="button"><span>${icon('report')}</span><span><strong>${esc(notification.title)}</strong><small>${esc(notification.body)}</small></span></button>`).join('') : '<p class="admin-notifications-empty">No notifications yet.</p>'}</div>` : ''}
-            <div class="admin-user-menu"><button class="admin-user-chip" id="adminUserMenuToggle" type="button" aria-expanded="${state.userMenuOpen}" aria-haspopup="menu" aria-label="Open user menu">${icon('user')}<span>${esc(adminDisplayName(state.user))}</span>${icon('arrowRight')}</button>${state.userMenuOpen ? `<div class="admin-user-menu__panel" role="menu"><div class="admin-user-menu__identity"><strong>${esc(adminDisplayName(state.user))}</strong><small>${esc(state.user?.role ?? 'Staff account')}</small></div><button type="button" data-module="profile" role="menuitem">${icon('user')}My account</button><button type="button" data-module="settings" role="menuitem">${icon('settings')}General settings</button><button type="button" id="menuLogout" role="menuitem" class="is-danger">${icon('logout')}Sign out</button></div>` : ''}</div>
+            <button class="button button--icon admin-notification-button" id="adminNotificationsToggle" type="button" aria-expanded="${state.notificationsOpen}" aria-label="Open notifications">${icon('report')}${state.notificationsUnread ? `<b>${state.notificationsUnread}</b>` : ''}</button>
+            ${state.notificationsOpen ? `<div class="admin-notifications-panel" role="dialog" aria-label="Notifications"><header><strong>Notifications</strong><button class="button button--ghost button--with-icon" id="markAllNotifications" type="button" ${state.notificationsUnread ? '' : 'disabled'}>${icon('check')}<span>Mark all read</span></button></header>${state.notifications.length ? state.notifications.map((notification) => `<button class="admin-notification-item ${notification.read_at ? '' : 'is-unread'}" data-notification-id="${esc(notification.id)}" type="button"><span>${icon('report')}</span><span><strong>${esc(notification.title)}</strong><small>${esc(notification.body)}</small></span></button>`).join('') : '<p class="admin-notifications-empty">No notifications yet.</p>'}</div>` : ''}
+            <div class="admin-user-menu"><button class="button button--ghost admin-user-chip" id="adminUserMenuToggle" type="button" aria-expanded="${state.userMenuOpen}" aria-haspopup="menu" aria-label="Open user menu">${icon('user')}<span>${esc(adminDisplayName(state.user))}</span>${icon('arrowRight')}</button>${state.userMenuOpen ? `<div class="admin-user-menu__panel" role="menu"><div class="admin-user-menu__identity"><strong>${esc(adminDisplayName(state.user))}</strong><small>${esc(state.user?.role ?? 'Staff account')}</small></div><button type="button" data-module="profile" role="menuitem">${icon('user')}My account</button><button type="button" data-module="settings" role="menuitem">${icon('settings')}General settings</button><button type="button" id="menuLogout" role="menuitem" class="is-danger">${icon('logout')}Sign out</button></div>` : ''}</div>
             ${state.accessDenied ? '' : `<button class="button button--icon" id="openSettings" type="button" aria-label="Open settings" title="Settings">${icon('settings')}</button>`}
-            ${state.accessDenied ? '' : `<button class="button button--ghost button--with-icon" id="refresh">${icon('refresh')}Refresh</button>`}
-            <button class="button button--ghost button--with-icon" id="logout">${icon('logout')}Logout</button>
+            ${state.accessDenied ? '' : `<button type="button" class="button button--ghost button--with-icon" id="refresh">${icon('refresh')}Refresh</button>`}
+            <button type="button" class="button button--ghost button--with-icon" id="logout">${icon('logout')}Logout</button>
           </div>
         </header>
 
@@ -975,6 +1006,7 @@ async function hydrateAdminMap() {
 }
 
 async function loadModule() {
+  const requestId = ++latestLoadRequest;
   state.loading = true;
   state.error = '';
   render();
@@ -983,6 +1015,7 @@ async function loadModule() {
     if (!state.dashboard) {
       state.dashboard = await api.dashboard();
     }
+    if (requestId !== latestLoadRequest) return;
 
     if (state.module === 'incidents') {
       state.incidents = await api.incidents();
@@ -1026,8 +1059,7 @@ async function loadModule() {
     }
 
     if (state.module === 'users' || state.module === 'customers') {
-      const directoryFilters = state.module === 'customers' ? { ...state.userFilters, role: 'passenger' } : state.userFilters;
-      const usersResult = await api.users(directoryFilters);
+      const usersResult = await api.users(userDirectoryFilters());
       state.users = usersResult.items;
       state.userMeta = usersResult.meta;
       if (state.module === 'users' && (state.permissions.includes('roles.view') || state.permissions.includes('roles.manage'))) state.roles = await api.roles();
@@ -1039,12 +1071,15 @@ async function loadModule() {
     if (state.module === 'permissions') state.permissionCatalog = await api.permissions();
     if (state.module === 'settings') state.generalSettings = await api.settings();
 
+    if (requestId !== latestLoadRequest) return;
     state.loading = false;
   } catch (error) {
+    if (requestId !== latestLoadRequest) return;
     state.loading = false;
     state.error = error.message;
   }
 
+  if (requestId !== latestLoadRequest) return;
   render();
 }
 
@@ -1524,7 +1559,9 @@ function wire() {
     render();
   });
   document.querySelectorAll('[data-user-detail-tab]').forEach((button) => button.addEventListener('click', () => {
-    void openUserDetail(state.userDetail?.user?.id, button.dataset.userDetailTab, 1);
+    const userId = state.userDetail?.user?.id;
+    if (!userId || state.userDetailLoading) return;
+    void openUserDetail(userId, button.dataset.userDetailTab, 1);
   }));
   document.querySelectorAll('[data-user-detail-page]').forEach((button) => button.addEventListener('click', () => {
     const meta = state.userDetailMeta;
@@ -1578,7 +1615,7 @@ function wire() {
   }));
   document.querySelectorAll('[data-disable-user]').forEach((button) => button.addEventListener('click', async () => {
     if (!confirm('Disable this user account?')) return;
-    try { await api.disableUser(button.dataset.disableUser); const usersResult = await api.users(state.userFilters); state.users = usersResult.items; state.userMeta = usersResult.meta; render(); } catch (error) { state.error = error.message; render(); }
+    try { await api.disableUser(button.dataset.disableUser); const usersResult = await api.users(userDirectoryFilters()); state.users = usersResult.items; state.userMeta = usersResult.meta; render(); } catch (error) { state.error = error.message; render(); }
   }));
   document.querySelectorAll('[data-user-role], [data-role-permission]').forEach((button) => button.addEventListener('click', () => {
     const enabled = button.getAttribute('aria-pressed') !== 'true';
@@ -1607,7 +1644,7 @@ function wire() {
     }
     if (state.permissions.includes('permissions.assign')) data.permission_grants = grants;
     if (String(form.get('password') ?? '').trim()) data.password = form.get('password');
-    try { await api.saveUser(data, state.userEditingId); const usersResult = await api.users(state.userFilters); state.users = usersResult.items; state.userMeta = usersResult.meta; state.userFormOpen = false; state.userEditingId = null; state.userForm = null; render(); } catch (error) { const message = document.querySelector('#userMessage'); if (message) message.textContent = error.message; }
+    try { await api.saveUser(data, state.userEditingId); const usersResult = await api.users(userDirectoryFilters()); state.users = usersResult.items; state.userMeta = usersResult.meta; state.userFormOpen = false; state.userEditingId = null; state.userForm = null; render(); } catch (error) { const message = document.querySelector('#userMessage'); if (message) message.textContent = error.message; }
   });
   document.querySelectorAll('[data-edit-role]').forEach((button) => button.addEventListener('click', () => { state.roleEditingId = button.dataset.editRole; render(); }));
   document.querySelector('#cancelRole')?.addEventListener('click', () => { state.roleEditingId = null; render(); });
@@ -1619,6 +1656,12 @@ function wire() {
   });
 
   document.querySelectorAll('[data-report-widget]').forEach((widget) => {
+    const index = [...document.querySelectorAll('[data-report-widget]')].indexOf(widget);
+    widget.querySelector('[data-report-move="up"]')?.toggleAttribute('disabled', index <= 0);
+    widget.querySelector('[data-report-move="down"]')?.toggleAttribute('disabled', index >= document.querySelectorAll('[data-report-widget]').length - 1);
+    widget.querySelectorAll('[data-report-move]').forEach((button) => button.addEventListener('click', () => {
+      moveReportWidget(widget, button.dataset.reportMove === 'up' ? -1 : 1);
+    }));
     widget.addEventListener('dragstart', (event) => {
       event.dataTransfer?.setData('text/plain', widget.dataset.reportWidget ?? '');
       widget.classList.add('is-dragging');
@@ -1636,9 +1679,7 @@ function wire() {
       if (from < 0 || to < 0) return;
       order.splice(from, 1);
       order.splice(to, 0, source);
-      state.reportWidgetOrder = order;
-      localStorage.setItem('encore_report_widgets', JSON.stringify(order));
-      render();
+      saveReportWidgetOrder(order);
     });
   });
 

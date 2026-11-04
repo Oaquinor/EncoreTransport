@@ -10,8 +10,18 @@
 .premium-tracking-form label:focus-within span { color: #087fab; }
 .track-result { animation: track-result-in .24s ease both; }
 .track-actions { display:flex; flex-wrap:wrap; gap:10px; margin:18px 0; }
-.track-actions button { border:1px solid rgba(8,127,171,.25); background:#fff; color:#0b2a3c; border-radius:999px; padding:10px 14px; font:inherit; font-weight:700; cursor:pointer; }
-.track-actions button:hover { border-color:#087fab; color:#087fab; }
+.track-actions .button { min-height:40px; padding:0 13px; border-radius:12px; font-size:.74rem; }
+.track-actions .button:hover { border-color:#087fab; color:#087fab; transform:translateY(-1px); }
+.track-actions button:disabled { opacity:.65; cursor:default; }
+.tracking-qr { display:flex; align-items:center; justify-content:space-between; gap:24px; margin:18px 0 4px; padding:18px; border:1px solid rgba(8,127,171,.18); border-radius:20px; background:linear-gradient(135deg,#f4fbfd,#fff); }
+.tracking-qr[hidden] { display:none; }
+.tracking-qr > div { display:grid; gap:6px; }
+.tracking-qr strong { color:#0b2a3c; }
+.tracking-qr span { max-width:320px; color:#5d7482; font-size:.84rem; line-height:1.45; }
+.tracking-qr small { color:#087fab; font-size:.72rem; font-weight:800; }
+.tracking-qr__visual { display:grid; min-width:196px; min-height:196px; place-items:center; }
+.tracking-qr img { width:180px; height:180px; padding:8px; border-radius:14px; background:#fff; box-shadow:0 12px 28px rgba(8,42,60,.12); }
 .track-empty { margin:18px 0 0; color:#5d7482; }
 @keyframes track-result-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .track-result { animation: none; } }
+@media (max-width: 560px) { .tracking-qr { align-items:flex-start; flex-direction:column; } .tracking-qr img { align-self:center; } }

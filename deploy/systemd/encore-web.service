@@ -1,0 +1,24 @@
+[Unit]
+Description=EncoreTransport public application server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=encore
+Group=encore
+WorkingDirectory=/var/www/encoretransport/current
+EnvironmentFile=/etc/encoretransport/node.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node server.mjs
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadOnlyPaths=/var/www/encoretransport/current
+
+[Install]
+WantedBy=multi-user.target

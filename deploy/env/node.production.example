@@ -1,0 +1,10 @@
+# Copiar como configuración del servicio Node en el VPS.
+# No contiene secretos.
+NODE_ENV=production
+HOST=127.0.0.1
+PORT=4173
+PUBLIC_SITE_URL=https://YOUR_PRODUCTION_DOMAIN
+
+# Solo es necesario si se usa el proxy API de server.mjs fuera de Nginx.
+# En la plantilla Nginx incluida, /api/* se entrega directamente a PHP-FPM.
+LARAVEL_API_URL=http://127.0.0.1:8000

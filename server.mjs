@@ -22,6 +22,7 @@ const mimeTypes = new Map([
   ['.svg', 'image/svg+xml'],
   ['.ico', 'image/x-icon'],
   ['.png', 'image/png'],
+  ['.gif', 'image/gif'],
   ['.jpg', 'image/jpeg'],
   ['.jpeg', 'image/jpeg'],
   ['.woff2', 'font/woff2'],

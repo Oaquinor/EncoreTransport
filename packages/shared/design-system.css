@@ -110,6 +110,7 @@ textarea {
 }
 
 .app-shell .journey-steps button.active,
+.app-shell .journey-steps .journey-step.active,
 .app-shell .search-console,
 .app-shell .action-band,
 .app-shell .smart-banner {
@@ -124,7 +125,7 @@ textarea {
 
 .app-shell .primary,
 .app-shell .booking-submit {
-  border-radius: 999px;
+  border-radius: var(--et-radius-control);
   box-shadow: 0 12px 26px rgba(20, 158, 215, .19);
 }
 
@@ -160,7 +161,7 @@ textarea {
 
 .auth-form button,
 .tracking-card button {
-  border-radius: 999px;
+  border-radius: var(--et-radius-control);
 }
 
 /* Operations: denser information, stronger navigation and quieter panels. */
@@ -184,7 +185,7 @@ textarea {
 
 .button,
 .admin-controls .field {
-  border-radius: 999px;
+  border-radius: var(--et-radius-control);
 }
 
 .admin-table th {
@@ -200,7 +201,7 @@ textarea {
 .driver-action,
 .driver-button,
 .driver-login button {
-  border-radius: 999px;
+  border-radius: var(--et-radius-control);
 }
 
 @media (max-width: 720px) {
