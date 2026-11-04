@@ -23,6 +23,8 @@ class AdminTicketController extends Controller
             'per_page' => ['nullable', 'integer', 'min:10', 'max:100'],
         ]);
 
+        $now = now();
+
         $query = Ticket::query()->with(['booking.trip.route', 'booking.payments', 'booking.user'])
             ->when($filters['q'] ?? null, function ($query, string $term): void {
                 $like = '%' . addcslashes($term, '%_') . '%';
@@ -31,9 +33,28 @@ class AdminTicketController extends Controller
                 });
             })
             ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
-            ->when($filters['lifecycle'] ?? null, function ($query, string $lifecycle): void {
-                if ($lifecycle === 'valid') $query->where('status', 'active')->whereHas('booking.trip', fn ($trip) => $trip->whereRaw("TIMESTAMP(departure_date, departure_time) >= ?", [now()]));
-                elseif ($lifecycle === 'not_used') $query->where('status', 'active')->whereHas('booking.trip', fn ($trip) => $trip->whereRaw("TIMESTAMP(departure_date, departure_time) < ?", [now()]));
+            ->when($filters['lifecycle'] ?? null, function ($query, string $lifecycle) use ($now): void {
+                if ($lifecycle === 'valid') {
+                    $query->where('status', 'active')->whereHas('booking.trip', function ($trip) use ($now): void {
+                        $trip->where(function ($date) use ($now): void {
+                            $date->whereDate('departure_date', '>', $now->toDateString())
+                                ->orWhere(function ($sameDate) use ($now): void {
+                                    $sameDate->whereDate('departure_date', $now->toDateString())
+                                        ->whereTime('departure_time', '>=', $now->format('H:i:s'));
+                                });
+                        });
+                    });
+                } elseif ($lifecycle === 'not_used') {
+                    $query->where('status', 'active')->whereHas('booking.trip', function ($trip) use ($now): void {
+                        $trip->where(function ($date) use ($now): void {
+                            $date->whereDate('departure_date', '<', $now->toDateString())
+                                ->orWhere(function ($sameDate) use ($now): void {
+                                    $sameDate->whereDate('departure_date', $now->toDateString())
+                                        ->whereTime('departure_time', '<', $now->format('H:i:s'));
+                                });
+                        });
+                    });
+                }
                 else $query->where('status', $lifecycle === 'used' ? 'used' : $lifecycle);
             })
             ->latest();
