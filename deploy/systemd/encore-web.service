@@ -5,8 +5,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=encore
-Group=encore
+User=encoreapp
+Group=www-data
 WorkingDirectory=/var/www/encoretransport/current
 EnvironmentFile=/etc/encoretransport/node.env
 Environment=NODE_ENV=production

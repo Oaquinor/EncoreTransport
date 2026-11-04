@@ -41,7 +41,7 @@ estáticas y los recursos compartidos.
 ## Secuencia segura en el VPS
 
 1. Crear un usuario de servicio sin acceso SSH interactivo, por ejemplo
-   `encore`, y un directorio de releases fuera del web root público.
+   `encoreapp`, y un directorio de releases fuera del web root público.
 2. Instalar PHP 8.2+, PHP-FPM, Composer, Node 22+, npm, MySQL/MariaDB,
    Nginx y Certbot según la distribución mantenida del VPS.
 3. Copiar el repositorio a una release y crear el enlace `current`.
