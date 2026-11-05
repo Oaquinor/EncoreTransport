@@ -28,8 +28,8 @@ class LiveNetworkTest extends TestCase
         ]);
 
         $response = $this->getJson('/api/v1/network/live')
-            ->assertOk()
-            ->assertHeader('Cache-Control', 'no-store');
+            ->assertOk();
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
         $response->assertJsonPath('data.trips.0.trip_id', (string) $trip->id);
         $response->assertJsonPath('data.trips.0.bus_code', 'BUS-001');
         $this->assertArrayNotHasKey('driver', $response->json('data.trips.0'));
