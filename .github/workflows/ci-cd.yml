@@ -148,6 +148,7 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
           PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
           PHP_FPM_SOCKET: ${{ vars.PHP_FPM_SOCKET || '/run/php/php8.3-fpm.sock' }}
+          PHP_FPM_SERVICE: ${{ vars.PHP_FPM_SERVICE || 'php8.3-fpm' }}
           TLS_READY: ${{ vars.TLS_READY || 'true' }}
           AUTO_MIGRATE: ${{ vars.AUTO_MIGRATE || 'false' }}
           GITHUB_SHA: ${{ github.sha }}
@@ -215,6 +216,7 @@ jobs:
           systemctl enable encore-web encore-queue encore-schedule.timer
           systemctl restart encore-web encore-queue
           systemctl restart encore-schedule.timer
+          systemctl reload "$PHP_FPM_SERVICE"
 
           if [ "$TLS_READY" = "true" ]; then
               sed \
