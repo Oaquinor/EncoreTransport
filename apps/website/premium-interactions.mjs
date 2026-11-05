@@ -9,23 +9,37 @@ function mountScrollProgress() {
   progress.innerHTML = '<span></span>';
   document.body.append(progress);
   const fill = progress.firstElementChild;
+  let frame = 0;
   const update = () => {
+    frame = 0;
     const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
     const percentage = max ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
     fill.style.width = `${percentage}%`;
   };
-  window.addEventListener('scroll', update, { passive: true });
-  window.addEventListener('resize', update);
+  const scheduleUpdate = () => {
+    if (frame) return;
+    frame = window.requestAnimationFrame(update);
+  };
+  window.addEventListener('scroll', scheduleUpdate, { passive: true });
+  window.addEventListener('resize', scheduleUpdate, { passive: true });
   update();
 }
 
 function mountPointerField() {
   if (reducedMotion || !window.matchMedia('(pointer:fine)').matches) return;
+  let frame = 0;
+  let latestPointer = null;
   document.addEventListener('pointermove', (event) => {
-    const x = event.clientX / Math.max(1, window.innerWidth);
-    const y = event.clientY / Math.max(1, window.innerHeight);
-    document.documentElement.style.setProperty('--pointer-x', `${(x * 100).toFixed(2)}%`);
-    document.documentElement.style.setProperty('--pointer-y', `${(y * 100).toFixed(2)}%`);
+    latestPointer = event;
+    if (frame) return;
+    frame = window.requestAnimationFrame(() => {
+      frame = 0;
+      if (!latestPointer) return;
+      const x = latestPointer.clientX / Math.max(1, window.innerWidth);
+      const y = latestPointer.clientY / Math.max(1, window.innerHeight);
+      document.documentElement.style.setProperty('--pointer-x', `${(x * 100).toFixed(2)}%`);
+      document.documentElement.style.setProperty('--pointer-y', `${(y * 100).toFixed(2)}%`);
+    });
   }, { passive: true });
 }
 

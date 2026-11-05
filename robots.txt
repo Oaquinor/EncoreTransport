@@ -7,3 +7,5 @@ Disallow: /admin/
 Disallow: /login/
 Disallow: /move/
 Disallow: /api/
+
+Sitemap: https://encoretransport.online/sitemap.xml

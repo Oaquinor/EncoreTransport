@@ -319,6 +319,16 @@
 }
 
 @media (max-width: 640px) {
+  :where(button, .button, input, select) {
+    min-height: 44px;
+  }
+
+  .site-mobile-menu__panel a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
   .public-footer {
     margin-top: 24px;
   }

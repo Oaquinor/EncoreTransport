@@ -17,6 +17,7 @@ const mimeTypes = new Map([
   ['.js', 'text/javascript; charset=utf-8'],
   ['.mjs', 'text/javascript; charset=utf-8'],
   ['.json', 'application/json; charset=utf-8'],
+  ['.xml', 'application/xml; charset=utf-8'],
   ['.txt', 'text/plain; charset=utf-8'],
   ['.webmanifest', 'application/manifest+json; charset=utf-8'],
   ['.svg', 'image/svg+xml'],
@@ -39,7 +40,7 @@ const appAliases = new Map([
 ]);
 
 const publicRoots = ['assets', 'packages/shared'];
-const publicFiles = new Set(['/logo.svg', '/robots.txt']);
+const publicFiles = new Set(['/logo.svg', '/robots.txt', '/sitemap.xml']);
 const vendorFiles = new Map([
   ['/vendor/leaflet/leaflet.css', 'node_modules/leaflet/dist/leaflet.css'],
   ['/vendor/leaflet/leaflet.js', 'node_modules/leaflet/dist/leaflet.js'],

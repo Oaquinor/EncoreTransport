@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://encoretransport.online/website/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://encoretransport.online/website/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://encoretransport.online/website/?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://encoretransport.online/website/" />
+  </url>
+  <url>
+    <loc>https://encoretransport.online/website/routes/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://encoretransport.online/website/routes/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://encoretransport.online/website/routes/?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://encoretransport.online/website/routes/" />
+  </url>
+  <url>
+    <loc>https://encoretransport.online/website/trips/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://encoretransport.online/website/trips/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://encoretransport.online/website/trips/?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://encoretransport.online/website/trips/" />
+  </url>
+  <url>
+    <loc>https://encoretransport.online/website/packages/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://encoretransport.online/website/packages/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://encoretransport.online/website/packages/?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://encoretransport.online/website/packages/" />
+  </url>
+  <url>
+    <loc>https://encoretransport.online/website/services/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://encoretransport.online/website/services/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://encoretransport.online/website/services/?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://encoretransport.online/website/services/" />
+  </url>
+  <url>
+    <loc>https://encoretransport.online/website/live/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://encoretransport.online/website/live/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://encoretransport.online/website/live/?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://encoretransport.online/website/live/" />
+  </url>
+  <url>
+    <loc>https://encoretransport.online/website/about/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://encoretransport.online/website/about/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://encoretransport.online/website/about/?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://encoretransport.online/website/about/" />
+  </url>
+  <url>
+    <loc>https://encoretransport.online/website/contact/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://encoretransport.online/website/contact/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://encoretransport.online/website/contact/?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://encoretransport.online/website/contact/" />
+  </url>
+  <url>
+    <loc>https://encoretransport.online/website/help/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://encoretransport.online/website/help/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://encoretransport.online/website/help/?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://encoretransport.online/website/help/" />
+  </url>
+  <url>
+    <loc>https://encoretransport.online/track-package/</loc>
+  </url>
+</urlset>

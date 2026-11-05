@@ -18,6 +18,8 @@ const tracking =
   read('apps/package-tracking/index.html');
 const robots =
   read('robots.txt');
+const sitemap =
+  read('sitemap.xml');
 const server =
   read('server.mjs');
 
@@ -102,6 +104,21 @@ assert.match(
 assert.match(
   robots,
   /Allow: \/track-package\//,
+);
+
+assert.match(
+  robots,
+  /Sitemap: https:\/\/encoretransport\.online\/sitemap\.xml/,
+);
+
+assert.match(
+  sitemap,
+  /<loc>https:\/\/encoretransport\.online\/website\/<\/loc>/,
+);
+
+assert.match(
+  sitemap,
+  /hreflang="es" href="https:\/\/encoretransport\.online\/website\/\?lang=es"/,
 );
 
 for (

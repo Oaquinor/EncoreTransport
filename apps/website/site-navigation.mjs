@@ -3,6 +3,8 @@ const mobileToggle = document.querySelector('#mobileMenuToggle');
 const mobileNavigation = document.querySelector('#mobileNavigation');
 const menus = [...document.querySelectorAll('[data-menu]')];
 const closeTimers = new WeakMap();
+let pointerFrame = 0;
+let latestPointerTarget = null;
 const navigationCopy = document.documentElement.lang === 'es'
   ? { open: 'Abrir navegación', close: 'Cerrar navegación' }
   : { open: 'Open navigation', close: 'Close navigation' };
@@ -92,12 +94,17 @@ menus.forEach((menu) => {
 });
 
 document.addEventListener('pointermove', (event) => {
-  if (!window.matchMedia('(min-width: 981px) and (pointer: fine)').matches) return;
-  menus.forEach((menu) => {
-    // Keep a small hand-off window while the pointer crosses the gap from
-    // the trigger to the panel. Immediate closure makes submenu items
-    // impossible to reach on slower or diagonal pointer movement.
-    if (menu.dataset.openReason === 'hover' && !menu.contains(event.target)) scheduleClose(menu);
+  latestPointerTarget = event.target;
+  if (pointerFrame) return;
+  pointerFrame = window.requestAnimationFrame(() => {
+    pointerFrame = 0;
+    if (!window.matchMedia('(min-width: 981px) and (pointer: fine)').matches) return;
+    menus.forEach((menu) => {
+      // Keep a small hand-off window while the pointer crosses the gap from
+      // the trigger to the panel. Immediate closure makes submenu items impossible
+      // to reach on slower or diagonal pointer movement.
+      if (menu.dataset.openReason === 'hover' && !menu.contains(latestPointerTarget)) scheduleClose(menu);
+    });
   });
 }, { passive: true });
 
