@@ -944,8 +944,8 @@ function PointField({
           {optionValues.map((point, index) => (
             <button
               key={point || 'empty'}
-              ref={(element) => { optionRefs.current[index] = element; }}
               type="button"
+              ref={(element) => { optionRefs.current[index] = element; }}
               className="passenger-select__option"
               role="option"
               aria-selected={point === value}
