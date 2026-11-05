@@ -915,7 +915,7 @@ bookingForm?.addEventListener('submit', (event) => {
     submit.disabled = true;
     submit.setAttribute('aria-busy', 'true');
     const actionLabel = submit.querySelector('[data-action-label]');
-    if (actionLabel) actionLabel.textContent = text('Opening departures…', 'Abriendo salidas…');
+    if (actionLabel) actionLabel.textContent = text('Searching…', 'Buscando…');
   }
   rememberSearch({ origin, destination, date, passengers });
 

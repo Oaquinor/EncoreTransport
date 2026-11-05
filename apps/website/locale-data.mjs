@@ -66,7 +66,7 @@ const STATIC_ES = {
   'clear from the start.': 'claro desde el inicio.',
   'Find a departure, compare schedules and choose your seat with confidence.': 'Encuentra una salida, compara horarios y elige tu asiento con tranquilidad.',
   'Published departures': 'Salidas publicadas', 'Seat selection': 'Selección de asientos', 'Clear tracking': 'Seguimiento claro',
-  'Routes': 'Rutas', 'published': 'publicadas', 'Departures': 'Salidas', 'available': 'disponibles', 'Checking service': 'Comprobando servicio',
+  'Routes': 'Rutas', 'published': 'publicadas', 'Departures': 'Salidas', 'available': 'disponibles', 'Checking service': 'Comprobando servicio', 'Search': 'Buscar', 'Searching…': 'Buscando…',
   'Start here': 'Empieza aquí', 'Where are you going?': '¿A dónde quieres ir?',
   'Choose an origin, destination, date and passengers. Then compare departures and choose your seat.': 'Elige origen, destino, fecha y pasajeros. Después podrás comparar salidas y escoger tu asiento.',
   'Ready when you are.': 'Listo cuando tú estés.', 'Origin': 'Origen', 'Destination': 'Destino', 'Date': 'Fecha', 'Passengers': 'Pasajeros',

@@ -377,7 +377,7 @@
    rhythm as the homepage search without changing the booking behavior. */
 .site-page--trips .trip-search-card .public-booking-card {
   display: grid;
-  grid-template-columns: minmax(148px, 1.25fr) 44px minmax(148px, 1.25fr) minmax(116px, .85fr) minmax(84px, .58fr) minmax(154px, 1fr);
+  grid-template-columns: minmax(150px, 1.1fr) 44px minmax(180px, 1.3fr) minmax(142px, .9fr) minmax(82px, .6fr) minmax(140px, .9fr);
   align-items: center;
   gap: 10px;
   min-width: 0;
@@ -411,6 +411,16 @@
   white-space: nowrap;
 }
 
+.site-page--trips .trip-search-card .public-field .website-select__value {
+  font-size: .8rem;
+  font-weight: 850;
+}
+
+.site-page--trips .trip-search-card input[type="date"] {
+  font-size: .78rem;
+  letter-spacing: -.025em;
+}
+
 .site-page--trips .trip-search-card .public-swap {
   width: 44px;
   height: 44px;
@@ -437,7 +447,7 @@
 
 @media (min-width: 901px) and (max-width: 1100px) {
   .site-page--trips .trip-search-card .public-booking-card {
-    grid-template-columns: minmax(124px, 1.2fr) 42px minmax(124px, 1.2fr) minmax(104px, .85fr) minmax(80px, .6fr) minmax(148px, 1fr);
+    grid-template-columns: minmax(136px, 1.1fr) 42px minmax(160px, 1.3fr) minmax(128px, .85fr) minmax(80px, .6fr) minmax(140px, .9fr);
     gap: 8px;
   }
 }
@@ -478,5 +488,72 @@
   .site-page--trips .trip-search-card .public-swap {
     justify-self: center;
     transform: rotate(90deg);
+  }
+}
+
+/* Keep the premium surfaces compact: generous whitespace belongs around the
+   module, not inside an overstretched form. */
+.public-booking .public-booking-card {
+  width: min(100%, 940px);
+  margin-inline: auto;
+}
+
+.site-page--trips .trip-search-card {
+  width: min(100%, 940px);
+  justify-self: center;
+}
+
+.public-hero__copy h1 {
+  max-width: 580px;
+  text-wrap: balance;
+}
+
+.public-faq-list {
+  width: 100%;
+  max-width: 760px;
+}
+
+.public-faq-list p {
+  max-width: 65ch;
+}
+
+.site-page--trips .trip-search-intro h2 {
+  max-width: 390px;
+  font-size: clamp(2.55rem, 4.2vw, 4.4rem);
+  text-wrap: balance;
+}
+
+.website-select__menu {
+  background: rgba(255, 255, 255, .94);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-color: rgba(37, 166, 213, .28);
+}
+
+.website-select__value.is-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #7893a0;
+}
+
+.website-select__value.is-loading::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  border: 2px solid #c9dfe7;
+  border-top-color: #159ac0;
+  border-radius: 50%;
+  animation: website-select-loading .72s linear infinite;
+}
+
+@keyframes website-select-loading {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .website-select__value.is-loading::before {
+    animation: none;
   }
 }

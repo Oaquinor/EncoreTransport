@@ -335,7 +335,7 @@ try {
   assert.equal(tripSearchUrl.searchParams.get('destination'), 'New Amsterdam', 'Trips search must preserve destination');
   assert.equal(tripSearchUrl.searchParams.get('passengers'), '2', 'Trips search must preserve passenger count');
   assert.equal(tripSearchUrl.searchParams.get('date'), '2027-01-08', 'Trips search must preserve date');
-  buttonMatrix.push({ route: '/website/trips/', label: 'Continue to results', mechanism: 'form:bookingForm', type: 'submit', id: '', status: 'verified-by-click' });
+  buttonMatrix.push({ route: '/website/trips/', label: 'Search', mechanism: 'form:bookingForm', type: 'submit', id: '', status: 'verified-by-click' });
   recordBehavior('form-submit', 'Home and Trips booking forms transfer all search parameters to Passenger', '/website/trips/');
 
   await page.setViewportSize({ width: 1440, height: 900 });

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-05T18:49:06.753Z",
+  "generated_at": "2026-11-05T19:05:27.726Z",
   "source": "tests/website-controls-browser.test.mjs",
   "inventory_rows": 678,
   "action_rows": 63,
@@ -37,13 +37,16 @@
         "HTTP destination /website/contact/",
         "HTTP destination /website/help/",
         "HTTP destination /login/?return=/passenger/",
+        "HTTP destination /passenger/?origin=Georgetown&destination=New%20Amsterdam&passengers=1",
+        "HTTP destination /passenger/?origin=New%20Amsterdam&destination=Georgetown&passengers=1",
+        "HTTP destination /passenger/?origin=Linden&destination=Georgetown&passengers=1",
+        "HTTP destination https://leafletjs.com",
         "HTTP destination /login/",
         "HTTP destination #routes",
         "HTTP destination /website/trips/?origin=Georgetown&destination=New+Amsterdam&passengers=1",
         "HTTP destination /website/trips/?origin=New+Amsterdam&destination=Georgetown&passengers=1",
         "HTTP destination /website/trips/?origin=Linden&destination=Georgetown&passengers=1",
         "HTTP destination /passenger/?screen=account&tab=tickets",
-        "HTTP destination https://leafletjs.com",
         "HTTP destination /passenger/",
         "HTTP destination #trips-tickets",
         "HTTP destination #tracking-delivery"
@@ -135,7 +138,7 @@
       "mechanism": "form:bookingForm",
       "evidence": [
         "Visible button: Find trips",
-        "Visible button: Continue to results"
+        "Visible button: Search"
       ],
       "screens": [
         "/website/",

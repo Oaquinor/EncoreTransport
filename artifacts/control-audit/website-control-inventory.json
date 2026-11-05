@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-05T18:49:06.797Z",
+  "generated_at": "2026-11-05T19:05:27.732Z",
   "columns": [
     "Aplicación",
     "Pantalla",
@@ -722,7 +722,7 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "button",
-      "width": 258,
+      "width": 164,
       "height": 36
     },
     {
@@ -820,7 +820,7 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "button",
-      "width": 258,
+      "width": 164,
       "height": 36
     },
     {
@@ -876,7 +876,7 @@
       "test": "test:website-controls-browser",
       "tag": "input",
       "type": "date",
-      "width": 149,
+      "width": 102,
       "height": 23
     },
     {
@@ -890,7 +890,7 @@
       "test": "test:website-controls-browser",
       "tag": "input",
       "type": "number",
-      "width": 89,
+      "width": 68,
       "height": 23
     },
     {
@@ -904,7 +904,7 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "submit",
-      "width": 234,
+      "width": 190,
       "height": 68
     },
     {
@@ -1114,7 +1114,7 @@
       "test": "test:website-controls-browser",
       "tag": "summary",
       "type": "",
-      "width": 793,
+      "width": 758,
       "height": 68
     },
     {
@@ -1128,7 +1128,7 @@
       "test": "test:website-controls-browser",
       "tag": "summary",
       "type": "",
-      "width": 793,
+      "width": 758,
       "height": 68
     },
     {
@@ -1142,7 +1142,7 @@
       "test": "test:website-controls-browser",
       "tag": "summary",
       "type": "",
-      "width": 793,
+      "width": 758,
       "height": 68
     },
     {
@@ -3130,7 +3130,7 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "button",
-      "width": 142,
+      "width": 122,
       "height": 36
     },
     {
@@ -3228,7 +3228,7 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "button",
-      "width": 142,
+      "width": 150,
       "height": 36
     },
     {
@@ -3284,8 +3284,8 @@
       "test": "test:website-controls-browser",
       "tag": "input",
       "type": "date",
-      "width": 87,
-      "height": 24
+      "width": 112,
+      "height": 21
     },
     {
       "application": "Website",
@@ -3304,7 +3304,7 @@
     {
       "application": "Website",
       "screen": "/website/trips/",
-      "control": "Continue to results",
+      "control": "Search",
       "purpose": "form:bookingForm",
       "destination": "form:bookingForm",
       "permissions": "public",
@@ -3312,7 +3312,7 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "submit",
-      "width": 154,
+      "width": 140,
       "height": 68
     },
     {
@@ -7848,8 +7848,50 @@
       "test": "test:website-controls-browser",
       "tag": "select",
       "type": "",
-      "width": 78,
+      "width": 1,
       "height": 40
+    },
+    {
+      "application": "Website",
+      "screen": "/website/contact/",
+      "control": "Language",
+      "purpose": "select-trigger",
+      "destination": "#website-select-menu-1",
+      "permissions": "public",
+      "status": "visible",
+      "test": "test:website-controls-browser",
+      "tag": "button",
+      "type": "button",
+      "width": 68,
+      "height": 40
+    },
+    {
+      "application": "Website",
+      "screen": "/website/contact/",
+      "control": "EN✓",
+      "purpose": "select-option",
+      "destination": "website-select-menu-1-option-0",
+      "permissions": "public",
+      "status": "available-hidden",
+      "test": "test:website-controls-browser",
+      "tag": "button",
+      "type": "button",
+      "width": 0,
+      "height": 0
+    },
+    {
+      "application": "Website",
+      "screen": "/website/contact/",
+      "control": "ES",
+      "purpose": "select-option",
+      "destination": "website-select-menu-1-option-1",
+      "permissions": "public",
+      "status": "available-hidden",
+      "test": "test:website-controls-browser",
+      "tag": "button",
+      "type": "button",
+      "width": 0,
+      "height": 0
     },
     {
       "application": "Website",
@@ -7904,6 +7946,48 @@
       "test": "test:website-controls-browser",
       "tag": "select",
       "type": "",
+      "width": 0,
+      "height": 0
+    },
+    {
+      "application": "Website",
+      "screen": "/website/contact/",
+      "control": "Language",
+      "purpose": "select-trigger",
+      "destination": "#website-select-menu-2",
+      "permissions": "public",
+      "status": "available-hidden",
+      "test": "test:website-controls-browser",
+      "tag": "button",
+      "type": "button",
+      "width": 0,
+      "height": 0
+    },
+    {
+      "application": "Website",
+      "screen": "/website/contact/",
+      "control": "EN✓",
+      "purpose": "select-option",
+      "destination": "website-select-menu-2-option-0",
+      "permissions": "public",
+      "status": "available-hidden",
+      "test": "test:website-controls-browser",
+      "tag": "button",
+      "type": "button",
+      "width": 0,
+      "height": 0
+    },
+    {
+      "application": "Website",
+      "screen": "/website/contact/",
+      "control": "ES",
+      "purpose": "select-option",
+      "destination": "website-select-menu-2-option-1",
+      "permissions": "public",
+      "status": "available-hidden",
+      "test": "test:website-controls-browser",
+      "tag": "button",
+      "type": "button",
       "width": 0,
       "height": 0
     },
@@ -8716,50 +8800,8 @@
       "test": "test:website-controls-browser",
       "tag": "select",
       "type": "",
-      "width": 1,
+      "width": 78,
       "height": 40
-    },
-    {
-      "application": "Website",
-      "screen": "/website/help/",
-      "control": "Language",
-      "purpose": "select-trigger",
-      "destination": "#website-select-menu-1",
-      "permissions": "public",
-      "status": "visible",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 68,
-      "height": 40
-    },
-    {
-      "application": "Website",
-      "screen": "/website/help/",
-      "control": "EN✓",
-      "purpose": "select-option",
-      "destination": "website-select-menu-1-option-0",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 0,
-      "height": 0
-    },
-    {
-      "application": "Website",
-      "screen": "/website/help/",
-      "control": "ES",
-      "purpose": "select-option",
-      "destination": "website-select-menu-1-option-1",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 0,
-      "height": 0
     },
     {
       "application": "Website",
@@ -8814,48 +8856,6 @@
       "test": "test:website-controls-browser",
       "tag": "select",
       "type": "",
-      "width": 0,
-      "height": 0
-    },
-    {
-      "application": "Website",
-      "screen": "/website/help/",
-      "control": "Language",
-      "purpose": "select-trigger",
-      "destination": "#website-select-menu-2",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 0,
-      "height": 0
-    },
-    {
-      "application": "Website",
-      "screen": "/website/help/",
-      "control": "EN✓",
-      "purpose": "select-option",
-      "destination": "website-select-menu-2-option-0",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 0,
-      "height": 0
-    },
-    {
-      "application": "Website",
-      "screen": "/website/help/",
-      "control": "ES",
-      "purpose": "select-option",
-      "destination": "website-select-menu-2-option-1",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
       "width": 0,
       "height": 0
     },

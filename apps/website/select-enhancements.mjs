@@ -5,6 +5,13 @@ function optionLabel(option) {
   return String(option?.textContent ?? option?.label ?? option?.value ?? '').trim();
 }
 
+function visibleOptionLabel(option) {
+  const label = optionLabel(option);
+  if (/^loading\b/i.test(label)) return 'Loading…';
+  if (/^cargando\b/i.test(label)) return 'Cargando…';
+  return label;
+}
+
 function getLabel(select) {
   if (select.getAttribute('aria-label')) return select.getAttribute('aria-label');
   const label = select.closest('label');
@@ -88,7 +95,10 @@ function enhanceSelect(select) {
 
   const sync = () => {
     const selected = selectedOption(select);
-    value.textContent = optionLabel(selected) || 'Select an option';
+    const selectedLabel = optionLabel(selected);
+    const isLoading = select.disabled && /^(loading|cargando)\b/i.test(selectedLabel);
+    value.textContent = visibleOptionLabel(selected) || 'Select an option';
+    value.classList.toggle('is-loading', isLoading);
     trigger.disabled = select.disabled;
     trigger.setAttribute('aria-disabled', String(select.disabled));
     trigger.setAttribute('aria-label', getLabel(select));
