@@ -727,6 +727,99 @@ export async function renderLocationMap(container, location, options = {}) {
   return map;
 }
 
+/**
+ * Render the shared map used by administrative route editing. Coordinates are
+ * always owned by the caller; the map only reports deliberate user changes
+ * through onPointChange/onMapClick. This keeps the same TomTom proxy, Leaflet
+ * runtime and map lifecycle as the public and operational surfaces.
+ */
+export async function renderEditableRouteMap(container, stops = [], options = {}) {
+  if (!container) return null;
+
+  ensureSharedStyles();
+  destroyRealMap(container);
+  container.classList.add('encore-real-map');
+
+  let L;
+  try {
+    L = await loadLeaflet();
+  } catch (error) {
+    container.innerHTML = `
+      <div class="encore-map-fallback">
+        <div>
+          <strong>Map renderer unavailable</strong>
+          <span>${String(error?.message ?? error)}</span>
+        </div>
+      </div>`;
+    throw error;
+  }
+
+  const defaultCenter = options.defaultCenter ?? [18.4861, -69.9312];
+  const map = L.map(container, {
+    zoomControl: options.zoomControl !== false,
+    attributionControl: true,
+    fadeAnimation: false,
+    zoomAnimation: false,
+    markerZoomAnimation: false,
+  }).setView(defaultCenter, options.zoom ?? 9);
+  mapRegistry.set(container, map);
+
+  const metrics = ensureMapMetrics(container, 'editable-route');
+  metrics.initializedAt = metricNow();
+  metrics.leafletLoadMs = globalThis.__ENCORE_MAP_RUNTIME_METRICS__?.leafletLoadMs ?? null;
+  const tileLayer = L.tileLayer(tileLayerUrl(), tileLayerOptions).addTo(map);
+  installMapMetrics(map, tileLayer, metrics);
+
+  const validStops = (Array.isArray(stops) ? stops : [])
+    .map((stop, index) => ({ stop, index }))
+    .filter(({ stop }) => validCoordinate(stop));
+  const bounds = [];
+  const markers = new Map();
+
+  const addStopMarker = (index, point) => {
+    const stop = stops[index] ?? {};
+    const kind = index === 0 ? 'origin' : index === stops.length - 1 ? 'destination' : 'origin';
+    const marker = L.marker(point, {
+      icon: markerIcon(L, kind, String(index + 1)),
+      title: stop.name || `Stop ${index + 1}`,
+      draggable: true,
+    }).addTo(map);
+    marker.bindTooltip(`${index + 1}. ${stop.name || 'Unnamed stop'}`, { direction: 'top', offset: [0, -22] });
+    marker.on('click', () => options.onSelectStop?.(index));
+    marker.on('dragend', () => {
+      const position = marker.getLatLng();
+      options.onPointChange?.(index, { latitude: position.lat, longitude: position.lng, source: 'drag' });
+    });
+    markers.set(index, marker);
+    return marker;
+  };
+
+  for (const { stop, index } of validStops) {
+    const point = [Number(stop.latitude), Number(stop.longitude)];
+    bounds.push(point);
+    addStopMarker(index, point);
+  }
+
+  if (bounds.length > 1) {
+    map.fitBounds(L.latLngBounds(bounds).pad(0.2), { animate: false, maxZoom: options.maxZoom ?? 14 });
+  } else if (bounds.length === 1) {
+    map.setView(bounds[0], options.zoom ?? 14, { animate: false });
+  } else {
+    runtimeStatus(container, 'Choose a location', 'Search for a place or click the map to position the selected stop.');
+  }
+
+  map.on('click', (event) => {
+    const index = Number(options.selectedStop ?? 0);
+    const point = { latitude: event.latlng.lat, longitude: event.latlng.lng, source: 'map' };
+    const marker = markers.get(index) ?? addStopMarker(index, [point.latitude, point.longitude]);
+    marker.setLatLng([point.latitude, point.longitude]);
+    options.onMapClick?.(index, point);
+  });
+
+  requestAnimationFrame(() => map.invalidateSize());
+  return map;
+}
+
 function escapePopup(value = '') {
   return String(value).replace(/[&<>'"]/g, (character) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;',

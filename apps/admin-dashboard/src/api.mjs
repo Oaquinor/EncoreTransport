@@ -128,6 +128,18 @@ export const routes = async () => {
   return payload.data ?? [];
 };
 
+export const mapSearch = async (query, limit = 8) => {
+  const params = new URLSearchParams({ q: query, limit: String(limit) });
+  const payload = await requestJson(`/maps/search?${params}`);
+  return payload.data?.results ?? payload.results ?? [];
+};
+
+export const reverseGeocode = async ({ latitude, longitude }) => {
+  const params = new URLSearchParams({ latitude: String(latitude), longitude: String(longitude) });
+  const payload = await requestJson(`/maps/reverse-geocode?${params}`);
+  return payload.data ?? payload;
+};
+
 export const saveRoute = async (data, id = null) => {
   const path = id
     ? `/admin/routes/${encodeURIComponent(id)}`
