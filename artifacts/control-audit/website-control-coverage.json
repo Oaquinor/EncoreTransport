@@ -1,0 +1,241 @@
+{
+  "generated_at": "2026-11-05T02:09:38.332Z",
+  "source": "tests/website-controls-browser.test.mjs",
+  "inventory_rows": 609,
+  "action_rows": 49,
+  "required_behaviors": [
+    "navigation",
+    "desktop-menu",
+    "desktop-menu-keyboard",
+    "mobile-menu",
+    "route-swap",
+    "form-field",
+    "form-submit",
+    "recent-search",
+    "locale-switch",
+    "route-filter-clear",
+    "routes-retry",
+    "package-step",
+    "live-trip-selection",
+    "live-retry",
+    "disclosure"
+  ],
+  "behaviors": [
+    {
+      "mechanism": "navigation",
+      "evidence": [
+        "HTTP destination #mainContent",
+        "HTTP destination /website/",
+        "HTTP destination /website/routes/",
+        "HTTP destination /website/trips/",
+        "HTTP destination /website/routes/#terminals",
+        "HTTP destination /website/packages/",
+        "HTTP destination /website/services/",
+        "HTTP destination /track-package/",
+        "HTTP destination /website/live/",
+        "HTTP destination /website/about/",
+        "HTTP destination /website/contact/",
+        "HTTP destination /website/help/",
+        "HTTP destination /login/?return=/passenger/",
+        "HTTP destination /login/",
+        "HTTP destination #routes",
+        "HTTP destination /website/trips/?origin=Georgetown&destination=New+Amsterdam&passengers=1",
+        "HTTP destination /website/trips/?origin=New+Amsterdam&destination=Georgetown&passengers=1",
+        "HTTP destination /website/trips/?origin=Linden&destination=Georgetown&passengers=1",
+        "HTTP destination /passenger/?screen=account&tab=tickets",
+        "HTTP destination https://leafletjs.com",
+        "HTTP destination /passenger/",
+        "HTTP destination #trips-tickets",
+        "HTTP destination #tracking-delivery"
+      ],
+      "screens": [
+        "/website/",
+        "/website/routes/",
+        "/website/trips/",
+        "/website/packages/",
+        "/website/services/",
+        "/website/live/",
+        "/website/about/",
+        "/website/contact/",
+        "/website/help/"
+      ]
+    },
+    {
+      "mechanism": "disclosure",
+      "evidence": [
+        "FAQ/footer disclosure contract",
+        "All Help FAQ and footer legal details open and close"
+      ],
+      "screens": [
+        "/website/",
+        "/website/routes/",
+        "/website/trips/",
+        "/website/packages/",
+        "/website/services/",
+        "/website/live/",
+        "/website/about/",
+        "/website/contact/",
+        "/website/help/"
+      ]
+    },
+    {
+      "mechanism": "desktop-menu",
+      "evidence": [
+        "Visible button: Trips",
+        "Visible button: Packages",
+        "Visible button: Tracking",
+        "Visible button: Company & help",
+        "Click opens each desktop menu and Escape closes it"
+      ],
+      "screens": [
+        "/website/",
+        "/website/routes/",
+        "/website/trips/",
+        "/website/packages/",
+        "/website/services/",
+        "/website/live/",
+        "/website/about/",
+        "/website/contact/",
+        "/website/help/"
+      ]
+    },
+    {
+      "mechanism": "route-swap",
+      "evidence": [
+        "Visible button: Swap origin and destination",
+        "Home planner exchanges a valid return route and preserves an unavailable reverse route safely"
+      ],
+      "screens": [
+        "/website/",
+        "/website/trips/"
+      ]
+    },
+    {
+      "mechanism": "form:bookingForm",
+      "evidence": [
+        "Visible button: Find trips",
+        "Visible button: Continue to results"
+      ],
+      "screens": [
+        "/website/",
+        "/website/trips/"
+      ]
+    },
+    {
+      "mechanism": "form-field",
+      "evidence": [
+        "Field: desktopLocale",
+        "Field: origin",
+        "Field: destination",
+        "Field: date",
+        "Field: passengers",
+        "Field: routeFilter",
+        "Field: networkRouteSelect"
+      ],
+      "screens": [
+        "/website/",
+        "/website/routes/",
+        "/website/trips/",
+        "/website/packages/",
+        "/website/services/",
+        "/website/live/",
+        "/website/about/",
+        "/website/contact/",
+        "/website/help/"
+      ]
+    },
+    {
+      "mechanism": "package-step",
+      "evidence": [
+        "Visible button: Prepare",
+        "Visible button: Hand over",
+        "Visible button: Follow",
+        "Parcel tab click and ArrowLeft update the active stage"
+      ],
+      "screens": [
+        "/website/packages/"
+      ]
+    },
+    {
+      "mechanism": "locale-switch",
+      "evidence": [
+        "EN/ES switch updates document language and localized content"
+      ],
+      "screens": [
+        "/website/"
+      ]
+    },
+    {
+      "mechanism": "recent-search",
+      "evidence": [
+        "Recent search restores origin and destination"
+      ],
+      "screens": [
+        "/website/"
+      ]
+    },
+    {
+      "mechanism": "desktop-menu-keyboard",
+      "evidence": [
+        "ArrowDown moves focus into a desktop menu and Escape closes it"
+      ],
+      "screens": [
+        "/website/"
+      ]
+    },
+    {
+      "mechanism": "mobile-menu",
+      "evidence": [
+        "Mobile navigation opens and groups expand as accordions"
+      ],
+      "screens": [
+        "/website/"
+      ]
+    },
+    {
+      "mechanism": "route-filter-clear",
+      "evidence": [
+        "Route directory query clears and restores all routes"
+      ],
+      "screens": [
+        "/website/routes/"
+      ]
+    },
+    {
+      "mechanism": "routes-retry",
+      "evidence": [
+        "Route service error recovers after retry"
+      ],
+      "screens": [
+        "/website/"
+      ]
+    },
+    {
+      "mechanism": "form-submit",
+      "evidence": [
+        "Home and Trips booking forms transfer all search parameters to Passenger"
+      ],
+      "screens": [
+        "/website/trips/"
+      ]
+    },
+    {
+      "mechanism": "live-trip-selection",
+      "evidence": [
+        "Selecting a live bus updates aria-pressed and map state"
+      ],
+      "screens": [
+        "/website/live/"
+      ]
+    },
+    {
+      "mechanism": "live-retry",
+      "evidence": [
+        "Live service error recovers after retry"
+      ],
+      "screens": [
+        "/website/live/"
+      ]
+    }
+  ]
+}

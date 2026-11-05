@@ -25,7 +25,7 @@ const locale = queryLocale === 'es' || queryLocale === 'en' ? queryLocale : (sto
 const labels = copy(locale);
 
 function desktopMenu(label, id, links) {
-  return `<div class="site-menu" data-menu><button class="button site-menu__button" data-menu-button type="button" aria-expanded="false" aria-controls="${id}">${label}</button><div class="site-menu__panel" data-menu-panel id="${id}" hidden>${links}</div></div>`;
+  return `<div class="site-menu" data-menu><button class="button site-menu__button" data-menu-button type="button" aria-haspopup="true" aria-expanded="false" aria-controls="${id}">${label}</button><div class="site-menu__panel" data-menu-panel id="${id}" hidden>${links}</div></div>`;
 }
 
 function mobileMenu(label, id, links) {

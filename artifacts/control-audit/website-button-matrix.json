@@ -1,0 +1,397 @@
+{
+  "generated_at": "2026-11-05T02:09:38.334Z",
+  "rows": [
+    {
+      "route": "/website/",
+      "label": "Trips",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/",
+      "label": "Packages",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/",
+      "label": "Tracking",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/",
+      "label": "Company & help",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/",
+      "label": "Swap origin and destination",
+      "mechanism": "route-swap",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/",
+      "label": "Find trips",
+      "mechanism": "form:bookingForm",
+      "type": "submit",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/routes/",
+      "label": "Trips",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/routes/",
+      "label": "Packages",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/routes/",
+      "label": "Tracking",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/routes/",
+      "label": "Company & help",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/trips/",
+      "label": "Trips",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/trips/",
+      "label": "Packages",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/trips/",
+      "label": "Tracking",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/trips/",
+      "label": "Company & help",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/trips/",
+      "label": "Swap origin and destination",
+      "mechanism": "route-swap",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/trips/",
+      "label": "Continue to results",
+      "mechanism": "form:bookingForm",
+      "type": "submit",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/packages/",
+      "label": "Trips",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/packages/",
+      "label": "Packages",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/packages/",
+      "label": "Tracking",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/packages/",
+      "label": "Company & help",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/packages/",
+      "label": "Prepare",
+      "mechanism": "package-step",
+      "type": "button",
+      "id": "package-step-0",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/packages/",
+      "label": "Hand over",
+      "mechanism": "package-step",
+      "type": "button",
+      "id": "package-step-1",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/packages/",
+      "label": "Follow",
+      "mechanism": "package-step",
+      "type": "button",
+      "id": "package-step-2",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/services/",
+      "label": "Trips",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/services/",
+      "label": "Packages",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/services/",
+      "label": "Tracking",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/services/",
+      "label": "Company & help",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/live/",
+      "label": "Trips",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/live/",
+      "label": "Packages",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/live/",
+      "label": "Tracking",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/live/",
+      "label": "Company & help",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/about/",
+      "label": "Trips",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/about/",
+      "label": "Packages",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/about/",
+      "label": "Tracking",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/about/",
+      "label": "Company & help",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/contact/",
+      "label": "Trips",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/contact/",
+      "label": "Packages",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/contact/",
+      "label": "Tracking",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/contact/",
+      "label": "Company & help",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/help/",
+      "label": "Trips",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/help/",
+      "label": "Packages",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/help/",
+      "label": "Tracking",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/help/",
+      "label": "Company & help",
+      "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/",
+      "label": "Recent search",
+      "mechanism": "recent-search",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-click"
+    },
+    {
+      "route": "/website/routes/",
+      "label": "Clear search",
+      "mechanism": "route-filter-clear",
+      "type": "button",
+      "id": "routeFilterClear",
+      "status": "verified-by-click"
+    },
+    {
+      "route": "/website/",
+      "label": "Try again",
+      "mechanism": "routes-retry",
+      "type": "button",
+      "id": "retryRoutes",
+      "status": "verified-by-error-state"
+    },
+    {
+      "route": "/website/trips/",
+      "label": "Continue to results",
+      "mechanism": "form:bookingForm",
+      "type": "submit",
+      "id": "",
+      "status": "verified-by-click"
+    },
+    {
+      "route": "/website/live/",
+      "label": "View on map",
+      "mechanism": "live-trip-selection",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-click"
+    },
+    {
+      "route": "/website/live/",
+      "label": "Try again",
+      "mechanism": "live-retry",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-error-state"
+    }
+  ]
+}

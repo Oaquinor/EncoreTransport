@@ -6,7 +6,7 @@
         "routeMapCanvas": {
           "id": "routeMapCanvas",
           "kind": "live",
-          "createdAt": 1793586167895,
+          "createdAt": 1793844284793,
           "tiles": {
             "started": 6,
             "loaded": 15,
@@ -15,19 +15,19 @@
             "bytes": 5520,
             "resourceRequests": 15,
             "uniqueUrls": 15,
-            "firstImageMs": 37.1,
-            "completeMs": 122.3,
-            "completedAt": 1793586168018,
+            "firstImageMs": 189.4,
+            "completeMs": 305,
+            "completedAt": 1793844285098,
             "urls": {
-              "http://127.0.0.1:64106/api/v1/maps/tiles/9/173/246.png?style=street-light&tileSize=512": 1,
-              "http://127.0.0.1:64106/api/v1/maps/tiles/9/173/247.png?style=street-light&tileSize=512": 1,
-              "http://127.0.0.1:64106/api/v1/maps/tiles/9/172/246.png?style=street-light&tileSize=512": 1,
-              "http://127.0.0.1:64106/api/v1/maps/tiles/9/174/246.png?style=street-light&tileSize=512": 1,
-              "http://127.0.0.1:64106/api/v1/maps/tiles/9/172/247.png?style=street-light&tileSize=512": 1,
-              "http://127.0.0.1:64106/api/v1/maps/tiles/9/174/247.png?style=street-light&tileSize=512": 1
+              "http://127.0.0.1:62066/api/v1/maps/tiles/9/173/246.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:62066/api/v1/maps/tiles/9/173/247.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:62066/api/v1/maps/tiles/9/172/246.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:62066/api/v1/maps/tiles/9/174/246.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:62066/api/v1/maps/tiles/9/172/247.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:62066/api/v1/maps/tiles/9/174/247.png?style=street-light&tileSize=512": 1
             },
-            "firstRequestMs": 86.1,
-            "lastTileMs": 35.8
+            "firstRequestMs": 262.3,
+            "lastTileMs": 42.3
           },
           "markers": {
             "created": 1,
@@ -38,21 +38,21 @@
           },
           "interactions": [
             {
-              "durationMs": 13.8,
+              "durationMs": 21.6,
               "frames": 0,
               "fps": 0
             },
             {
-              "durationMs": 260.4,
-              "frames": 16,
-              "fps": 61.44
+              "durationMs": 353.1,
+              "frames": 22,
+              "fps": 62.31
             }
           ],
-          "initializedAt": 347.79999999701977,
-          "leafletLoadMs": 76.5,
+          "initializedAt": 839.9000000059605,
+          "leafletLoadMs": 59.5,
           "updates": 2,
-          "updateMs": 18.5,
-          "lastUpdatedAt": 1793586167983,
+          "updateMs": 29.9,
+          "lastUpdatedAt": 1793844285059,
           "memory": {
             "usedJsHeapBytes": 10000000,
             "totalJsHeapBytes": 10000000,
@@ -69,7 +69,7 @@
           "method": "GET",
           "status": 200,
           "ok": true,
-          "durationMs": 27.7,
+          "durationMs": 207.5,
           "retries": 0,
           "serverTiming": "",
           "mapCache": "",
@@ -80,7 +80,7 @@
           "method": "GET",
           "status": 200,
           "ok": true,
-          "durationMs": 24.9,
+          "durationMs": 205,
           "retries": 0,
           "serverTiming": "",
           "mapCache": "",
@@ -91,7 +91,7 @@
           "method": "GET",
           "status": 200,
           "ok": true,
-          "durationMs": 24.4,
+          "durationMs": 204.5,
           "retries": 0,
           "serverTiming": "",
           "mapCache": "",
@@ -102,7 +102,7 @@
           "method": "GET",
           "status": 200,
           "ok": true,
-          "durationMs": 44,
+          "durationMs": 208.2,
           "retries": 0,
           "serverTiming": "",
           "mapCache": "",
@@ -113,7 +113,7 @@
           "method": "GET",
           "status": 200,
           "ok": true,
-          "durationMs": 40.9,
+          "durationMs": 35.6,
           "retries": 0,
           "serverTiming": "live-query;dur=2.5",
           "mapCache": "",
@@ -135,28 +135,28 @@
         "routeMapCanvas": {
           "id": "routeMapCanvas",
           "kind": "live",
-          "createdAt": 1793586169037,
+          "createdAt": 1793844286483,
           "tiles": {
             "started": 6,
-            "loaded": 6,
+            "loaded": 15,
             "errors": 0,
             "duplicateUrls": 0,
             "bytes": 5520,
             "resourceRequests": 15,
             "uniqueUrls": 15,
+            "firstImageMs": 34,
+            "completeMs": 301.2,
+            "completedAt": 1793844286784,
             "urls": {
-              "http://127.0.0.1:64106/api/v1/maps/tiles/9/173/246.png?style=street-light&tileSize=512": 1,
-              "http://127.0.0.1:64106/api/v1/maps/tiles/9/173/247.png?style=street-light&tileSize=512": 1,
-              "http://127.0.0.1:64106/api/v1/maps/tiles/9/172/246.png?style=street-light&tileSize=512": 1,
-              "http://127.0.0.1:64106/api/v1/maps/tiles/9/174/246.png?style=street-light&tileSize=512": 1,
-              "http://127.0.0.1:64106/api/v1/maps/tiles/9/172/247.png?style=street-light&tileSize=512": 1,
-              "http://127.0.0.1:64106/api/v1/maps/tiles/9/174/247.png?style=street-light&tileSize=512": 1
+              "http://127.0.0.1:62066/api/v1/maps/tiles/9/173/246.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:62066/api/v1/maps/tiles/9/173/247.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:62066/api/v1/maps/tiles/9/172/246.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:62066/api/v1/maps/tiles/9/174/246.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:62066/api/v1/maps/tiles/9/172/247.png?style=street-light&tileSize=512": 1,
+              "http://127.0.0.1:62066/api/v1/maps/tiles/9/174/247.png?style=street-light&tileSize=512": 1
             },
-            "firstRequestMs": 17.7,
-            "lastTileMs": 58.3,
-            "firstImageMs": 49,
-            "completeMs": 76.5,
-            "completedAt": 1793586169114
+            "firstRequestMs": 258.4,
+            "lastTileMs": 41.5
           },
           "markers": {
             "created": 1,
@@ -167,16 +167,16 @@
           },
           "interactions": [
             {
-              "durationMs": 4.8,
+              "durationMs": 7,
               "frames": 0,
               "fps": 0
             }
           ],
-          "initializedAt": 235.60000000149012,
-          "leafletLoadMs": 16.2,
+          "initializedAt": 450.29999999701977,
+          "leafletLoadMs": 32.1,
           "updates": 2,
-          "updateMs": 7.9,
-          "lastUpdatedAt": 1793586169056,
+          "updateMs": 11,
+          "lastUpdatedAt": 1793844286745,
           "memory": {
             "usedJsHeapBytes": 10000000,
             "totalJsHeapBytes": 10000000,
@@ -193,7 +193,7 @@
           "method": "GET",
           "status": 200,
           "ok": true,
-          "durationMs": 7.6,
+          "durationMs": 143.4,
           "retries": 0,
           "serverTiming": "",
           "mapCache": "",
@@ -204,7 +204,7 @@
           "method": "GET",
           "status": 200,
           "ok": true,
-          "durationMs": 12.4,
+          "durationMs": 143.1,
           "retries": 0,
           "serverTiming": "",
           "mapCache": "",
@@ -215,7 +215,7 @@
           "method": "GET",
           "status": 200,
           "ok": true,
-          "durationMs": 12,
+          "durationMs": 143,
           "retries": 0,
           "serverTiming": "",
           "mapCache": "",
@@ -226,7 +226,7 @@
           "method": "GET",
           "status": 200,
           "ok": true,
-          "durationMs": 27.6,
+          "durationMs": 142.6,
           "retries": 0,
           "serverTiming": "",
           "mapCache": "",
@@ -237,7 +237,7 @@
           "method": "GET",
           "status": 200,
           "ok": true,
-          "durationMs": 18,
+          "durationMs": 14,
           "retries": 0,
           "serverTiming": "live-query;dur=2.5",
           "mapCache": "",

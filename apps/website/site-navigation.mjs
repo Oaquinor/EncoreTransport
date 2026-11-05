@@ -15,7 +15,7 @@ function cancelClose(menu) {
 
 function scheduleClose(menu) {
   cancelClose(menu);
-  closeTimers.set(menu, window.setTimeout(() => closeMenu(menu), 110));
+  closeTimers.set(menu, window.setTimeout(() => closeMenu(menu), 180));
 }
 
 function closeMenu(menu, { focus = false } = {}) {

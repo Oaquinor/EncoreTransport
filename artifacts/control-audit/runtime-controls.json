@@ -1,0 +1,3411 @@
+{
+  "generated_at": "2026-11-05T02:04:20.275Z",
+  "routes": [
+    "/website/",
+    "/website/routes/",
+    "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+    "/website/packages/",
+    "/website/services/",
+    "/website/live/",
+    "/website/about/",
+    "/website/contact/",
+    "/website/help/",
+    "/track-package/",
+    "/package-register/",
+    "/login/",
+    "/driver/",
+    "/admin/"
+  ],
+  "controls": [
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Skip to content",
+      "href": "#mainContent",
+      "anchorTargetExists": true,
+      "width": 147,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 190,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "button",
+      "label": "Trips",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 64,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/",
+      "tag": "button",
+      "label": "Packages",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 89,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/",
+      "tag": "button",
+      "label": "Tracking",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 86,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/",
+      "tag": "button",
+      "label": "Company & help",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 132,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/",
+      "tag": "select",
+      "label": "Language",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 78,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Sign in",
+      "href": "/login/?return=/passenger/",
+      "anchorTargetExists": true,
+      "width": 95,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Find a trip →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 143,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Explore routes",
+      "href": "/website/routes/",
+      "anchorTargetExists": true,
+      "width": 156,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "select",
+      "label": "Departure point",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 239,
+      "height": 30,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "button",
+      "label": "Swap origin and destination",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 42,
+      "height": 50,
+      "type": "button"
+    },
+    {
+      "route": "/website/",
+      "tag": "select",
+      "label": "Destination",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 239,
+      "height": 30,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "input",
+      "label": "Date",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 155,
+      "height": 24,
+      "type": "date"
+    },
+    {
+      "route": "/website/",
+      "tag": "input",
+      "label": "Passengers",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 111,
+      "height": 24,
+      "type": "number"
+    },
+    {
+      "route": "/website/",
+      "tag": "button",
+      "label": "Find trips",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 334,
+      "height": 50,
+      "type": "submit"
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Track a parcel →",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 172,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "button",
+      "label": "Try again",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 141,
+      "height": 50,
+      "type": "button"
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "View all routes →",
+      "href": "/website/routes/",
+      "anchorTargetExists": true,
+      "width": 176,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Explore the route book →",
+      "href": "/website/routes/",
+      "anchorTargetExists": true,
+      "width": 240,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Open Encore Live →",
+      "href": "/website/live/",
+      "anchorTargetExists": true,
+      "width": 194,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "TravelSearch and bookCompare departures, review details and choose your seats.Ready when you areFind a trip ↗",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 394,
+      "height": 292,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "ParcelsSend and trackPrepare your shipment, review requirements and follow its journey.Trace every handoffView parcel se",
+      "href": "/website/packages/",
+      "anchorTargetExists": true,
+      "width": 394,
+      "height": 292,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "HelpFind an answerGet practical answers about trips, tickets and parcels.Answers at a glanceOpen help ↗",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 394,
+      "height": 292,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Open help center →",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 192,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "summary",
+      "label": "How do I find a trip?",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 793,
+      "height": 68,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "summary",
+      "label": "Where can I find my tickets?",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 793,
+      "height": 68,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "summary",
+      "label": "How do I track a parcel?",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 793,
+      "height": 68,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 69,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Open contact options ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Routes and destinations",
+      "href": "/website/routes/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Find a trip",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Encore Live",
+      "href": "/website/live/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Information",
+      "href": "/website/packages/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Services",
+      "href": "/website/services/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Track a parcel",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Frequently asked questions",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Staff access",
+      "href": "/login/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Plan a trip →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 114,
+      "height": 42,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Contact ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "summary",
+      "label": "Privacy",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "summary",
+      "label": "Terms",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "summary",
+      "label": "Accessibility",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Accessibility",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 54,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/",
+      "tag": "a",
+      "label": "Contact",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 35,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Skip to content",
+      "href": "#mainContent",
+      "anchorTargetExists": true,
+      "width": 147,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 190,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "button",
+      "label": "Trips",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 64,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "button",
+      "label": "Packages",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 89,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "button",
+      "label": "Tracking",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 86,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "button",
+      "label": "Company & help",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 132,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "select",
+      "label": "Language",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 78,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Sign in",
+      "href": "/login/?return=/passenger/",
+      "anchorTargetExists": true,
+      "width": 95,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Find a trip →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 143,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Browse routes",
+      "href": "#routes",
+      "anchorTargetExists": true,
+      "width": 154,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "View Encore Live ↗",
+      "href": "/website/live/",
+      "anchorTargetExists": true,
+      "width": 105,
+      "height": 17,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "input",
+      "label": "Origin or destination",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 364,
+      "height": 52,
+      "type": "search"
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Search by date →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 177,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Open trip search →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 192,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 69,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Open contact options ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Routes and destinations",
+      "href": "/website/routes/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Find a trip",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Encore Live",
+      "href": "/website/live/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Information",
+      "href": "/website/packages/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Services",
+      "href": "/website/services/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Track a parcel",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Frequently asked questions",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Staff access",
+      "href": "/login/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Plan a trip →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 114,
+      "height": 42,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Contact ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "summary",
+      "label": "Privacy",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "summary",
+      "label": "Terms",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "summary",
+      "label": "Accessibility",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Accessibility",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 54,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/routes/",
+      "tag": "a",
+      "label": "Contact",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 35,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Skip to content",
+      "href": "#mainContent",
+      "anchorTargetExists": true,
+      "width": 147,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 190,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "button",
+      "label": "Trips",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 64,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "button",
+      "label": "Packages",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 89,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "button",
+      "label": "Tracking",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 86,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "button",
+      "label": "Company & help",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 132,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "select",
+      "label": "Language",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 78,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Sign in",
+      "href": "/login/?return=/passenger/",
+      "anchorTargetExists": true,
+      "width": 95,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "select",
+      "label": "Origin",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 324,
+      "height": 30,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "button",
+      "label": "Swap origin and destination",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 42,
+      "height": 50,
+      "type": "button"
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "select",
+      "label": "Destination",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 324,
+      "height": 30,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "input",
+      "label": "Date",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 210,
+      "height": 24,
+      "type": "date"
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "input",
+      "label": "Passengers",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 155,
+      "height": 24,
+      "type": "number"
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "button",
+      "label": "Continue to results",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 451,
+      "height": 72,
+      "type": "submit"
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 69,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Open contact options ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Routes and destinations",
+      "href": "/website/routes/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Find a trip",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Encore Live",
+      "href": "/website/live/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Information",
+      "href": "/website/packages/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Services",
+      "href": "/website/services/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Track a parcel",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Frequently asked questions",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Staff access",
+      "href": "/login/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Plan a trip →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 114,
+      "height": 42,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Contact ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "summary",
+      "label": "Privacy",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "summary",
+      "label": "Terms",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "summary",
+      "label": "Accessibility",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Accessibility",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 54,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/trips/?origin=Georgetown&destination=New%20Amsterdam&date=2027-01-08&passengers=2",
+      "tag": "a",
+      "label": "Contact",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 35,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Skip to content",
+      "href": "#mainContent",
+      "anchorTargetExists": true,
+      "width": 147,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 190,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "button",
+      "label": "Trips",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 64,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "button",
+      "label": "Packages",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 89,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "button",
+      "label": "Tracking",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 86,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "button",
+      "label": "Company & help",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 132,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "select",
+      "label": "Language",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 78,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Sign in",
+      "href": "/login/?return=/passenger/",
+      "anchorTargetExists": true,
+      "width": 95,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Track a parcel →",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 172,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Ask before sending",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 193,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "button",
+      "label": "Prepare",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 72,
+      "height": 42,
+      "type": "button"
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "button",
+      "label": "Hand over",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 86,
+      "height": 42,
+      "type": "button"
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "button",
+      "label": "Follow",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 66,
+      "height": 42,
+      "type": "button"
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "See what to prepare →",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 132,
+      "height": 19,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Contact Encore →",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 177,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 69,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Open contact options ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Routes and destinations",
+      "href": "/website/routes/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Find a trip",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Encore Live",
+      "href": "/website/live/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Information",
+      "href": "/website/packages/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Services",
+      "href": "/website/services/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Track a parcel",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Frequently asked questions",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Staff access",
+      "href": "/login/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Plan a trip →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 114,
+      "height": 42,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Contact ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "summary",
+      "label": "Privacy",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "summary",
+      "label": "Terms",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "summary",
+      "label": "Accessibility",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Accessibility",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 54,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/packages/",
+      "tag": "a",
+      "label": "Contact",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 35,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Skip to content",
+      "href": "#mainContent",
+      "anchorTargetExists": true,
+      "width": 147,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 190,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "button",
+      "label": "Trips",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 64,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/services/",
+      "tag": "button",
+      "label": "Packages",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 89,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/services/",
+      "tag": "button",
+      "label": "Tracking",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 86,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/services/",
+      "tag": "button",
+      "label": "Company & help",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 132,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/services/",
+      "tag": "select",
+      "label": "Language",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 78,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Sign in",
+      "href": "/login/?return=/passenger/",
+      "anchorTargetExists": true,
+      "width": 95,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "TravelSearch departures and seats→",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 516,
+      "height": 66,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "ParcelsPrepare, send and track→",
+      "href": "/website/packages/",
+      "anchorTargetExists": true,
+      "width": 516,
+      "height": 66,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "HelpFind a practical answer→",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 516,
+      "height": 66,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Find a trip →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 324,
+      "height": 20,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "View parcel services →",
+      "href": "/website/packages/",
+      "anchorTargetExists": true,
+      "width": 399,
+      "height": 20,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Open Encore Live →",
+      "href": "/website/live/",
+      "anchorTargetExists": true,
+      "width": 324,
+      "height": 20,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "My trips and ticketsReview bookings and travel documents.↗",
+      "href": "/passenger/?screen=account&tab=tickets",
+      "anchorTargetExists": true,
+      "width": 1240,
+      "height": 76,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Parcel trackingUse a reference you already received.↗",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 1240,
+      "height": 76,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "HelpFind answers and contact options.↗",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 1240,
+      "height": 76,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 69,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Open contact options ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Routes and destinations",
+      "href": "/website/routes/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Find a trip",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Encore Live",
+      "href": "/website/live/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Information",
+      "href": "/website/packages/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Services",
+      "href": "/website/services/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Track a parcel",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Frequently asked questions",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Staff access",
+      "href": "/login/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Plan a trip →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 114,
+      "height": 42,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Contact ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "summary",
+      "label": "Privacy",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "summary",
+      "label": "Terms",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "summary",
+      "label": "Accessibility",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Accessibility",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 54,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/services/",
+      "tag": "a",
+      "label": "Contact",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 35,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Skip to content",
+      "href": "#mainContent",
+      "anchorTargetExists": true,
+      "width": 147,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 190,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "button",
+      "label": "Trips",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 64,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/live/",
+      "tag": "button",
+      "label": "Packages",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 89,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/live/",
+      "tag": "button",
+      "label": "Tracking",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 86,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/live/",
+      "tag": "button",
+      "label": "Company & help",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 132,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/live/",
+      "tag": "select",
+      "label": "Language",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 78,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Sign in",
+      "href": "/login/?return=/passenger/",
+      "anchorTargetExists": true,
+      "width": 95,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "select",
+      "label": "Select a route",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 156,
+      "height": 46,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "button",
+      "label": "Try again",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 1194,
+      "height": 50,
+      "type": "button"
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Track a parcel →",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 329,
+      "height": 20,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 69,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Open contact options ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Routes and destinations",
+      "href": "/website/routes/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Find a trip",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Encore Live",
+      "href": "/website/live/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Information",
+      "href": "/website/packages/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Services",
+      "href": "/website/services/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Track a parcel",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Frequently asked questions",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Staff access",
+      "href": "/login/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Plan a trip →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 114,
+      "height": 42,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Contact ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "summary",
+      "label": "Privacy",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "summary",
+      "label": "Terms",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "summary",
+      "label": "Accessibility",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Accessibility",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 54,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/live/",
+      "tag": "a",
+      "label": "Contact",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 35,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Skip to content",
+      "href": "#mainContent",
+      "anchorTargetExists": true,
+      "width": 147,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 190,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "button",
+      "label": "Trips",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 64,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/about/",
+      "tag": "button",
+      "label": "Packages",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 89,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/about/",
+      "tag": "button",
+      "label": "Tracking",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 86,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/about/",
+      "tag": "button",
+      "label": "Company & help",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 132,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/about/",
+      "tag": "select",
+      "label": "Language",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 78,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Sign in",
+      "href": "/login/?return=/passenger/",
+      "anchorTargetExists": true,
+      "width": 95,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Plan a trip →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 140,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Send a parcel",
+      "href": "/website/packages/",
+      "anchorTargetExists": true,
+      "width": 145,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Explore routes →",
+      "href": "/website/routes/",
+      "anchorTargetExists": true,
+      "width": 174,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 69,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Open contact options ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Routes and destinations",
+      "href": "/website/routes/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Find a trip",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Encore Live",
+      "href": "/website/live/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Information",
+      "href": "/website/packages/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Services",
+      "href": "/website/services/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Track a parcel",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Frequently asked questions",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Staff access",
+      "href": "/login/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Plan a trip →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 114,
+      "height": 42,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Contact ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "summary",
+      "label": "Privacy",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "summary",
+      "label": "Terms",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "summary",
+      "label": "Accessibility",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Accessibility",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 54,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/about/",
+      "tag": "a",
+      "label": "Contact",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 35,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Skip to content",
+      "href": "#mainContent",
+      "anchorTargetExists": true,
+      "width": 147,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 190,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "button",
+      "label": "Trips",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 64,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "button",
+      "label": "Packages",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 89,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "button",
+      "label": "Tracking",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 86,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "button",
+      "label": "Company & help",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 132,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "select",
+      "label": "Language",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 78,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Sign in",
+      "href": "/login/?return=/passenger/",
+      "anchorTargetExists": true,
+      "width": 95,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "TravelReview or continue a bookingDepartures, seats, passengers, payments and tickets.↗",
+      "href": "/passenger/",
+      "anchorTargetExists": true,
+      "width": 1240,
+      "height": 156,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "ParcelsCheck a shipmentUse the reference you received to see its latest available update.↗",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 1240,
+      "height": 156,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "QuestionsRead practical answersGuidance about dates, seats, tickets, parcels and accessibility.↗",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 1240,
+      "height": 156,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 69,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Open contact options ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Routes and destinations",
+      "href": "/website/routes/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Find a trip",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Encore Live",
+      "href": "/website/live/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Information",
+      "href": "/website/packages/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Services",
+      "href": "/website/services/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Track a parcel",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Frequently asked questions",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Staff access",
+      "href": "/login/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Plan a trip →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 114,
+      "height": 42,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Contact ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "summary",
+      "label": "Privacy",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "summary",
+      "label": "Terms",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "summary",
+      "label": "Accessibility",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Accessibility",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 54,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/contact/",
+      "tag": "a",
+      "label": "Contact",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 35,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Skip to content",
+      "href": "#mainContent",
+      "anchorTargetExists": true,
+      "width": 147,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 190,
+      "height": 44,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "button",
+      "label": "Trips",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 64,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/help/",
+      "tag": "button",
+      "label": "Packages",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 89,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/help/",
+      "tag": "button",
+      "label": "Tracking",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 86,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/help/",
+      "tag": "button",
+      "label": "Company & help",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 132,
+      "height": 40,
+      "type": "button"
+    },
+    {
+      "route": "/website/help/",
+      "tag": "select",
+      "label": "Language",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 78,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Sign in",
+      "href": "/login/?return=/passenger/",
+      "anchorTargetExists": true,
+      "width": 95,
+      "height": 40,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Find a trip →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 140,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Trips & tickets",
+      "href": "#trips-tickets",
+      "anchorTargetExists": true,
+      "width": 415,
+      "height": 54,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Tracking & delivery",
+      "href": "#tracking-delivery",
+      "anchorTargetExists": true,
+      "width": 415,
+      "height": 54,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "summary",
+      "label": "How do I find a departure?+",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 980,
+      "height": 74,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "summary",
+      "label": "Can I choose my seat?+",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 980,
+      "height": 74,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "summary",
+      "label": "Where is my ticket?+",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 980,
+      "height": 74,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "summary",
+      "label": "How do I track a parcel?+",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 980,
+      "height": 74,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "summary",
+      "label": "Which statuses will I see?+",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 980,
+      "height": 74,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "summary",
+      "label": "Where are requirements and prices?+",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 980,
+      "height": 74,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Open parcel tracking ↗",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 145,
+      "height": 20,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Encore Transport, Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 69,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Open contact options ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 390,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Routes and destinations",
+      "href": "/website/routes/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Find a trip",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Encore Live",
+      "href": "/website/live/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Information",
+      "href": "/website/packages/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Services",
+      "href": "/website/services/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Track a parcel",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Frequently asked questions",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Staff access",
+      "href": "/login/",
+      "anchorTargetExists": true,
+      "width": 218,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Plan a trip →",
+      "href": "/website/trips/",
+      "anchorTargetExists": true,
+      "width": 114,
+      "height": 42,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Contact ↗",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 59,
+      "height": 18,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "summary",
+      "label": "Privacy",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "summary",
+      "label": "Terms",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "summary",
+      "label": "Accessibility",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 375,
+      "height": 24,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Accessibility",
+      "href": "/website/help/",
+      "anchorTargetExists": true,
+      "width": 54,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/website/help/",
+      "tag": "a",
+      "label": "Contact",
+      "href": "/website/contact/",
+      "anchorTargetExists": true,
+      "width": 35,
+      "height": 16,
+      "type": ""
+    },
+    {
+      "route": "/track-package/",
+      "tag": "a",
+      "label": "Encore Transport home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 512,
+      "height": 48,
+      "type": ""
+    },
+    {
+      "route": "/track-package/",
+      "tag": "a",
+      "label": "Back to Encore Transport",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 190,
+      "height": 38,
+      "type": ""
+    },
+    {
+      "route": "/track-package/",
+      "tag": "input",
+      "label": "Enter your tracking number",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 287,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/track-package/",
+      "tag": "button",
+      "label": "Track package",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 287,
+      "height": 50,
+      "type": "submit"
+    },
+    {
+      "route": "/package-register/",
+      "tag": "a",
+      "label": "Back to Encore Operations",
+      "href": "/admin/",
+      "anchorTargetExists": true,
+      "width": 212,
+      "height": 42,
+      "type": ""
+    },
+    {
+      "route": "/package-register/",
+      "tag": "a",
+      "label": "← Operations",
+      "href": "/admin/",
+      "anchorTargetExists": true,
+      "width": 88,
+      "height": 20,
+      "type": ""
+    },
+    {
+      "route": "/package-register/",
+      "tag": "a",
+      "label": "Sign in to continue →",
+      "href": "/login/?return=/package-register/",
+      "anchorTargetExists": true,
+      "width": 130,
+      "height": 17,
+      "type": ""
+    },
+    {
+      "route": "/package-register/",
+      "tag": "input",
+      "label": "Full name",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 326,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/package-register/",
+      "tag": "input",
+      "label": "+592 …",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 326,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/package-register/",
+      "tag": "input",
+      "label": "recipient@example.com",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 667,
+      "height": 50,
+      "type": "email"
+    },
+    {
+      "route": "/package-register/",
+      "tag": "input",
+      "label": "What is inside? (optional)",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 667,
+      "height": 50,
+      "type": ""
+    },
+    {
+      "route": "/package-register/",
+      "tag": "button",
+      "label": "Register package",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 667,
+      "height": 54,
+      "type": "submit"
+    },
+    {
+      "route": "/package-register/",
+      "tag": "a",
+      "label": "Open tracking",
+      "href": "/track-package/",
+      "anchorTargetExists": true,
+      "width": 135,
+      "height": 46,
+      "type": ""
+    },
+    {
+      "route": "/package-register/",
+      "tag": "button",
+      "label": "Copy link",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 107,
+      "height": 46,
+      "type": "button"
+    },
+    {
+      "route": "/login/",
+      "tag": "a",
+      "label": "Encore Transport home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 145,
+      "height": 58,
+      "type": ""
+    },
+    {
+      "route": "/login/",
+      "tag": "input",
+      "label": "you@example.com",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 520,
+      "height": 54,
+      "type": "email"
+    },
+    {
+      "route": "/login/",
+      "tag": "input",
+      "label": "••••••••",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 520,
+      "height": 54,
+      "type": "password"
+    },
+    {
+      "route": "/login/",
+      "tag": "button",
+      "label": "Sign in",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 520,
+      "height": 54,
+      "type": "submit"
+    },
+    {
+      "route": "/login/",
+      "tag": "a",
+      "label": "Back to website",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 111,
+      "height": 17,
+      "type": ""
+    },
+    {
+      "route": "/driver/",
+      "tag": "a",
+      "label": "Encore Transport home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 145,
+      "height": 58,
+      "type": ""
+    },
+    {
+      "route": "/driver/",
+      "tag": "input",
+      "label": "you@example.com",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 520,
+      "height": 54,
+      "type": "email"
+    },
+    {
+      "route": "/driver/",
+      "tag": "input",
+      "label": "••••••••",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 520,
+      "height": 54,
+      "type": "password"
+    },
+    {
+      "route": "/driver/",
+      "tag": "button",
+      "label": "Sign in",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 520,
+      "height": 54,
+      "type": "submit"
+    },
+    {
+      "route": "/driver/",
+      "tag": "a",
+      "label": "Back to website",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 111,
+      "height": 17,
+      "type": ""
+    },
+    {
+      "route": "/admin/",
+      "tag": "a",
+      "label": "Encore Transport home",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 145,
+      "height": 58,
+      "type": ""
+    },
+    {
+      "route": "/admin/",
+      "tag": "input",
+      "label": "you@example.com",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 520,
+      "height": 54,
+      "type": "email"
+    },
+    {
+      "route": "/admin/",
+      "tag": "input",
+      "label": "••••••••",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 520,
+      "height": 54,
+      "type": "password"
+    },
+    {
+      "route": "/admin/",
+      "tag": "button",
+      "label": "Sign in",
+      "href": "",
+      "anchorTargetExists": true,
+      "width": 520,
+      "height": 54,
+      "type": "submit"
+    },
+    {
+      "route": "/admin/",
+      "tag": "a",
+      "label": "Back to website",
+      "href": "/website/",
+      "anchorTargetExists": true,
+      "width": 111,
+      "height": 17,
+      "type": ""
+    }
+  ]
+}

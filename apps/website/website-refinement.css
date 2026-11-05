@@ -1,0 +1,347 @@
+/* Final public Website refinement.
+   This layer is intentionally last: the Website has several historical style
+   layers, so page-level corrections live here instead of being scattered. */
+
+/* The old editorial rail read like a broken layout boundary on every page. */
+.site-page::before {
+  display: none;
+}
+
+/* Give every page a deliberate hand-off into the footer instead of letting
+   the dark footer touch the previous section edge-to-edge. */
+.public-footer {
+  position: relative;
+  margin-top: clamp(28px, 4vw, 56px);
+  border-top: 1px solid rgba(104, 215, 241, .35);
+}
+
+.public-footer::after {
+  top: calc(clamp(28px, 4vw, 56px) * -1);
+  right: 0;
+  bottom: auto;
+  left: 0;
+  width: auto;
+  height: 1px;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(90deg, transparent, rgba(45, 169, 223, .32), transparent);
+  box-shadow: none;
+}
+
+/* Keep all public pages on one measured content axis. */
+.site-page > .shell,
+.site-page > section > .shell {
+  width: min(1240px, calc(100% - 48px));
+}
+
+.site-page__hero,
+.routes-hero__layout,
+.trips-hero__inner,
+.packages-hero__layout,
+.about-intro__layout,
+.contact-intro__layout,
+.help-intro__layout {
+  min-width: 0;
+}
+
+.site-page__hero h1,
+.routes-hero__copy h1,
+.trips-hero h1,
+.packages-hero__copy h1,
+.about-intro__copy h1,
+.contact-intro h1,
+.help-intro h1 {
+  text-wrap: balance;
+}
+
+/* A dropdown stays visually attached to its trigger and remains reachable. */
+.site-menu__panel {
+  margin-top: 0;
+  padding-top: 11px;
+}
+
+.site-menu__panel::before {
+  top: -14px;
+  height: 14px;
+}
+
+.site-menu__button[aria-current="page"] {
+  background: #eef7fb;
+  color: #0a668e;
+}
+
+/* Services is a decision surface, not a third copy of the homepage cards. */
+.site-page--services {
+  background:
+    radial-gradient(circle at 88% 24%, rgba(45, 169, 223, .09), transparent 22rem),
+    #f7fbfc;
+}
+
+.site-page--services .site-page__hero {
+  padding-block: clamp(76px, 9vw, 126px) clamp(58px, 7vw, 92px);
+}
+
+.services-hero-panel {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid #bcdde7;
+  border-radius: 28px 28px 28px 8px;
+  background: linear-gradient(145deg, #e9f8fb, #fff 72%);
+  box-shadow: 0 24px 54px rgba(16, 49, 70, .1);
+}
+
+.services-hero-panel__head,
+.services-hero-panel__step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.services-hero-panel__head {
+  padding-bottom: 14px;
+  border-bottom: 1px solid #d8e9ee;
+  color: #159ac0;
+  font-size: .66rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.services-hero-panel__head strong {
+  color: #31536a;
+  font-size: .67rem;
+  letter-spacing: .04em;
+}
+
+.services-hero-panel__steps {
+  display: grid;
+  gap: 8px;
+}
+
+.services-hero-panel__step {
+  min-height: 66px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  color: #08283b;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.services-hero-panel__step:hover,
+.services-hero-panel__step:focus-visible {
+  border-color: #b9dce7;
+  background: #fff;
+  transform: translateX(3px);
+  outline: none;
+}
+
+.services-hero-panel__step > span:first-child {
+  display: grid;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 12px;
+  background: #e4f7fb;
+  color: #0b91bd;
+}
+
+.services-hero-panel__step:nth-child(2) > span:first-child {
+  background: #e8f8f1;
+  color: #17845d;
+}
+
+.services-hero-panel__step:nth-child(3) > span:first-child {
+  background: #eef0fb;
+  color: #536da7;
+}
+
+.services-hero-panel__step svg,
+.service-card__icon svg,
+.services-shortcuts__icon svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.services-hero-panel__step > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 3px;
+}
+
+.services-hero-panel__step strong {
+  font-size: .88rem;
+}
+
+.services-hero-panel__step small {
+  overflow: hidden;
+  color: #637b8b;
+  font-size: .7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.services-hero-panel__step > b {
+  color: #159ac0;
+  font-size: 1.1rem;
+}
+
+.site-page--services .site-card-grid {
+  align-items: stretch;
+}
+
+.site-page--services .site-card {
+  min-height: 276px;
+  padding: 26px;
+  border-radius: 24px;
+  box-shadow: 0 14px 34px rgba(16, 49, 70, .06);
+}
+
+.site-page--services .site-card:nth-child(2) {
+  transform: none;
+}
+
+.service-card__icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 4px;
+  place-items: center;
+  border: 1px solid #bfe2ec;
+  border-radius: 14px;
+  background: #eaf8fb;
+  color: #0b91bd;
+}
+
+.site-page--services .site-card:nth-child(2) .service-card__icon {
+  border-color: #bfe5d5;
+  background: #eaf8f2;
+  color: #17845d;
+}
+
+.site-page--services .site-card:nth-child(3) .service-card__icon {
+  border-color: #d0d9ef;
+  background: #f0f3fc;
+  color: #536da7;
+}
+
+.services-shortcuts {
+  display: grid;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.services-shortcuts__item {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 32px;
+  gap: 14px;
+  align-items: center;
+  min-height: 76px;
+  padding: 12px 16px;
+  border: 1px solid rgba(45, 169, 223, .14);
+  border-left: 3px solid #2da9df;
+  background: rgba(255, 255, 255, .72);
+  color: #08283b;
+  transition: background .18s ease, transform .18s ease, border-color .18s ease;
+}
+
+.services-shortcuts__item:hover,
+.services-shortcuts__item:focus-visible {
+  border-color: #8dcddd;
+  background: #fff;
+  transform: translateX(4px);
+  outline: none;
+}
+
+.services-shortcuts__icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  background: #e7f6fa;
+  color: #0b91bd;
+}
+
+.services-shortcuts__copy {
+  display: grid;
+  gap: 3px;
+}
+
+.services-shortcuts__copy strong {
+  font-size: .86rem;
+}
+
+.services-shortcuts__copy small {
+  color: #637b8b;
+  font-size: .74rem;
+  line-height: 1.45;
+}
+
+.services-shortcuts__arrow {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #b9dce7;
+  border-radius: 50%;
+  color: #159ac0;
+  font-weight: 900;
+}
+
+/* Contact icons are real visual affordances, not empty decorative squares. */
+.contact-path__icon svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+@media (max-width: 980px) {
+  .site-page--services .site-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .site-page--services .site-card {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-footer {
+    margin-top: 24px;
+  }
+
+  .services-hero-panel {
+    padding: 18px;
+    border-radius: 22px 22px 22px 7px;
+  }
+
+  .services-hero-panel__step small {
+    white-space: normal;
+  }
+
+  .services-shortcuts__item {
+    grid-template-columns: 36px minmax(0, 1fr) 30px;
+    gap: 10px;
+    padding-inline: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .services-hero-panel__step,
+  .services-shortcuts__item {
+    transition: none;
+  }
+}
