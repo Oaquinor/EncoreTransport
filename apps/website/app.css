@@ -564,6 +564,7 @@
 :root {
   --website-control-height: 52px;
   --website-control-radius: 14px;
+  --website-action-radius: 12px;
 }
 
 .site-page .button,
@@ -572,7 +573,7 @@
 .parcel-feature .button,
 .public-section .button {
   min-height: var(--website-control-height);
-  border-radius: var(--website-control-radius);
+  border-radius: var(--website-action-radius);
 }
 
 .site-page .site-page__actions .button,
@@ -841,12 +842,17 @@
 }
 
 .public-booking .public-field,
-.public-booking .public-search-button,
-.site-page--trips .trip-search-card .booking-field,
-.site-page--trips .trip-search-card .public-search-button {
+.site-page--trips .trip-search-card .booking-field {
   height: 58px;
   min-height: 58px;
   border-radius: var(--website-control-radius);
+}
+
+.public-booking .public-search-button,
+.site-page--trips .trip-search-card .public-search-button {
+  height: 58px;
+  min-height: 58px;
+  border-radius: var(--website-action-radius);
 }
 
 .public-booking .public-field,
