@@ -72,6 +72,12 @@ body {
   box-shadow: var(--et-shadow-md);
 }
 
+.tracking-form__field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
 .premium-tracking-form label {
   display: grid;
   gap: 6px;
@@ -104,6 +110,12 @@ body {
   color: #fff;
   font: inherit;
   font-weight: 900;
+}
+
+.tracking-form__field small {
+  color: var(--et-muted);
+  font-size: .76rem;
+  line-height: 1.45;
 }
 
 #result {

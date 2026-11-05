@@ -38,3 +38,427 @@
 .public-footer__legal summary{cursor:pointer;font-weight:800}
 .public-footer__legal p{margin:10px 0 0;max-width:42ch;line-height:1.55;opacity:.8;font-size:.82rem}
 @media(max-width:720px){.public-footer__legal{grid-template-columns:1fr}}
+
+/* Homepage booking alignment: one stable desktop row, responsive stacking below. */
+.public-booking .public-booking-card {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.45fr) 48px minmax(180px, 1.45fr) minmax(132px, .9fr) minmax(98px, .6fr) minmax(190px, 1.18fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px;
+}
+
+.public-booking .public-booking-card__route,
+.public-booking .public-booking-card__details {
+  display: contents;
+}
+
+.public-booking .public-field {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 68px;
+  min-height: 68px;
+  padding: 11px 14px;
+  border-radius: 16px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+}
+
+.public-booking .public-field select,
+.public-booking .public-field input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 22px;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-booking .public-swap {
+  position: static;
+  justify-self: center;
+  align-self: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  border-radius: 50%;
+}
+
+.public-booking .public-search-button {
+  box-sizing: border-box;
+  width: 100%;
+  height: 68px;
+  min-height: 68px;
+  border-radius: 16px;
+  white-space: nowrap;
+}
+
+.public-booking .public-search-button [data-action-label] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 901px) and (max-width: 1100px) {
+  .public-booking .public-booking-card {
+    grid-template-columns: minmax(140px, 1.3fr) 44px minmax(140px, 1.3fr) minmax(112px, .9fr) minmax(88px, .6fr) minmax(166px, 1.1fr);
+    gap: 8px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 900px) {
+  .public-booking .public-booking-card {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .public-booking .public-booking-card__route,
+  .public-booking .public-booking-card__details {
+    display: grid;
+    gap: 10px;
+  }
+
+  .public-booking .public-booking-card__route {
+    grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .public-booking .public-booking-card__details {
+    grid-template-columns: minmax(0, 1fr) minmax(110px, .7fr) minmax(180px, 1.1fr);
+    align-items: center;
+  }
+}
+
+@media (max-width: 620px) {
+  .public-booking .public-booking-card__route,
+  .public-booking .public-booking-card__details {
+    grid-template-columns: 1fr;
+  }
+
+  .public-booking .public-swap {
+    justify-self: center;
+  }
+}
+
+/* Shared public select: the native select remains the real form control while
+   this accessible surface gives every Website combo the same visual language. */
+.website-select {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.website-select__native {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  white-space: nowrap !important;
+}
+
+.website-select__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 13px;
+  border: 1px solid #bfd5df;
+  border-radius: 12px;
+  background: #fff;
+  color: #16445d;
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 850;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.website-select__trigger:hover,
+.website-select.is-open .website-select__trigger {
+  border-color: #25a6d5;
+  background: #fbfeff;
+  box-shadow: 0 0 0 4px rgba(37, 166, 213, .12);
+}
+
+.website-select__trigger:focus-visible {
+  outline: 3px solid rgba(45, 169, 223, .35);
+  outline-offset: 2px;
+}
+
+.website-select__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.website-select__chevron {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform .16s ease;
+}
+
+.website-select.is-open .website-select__chevron {
+  transform: rotate(225deg) translate(-1px, -1px);
+}
+
+.website-select__trigger:disabled,
+.website-select.is-disabled .website-select__trigger {
+  border-color: #d4e1e7;
+  background: #f3f7f9;
+  color: #8297a2;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.website-select__menu {
+  position: fixed;
+  z-index: 1200;
+  display: grid;
+  gap: 4px;
+  padding: 7px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #c5dce5;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, .98);
+  box-shadow: 0 20px 44px rgba(8, 48, 70, .2), 0 3px 10px rgba(8, 48, 70, .08);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-4px) scale(.99);
+  transform-origin: top center;
+  transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+}
+
+.website-select__menu[aria-hidden="false"] {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.website-select__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #234b60;
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 760;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  transition: background .14s ease, border-color .14s ease, color .14s ease;
+}
+
+.website-select__option:hover,
+.website-select__option:focus-visible {
+  border-color: #cae6ef;
+  background: #eaf7fb;
+  color: #087ba7;
+  outline: none;
+}
+
+.website-select__option[aria-selected="true"] {
+  border-color: #bde1ec;
+  background: #e6f5fa;
+  color: #08749e;
+}
+
+.website-select__option[aria-selected="true"] b {
+  color: #087ba7;
+  font-size: .85rem;
+}
+
+.website-select__option:disabled {
+  color: #9aabb4;
+  cursor: not-allowed;
+}
+
+.public-field .website-select__trigger {
+  box-sizing: border-box;
+  min-height: 36px;
+  height: 36px;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--pub-ink);
+  font-size: .9rem;
+  font-weight: 900;
+  box-shadow: none;
+}
+
+.public-field .website-select__trigger:hover,
+.public-field .website-select.is-open .website-select__trigger {
+  background: transparent;
+  box-shadow: none;
+}
+
+.locale-switcher .website-select {
+  width: 68px;
+}
+
+.locale-switcher .website-select__trigger {
+  min-height: 40px;
+  padding-inline: 10px;
+  border-radius: var(--et-radius-control);
+  font-size: .72rem;
+  letter-spacing: .08em;
+}
+
+.public-map-card__bar .website-select {
+  min-width: min(320px, 70%);
+}
+
+.public-map-card__bar .website-select__trigger {
+  min-height: 46px;
+  padding-inline: 12px;
+  border-radius: var(--et-radius-control);
+}
+
+@media (max-width: 620px) {
+  .website-select__menu {
+    max-width: calc(100vw - 16px);
+  }
+
+  .locale-switcher .website-select {
+    width: 72px;
+  }
+
+  .public-map-card__bar .website-select {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .website-select__trigger,
+  .website-select__menu,
+  .website-select__option {
+    transition: none;
+  }
+}
+
+/* Trip page booking form: keep the destination selector in the same measured
+   rhythm as the homepage search without changing the booking behavior. */
+.site-page--trips .trip-search-card .public-booking-card {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.45fr) 48px minmax(180px, 1.45fr) minmax(132px, .9fr) minmax(98px, .6fr) minmax(190px, 1.18fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0;
+}
+
+.site-page--trips .trip-search-card .public-booking-card__route,
+.site-page--trips .trip-search-card .public-booking-card__details {
+  display: contents;
+}
+
+.site-page--trips .trip-search-card .booking-field {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 68px;
+  min-height: 68px;
+  padding: 11px 14px;
+  border-radius: 16px;
+}
+
+.site-page--trips .trip-search-card .booking-field select,
+.site-page--trips .trip-search-card .booking-field input {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-page--trips .trip-search-card .public-swap {
+  width: 44px;
+  height: 44px;
+  justify-self: center;
+}
+
+.site-page--trips .trip-search-card .public-search-button {
+  box-sizing: border-box;
+  width: 100%;
+  height: 68px;
+  min-height: 68px;
+  border-radius: 16px;
+  white-space: nowrap;
+}
+
+@media (min-width: 901px) and (max-width: 1100px) {
+  .site-page--trips .trip-search-card .public-booking-card {
+    grid-template-columns: minmax(140px, 1.3fr) 44px minmax(140px, 1.3fr) minmax(112px, .9fr) minmax(88px, .6fr) minmax(166px, 1.1fr);
+    gap: 8px;
+  }
+}
+
+@media (max-width: 900px) {
+  .site-page--trips .trip-search-card .public-booking-card {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .site-page--trips .trip-search-card .public-booking-card__route,
+  .site-page--trips .trip-search-card .public-booking-card__details {
+    display: grid;
+    gap: 10px;
+  }
+
+  .site-page--trips .trip-search-card .public-booking-card__route {
+    grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .site-page--trips .trip-search-card .public-booking-card__details {
+    grid-template-columns: minmax(0, 1fr) minmax(110px, .7fr) minmax(180px, 1.1fr);
+    align-items: center;
+  }
+}
+
+@media (max-width: 620px) {
+  .site-page--trips .trip-search-card .public-booking-card__route,
+  .site-page--trips .trip-search-card .public-booking-card__details {
+    grid-template-columns: 1fr;
+  }
+
+  .site-page--trips .trip-search-card .public-swap {
+    justify-self: center;
+    transform: rotate(90deg);
+  }
+}

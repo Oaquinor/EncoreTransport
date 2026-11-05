@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-05T02:09:38.332Z",
+  "generated_at": "2026-11-05T18:32:30.819Z",
   "source": "tests/website-controls-browser.test.mjs",
-  "inventory_rows": 609,
-  "action_rows": 49,
+  "inventory_rows": 663,
+  "action_rows": 63,
   "required_behaviors": [
     "navigation",
     "desktop-menu",
@@ -37,13 +37,16 @@
         "HTTP destination /website/contact/",
         "HTTP destination /website/help/",
         "HTTP destination /login/?return=/passenger/",
+        "HTTP destination /passenger/?origin=Georgetown&destination=New%20Amsterdam&passengers=1",
+        "HTTP destination /passenger/?origin=New%20Amsterdam&destination=Georgetown&passengers=1",
+        "HTTP destination /passenger/?origin=Linden&destination=Georgetown&passengers=1",
+        "HTTP destination https://leafletjs.com",
         "HTTP destination /login/",
         "HTTP destination #routes",
         "HTTP destination /website/trips/?origin=Georgetown&destination=New+Amsterdam&passengers=1",
         "HTTP destination /website/trips/?origin=New+Amsterdam&destination=Georgetown&passengers=1",
         "HTTP destination /website/trips/?origin=Linden&destination=Georgetown&passengers=1",
         "HTTP destination /passenger/?screen=account&tab=tickets",
-        "HTTP destination https://leafletjs.com",
         "HTTP destination /passenger/",
         "HTTP destination #trips-tickets",
         "HTTP destination #tracking-delivery"
@@ -86,6 +89,27 @@
         "Visible button: Tracking",
         "Visible button: Company & help",
         "Click opens each desktop menu and Escape closes it"
+      ],
+      "screens": [
+        "/website/",
+        "/website/routes/",
+        "/website/trips/",
+        "/website/packages/",
+        "/website/services/",
+        "/website/live/",
+        "/website/about/",
+        "/website/contact/",
+        "/website/help/"
+      ]
+    },
+    {
+      "mechanism": "select-trigger",
+      "evidence": [
+        "Visible button: Language",
+        "Visible button: Departure point",
+        "Visible button: Destination",
+        "Visible button: Origin",
+        "Visible button: Select a route"
       ],
       "screens": [
         "/website/",
@@ -154,6 +178,15 @@
       ],
       "screens": [
         "/website/packages/"
+      ]
+    },
+    {
+      "mechanism": "select-combo",
+      "evidence": [
+        "Custom combo opens with rounded menu, supports keyboard/mouse selection and Escape, and syncs the native form control"
+      ],
+      "screens": [
+        "/website/"
       ]
     },
     {

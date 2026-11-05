@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-05T02:09:38.334Z",
+  "generated_at": "2026-11-05T18:32:30.821Z",
   "rows": [
     {
       "route": "/website/",
@@ -35,8 +35,32 @@
     },
     {
       "route": "/website/",
+      "label": "Language",
+      "mechanism": "select-trigger",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/",
+      "label": "Departure point",
+      "mechanism": "select-trigger",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/",
       "label": "Swap origin and destination",
       "mechanism": "route-swap",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/",
+      "label": "Destination",
+      "mechanism": "select-trigger",
       "type": "button",
       "id": "",
       "status": "verified-by-contract"
@@ -82,6 +106,14 @@
       "status": "verified-by-contract"
     },
     {
+      "route": "/website/routes/",
+      "label": "Language",
+      "mechanism": "select-trigger",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
       "route": "/website/trips/",
       "label": "Trips",
       "mechanism": "desktop-menu",
@@ -115,8 +147,32 @@
     },
     {
       "route": "/website/trips/",
+      "label": "Language",
+      "mechanism": "select-trigger",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/trips/",
+      "label": "Origin",
+      "mechanism": "select-trigger",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/trips/",
       "label": "Swap origin and destination",
       "mechanism": "route-swap",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/trips/",
+      "label": "Destination",
+      "mechanism": "select-trigger",
       "type": "button",
       "id": "",
       "status": "verified-by-contract"
@@ -157,6 +213,14 @@
       "route": "/website/packages/",
       "label": "Company & help",
       "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/packages/",
+      "label": "Language",
+      "mechanism": "select-trigger",
       "type": "button",
       "id": "",
       "status": "verified-by-contract"
@@ -218,6 +282,14 @@
       "status": "verified-by-contract"
     },
     {
+      "route": "/website/services/",
+      "label": "Language",
+      "mechanism": "select-trigger",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
       "route": "/website/live/",
       "label": "Trips",
       "mechanism": "desktop-menu",
@@ -245,6 +317,22 @@
       "route": "/website/live/",
       "label": "Company & help",
       "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/live/",
+      "label": "Language",
+      "mechanism": "select-trigger",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/live/",
+      "label": "Select a route",
+      "mechanism": "select-trigger",
       "type": "button",
       "id": "",
       "status": "verified-by-contract"
@@ -282,6 +370,14 @@
       "status": "verified-by-contract"
     },
     {
+      "route": "/website/about/",
+      "label": "Language",
+      "mechanism": "select-trigger",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
       "route": "/website/contact/",
       "label": "Trips",
       "mechanism": "desktop-menu",
@@ -314,6 +410,14 @@
       "status": "verified-by-contract"
     },
     {
+      "route": "/website/contact/",
+      "label": "Language",
+      "mechanism": "select-trigger",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
       "route": "/website/help/",
       "label": "Trips",
       "mechanism": "desktop-menu",
@@ -341,6 +445,14 @@
       "route": "/website/help/",
       "label": "Company & help",
       "mechanism": "desktop-menu",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/help/",
+      "label": "Language",
+      "mechanism": "select-trigger",
       "type": "button",
       "id": "",
       "status": "verified-by-contract"

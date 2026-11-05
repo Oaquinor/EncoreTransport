@@ -96,6 +96,8 @@ try {
         const mechanism = element.matches('[data-menu-button]') ? 'desktop-menu'
           : element.matches('[data-mobile-menu-button]') ? 'mobile-menu-group'
             : element.matches('#mobileMenuToggle') ? 'mobile-menu'
+              : element.matches('.website-select__trigger') ? 'select-trigger'
+                : element.matches('.website-select__option') ? 'select-option'
               : element.matches('.swap') ? 'route-swap'
                 : element.matches('form button[type="submit"]') ? `form:${element.closest('form')?.id || 'unnamed'}`
                   : element.matches('[data-package-step]') ? 'package-step'
@@ -136,6 +138,8 @@ try {
       .map((element) => {
         const mechanism = element.matches('[data-menu-button]') ? 'desktop-menu'
           : element.matches('#mobileMenuToggle') ? 'mobile-menu'
+            : element.matches('.website-select__trigger') ? 'select-trigger'
+              : element.matches('.website-select__option') ? 'select-option'
             : element.matches('.swap') ? 'route-swap'
               : element.matches('form button[type="submit"]') ? `form:${element.closest('form')?.id || 'unnamed'}`
                 : element.matches('[data-package-step]') ? 'package-step'
@@ -165,6 +169,36 @@ try {
 
   await page.goto(`${origin}/website/?lang=en`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => Boolean(document.querySelector('[name="origin"] option[value="Georgetown"]')));
+  await page.waitForFunction(() => {
+    const select = document.querySelector('#bookingForm [name="origin"]');
+    return Boolean(select && !select.disabled && select.options.length === 4);
+  });
+
+  const originTrigger = page.locator('#bookingForm .website-select__trigger').first();
+  await originTrigger.waitFor({ state: 'visible' });
+  await originTrigger.click();
+  const originMenu = page.locator('#bookingForm .website-select__menu[aria-hidden="false"]');
+  await originMenu.getByRole('option').first().waitFor({ state: 'visible' });
+  assert.equal(await originMenu.getByRole('option').count(), 4, 'origin combo must render its real options in the custom menu');
+  const menuVisuals = await originMenu.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { borderRadius: style.borderRadius, boxShadow: style.boxShadow, maxHeight: style.maxHeight };
+  });
+  assert.notEqual(menuVisuals.borderRadius, '0px', 'custom combo menu must keep rounded corners');
+  assert.notEqual(menuVisuals.boxShadow, 'none', 'custom combo menu must keep a professional shadow');
+  assert.notEqual(menuVisuals.maxHeight, 'none', 'custom combo menu must keep a bounded scroll area');
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+  assert.equal(await page.locator('[name="origin"]').inputValue(), 'Georgetown', 'keyboard option selection must sync the native form control');
+  assert.match(await originTrigger.textContent(), /Georgetown/, 'custom trigger must reflect the selected value');
+  await originTrigger.click();
+  await page.keyboard.press('Escape');
+  assert.equal(await originTrigger.getAttribute('aria-expanded'), 'false', 'Escape must close the custom combo');
+  await originTrigger.click();
+  await originMenu.getByRole('option', { name: 'Linden', exact: true }).click();
+  assert.equal(await page.locator('[name="origin"]').inputValue(), 'Linden', 'mouse option selection must sync the native form control');
+  recordBehavior('select-combo', 'Custom combo opens with rounded menu, supports keyboard/mouse selection and Escape, and syncs the native form control', '/website/');
+
   await page.locator('[name="origin"]').selectOption('Georgetown');
   await page.waitForFunction(() => Boolean(document.querySelector('[name="destination"] option[value="New Amsterdam"]')));
   await page.locator('[name="destination"]').selectOption('New Amsterdam');

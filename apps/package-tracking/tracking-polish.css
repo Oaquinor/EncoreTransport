@@ -57,6 +57,15 @@
   box-shadow: 0 22px 58px rgba(14, 43, 61, .12);
 }
 
+.tracking-form__field {
+  gap: 8px;
+}
+
+.tracking-form__field small {
+  max-width: 48ch;
+  color: #5d7482;
+}
+
 .premium-tracking-form input {
   border-color: #b8ccd8;
   background: #fbfdfe;
@@ -103,6 +112,10 @@
 
   .premium-tracking-form {
     padding: 18px;
+  }
+
+  .premium-tracking-form button {
+    width: 100%;
   }
 }
 
