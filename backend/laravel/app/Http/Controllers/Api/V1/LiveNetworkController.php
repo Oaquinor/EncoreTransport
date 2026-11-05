@@ -63,7 +63,7 @@ class LiveNetworkController extends Controller
                 'trips' => $activeTrips,
                 'updated_at' => now()->toIso8601String(),
             ],
-        ])->header('Cache-Control', 'public, max-age=10, stale-while-revalidate=20')
+        ])->header('Cache-Control', 'no-store')
             ->header('X-Live-Query-Ms', (string) $queryMs)
             ->header('Server-Timing', 'live-query;dur='.$queryMs);
     }

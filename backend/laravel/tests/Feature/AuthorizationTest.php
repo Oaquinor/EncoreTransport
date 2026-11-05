@@ -30,7 +30,8 @@ class AuthorizationTest extends TestCase
             ->getJson('/api/v1/auth/me')
             ->assertOk()
             ->assertHeader('X-Content-Type-Options', 'nosniff')
-            ->assertHeader('X-Frame-Options', 'DENY');
+            ->assertHeader('X-Frame-Options', 'DENY')
+            ->assertHeader('Content-Security-Policy', "default-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
         $this->assertContains('routes.create', $adminResponse->json('permissions'));
 
         $this->withToken($this->tokenFor($passenger))

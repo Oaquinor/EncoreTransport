@@ -19,6 +19,10 @@ class SecurityHeaders
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         }
         if ($request->is('api/*')) {
+            $response->headers->set(
+                'Content-Security-Policy',
+                "default-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+            );
             $response->headers->set('Cache-Control', 'no-store');
             $response->headers->set('X-Robots-Tag', 'noindex, nofollow, noarchive');
         }

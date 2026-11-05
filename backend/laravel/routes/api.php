@@ -38,13 +38,17 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
     Route::post('auth/google', [AuthController::class, 'google'])->middleware('throttle:10,1');
 
-    Route::get('routes', [RouteController::class, 'index']);
-    Route::get('website-content', [WebsiteContentController::class, 'published']);
-    Route::get('routes/{transportRoute}', [RouteController::class, 'show']);
-    Route::get('trips/search', [TripController::class, 'search']);
-    Route::get('trips/{trip}', [TripController::class, 'show']);
-    Route::get('trips/{trip}/seats', [SeatController::class, 'index']);
-    Route::get('trips/{trip}/quote', [PricingController::class, 'show']);
+    // Public catalogue and booking discovery endpoints share an IP-based ceiling.
+    // The more sensitive endpoints below retain their stricter route-specific limits.
+    Route::middleware('throttle:60,1')->group(function () {
+        Route::get('routes', [RouteController::class, 'index']);
+        Route::get('website-content', [WebsiteContentController::class, 'published']);
+        Route::get('routes/{transportRoute}', [RouteController::class, 'show']);
+        Route::get('trips/search', [TripController::class, 'search']);
+        Route::get('trips/{trip}', [TripController::class, 'show']);
+        Route::get('trips/{trip}/seats', [SeatController::class, 'index']);
+        Route::get('trips/{trip}/quote', [PricingController::class, 'show']);
+    });
     Route::get('network/live', LiveNetworkController::class)->middleware('throttle:30,1');
 
     Route::prefix('maps')->group(function () {

@@ -109,6 +109,7 @@ try {
   const websiteHtml = await (await fetch(`${base}/website/`)).text();
   assert.match(websiteHtml, /rel="canonical" href="https:\/\/www\.encoretransport\.test\/website\/"/);
   assert.match(websiteHtml, /property="og:url" content="https:\/\/www\.encoretransport\.test\/website\/"/);
+  assert.match(website.headers.get('content-security-policy') ?? '', /default-src 'self'/);
 
   await expectOk(
     '/website/styles.css',

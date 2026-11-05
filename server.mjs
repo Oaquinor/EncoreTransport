@@ -194,6 +194,20 @@ async function serveFile(response, filePath, request, publicSiteUrl = '') {
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'camera=(), microphone=(), payment=(), usb=()',
     };
+    if (isHtml && filePath.includes(path.join('apps', 'website'))) {
+      headers['Content-Security-Policy'] = [
+        "default-src 'self'",
+        "base-uri 'self'",
+        "object-src 'none'",
+        "frame-ancestors 'none'",
+        "form-action 'self'",
+        "script-src 'self' https://unpkg.com",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob:",
+        "font-src 'self' data:",
+        "connect-src 'self'",
+      ].join('; ');
+    }
     if (body !== fileContents) {
       headers['Content-Encoding'] = 'gzip';
       headers.Vary = 'Accept-Encoding';
