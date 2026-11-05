@@ -524,9 +524,9 @@ function initialsForUser(user = {}) {
 
 function profileDialogMarkup() {
   const draft = state.profilePhotoDraftUrl;
-  if (state.profileDialog === 'photo') return `<dialog class="profile-dialog" open aria-labelledby="photoDialogTitle"><form method="dialog" class="profile-dialog__panel" id="profilePhotoDialog"><div class="eyebrow">Profile photo</div><div class="profile-dialog__heading"><h3 id="photoDialogTitle">Change profile photo</h3><button type="submit" class="button button--icon" value="cancel" aria-label="Close">${icon('close')}</button></div><div class="photo-dialog-grid"><div class="photo-dialog-preview" style="--photo-zoom:${state.profilePhotoZoom}">${draft ? `<img src="${esc(draft)}" alt="Selected profile preview" />` : `<span>${icon('user')}</span>`}</div><label class="photo-dropzone"><input id="profilePhotoDialogInput" type="file" accept="image/jpeg,image/png,image/webp" /><span>${icon('view')}Choose a photo</span><small>JPG, PNG or WebP · maximum 5 MB</small></label></div><label class="photo-zoom"><span>Adjust framing</span><input id="profilePhotoZoom" type="range" min="1" max="2" step="0.05" value="${state.profilePhotoZoom}" ${draft ? '' : 'disabled'} /></label><div class="profile-dialog__actions"><button type="submit" class="button button--ghost" value="cancel">Cancel</button><button class="button button--primary" id="applyProfilePhoto" type="button" ${draft ? '' : 'disabled'}>${icon('save')}Save photo</button></div><p id="profilePhotoDialogMessage" class="profile-dialog__message" aria-live="polite"></p></form></dialog>`;
-  if (state.profileDialog === 'delete') return `<dialog class="profile-dialog profile-dialog--danger" open aria-labelledby="deleteDialogTitle"><form method="dialog" class="profile-dialog__panel" id="deleteProfileDialog"><div class="profile-danger-icon">${icon('close')}</div><div class="profile-dialog__heading"><h3 id="deleteDialogTitle">Delete account?</h3><button type="submit" class="button button--icon" value="cancel" aria-label="Close">${icon('close')}</button></div><p>This action cannot be undone. Historical bookings will be preserved and personal data will be anonymized where required.</p><label><span>Type DELETE to confirm</span><input id="deleteConfirmation" autocomplete="off" placeholder="DELETE" /></label><div class="profile-dialog__actions"><button type="submit" class="button button--ghost" value="cancel">Cancel</button><button class="button button--danger" id="confirmDeleteProfile" type="button" disabled>Delete account</button></div><p id="deleteProfileMessage" class="profile-dialog__message" aria-live="polite"></p></form></dialog>`;
-  if (state.profileDialog === 'saved') return `<dialog class="profile-dialog profile-dialog--success" open aria-labelledby="savedDialogTitle"><form method="dialog" class="profile-dialog__panel"><div class="profile-success-icon">${icon('save')}</div><h3 id="savedDialogTitle">Profile updated</h3><p>Your information was saved successfully.</p><button type="submit" class="button button--primary" value="cancel">Done</button></form></dialog>`;
+  if (state.profileDialog === 'photo') return `<dialog class="profile-dialog" aria-labelledby="photoDialogTitle"><form method="dialog" class="profile-dialog__panel" id="profilePhotoDialog"><div class="eyebrow">Profile photo</div><div class="profile-dialog__heading"><h3 id="photoDialogTitle">Change profile photo</h3><button type="submit" class="button button--icon" value="cancel" aria-label="Close">${icon('close')}</button></div><div class="photo-dialog-grid"><div class="photo-dialog-preview" style="--photo-zoom:${state.profilePhotoZoom}">${draft ? `<img src="${esc(draft)}" alt="Selected profile preview" />` : `<span>${icon('user')}</span>`}</div><label class="photo-dropzone"><input id="profilePhotoDialogInput" type="file" accept="image/jpeg,image/png,image/webp" /><span>${icon('view')}Choose a photo</span><small>JPG, PNG or WebP · maximum 5 MB</small></label></div><label class="photo-zoom"><span>Adjust framing</span><input id="profilePhotoZoom" type="range" min="1" max="2" step="0.05" value="${state.profilePhotoZoom}" ${draft ? '' : 'disabled'} /></label><div class="profile-dialog__actions"><button type="submit" class="button button--ghost" value="cancel">Cancel</button><button class="button button--primary" id="applyProfilePhoto" type="button" ${draft ? '' : 'disabled'}>${icon('save')}Save photo</button></div><p id="profilePhotoDialogMessage" class="profile-dialog__message" aria-live="polite"></p></form></dialog>`;
+  if (state.profileDialog === 'delete') return `<dialog class="profile-dialog profile-dialog--danger" aria-labelledby="deleteDialogTitle"><form method="dialog" class="profile-dialog__panel" id="deleteProfileDialog"><div class="profile-danger-icon">${icon('close')}</div><div class="profile-dialog__heading"><h3 id="deleteDialogTitle">Delete account?</h3><button type="submit" class="button button--icon" value="cancel" aria-label="Close">${icon('close')}</button></div><p>This action cannot be undone. Historical bookings will be preserved and personal data will be anonymized where required.</p><label><span>Type DELETE to confirm</span><input id="deleteConfirmation" autocomplete="off" placeholder="DELETE" /></label><div class="profile-dialog__actions"><button type="submit" class="button button--ghost" value="cancel">Cancel</button><button class="button button--danger" id="confirmDeleteProfile" type="button" disabled>Delete account</button></div><p id="deleteProfileMessage" class="profile-dialog__message" aria-live="polite"></p></form></dialog>`;
+  if (state.profileDialog === 'saved') return `<dialog class="profile-dialog profile-dialog--success" aria-labelledby="savedDialogTitle"><form method="dialog" class="profile-dialog__panel"><div class="profile-success-icon">${icon('save')}</div><h3 id="savedDialogTitle">Profile updated</h3><p>Your information was saved successfully.</p><button type="submit" class="button button--primary" value="cancel">Done</button></form></dialog>`;
   return '';
 }
 
@@ -979,6 +979,28 @@ function render() {
 
   wire();
 
+  const profileDialog = document.querySelector('.profile-dialog');
+  if (profileDialog && !profileDialog.open) {
+    profileDialog.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      state.profileDialog = '';
+      if (state.profilePhotoDraftUrl) URL.revokeObjectURL(state.profilePhotoDraftUrl);
+      state.profilePhotoDraftUrl = '';
+      state.profilePhotoDraftFile = null;
+      render();
+    }, { once: true });
+    profileDialog.addEventListener('click', (event) => {
+      if (event.target !== profileDialog) return;
+      profileDialog.close();
+      state.profileDialog = '';
+      if (state.profilePhotoDraftUrl) URL.revokeObjectURL(state.profilePhotoDraftUrl);
+      state.profilePhotoDraftUrl = '';
+      state.profilePhotoDraftFile = null;
+      render();
+    });
+    profileDialog.showModal();
+  }
+
   if (!state.accessDenied && !state.loading && !state.error) {
     void hydrateAdminMap();
   }
@@ -1205,7 +1227,6 @@ function wire() {
     state.profilePhotoDraftFile = null;
     state.profilePhotoZoom = 1;
     render();
-    document.querySelector('#profilePhotoDialog')?.showModal?.();
   }));
   document.querySelector('#profilePhotoDialogInput')?.addEventListener('change', (event) => {
     const file = event.currentTarget.files?.[0];
