@@ -179,11 +179,14 @@ async function serveFile(response, filePath, request, publicSiteUrl = '') {
       ? await gzipAsync(fileContents)
       : fileContents;
 
+    const revalidateAsset = ['.css', '.js', '.mjs'].includes(extension);
     const headers = {
       'Content-Type': mimeTypes.get(extension) ?? 'application/octet-stream',
       'Cache-Control': isHtml
         ? 'no-cache'
-        : (production ? 'public, max-age=86400' : 'no-cache'),
+        : (revalidateAsset
+          ? 'public, max-age=0, must-revalidate'
+          : (production ? 'public, max-age=86400' : 'no-cache')),
       ETag: etag,
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
