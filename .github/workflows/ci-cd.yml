@@ -36,7 +36,15 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run frontend and browser regression suite
-        run: npm test --silent
+        run: |
+          set -o pipefail
+          npm test --silent 2>&1 | tee "$RUNNER_TEMP/frontend-tests.log"
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            summary=$(tail -n 24 "$RUNNER_TEMP/frontend-tests.log" | tr '\n' ' ' | cut -c 1-900)
+            echo "::error file=.github/workflows/ci-cd.yml,line=38,title=Frontend test failure::$summary"
+            exit "$status"
+          fi
 
       - name: Run typechecks
         run: |
@@ -97,7 +105,15 @@ jobs:
 
       - name: Run Laravel feature and unit tests
         working-directory: backend/laravel
-        run: php artisan test
+        run: |
+          set -o pipefail
+          php artisan test 2>&1 | tee "$RUNNER_TEMP/laravel-tests.log"
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            summary=$(tail -n 24 "$RUNNER_TEMP/laravel-tests.log" | tr '\n' ' ' | cut -c 1-900)
+            echo "::error file=.github/workflows/ci-cd.yml,line=270,title=Laravel test failure::$summary"
+            exit "$status"
+          fi
 
   deploy:
     name: Deploy to VPS
