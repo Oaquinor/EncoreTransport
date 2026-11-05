@@ -186,7 +186,9 @@ jobs:
           stage runtime-ready
 
           runuser -u encoreapp -- bash -lc "cd '$release' && npm ci --no-audit --no-fund && npm install-scripts approve esbuild && npm run build:passenger --silent"
-          runuser -u encoreapp -- bash -lc "cd '$release/backend/laravel' && composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction"
+          mkdir -p "$release/backend/laravel/vendor"
+          chown -R www-data:www-data "$release/backend/laravel/vendor"
+          runuser -u www-data -- bash -lc "cd '$release/backend/laravel' && composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction"
           runuser -u www-data -- bash -lc "cd '$release/backend/laravel' && php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache"
 
           if [ "$AUTO_MIGRATE" = "true" ]; then
