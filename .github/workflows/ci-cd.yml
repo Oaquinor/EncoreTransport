@@ -37,7 +37,7 @@ jobs:
 
       - name: Run frontend and browser regression suite
         run: |
-          set -o pipefail
+          set +e
           npm test --silent 2>&1 | tee "$RUNNER_TEMP/frontend-tests.log"
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
@@ -45,6 +45,7 @@ jobs:
             echo "::error file=.github/workflows/ci-cd.yml,line=38,title=Frontend test failure::$summary"
             exit "$status"
           fi
+          set -e
 
       - name: Run typechecks
         run: |
@@ -106,7 +107,7 @@ jobs:
       - name: Run Laravel feature and unit tests
         working-directory: backend/laravel
         run: |
-          set -o pipefail
+          set +e
           php artisan test 2>&1 | tee "$RUNNER_TEMP/laravel-tests.log"
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
@@ -114,6 +115,7 @@ jobs:
             echo "::error file=.github/workflows/ci-cd.yml,line=270,title=Laravel test failure::$summary"
             exit "$status"
           fi
+          set -e
 
   deploy:
     name: Deploy to VPS
