@@ -162,12 +162,17 @@ jobs:
           root=/var/www/encoretransport
           release="$root/releases/$GITHUB_SHA"
           mkdir -p "$root/releases" "$root/shared"
-          test ! -e "$release"
           test -f "$root/shared/laravel.env"
           test -d "$root/shared/storage" || mkdir -p "$root/shared/storage"
+          stage() { printf '%s %s\n' "$(date -u +%FT%TZ)" "$1" > "$root/shared/deploy-stage"; }
+          trap 'stage "failure line=$LINENO command=$BASH_COMMAND"' ERR
 
-          git clone --depth 1 --branch main https://github.com/Oaquinor/EncoreTransport.git "$release"
-          ln -s "$root/shared/laravel.env" "$release/backend/laravel/.env"
+          if [ ! -e "$release" ]; then
+              git clone --depth 1 --branch main https://github.com/Oaquinor/EncoreTransport.git "$release"
+          fi
+          test -d "$release/.git"
+          stage release-ready
+          ln -sfn "$root/shared/laravel.env" "$release/backend/laravel/.env"
           rm -rf "$release/backend/laravel/storage"
           ln -s "$root/shared/storage" "$release/backend/laravel/storage"
           chown root:www-data "$root/shared"
@@ -178,25 +183,31 @@ jobs:
           chown -R encoreapp:www-data "$release"
           chown -R www-data:www-data "$release/backend/laravel/bootstrap/cache"
           chmod -R ug+rwX "$release/backend/laravel/bootstrap/cache"
+          stage runtime-ready
 
           runuser -u encoreapp -- bash -lc "cd '$release' && npm ci --no-audit --no-fund && npm install-scripts approve esbuild && npm run build:passenger --silent"
           runuser -u encoreapp -- bash -lc "cd '$release/backend/laravel' && composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction"
           runuser -u www-data -- bash -lc "cd '$release/backend/laravel' && php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache"
 
           if [ "$AUTO_MIGRATE" = "true" ]; then
+              stage migration-start
               runuser -u www-data -- bash -lc "cd '$release/backend/laravel' && php artisan migrate --force"
+              stage migration-done
           fi
 
+          stage systemd-start
           install -o root -g root -m 0644 "$release/deploy/systemd/encore-web.service" /etc/systemd/system/encore-web.service
           install -o root -g root -m 0644 "$release/deploy/systemd/encore-queue.service" /etc/systemd/system/encore-queue.service
           install -o root -g root -m 0644 "$release/deploy/systemd/encore-schedule.service" /etc/systemd/system/encore-schedule.service
           install -o root -g root -m 0644 "$release/deploy/systemd/encore-schedule.timer" /etc/systemd/system/encore-schedule.timer
+          stage systemd-installed
 
           if [ -e "$root/current" ] && [ ! -L "$root/current" ]; then
               mv "$root/current" "$root/legacy-$(date -u +%Y%m%d%H%M%S)"
           fi
           ln -sfn "$release" "$root/current.next"
           mv -Tf "$root/current.next" "$root/current"
+          stage current-switched
 
           systemctl daemon-reload
           systemctl enable encore-web encore-queue encore-schedule.timer
@@ -215,4 +226,5 @@ jobs:
           fi
 
           bash "$root/current/deploy/scripts/healthcheck.sh" "https://$PRODUCTION_DOMAIN"
+          stage health-passed
           REMOTE
