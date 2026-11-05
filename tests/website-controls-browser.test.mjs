@@ -98,6 +98,7 @@ try {
             : element.matches('#mobileMenuToggle') ? 'mobile-menu'
               : element.matches('.website-select__trigger') ? 'select-trigger'
                 : element.matches('.website-select__option') ? 'select-option'
+              : element.matches('.website-date-picker__trigger') ? 'date-picker'
               : element.matches('.swap') ? 'route-swap'
                 : element.matches('form button[type="submit"]') ? `form:${element.closest('form')?.id || 'unnamed'}`
                   : element.matches('[data-package-step]') ? 'package-step'
@@ -140,6 +141,7 @@ try {
           : element.matches('#mobileMenuToggle') ? 'mobile-menu'
             : element.matches('.website-select__trigger') ? 'select-trigger'
               : element.matches('.website-select__option') ? 'select-option'
+              : element.matches('.website-date-picker__trigger') ? 'date-picker'
             : element.matches('.swap') ? 'route-swap'
               : element.matches('form button[type="submit"]') ? `form:${element.closest('form')?.id || 'unnamed'}`
                 : element.matches('[data-package-step]') ? 'package-step'
@@ -212,8 +214,27 @@ try {
   assert.equal(await page.locator('[name="destination"]').inputValue(), 'Georgetown', 'swap must preserve destination when no reverse route exists');
   assert.match(await page.locator('#searchMessage').textContent(), /return route/i, 'swap must explain why an unavailable reverse route was not applied');
   recordBehavior('route-swap', 'Home planner exchanges a valid return route and preserves an unavailable reverse route safely', '/website/');
-  assert.equal(await page.getByLabel('Date').count(), 1, 'home date input must expose a stable accessible name');
+  assert.equal(await page.locator('#bookingForm input[name="date"]').count(), 1, 'home date input must remain the single real form field');
+  assert.equal(await page.locator('#bookingForm .website-date-picker__trigger').count(), 1, 'home date picker must expose one visible trigger');
   assert.equal(await page.getByLabel('Passengers').count(), 1, 'home passenger input must expose a stable accessible name');
+  const dateTrigger = page.locator('#bookingForm .website-date-picker__trigger');
+  await dateTrigger.click();
+  const datePopover = page.locator('.website-date-picker__popover[aria-hidden="false"]');
+  await datePopover.waitFor({ state: 'visible' });
+  await page.screenshot({ path: 'artifacts/visual/website-home-date-picker-1440.png', fullPage: false });
+  assert.ok(await datePopover.locator('.website-date-picker__day').count() >= 28, 'calendar must render a real month grid');
+  const dateVisuals = await datePopover.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { borderRadius: style.borderRadius, boxShadow: style.boxShadow };
+  });
+  assert.notEqual(dateVisuals.borderRadius, '0px', 'date calendar must keep rounded corners');
+  assert.notEqual(dateVisuals.boxShadow, 'none', 'date calendar must keep a professional shadow');
+  await page.keyboard.press('Escape');
+  assert.equal(await dateTrigger.getAttribute('aria-expanded'), 'false', 'Escape must close the date calendar');
+  await dateTrigger.click();
+  await datePopover.locator('.website-date-picker__day:not(:disabled)').first().click();
+  assert.match(await page.locator('[name="date"]').inputValue(), /^\d{4}-\d{2}-\d{2}$/, 'calendar selection must sync the real date input');
+  recordBehavior('date-picker', 'Rounded calendar opens from the real date field, supports Escape and syncs a selected date', '/website/');
 
   await page.locator('#desktopLocale').selectOption('es');
   await page.waitForURL(/lang=es/);

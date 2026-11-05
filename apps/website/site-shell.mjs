@@ -157,3 +157,4 @@ applyStaticLocale(locale);
 await import('./premium-interactions.mjs');
 await import('./site-navigation.mjs');
 await import('./select-enhancements.mjs');
+await import('./date-picker-enhancements.mjs');

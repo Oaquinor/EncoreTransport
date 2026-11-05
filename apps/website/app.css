@@ -557,3 +557,367 @@
     animation: none;
   }
 }
+
+/* Shared control rhythm: compact enough for scanning, large enough for touch.
+   Keep the same geometry across the public Website instead of letting each
+   page invent a different button or field height. */
+:root {
+  --website-control-height: 52px;
+  --website-control-radius: 14px;
+}
+
+.site-page .button,
+.site-page a.button,
+.public-hero__actions .button,
+.parcel-feature .button,
+.public-section .button {
+  min-height: var(--website-control-height);
+  border-radius: var(--website-control-radius);
+}
+
+.site-page .site-page__actions .button,
+.site-page .routes-filter__controls .button {
+  min-height: 48px;
+}
+
+/* Dense live-bus actions are intentionally smaller than page CTAs so the
+   vehicle list stays scannable when several buses are visible. */
+.site-page .public-network-buses [data-network-trip] {
+  border-radius: 12px;
+}
+
+.routes-filter input,
+.public-map-card__bar .website-select__trigger,
+.live-map-toolbar .website-select__trigger {
+  min-height: var(--website-control-height);
+  border-radius: var(--website-control-radius);
+}
+
+.recent-searches button {
+  min-height: 38px;
+  padding-block: 0;
+}
+
+/* The visible calendar is a branded surface. The native date input remains in
+   the form as the source of truth, but the browser-specific popup is replaced
+   by this keyboard- and touch-friendly calendar. */
+.website-date-picker {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+}
+
+.website-date-picker__native {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  color: transparent !important;
+  background: transparent !important;
+}
+
+.website-date-picker__trigger {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--pub-ink, #102130);
+  font: inherit;
+  font-size: .86rem;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+}
+
+.website-date-picker__trigger:hover,
+.website-date-picker.is-open .website-date-picker__trigger {
+  color: #087fa9;
+}
+
+.website-date-picker__trigger:focus-visible {
+  outline: 3px solid rgba(45, 169, 223, .32);
+  outline-offset: 3px;
+}
+
+.website-date-picker__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.website-date-picker__value.is-placeholder {
+  color: #7c929e;
+}
+
+.website-date-picker__icon {
+  position: relative;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border: 1.6px solid currentColor;
+  border-radius: 4px;
+}
+
+.website-date-picker__icon::before,
+.website-date-picker__icon::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 5px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.website-date-picker__icon::before { left: 3px; }
+.website-date-picker__icon::after { right: 3px; }
+
+.website-date-picker__popover {
+  position: fixed;
+  z-index: 1300;
+  display: grid;
+  gap: 12px;
+  box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid rgba(37, 166, 213, .3);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .97);
+  box-shadow: 0 24px 54px rgba(8, 48, 70, .2), 0 4px 12px rgba(8, 48, 70, .08);
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-5px) scale(.98);
+  transform-origin: top center;
+  transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+}
+
+.website-date-picker__popover[aria-hidden="false"] {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.website-date-picker__header,
+.website-date-picker__weekdays,
+.website-date-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.website-date-picker__header {
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 8px;
+}
+
+.website-date-picker__header strong {
+  overflow: hidden;
+  color: #08283b;
+  font-size: .88rem;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.website-date-picker__nav {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #c6e0e9;
+  border-radius: 50%;
+  background: #f5fbfd;
+  color: #087fa9;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.website-date-picker__nav:hover,
+.website-date-picker__nav:focus-visible {
+  border-color: #159ac0;
+  background: #eaf7fb;
+  outline: none;
+}
+
+.website-date-picker__weekdays {
+  color: #7a919d;
+  font-size: .62rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.website-date-picker__grid {
+  gap: 4px;
+}
+
+.website-date-picker__empty,
+.website-date-picker__day {
+  aspect-ratio: 1;
+  min-width: 0;
+}
+
+.website-date-picker__day {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: #234b60;
+  font: inherit;
+  font-size: .76rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background .14s ease, border-color .14s ease, color .14s ease, transform .14s ease;
+}
+
+.website-date-picker__day:hover,
+.website-date-picker__day:focus-visible {
+  border-color: #b8deea;
+  background: #eaf7fb;
+  color: #08749e;
+  outline: none;
+  transform: scale(1.06);
+}
+
+.website-date-picker__day.is-selected {
+  border-color: #159ac0;
+  background: #159ac0;
+  color: #fff;
+  box-shadow: 0 6px 12px rgba(21, 154, 192, .22);
+}
+
+.website-date-picker__day[aria-current="date"]:not(.is-selected) {
+  border-color: #66c9df;
+  color: #08749e;
+}
+
+.website-date-picker__day:disabled {
+  opacity: .32;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.website-date-picker.is-disabled .website-date-picker__trigger {
+  color: #8297a2;
+  cursor: not-allowed;
+}
+
+/* Compact planner geometry: route controls remain more generous than date
+   and passenger controls, while every control shares the same baseline. */
+.public-booking .public-booking-card {
+  grid-template-columns: minmax(160px, 1.15fr) 40px minmax(190px, 1.35fr) minmax(118px, .9fr) minmax(78px, .55fr) minmax(150px, .9fr);
+  gap: 9px;
+  padding: 14px;
+}
+
+.public-booking .public-field,
+.public-booking .public-search-button,
+.site-page--trips .trip-search-card .booking-field,
+.site-page--trips .trip-search-card .public-search-button {
+  height: 58px;
+  min-height: 58px;
+  border-radius: var(--website-control-radius);
+}
+
+.public-booking .public-field,
+.site-page--trips .trip-search-card .booking-field {
+  padding: 9px 12px;
+}
+
+.public-booking .public-field .website-select__value,
+.site-page--trips .trip-search-card .public-field .website-select__value {
+  font-size: .82rem;
+  letter-spacing: -.01em;
+}
+
+.public-booking .public-field input[type="number"],
+.site-page--trips .trip-search-card .public-field input[type="number"] {
+  font-size: .92rem;
+}
+
+.public-booking .public-swap,
+.site-page--trips .trip-search-card .public-swap {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+}
+
+.public-booking .public-search-button,
+.site-page--trips .trip-search-card .public-search-button {
+  padding-inline: 12px;
+}
+
+@media (min-width: 901px) and (max-width: 1100px) {
+  .public-booking .public-booking-card {
+    grid-template-columns: minmax(140px, 1.15fr) 38px minmax(160px, 1.3fr) minmax(108px, .9fr) minmax(74px, .55fr) minmax(138px, .9fr);
+    gap: 8px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 900px) {
+  .public-booking .public-booking-card,
+  .site-page--trips .trip-search-card .public-booking-card {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .public-booking .public-booking-card__route,
+  .public-booking .public-booking-card__details,
+  .site-page--trips .trip-search-card .public-booking-card__route,
+  .site-page--trips .trip-search-card .public-booking-card__details {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 620px) {
+  .public-booking .public-booking-card__route,
+  .public-booking .public-booking-card__details,
+  .site-page--trips .trip-search-card .public-booking-card__route,
+  .site-page--trips .trip-search-card .public-booking-card__details {
+    grid-template-columns: 1fr;
+  }
+
+  .public-booking .public-swap,
+  .site-page--trips .trip-search-card .public-swap {
+    justify-self: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .website-date-picker__popover,
+  .website-date-picker__day {
+    transition: none;
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-05T19:05:27.732Z",
+  "generated_at": "2026-11-05T19:43:17.806Z",
   "columns": [
     "Aplicación",
     "Pantalla",
@@ -681,7 +681,7 @@
       "tag": "a",
       "type": "",
       "width": 143,
-      "height": 50
+      "height": 52
     },
     {
       "application": "Website",
@@ -695,7 +695,7 @@
       "tag": "a",
       "type": "",
       "width": 156,
-      "height": 50
+      "height": 52
     },
     {
       "application": "Website",
@@ -722,13 +722,13 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "button",
-      "width": 164,
+      "width": 170,
       "height": 36
     },
     {
       "application": "Website",
       "screen": "/website/",
-      "control": "Choose a departure point✓",
+      "control": "Select origin✓",
       "purpose": "select-option",
       "destination": "form:bookingForm",
       "permissions": "public",
@@ -792,8 +792,8 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "button",
-      "width": 44,
-      "height": 44
+      "width": 42,
+      "height": 40
     },
     {
       "application": "Website",
@@ -820,13 +820,13 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "button",
-      "width": 164,
+      "width": 204,
       "height": 36
     },
     {
       "application": "Website",
       "screen": "/website/",
-      "control": "Choose a destination✓",
+      "control": "Select destination✓",
       "purpose": "select-option",
       "destination": "form:bookingForm",
       "permissions": "public",
@@ -876,8 +876,22 @@
       "test": "test:website-controls-browser",
       "tag": "input",
       "type": "date",
-      "width": 102,
-      "height": 23
+      "width": 127,
+      "height": 36
+    },
+    {
+      "application": "Website",
+      "screen": "/website/",
+      "control": "Choose date",
+      "purpose": "date-picker",
+      "destination": "form:bookingForm",
+      "permissions": "public",
+      "status": "visible",
+      "test": "test:website-controls-browser",
+      "tag": "button",
+      "type": "button",
+      "width": 127,
+      "height": 36
     },
     {
       "application": "Website",
@@ -891,7 +905,7 @@
       "tag": "input",
       "type": "number",
       "width": 68,
-      "height": 23
+      "height": 22
     },
     {
       "application": "Website",
@@ -904,8 +918,8 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "submit",
-      "width": 190,
-      "height": 68
+      "width": 153,
+      "height": 58
     },
     {
       "application": "Website",
@@ -919,7 +933,7 @@
       "tag": "a",
       "type": "",
       "width": 172,
-      "height": 50
+      "height": 52
     },
     {
       "application": "Website",
@@ -975,7 +989,7 @@
       "tag": "a",
       "type": "",
       "width": 176,
-      "height": 50
+      "height": 52
     },
     {
       "application": "Website",
@@ -1003,7 +1017,7 @@
       "tag": "a",
       "type": "",
       "width": 194,
-      "height": 50
+      "height": 52
     },
     {
       "application": "Website",
@@ -1101,7 +1115,7 @@
       "tag": "a",
       "type": "",
       "width": 192,
-      "height": 50
+      "height": 52
     },
     {
       "application": "Website",
@@ -2067,7 +2081,7 @@
       "tag": "a",
       "type": "",
       "width": 143,
-      "height": 50
+      "height": 48
     },
     {
       "application": "Website",
@@ -2081,7 +2095,7 @@
       "tag": "a",
       "type": "",
       "width": 154,
-      "height": 50
+      "height": 48
     },
     {
       "application": "Website",
@@ -2137,7 +2151,7 @@
       "tag": "a",
       "type": "",
       "width": 186,
-      "height": 50
+      "height": 52
     },
     {
       "application": "Website",
@@ -2151,7 +2165,7 @@
       "tag": "a",
       "type": "",
       "width": 186,
-      "height": 50
+      "height": 52
     },
     {
       "application": "Website",
@@ -2165,7 +2179,7 @@
       "tag": "a",
       "type": "",
       "width": 186,
-      "height": 50
+      "height": 52
     },
     {
       "application": "Website",
@@ -2179,7 +2193,7 @@
       "tag": "a",
       "type": "",
       "width": 177,
-      "height": 50
+      "height": 52
     },
     {
       "application": "Website",
@@ -2193,7 +2207,7 @@
       "tag": "a",
       "type": "",
       "width": 192,
-      "height": 50
+      "height": 52
     },
     {
       "application": "Website",
@@ -3130,13 +3144,13 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "button",
-      "width": 122,
+      "width": 126,
       "height": 36
     },
     {
       "application": "Website",
       "screen": "/website/trips/",
-      "control": "Choose a departure point✓",
+      "control": "Select origin✓",
       "purpose": "select-option",
       "destination": "form:bookingForm",
       "permissions": "public",
@@ -3200,8 +3214,8 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "button",
-      "width": 44,
-      "height": 50
+      "width": 42,
+      "height": 40
     },
     {
       "application": "Website",
@@ -3228,13 +3242,13 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "button",
-      "width": 150,
+      "width": 154,
       "height": 36
     },
     {
       "application": "Website",
       "screen": "/website/trips/",
-      "control": "Choose a destination✓",
+      "control": "Select destination✓",
       "purpose": "select-option",
       "destination": "form:bookingForm",
       "permissions": "public",
@@ -3284,8 +3298,22 @@
       "test": "test:website-controls-browser",
       "tag": "input",
       "type": "date",
-      "width": 112,
-      "height": 21
+      "width": 116,
+      "height": 36
+    },
+    {
+      "application": "Website",
+      "screen": "/website/trips/",
+      "control": "Choose date",
+      "purpose": "date-picker",
+      "destination": "form:bookingForm",
+      "permissions": "public",
+      "status": "visible",
+      "test": "test:website-controls-browser",
+      "tag": "button",
+      "type": "button",
+      "width": 116,
+      "height": 36
     },
     {
       "application": "Website",
@@ -3313,7 +3341,7 @@
       "tag": "button",
       "type": "submit",
       "width": 140,
-      "height": 68
+      "height": 58
     },
     {
       "application": "Website",
@@ -4237,7 +4265,7 @@
       "tag": "a",
       "type": "",
       "width": 172,
-      "height": 50
+      "height": 48
     },
     {
       "application": "Website",
@@ -4251,7 +4279,7 @@
       "tag": "a",
       "type": "",
       "width": 193,
-      "height": 50
+      "height": 48
     },
     {
       "application": "Website",
@@ -4321,7 +4349,7 @@
       "tag": "a",
       "type": "",
       "width": 177,
-      "height": 50
+      "height": 52
     },
     {
       "application": "Website",
@@ -6295,7 +6323,7 @@
       "tag": "button",
       "type": "button",
       "width": 130,
-      "height": 46
+      "height": 52
     },
     {
       "application": "Website",
@@ -6324,48 +6352,6 @@
       "type": "button",
       "width": 0,
       "height": 0
-    },
-    {
-      "application": "Website",
-      "screen": "/website/live/",
-      "control": "Zoom in",
-      "purpose": "navigation",
-      "destination": "#",
-      "permissions": "public",
-      "status": "visible",
-      "test": "test:website-controls-browser",
-      "tag": "a",
-      "type": "",
-      "width": 30,
-      "height": 30
-    },
-    {
-      "application": "Website",
-      "screen": "/website/live/",
-      "control": "Zoom out",
-      "purpose": "navigation",
-      "destination": "#",
-      "permissions": "public",
-      "status": "visible",
-      "test": "test:website-controls-browser",
-      "tag": "a",
-      "type": "",
-      "width": 30,
-      "height": 30
-    },
-    {
-      "application": "Website",
-      "screen": "/website/live/",
-      "control": "A JavaScript library for interactive maps",
-      "purpose": "navigation",
-      "destination": "https://leafletjs.com",
-      "permissions": "public",
-      "status": "visible",
-      "test": "test:website-controls-browser",
-      "tag": "a",
-      "type": "",
-      "width": 66,
-      "height": 21
     },
     {
       "application": "Website",
@@ -7303,7 +7289,7 @@
       "tag": "a",
       "type": "",
       "width": 140,
-      "height": 50
+      "height": 48
     },
     {
       "application": "Website",
@@ -7317,7 +7303,7 @@
       "tag": "a",
       "type": "",
       "width": 145,
-      "height": 50
+      "height": 48
     },
     {
       "application": "Website",
@@ -7331,7 +7317,7 @@
       "tag": "a",
       "type": "",
       "width": 174,
-      "height": 50
+      "height": 52
     },
     {
       "application": "Website",
@@ -8800,8 +8786,50 @@
       "test": "test:website-controls-browser",
       "tag": "select",
       "type": "",
-      "width": 78,
+      "width": 1,
       "height": 40
+    },
+    {
+      "application": "Website",
+      "screen": "/website/help/",
+      "control": "Language",
+      "purpose": "select-trigger",
+      "destination": "#website-select-menu-1",
+      "permissions": "public",
+      "status": "visible",
+      "test": "test:website-controls-browser",
+      "tag": "button",
+      "type": "button",
+      "width": 68,
+      "height": 40
+    },
+    {
+      "application": "Website",
+      "screen": "/website/help/",
+      "control": "EN✓",
+      "purpose": "select-option",
+      "destination": "website-select-menu-1-option-0",
+      "permissions": "public",
+      "status": "available-hidden",
+      "test": "test:website-controls-browser",
+      "tag": "button",
+      "type": "button",
+      "width": 0,
+      "height": 0
+    },
+    {
+      "application": "Website",
+      "screen": "/website/help/",
+      "control": "ES",
+      "purpose": "select-option",
+      "destination": "website-select-menu-1-option-1",
+      "permissions": "public",
+      "status": "available-hidden",
+      "test": "test:website-controls-browser",
+      "tag": "button",
+      "type": "button",
+      "width": 0,
+      "height": 0
     },
     {
       "application": "Website",
@@ -8856,6 +8884,48 @@
       "test": "test:website-controls-browser",
       "tag": "select",
       "type": "",
+      "width": 0,
+      "height": 0
+    },
+    {
+      "application": "Website",
+      "screen": "/website/help/",
+      "control": "Language",
+      "purpose": "select-trigger",
+      "destination": "#website-select-menu-2",
+      "permissions": "public",
+      "status": "available-hidden",
+      "test": "test:website-controls-browser",
+      "tag": "button",
+      "type": "button",
+      "width": 0,
+      "height": 0
+    },
+    {
+      "application": "Website",
+      "screen": "/website/help/",
+      "control": "EN✓",
+      "purpose": "select-option",
+      "destination": "website-select-menu-2-option-0",
+      "permissions": "public",
+      "status": "available-hidden",
+      "test": "test:website-controls-browser",
+      "tag": "button",
+      "type": "button",
+      "width": 0,
+      "height": 0
+    },
+    {
+      "application": "Website",
+      "screen": "/website/help/",
+      "control": "ES",
+      "purpose": "select-option",
+      "destination": "website-select-menu-2-option-1",
+      "permissions": "public",
+      "status": "available-hidden",
+      "test": "test:website-controls-browser",
+      "tag": "button",
+      "type": "button",
       "width": 0,
       "height": 0
     },
@@ -9123,7 +9193,7 @@
       "tag": "a",
       "type": "",
       "width": 140,
-      "height": 50
+      "height": 52
     },
     {
       "application": "Website",

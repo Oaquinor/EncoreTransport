@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-05T19:05:27.728Z",
+  "generated_at": "2026-11-05T19:43:17.804Z",
   "rows": [
     {
       "route": "/website/",
@@ -61,6 +61,14 @@
       "route": "/website/",
       "label": "Destination",
       "mechanism": "select-trigger",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/",
+      "label": "Choose date",
+      "mechanism": "date-picker",
       "type": "button",
       "id": "",
       "status": "verified-by-contract"
@@ -173,6 +181,14 @@
       "route": "/website/trips/",
       "label": "Destination",
       "mechanism": "select-trigger",
+      "type": "button",
+      "id": "",
+      "status": "verified-by-contract"
+    },
+    {
+      "route": "/website/trips/",
+      "label": "Choose date",
+      "mechanism": "date-picker",
       "type": "button",
       "id": "",
       "status": "verified-by-contract"

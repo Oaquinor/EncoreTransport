@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-05T19:05:27.726Z",
+  "generated_at": "2026-11-05T19:43:17.803Z",
   "source": "tests/website-controls-browser.test.mjs",
-  "inventory_rows": 678,
-  "action_rows": 63,
+  "inventory_rows": 683,
+  "action_rows": 65,
   "required_behaviors": [
     "navigation",
     "desktop-menu",
@@ -128,6 +128,17 @@
       "evidence": [
         "Visible button: Swap origin and destination",
         "Home planner exchanges a valid return route and preserves an unavailable reverse route safely"
+      ],
+      "screens": [
+        "/website/",
+        "/website/trips/"
+      ]
+    },
+    {
+      "mechanism": "date-picker",
+      "evidence": [
+        "Visible button: Choose date",
+        "Rounded calendar opens from the real date field, supports Escape and syncs a selected date"
       ],
       "screens": [
         "/website/",
