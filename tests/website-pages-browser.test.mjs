@@ -66,6 +66,30 @@ const assertHorizontalGeometry = async (name, width) => {
   assert.deepEqual(result.unusableControls, [], `${name} has visible controls without usable geometry at ${width}px`);
 };
 
+const assertTripSearchRow = async (width) => {
+  if (width < 1280) return;
+  const result = await page.evaluate(() => {
+    const form = document.querySelector('#bookingForm');
+    const controls = [...(form?.querySelectorAll('.booking-field, .public-swap, .public-search-button') ?? [])]
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right, width: rect.width };
+      });
+    const card = form?.getBoundingClientRect();
+    return {
+      controls,
+      card: card ? { left: card.left, right: card.right, bottom: card.bottom } : null,
+      cardScrollWidth: form?.scrollWidth ?? 0,
+      cardClientWidth: form?.clientWidth ?? 0,
+    };
+  });
+  assert.equal(result.controls.length, 6, 'trip search must expose six aligned controls');
+  const centers = result.controls.map(({ top, bottom }) => (top + bottom) / 2);
+  assert.ok(Math.max(...centers) - Math.min(...centers) <= 2, `trip controls must share one vertically aligned desktop row at ${width}px`);
+  assert.ok(result.card && result.controls.every(({ left, right }) => left >= result.card.left - 1 && right <= result.card.right + 1), `trip controls must stay inside the card at ${width}px`);
+  assert.ok(result.cardScrollWidth <= result.cardClientWidth + 1, `trip form must not overflow horizontally at ${width}px`);
+};
+
 for (const width of [320, 360, 375, 390, 414, 768, 1024, 1280, 1440, 1920]) {
   await page.setViewportSize({ width, height: 900 });
   for (const [name, pathname] of pages) {
@@ -74,6 +98,7 @@ for (const width of [320, 360, 375, 390, 414, 768, 1024, 1280, 1440, 1920]) {
     await page.waitForTimeout(75);
     assert.ok(await page.title(), `${name} must have a title`);
     await assertHorizontalGeometry(name, width);
+    if (name === 'trips') await assertTripSearchRow(width);
     const primaryShell = page.locator('main > .shell').first();
     if (await primaryShell.count()) {
       const shellBox = await primaryShell.boundingBox();

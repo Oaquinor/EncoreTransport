@@ -148,9 +148,9 @@ function populateSegmentSelectors(routes) {
     `<option value="">${label}</option>`,
     ...values.map((value) => `<option value="${esc(value)}">${esc(value)}</option>`),
   ].join('');
-  originSelect.innerHTML = renderOptions(origins, text('Choose a departure point', 'Elige el punto de salida'));
+  originSelect.innerHTML = renderOptions(origins, text('Select origin', 'Selecciona el origen'));
   const destinations = [...new Set(publishedSegments.map((segment) => segment.destination))].sort();
-  destinationSelect.innerHTML = renderOptions(destinations, text('Choose a destination', 'Elige el destino'));
+  destinationSelect.innerHTML = renderOptions(destinations, text('Select destination', 'Selecciona el destino'));
   originSelect.disabled = origins.length === 0;
   destinationSelect.disabled = destinations.length === 0;
 
@@ -176,7 +176,7 @@ function filterDestinationSelector(origin) {
     .map((segment) => segment.destination))].sort();
   const selected = destinationSelect.value;
   destinationSelect.innerHTML = [
-    `<option value="">${text('Choose a destination', 'Elige el destino')}</option>`,
+    `<option value="">${text('Select destination', 'Selecciona el destino')}</option>`,
     ...destinations.map((value) => `<option value="${esc(value)}">${esc(value)}</option>`),
   ].join('');
   if (destinations.includes(selected)) destinationSelect.value = selected;
@@ -915,7 +915,7 @@ bookingForm?.addEventListener('submit', (event) => {
     submit.disabled = true;
     submit.setAttribute('aria-busy', 'true');
     const actionLabel = submit.querySelector('[data-action-label]');
-    if (actionLabel) actionLabel.textContent = text('Opening departures…', 'Abriendo salidas…');
+    if (actionLabel) actionLabel.textContent = text('Searching…', 'Buscando…');
   }
   rememberSearch({ origin, destination, date, passengers });
 
@@ -967,7 +967,11 @@ recentSearches?.addEventListener('click', (event) => {
     if (origin) origin.value = saved.origin;
     filterDestinationSelector(saved.origin);
     if (destination) destination.value = saved.destination;
-    if (date && saved.date) date.value = saved.date;
+    if (date && saved.date) {
+      date.value = saved.date;
+      date.dispatchEvent(new Event('input', { bubbles: true }));
+      date.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     if (passengers && saved.passengers) passengers.value = saved.passengers;
     setText('#searchMessage', text('Search restored. Review the details and find your departure.', 'Búsqueda recuperada. Revisa los datos y encuentra tu salida.'));
   } catch {}

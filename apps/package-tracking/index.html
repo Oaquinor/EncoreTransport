@@ -46,18 +46,20 @@
 
     <section class="premium-tracking-panel" aria-label="Track a package">
       <form id="trackForm" class="premium-tracking-form">
-        <label>
-          <span>Tracking number</span>
-          <input
-            name="token"
-            autocomplete="off"
-            required
-            inputmode="text"
-            aria-describedby="trackingHelp"
-            placeholder="Enter your tracking number">
-        </label>
-
-        <small id="trackingHelp">Use the number shown on your package receipt or confirmation.</small>
+        <div class="tracking-form__field">
+          <label for="trackingToken">
+            <span>Tracking number</span>
+            <input
+              id="trackingToken"
+              name="token"
+              autocomplete="off"
+              required
+              inputmode="text"
+              aria-describedby="trackingHelp"
+              placeholder="Enter your tracking number">
+          </label>
+          <small id="trackingHelp">Use the number shown on your package receipt or confirmation.</small>
+        </div>
 
         <button type="submit" class="button button--primary button--with-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>Track package</span></button>
       </form>

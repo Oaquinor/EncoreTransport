@@ -1,6 +1,7 @@
 import {
   FormEvent,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -764,6 +765,7 @@ function Home({
       <form className="search-console" onSubmit={submit}>
         <PointField
           label="From"
+          name="origin"
           value={filters.origin}
           options={[...new Set(routes.flatMap((route) => route.stops?.length ? route.stops.map((stop) => stop.name) : [route.origin]))]}
           onChange={(value) => setFilters({ ...filters, origin: value })}
@@ -784,6 +786,7 @@ function Home({
 
         <PointField
           label="To"
+          name="destination"
           value={filters.destination}
           options={[...new Set(routes.filter((route) => !filters.origin || route.stops?.some((stop) => stop.name === filters.origin) || route.origin === filters.origin).flatMap((route) => {
             if (route.segments?.length && filters.origin) return route.segments.filter((segment) => segment.origin === filters.origin && segment.active !== false).map((segment) => segment.destination);
@@ -798,6 +801,7 @@ function Home({
 
         <Field
           label="Date"
+          name="date"
           value={filters.date}
           type="date"
           onChange={(value) => setFilters({ ...filters, date: value })}
@@ -805,6 +809,7 @@ function Home({
 
         <Field
           label="Passengers"
+          name="passengers"
           value={String(filters.passengers)}
           type="number"
           onChange={(value) => setFilters({
@@ -823,42 +828,173 @@ function Home({
 
 function PointField({
   label,
+  name,
   value,
   options,
   onChange,
 }: {
   label: string;
+  name?: string;
   value: string;
   options: string[];
   onChange: (value: string) => void;
 }) {
+  const fieldId = useId().replace(/:/g, '');
+  const labelId = `${fieldId}-label`;
+  const menuId = `${fieldId}-options`;
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const [open, setOpen] = useState(false);
+  const optionValues = useMemo(() => ['', ...options.filter((point) => point)], [options]);
+  const selectedIndex = Math.max(0, optionValues.indexOf(value));
+  const [activeIndex, setActiveIndex] = useState(selectedIndex);
+
+  useEffect(() => {
+    setActiveIndex(selectedIndex);
+  }, [selectedIndex]);
+
+  useEffect(() => {
+    if (!open) return;
+    optionRefs.current[activeIndex]?.focus();
+    const onPointerDown = (event: PointerEvent) => {
+      if (!fieldRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [activeIndex, open]);
+
+  useEffect(() => {
+    if (open) optionRefs.current[activeIndex]?.focus();
+  }, [activeIndex, open]);
+
+  const closeWithFocus = () => {
+    setOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  const commit = (nextValue: string) => {
+    onChange(nextValue);
+    closeWithFocus();
+  };
+
+  const moveActive = (direction: number) => {
+    setActiveIndex((current) => (current + direction + optionValues.length) % optionValues.length);
+  };
+
   return (
-    <label>
-      <span>{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)} required>
-        <option value="">Select point</option>
-        {options.map((point) => <option key={point} value={point}>{point}</option>)}
+    <div ref={fieldRef} className={`search-console__field passenger-select-field${open ? ' is-open' : ''}`}>
+      <span id={labelId}>{label}</span>
+      <select
+        className="passenger-select__native"
+        name={name}
+        value={value}
+        aria-hidden="true"
+        tabIndex={-1}
+        onChange={(event) => onChange(event.target.value)}
+        required
+      >
+        {optionValues.map((point) => <option key={point || 'empty'} value={point}>{point || 'Select point'}</option>)}
       </select>
-    </label>
+      <button
+        ref={triggerRef}
+        type="button"
+        className="passenger-select__trigger"
+        role="combobox"
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-controls={menuId}
+        aria-labelledby={labelId}
+        onClick={() => setOpen((current) => !current)}
+        onKeyDown={(event) => {
+          if (['Enter', ' ', 'ArrowDown', 'ArrowUp'].includes(event.key)) {
+            event.preventDefault();
+            if (!open) {
+              setActiveIndex(selectedIndex);
+              setOpen(true);
+            } else if (event.key === 'ArrowDown') moveActive(1);
+            else if (event.key === 'ArrowUp') moveActive(-1);
+            else commit(optionValues[activeIndex] ?? '');
+          } else if (event.key === 'Home' || event.key === 'End') {
+            event.preventDefault();
+            setActiveIndex(event.key === 'Home' ? 0 : optionValues.length - 1);
+            setOpen(true);
+          } else if (event.key === 'Escape' && open) {
+            event.preventDefault();
+            closeWithFocus();
+          }
+        }}
+      >
+        <span className="passenger-select__value">{value || 'Select point'}</span>
+        <i className="passenger-select__chevron" aria-hidden="true" />
+      </button>
+      {open && (
+        <div id={menuId} className="passenger-select__menu" role="listbox" aria-labelledby={labelId}>
+          {optionValues.map((point, index) => (
+            <button
+              key={point || 'empty'}
+              ref={(element) => { optionRefs.current[index] = element; }}
+              type="button"
+              className="passenger-select__option"
+              role="option"
+              aria-selected={point === value}
+              onClick={() => commit(point)}
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                  event.preventDefault();
+                  moveActive(event.key === 'ArrowDown' ? 1 : -1);
+                } else if (event.key === 'Home' || event.key === 'End') {
+                  event.preventDefault();
+                  setActiveIndex(event.key === 'Home' ? 0 : optionValues.length - 1);
+                } else if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  commit(point);
+                } else if (event.key === 'Escape') {
+                  event.preventDefault();
+                  closeWithFocus();
+                }
+              }}
+            >
+              <span>{point || 'Select point'}</span>
+              {point === value && <b aria-hidden="true">✓</b>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
 function Field({
   label,
+  name,
   value,
   type = 'text',
   onChange,
 }: {
   label: string;
+  name?: string;
   value: string;
   type?: string;
   onChange?: (value: string) => void;
 }) {
   return (
-    <label>
+    <label className="search-console__field">
       <span>{label}</span>
       <input
         type={type}
+        name={name}
         value={value}
         onChange={(event) => onChange?.(event.target.value)}
       />

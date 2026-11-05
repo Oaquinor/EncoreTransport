@@ -96,6 +96,9 @@ try {
         const mechanism = element.matches('[data-menu-button]') ? 'desktop-menu'
           : element.matches('[data-mobile-menu-button]') ? 'mobile-menu-group'
             : element.matches('#mobileMenuToggle') ? 'mobile-menu'
+              : element.matches('.website-select__trigger') ? 'select-trigger'
+                : element.matches('.website-select__option') ? 'select-option'
+              : element.matches('.website-date-picker__trigger') ? 'date-picker'
               : element.matches('.swap') ? 'route-swap'
                 : element.matches('form button[type="submit"]') ? `form:${element.closest('form')?.id || 'unnamed'}`
                   : element.matches('[data-package-step]') ? 'package-step'
@@ -136,6 +139,9 @@ try {
       .map((element) => {
         const mechanism = element.matches('[data-menu-button]') ? 'desktop-menu'
           : element.matches('#mobileMenuToggle') ? 'mobile-menu'
+            : element.matches('.website-select__trigger') ? 'select-trigger'
+              : element.matches('.website-select__option') ? 'select-option'
+              : element.matches('.website-date-picker__trigger') ? 'date-picker'
             : element.matches('.swap') ? 'route-swap'
               : element.matches('form button[type="submit"]') ? `form:${element.closest('form')?.id || 'unnamed'}`
                 : element.matches('[data-package-step]') ? 'package-step'
@@ -165,6 +171,36 @@ try {
 
   await page.goto(`${origin}/website/?lang=en`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => Boolean(document.querySelector('[name="origin"] option[value="Georgetown"]')));
+  await page.waitForFunction(() => {
+    const select = document.querySelector('#bookingForm [name="origin"]');
+    return Boolean(select && !select.disabled && select.options.length === 4);
+  });
+
+  const originTrigger = page.locator('#bookingForm .website-select__trigger').first();
+  await originTrigger.waitFor({ state: 'visible' });
+  await originTrigger.click();
+  const originMenu = page.locator('#bookingForm .website-select__menu[aria-hidden="false"]');
+  await originMenu.getByRole('option').first().waitFor({ state: 'visible' });
+  assert.equal(await originMenu.getByRole('option').count(), 4, 'origin combo must render its real options in the custom menu');
+  const menuVisuals = await originMenu.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { borderRadius: style.borderRadius, boxShadow: style.boxShadow, maxHeight: style.maxHeight };
+  });
+  assert.notEqual(menuVisuals.borderRadius, '0px', 'custom combo menu must keep rounded corners');
+  assert.notEqual(menuVisuals.boxShadow, 'none', 'custom combo menu must keep a professional shadow');
+  assert.notEqual(menuVisuals.maxHeight, 'none', 'custom combo menu must keep a bounded scroll area');
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+  assert.equal(await page.locator('[name="origin"]').inputValue(), 'Georgetown', 'keyboard option selection must sync the native form control');
+  assert.match(await originTrigger.textContent(), /Georgetown/, 'custom trigger must reflect the selected value');
+  await originTrigger.click();
+  await page.keyboard.press('Escape');
+  assert.equal(await originTrigger.getAttribute('aria-expanded'), 'false', 'Escape must close the custom combo');
+  await originTrigger.click();
+  await originMenu.getByRole('option', { name: 'Linden', exact: true }).click();
+  assert.equal(await page.locator('[name="origin"]').inputValue(), 'Linden', 'mouse option selection must sync the native form control');
+  recordBehavior('select-combo', 'Custom combo opens with rounded menu, supports keyboard/mouse selection and Escape, and syncs the native form control', '/website/');
+
   await page.locator('[name="origin"]').selectOption('Georgetown');
   await page.waitForFunction(() => Boolean(document.querySelector('[name="destination"] option[value="New Amsterdam"]')));
   await page.locator('[name="destination"]').selectOption('New Amsterdam');
@@ -178,8 +214,27 @@ try {
   assert.equal(await page.locator('[name="destination"]').inputValue(), 'Georgetown', 'swap must preserve destination when no reverse route exists');
   assert.match(await page.locator('#searchMessage').textContent(), /return route/i, 'swap must explain why an unavailable reverse route was not applied');
   recordBehavior('route-swap', 'Home planner exchanges a valid return route and preserves an unavailable reverse route safely', '/website/');
-  assert.equal(await page.getByLabel('Date').count(), 1, 'home date input must expose a stable accessible name');
+  assert.equal(await page.locator('#bookingForm input[name="date"]').count(), 1, 'home date input must remain the single real form field');
+  assert.equal(await page.locator('#bookingForm .website-date-picker__trigger').count(), 1, 'home date picker must expose one visible trigger');
   assert.equal(await page.getByLabel('Passengers').count(), 1, 'home passenger input must expose a stable accessible name');
+  const dateTrigger = page.locator('#bookingForm .website-date-picker__trigger');
+  await dateTrigger.click();
+  const datePopover = page.locator('.website-date-picker__popover[aria-hidden="false"]');
+  await datePopover.waitFor({ state: 'visible' });
+  await page.screenshot({ path: 'artifacts/visual/website-home-date-picker-1440.png', fullPage: false });
+  assert.ok(await datePopover.locator('.website-date-picker__day').count() >= 28, 'calendar must render a real month grid');
+  const dateVisuals = await datePopover.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { borderRadius: style.borderRadius, boxShadow: style.boxShadow };
+  });
+  assert.notEqual(dateVisuals.borderRadius, '0px', 'date calendar must keep rounded corners');
+  assert.notEqual(dateVisuals.boxShadow, 'none', 'date calendar must keep a professional shadow');
+  await page.keyboard.press('Escape');
+  assert.equal(await dateTrigger.getAttribute('aria-expanded'), 'false', 'Escape must close the date calendar');
+  await dateTrigger.click();
+  await datePopover.locator('.website-date-picker__day:not(:disabled)').first().click();
+  assert.match(await page.locator('[name="date"]').inputValue(), /^\d{4}-\d{2}-\d{2}$/, 'calendar selection must sync the real date input');
+  recordBehavior('date-picker', 'Rounded calendar opens from the real date field, supports Escape and syncs a selected date', '/website/');
 
   await page.locator('#desktopLocale').selectOption('es');
   await page.waitForURL(/lang=es/);
@@ -301,7 +356,7 @@ try {
   assert.equal(tripSearchUrl.searchParams.get('destination'), 'New Amsterdam', 'Trips search must preserve destination');
   assert.equal(tripSearchUrl.searchParams.get('passengers'), '2', 'Trips search must preserve passenger count');
   assert.equal(tripSearchUrl.searchParams.get('date'), '2027-01-08', 'Trips search must preserve date');
-  buttonMatrix.push({ route: '/website/trips/', label: 'Continue to results', mechanism: 'form:bookingForm', type: 'submit', id: '', status: 'verified-by-click' });
+  buttonMatrix.push({ route: '/website/trips/', label: 'Search', mechanism: 'form:bookingForm', type: 'submit', id: '', status: 'verified-by-click' });
   recordBehavior('form-submit', 'Home and Trips booking forms transfer all search parameters to Passenger', '/website/trips/');
 
   await page.setViewportSize({ width: 1440, height: 900 });
