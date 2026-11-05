@@ -207,5 +207,5 @@ jobs:
               systemctl reload nginx
           fi
 
-          "$root/current/deploy/scripts/healthcheck.sh" "https://$PRODUCTION_DOMAIN"
+          bash "$root/current/deploy/scripts/healthcheck.sh" "https://$PRODUCTION_DOMAIN"
           REMOTE
