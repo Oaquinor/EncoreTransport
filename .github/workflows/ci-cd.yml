@@ -128,7 +128,6 @@ jobs:
     # A successful main push deploys by default. Set either variable to false to pause deployments.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED != 'false' && vars.TLS_READY != 'false'
     runs-on: ubuntu-latest
-    environment: production
     timeout-minutes: 30
     steps:
       - name: Configure SSH
