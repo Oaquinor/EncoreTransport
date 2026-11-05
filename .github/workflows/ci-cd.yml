@@ -157,7 +157,7 @@ jobs:
           test -n "$VPS_USER"
           test -n "$PRODUCTION_DOMAIN"
           ssh -o BatchMode=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" \
-            "GITHUB_SHA='$GITHUB_SHA' PRODUCTION_DOMAIN='$PRODUCTION_DOMAIN' PHP_FPM_SOCKET='$PHP_FPM_SOCKET' TLS_READY='$TLS_READY' AUTO_MIGRATE='$AUTO_MIGRATE' bash -s" <<'REMOTE'
+            "GITHUB_SHA='$GITHUB_SHA' PRODUCTION_DOMAIN='$PRODUCTION_DOMAIN' PHP_FPM_SOCKET='$PHP_FPM_SOCKET' PHP_FPM_SERVICE='$PHP_FPM_SERVICE' TLS_READY='$TLS_READY' AUTO_MIGRATE='$AUTO_MIGRATE' bash -s" <<'REMOTE'
           set -Eeuo pipefail
 
           root=/var/www/encoretransport
