@@ -125,7 +125,8 @@ jobs:
   deploy:
     name: Deploy to VPS
     needs: [frontend, backend]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true' && vars.TLS_READY == 'true'
+    # A successful main push deploys by default. Set either variable to false to pause deployments.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED != 'false' && vars.TLS_READY != 'false'
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 30
@@ -148,8 +149,8 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
           PRODUCTION_DOMAIN: ${{ secrets.PRODUCTION_DOMAIN }}
           PHP_FPM_SOCKET: ${{ vars.PHP_FPM_SOCKET || '/run/php/php8.3-fpm.sock' }}
-          TLS_READY: ${{ vars.TLS_READY }}
-          AUTO_MIGRATE: ${{ vars.AUTO_MIGRATE }}
+          TLS_READY: ${{ vars.TLS_READY || 'true' }}
+          AUTO_MIGRATE: ${{ vars.AUTO_MIGRATE || 'false' }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
           test -n "$VPS_HOST"
