@@ -170,6 +170,16 @@ class RouteController extends Controller
         }
 
         $this->assertUniqueStopNames($stops);
+        // The first and last stop are the canonical route terminals. Keep the
+        // denormalized route coordinates synchronized so every consumer that
+        // reads the route (website, Passenger, Driver and live tracking) sees
+        // the same locations as the editable stop map.
+        $route->forceFill([
+            'origin_latitude' => $stops[0]['latitude'] ?? null,
+            'origin_longitude' => $stops[0]['longitude'] ?? null,
+            'destination_latitude' => $stops[array_key_last($stops)]['latitude'] ?? null,
+            'destination_longitude' => $stops[array_key_last($stops)]['longitude'] ?? null,
+        ])->save();
         $segmentMap = $this->normalizeSegments($stops, $segmentData);
 
         if ($preserveSequence) {

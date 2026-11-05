@@ -77,8 +77,8 @@ class ClientPrioritiesTest extends TestCase
             'distance_km' => 105,
             'active' => true,
             'stops' => [
-                ['name' => 'Georgetown'],
-                ['name' => 'Linden'],
+                ['name' => 'Georgetown', 'latitude' => 6.8013, 'longitude' => -58.1551],
+                ['name' => 'Linden', 'latitude' => 6.0081, 'longitude' => -58.3071],
             ],
         ];
 
@@ -86,6 +86,8 @@ class ClientPrioritiesTest extends TestCase
             ->postJson('/api/v1/admin/routes', $payload)
             ->assertCreated()
             ->assertJsonPath('data.origin', 'Georgetown')
+            ->assertJsonPath('data.origin_coordinates.latitude', 6.8013)
+            ->assertJsonPath('data.destination_coordinates.longitude', -58.3071)
             ->assertJsonCount(2, 'data.stops');
 
         $routeId = $created->json('data.id');

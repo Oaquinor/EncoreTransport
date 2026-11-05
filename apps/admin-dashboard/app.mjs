@@ -10,6 +10,7 @@ import {
 } from '../../packages/shared/api.mjs';
 import {
   renderJourneyMapWithLoader,
+  renderEditableRouteMap,
   destroyRealMap,
 } from '../../packages/shared/real-map.mjs';
 import { modules } from './src/module-registry.mjs';
@@ -58,6 +59,7 @@ const state = {
   routeFormOpen: false,
   routeEditingId: null,
   routeEditor: null,
+  routeMapSearchResults: [],
   websiteContent: null,
   websiteMedia: [],
   cmsImageSection: 'hero',
@@ -195,6 +197,7 @@ function routeEditorFrom(route = null) {
   }));
 
   return {
+    selectedStop: 0,
     stops: stops.length >= 2 ? stops : [{ name: '', latitude: '', longitude: '', offset_minutes: 0 }, { name: '', latitude: '', longitude: '', offset_minutes: 0 }],
     segments: (route?.segments ?? []).map((segment) => ({
       origin: segment.origin ?? segment.origin_name ?? '',
@@ -292,15 +295,24 @@ function routeSegmentsMarkup(segments) {
 function routeEditorFields() {
   const editor = state.routeEditor ?? routeEditorFrom();
   const segments = routeSegmentRows(editor);
+  const selectedStop = Math.min(Number(editor.selectedStop ?? 0), Math.max(0, editor.stops.length - 1));
+  const stopOptions = editor.stops.map((stop, index) => `<option value="${index}" ${index === selectedStop ? 'selected' : ''}>${index + 1}. ${esc(stop.name || 'Unnamed stop')}</option>`).join('');
   return `
     <div class="route-editor" id="routeEditor">
       <div class="route-editor__heading"><strong>Stops</strong><span>First stop is the origin and last stop is the destination.</span></div>
+      <section class="route-location-editor" aria-labelledby="routeLocationTitle">
+        <div class="route-location-editor__heading"><div><strong id="routeLocationTitle">Set locations on the map</strong><span>Search a real place or drag a marker. Coordinates stay synchronized with this route and every consumer.</span></div><label><span>Stop to position</span><select id="routeMapStopSelect">${stopOptions}</select></label></div>
+        <form class="route-location-search" id="routeMapSearchForm"><label><span>Search map</span><input id="routeMapSearch" type="search" autocomplete="off" placeholder="Search terminal, street or city" maxlength="250" /></label><button type="submit" class="button button--primary button--with-icon">${icon('search')}Search place</button></form>
+        <div id="routeMapSearchResults" class="route-map-search-results" aria-live="polite"></div>
+        <div id="routeLocationMap" class="route-location-map" role="application" aria-label="Route location editor"></div>
+        <small class="route-location-editor__help">Drag a numbered marker to refine it, or click anywhere on the map to place the selected stop. The selected coordinates are saved with the route.</small>
+      </section>
       <div class="route-editor__stops">
         ${editor.stops.map((stop, index) => `<div class="route-stop-row" data-stop-row="${index}">
           <span class="route-stop-index">${index + 1}</span>
           <input data-stop-field="name" aria-label="Stop ${index + 1} name" value="${esc(stop.name)}" placeholder="Stop name" required />
-          <input data-stop-field="latitude" aria-label="Stop ${index + 1} latitude" type="number" step="any" value="${esc(stop.latitude)}" placeholder="Latitude" />
-          <input data-stop-field="longitude" aria-label="Stop ${index + 1} longitude" type="number" step="any" value="${esc(stop.longitude)}" placeholder="Longitude" />
+          <input data-stop-field="latitude" class="route-coordinate-field" aria-label="Stop ${index + 1} latitude" type="number" step="any" value="${esc(stop.latitude)}" placeholder="Latitude · set on map" readonly title="Use map search, click or drag to set the latitude" />
+          <input data-stop-field="longitude" class="route-coordinate-field" aria-label="Stop ${index + 1} longitude" type="number" step="any" value="${esc(stop.longitude)}" placeholder="Longitude · set on map" readonly title="Use map search, click or drag to set the longitude" />
           <input data-stop-field="offset_minutes" aria-label="Stop ${index + 1} offset" type="number" min="0" value="${esc(stop.offset_minutes)}" placeholder="Minutes" />
           <button type="button" class="button button--icon" data-stop-up="${index}" ${index === 0 ? 'disabled' : ''} aria-label="Move stop up">↑</button>
           <button type="button" class="button button--icon" data-stop-down="${index}" ${index === editor.stops.length - 1 ? 'disabled' : ''} aria-label="Move stop down">↓</button>
@@ -338,6 +350,8 @@ function syncRouteEditorPayload() {
 function refreshRouteEditor() {
   const editor = document.querySelector('#routeEditor');
   if (!editor) return;
+  const map = document.querySelector('#routeLocationMap');
+  if (map) destroyRealMap(map);
   editor.outerHTML = routeEditorFields();
   syncRouteEditorPayload();
   bindRouteEditor();
@@ -350,6 +364,89 @@ function refreshRouteSegments() {
   syncRouteEditorPayload();
 }
 
+function syncRouteStopInputs(index) {
+  const stop = state.routeEditor?.stops?.[index];
+  const row = document.querySelector(`[data-stop-row="${index}"]`);
+  if (!stop || !row) return;
+  row.querySelector('[data-stop-field="name"]').value = stop.name ?? '';
+  row.querySelector('[data-stop-field="latitude"]').value = stop.latitude ?? '';
+  row.querySelector('[data-stop-field="longitude"]').value = stop.longitude ?? '';
+  if (index === 0) document.querySelector('#routeForm [name="origin"]').value = stop.name ?? '';
+  if (index === state.routeEditor.stops.length - 1) document.querySelector('#routeForm [name="destination"]').value = stop.name ?? '';
+}
+
+function syncRouteStopCoordinate(index, point) {
+  const stop = state.routeEditor?.stops?.[index];
+  if (!stop) return;
+  stop.latitude = Number(point.latitude).toFixed(7);
+  stop.longitude = Number(point.longitude).toFixed(7);
+  syncRouteStopInputs(index);
+  syncRouteEditorPayload();
+}
+
+async function refreshRouteLocationMap() {
+  const container = document.querySelector('#routeLocationMap');
+  if (!container || !state.routeEditor) return;
+  try {
+    await renderEditableRouteMap(container, state.routeEditor.stops, {
+      selectedStop: Number(state.routeEditor.selectedStop ?? 0),
+      onSelectStop: (index) => {
+        state.routeEditor.selectedStop = index;
+        const select = document.querySelector('#routeMapStopSelect');
+        if (select) select.value = String(index);
+      },
+      onPointChange: async (index, point) => {
+        syncRouteStopCoordinate(index, point);
+        const stop = state.routeEditor?.stops?.[index];
+        if (!stop || String(stop.name ?? '').trim()) return;
+        try {
+          const place = await api.reverseGeocode(point);
+          if (place?.name && state.routeEditor?.stops?.[index] === stop) {
+            stop.name = place.name;
+            syncRouteStopInputs(index);
+            refreshRouteSegments();
+            syncRouteEditorPayload();
+          }
+        } catch {
+          // Coordinates remain authoritative even when reverse geocoding is unavailable.
+        }
+      },
+      onMapClick: (index, point) => syncRouteStopCoordinate(index, point),
+    });
+  } catch (error) {
+    const message = document.querySelector('#routeMessage');
+    if (message) message.textContent = `Map could not load: ${error.message}`;
+  }
+}
+
+function renderRouteMapSearchResults(results) {
+  const container = document.querySelector('#routeMapSearchResults');
+  if (!container) return;
+  if (!results.length) {
+    container.innerHTML = '<p class="route-map-search-empty">No places found. Try a more specific terminal, street or city.</p>';
+    return;
+  }
+  container.innerHTML = results.map((result, index) => `<button type="button" class="route-map-search-result" data-route-map-result="${index}"><strong>${esc(result.name)}</strong><small>${esc(result.address ?? '')}</small><span>${Number(result.latitude).toFixed(5)}, ${Number(result.longitude).toFixed(5)}</span></button>`).join('');
+  container.querySelectorAll('[data-route-map-result]').forEach((button) => button.addEventListener('click', () => {
+    const result = state.routeMapSearchResults[Number(button.dataset.routeMapResult)];
+    const index = Number(document.querySelector('#routeMapStopSelect')?.value ?? state.routeEditor?.selectedStop ?? 0);
+    if (!result || !state.routeEditor?.stops?.[index]) return;
+    state.routeEditor.selectedStop = index;
+    state.routeEditor.stops[index] = {
+      ...state.routeEditor.stops[index],
+      name: result.name,
+      latitude: Number(result.latitude).toFixed(7),
+      longitude: Number(result.longitude).toFixed(7),
+    };
+    syncRouteStopInputs(index);
+    refreshRouteSegments();
+    syncRouteEditorPayload();
+    state.routeMapSearchResults = [];
+    renderRouteMapSearchResults([]);
+    refreshRouteLocationMap();
+  }));
+}
+
 function bindRouteEditor() {
   const editor = document.querySelector('#routeEditor');
   if (!editor || !state.routeEditor) return;
@@ -359,7 +456,14 @@ function bindRouteEditor() {
     const segmentRow = event.target.closest('[data-segment-row]');
     if (stopRow) {
       state.routeEditor.stops[Number(stopRow.dataset.stopRow)][event.target.dataset.stopField] = event.target.type === 'number' ? event.target.value : event.target.value;
-      if (event.target.dataset.stopField === 'name') refreshRouteSegments();
+      if (event.target.dataset.stopField === 'name') {
+        const index = Number(stopRow.dataset.stopRow);
+        if (index === 0) document.querySelector('#routeForm [name="origin"]').value = event.target.value;
+        if (index === state.routeEditor.stops.length - 1) document.querySelector('#routeForm [name="destination"]').value = event.target.value;
+        const option = document.querySelector(`#routeMapStopSelect option[value="${index}"]`);
+        if (option) option.textContent = `${index + 1}. ${event.target.value || 'Unnamed stop'}`;
+        refreshRouteSegments();
+      }
     }
     if (segmentRow) state.routeEditor.segments[Number(segmentRow.dataset.segmentRow)][event.target.dataset.segmentField] = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
     syncRouteEditorPayload();
@@ -382,6 +486,28 @@ function bindRouteEditor() {
     [state.routeEditor.stops[index], state.routeEditor.stops[index + 1]] = [state.routeEditor.stops[index + 1], state.routeEditor.stops[index]];
     refreshRouteEditor();
   }));
+  editor.querySelector('#routeMapStopSelect')?.addEventListener('change', (event) => {
+    state.routeEditor.selectedStop = Number(event.currentTarget.value || 0);
+    refreshRouteLocationMap();
+  });
+  editor.querySelector('#routeMapSearchForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const input = document.querySelector('#routeMapSearch');
+    const results = document.querySelector('#routeMapSearchResults');
+    const query = String(input?.value ?? '').trim();
+    if (!query) {
+      if (results) results.innerHTML = '<p class="route-map-search-empty">Enter a place to search.</p>';
+      return;
+    }
+    if (results) results.innerHTML = '<p class="route-map-search-empty">Searching the configured map provider…</p>';
+    try {
+      state.routeMapSearchResults = await api.mapSearch(query);
+      renderRouteMapSearchResults(state.routeMapSearchResults);
+    } catch (error) {
+      if (results) results.innerHTML = `<p class="route-map-search-empty">Map search unavailable: ${esc(error.message)}</p>`;
+    }
+  });
+  void refreshRouteLocationMap();
 }
 
 function redirectLogin() {
@@ -524,9 +650,9 @@ function initialsForUser(user = {}) {
 
 function profileDialogMarkup() {
   const draft = state.profilePhotoDraftUrl;
-  if (state.profileDialog === 'photo') return `<dialog class="profile-dialog" open aria-labelledby="photoDialogTitle"><form method="dialog" class="profile-dialog__panel" id="profilePhotoDialog"><div class="eyebrow">Profile photo</div><div class="profile-dialog__heading"><h3 id="photoDialogTitle">Change profile photo</h3><button type="submit" class="button button--icon" value="cancel" aria-label="Close">${icon('close')}</button></div><div class="photo-dialog-grid"><div class="photo-dialog-preview" style="--photo-zoom:${state.profilePhotoZoom}">${draft ? `<img src="${esc(draft)}" alt="Selected profile preview" />` : `<span>${icon('user')}</span>`}</div><label class="photo-dropzone"><input id="profilePhotoDialogInput" type="file" accept="image/jpeg,image/png,image/webp" /><span>${icon('view')}Choose a photo</span><small>JPG, PNG or WebP · maximum 5 MB</small></label></div><label class="photo-zoom"><span>Adjust framing</span><input id="profilePhotoZoom" type="range" min="1" max="2" step="0.05" value="${state.profilePhotoZoom}" ${draft ? '' : 'disabled'} /></label><div class="profile-dialog__actions"><button type="submit" class="button button--ghost" value="cancel">Cancel</button><button class="button button--primary" id="applyProfilePhoto" type="button" ${draft ? '' : 'disabled'}>${icon('save')}Save photo</button></div><p id="profilePhotoDialogMessage" class="profile-dialog__message" aria-live="polite"></p></form></dialog>`;
-  if (state.profileDialog === 'delete') return `<dialog class="profile-dialog profile-dialog--danger" open aria-labelledby="deleteDialogTitle"><form method="dialog" class="profile-dialog__panel" id="deleteProfileDialog"><div class="profile-danger-icon">${icon('close')}</div><div class="profile-dialog__heading"><h3 id="deleteDialogTitle">Delete account?</h3><button type="submit" class="button button--icon" value="cancel" aria-label="Close">${icon('close')}</button></div><p>This action cannot be undone. Historical bookings will be preserved and personal data will be anonymized where required.</p><label><span>Type DELETE to confirm</span><input id="deleteConfirmation" autocomplete="off" placeholder="DELETE" /></label><div class="profile-dialog__actions"><button type="submit" class="button button--ghost" value="cancel">Cancel</button><button class="button button--danger" id="confirmDeleteProfile" type="button" disabled>Delete account</button></div><p id="deleteProfileMessage" class="profile-dialog__message" aria-live="polite"></p></form></dialog>`;
-  if (state.profileDialog === 'saved') return `<dialog class="profile-dialog profile-dialog--success" open aria-labelledby="savedDialogTitle"><form method="dialog" class="profile-dialog__panel"><div class="profile-success-icon">${icon('save')}</div><h3 id="savedDialogTitle">Profile updated</h3><p>Your information was saved successfully.</p><button type="submit" class="button button--primary" value="cancel">Done</button></form></dialog>`;
+  if (state.profileDialog === 'photo') return `<dialog class="profile-dialog" aria-labelledby="photoDialogTitle"><form method="dialog" class="profile-dialog__panel" id="profilePhotoDialog"><div class="eyebrow">Profile photo</div><div class="profile-dialog__heading"><h3 id="photoDialogTitle">Change profile photo</h3><button type="submit" class="button button--icon" value="cancel" aria-label="Close">${icon('close')}</button></div><div class="photo-dialog-grid"><div class="photo-dialog-preview" style="--photo-zoom:${state.profilePhotoZoom}">${draft ? `<img src="${esc(draft)}" alt="Selected profile preview" />` : `<span>${icon('user')}</span>`}</div><label class="photo-dropzone"><input id="profilePhotoDialogInput" type="file" accept="image/jpeg,image/png,image/webp" /><span>${icon('view')}Choose a photo</span><small>JPG, PNG or WebP · maximum 5 MB</small></label></div><label class="photo-zoom"><span>Adjust framing</span><input id="profilePhotoZoom" type="range" min="1" max="2" step="0.05" value="${state.profilePhotoZoom}" ${draft ? '' : 'disabled'} /></label><div class="profile-dialog__actions"><button type="submit" class="button button--ghost" value="cancel">Cancel</button><button class="button button--primary" id="applyProfilePhoto" type="button" ${draft ? '' : 'disabled'}>${icon('save')}Save photo</button></div><p id="profilePhotoDialogMessage" class="profile-dialog__message" aria-live="polite"></p></form></dialog>`;
+  if (state.profileDialog === 'delete') return `<dialog class="profile-dialog profile-dialog--danger" aria-labelledby="deleteDialogTitle"><form method="dialog" class="profile-dialog__panel" id="deleteProfileDialog"><div class="profile-danger-icon">${icon('close')}</div><div class="profile-dialog__heading"><h3 id="deleteDialogTitle">Delete account?</h3><button type="submit" class="button button--icon" value="cancel" aria-label="Close">${icon('close')}</button></div><p>This action cannot be undone. Historical bookings will be preserved and personal data will be anonymized where required.</p><label><span>Type DELETE to confirm</span><input id="deleteConfirmation" autocomplete="off" placeholder="DELETE" /></label><div class="profile-dialog__actions"><button type="submit" class="button button--ghost" value="cancel">Cancel</button><button class="button button--danger" id="confirmDeleteProfile" type="button" disabled>Delete account</button></div><p id="deleteProfileMessage" class="profile-dialog__message" aria-live="polite"></p></form></dialog>`;
+  if (state.profileDialog === 'saved') return `<dialog class="profile-dialog profile-dialog--success" aria-labelledby="savedDialogTitle"><form method="dialog" class="profile-dialog__panel"><div class="profile-success-icon">${icon('save')}</div><h3 id="savedDialogTitle">Profile updated</h3><p>Your information was saved successfully.</p><button type="submit" class="button button--primary" value="cancel">Done</button></form></dialog>`;
   return '';
 }
 
@@ -979,6 +1105,28 @@ function render() {
 
   wire();
 
+  const profileDialog = document.querySelector('.profile-dialog');
+  if (profileDialog && !profileDialog.open) {
+    profileDialog.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      state.profileDialog = '';
+      if (state.profilePhotoDraftUrl) URL.revokeObjectURL(state.profilePhotoDraftUrl);
+      state.profilePhotoDraftUrl = '';
+      state.profilePhotoDraftFile = null;
+      render();
+    }, { once: true });
+    profileDialog.addEventListener('click', (event) => {
+      if (event.target !== profileDialog) return;
+      profileDialog.close();
+      state.profileDialog = '';
+      if (state.profilePhotoDraftUrl) URL.revokeObjectURL(state.profilePhotoDraftUrl);
+      state.profilePhotoDraftUrl = '';
+      state.profilePhotoDraftFile = null;
+      render();
+    });
+    profileDialog.showModal();
+  }
+
   if (!state.accessDenied && !state.loading && !state.error) {
     void hydrateAdminMap();
   }
@@ -1205,7 +1353,6 @@ function wire() {
     state.profilePhotoDraftFile = null;
     state.profilePhotoZoom = 1;
     render();
-    document.querySelector('#profilePhotoDialog')?.showModal?.();
   }));
   document.querySelector('#profilePhotoDialogInput')?.addEventListener('change', (event) => {
     const file = event.currentTarget.files?.[0];
@@ -1711,16 +1858,34 @@ function wire() {
       state.routeFormOpen = false;
       state.routeEditingId = null;
       state.routeEditor = null;
+      state.routeMapSearchResults = [];
       render();
     } catch (error) {
       message.textContent = error.message;
     }
   });
 
+  routeForm?.querySelector('[name="origin"]')?.addEventListener('input', (event) => {
+    if (!state.routeEditor?.stops?.[0]) return;
+    state.routeEditor.stops[0].name = event.currentTarget.value;
+    syncRouteStopInputs(0);
+    refreshRouteSegments();
+    syncRouteEditorPayload();
+  });
+  routeForm?.querySelector('[name="destination"]')?.addEventListener('input', (event) => {
+    if (!state.routeEditor?.stops?.length) return;
+    const index = state.routeEditor.stops.length - 1;
+    state.routeEditor.stops[index].name = event.currentTarget.value;
+    syncRouteStopInputs(index);
+    refreshRouteSegments();
+    syncRouteEditorPayload();
+  });
+
   document.querySelector('#addRoute')?.addEventListener('click', () => {
     state.routeFormOpen = true;
     state.routeEditingId = null;
     state.routeEditor = routeEditorFrom();
+    state.routeMapSearchResults = [];
     render();
   });
 
@@ -1728,6 +1893,7 @@ function wire() {
     state.routeFormOpen = false;
     state.routeEditingId = null;
     state.routeEditor = null;
+    state.routeMapSearchResults = [];
     render();
   });
 
@@ -1738,6 +1904,7 @@ function wire() {
       state.routeFormOpen = true;
       state.routeEditingId = route.id;
       state.routeEditor = routeEditorFrom(route);
+      state.routeMapSearchResults = [];
       render();
       const form = document.querySelector('#routeForm');
       form.elements.id.value = route.id;

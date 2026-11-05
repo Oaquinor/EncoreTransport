@@ -23,7 +23,9 @@ class MapController extends Controller
         ]);
 
         return $this->call(fn () => [
-            'raw' => $this->maps->search($data['q'], ['limit' => $data['limit'] ?? 10]),
+            'results' => $this->normalizeSearchResults(
+                $this->maps->search($data['q'], ['limit' => $data['limit'] ?? 10])
+            ),
         ]);
     }
 
@@ -45,12 +47,10 @@ class MapController extends Controller
             'longitude' => ['required', 'numeric', 'between:-180,180'],
         ]);
 
-        return $this->call(fn () => [
-            'raw' => $this->maps->reverseGeocode(
-                (float) $data['latitude'],
-                (float) $data['longitude']
-            ),
-        ]);
+        return $this->call(fn () => $this->normalizeGeocode($this->maps->reverseGeocode(
+            (float) $data['latitude'],
+            (float) $data['longitude']
+        )));
     }
 
     public function route(Request $request)
@@ -197,6 +197,42 @@ class MapController extends Controller
             'latitude' => (float) $item['position']['lat'],
             'longitude' => (float) $item['position']['lon'],
         ];
+    }
+
+    private function normalizeSearchResults(array $payload): array
+    {
+        return collect($payload['results'] ?? [])
+            ->map(function (array $item): ?array {
+                $position = $item['position'] ?? [];
+                if (!isset($position['lat'], $position['lon'])) {
+                    return null;
+                }
+
+                $address = $item['address'] ?? [];
+                $poi = $item['poi'] ?? [];
+                $name = $poi['name']
+                    ?? $address['freeformAddress']
+                    ?? $address['municipality']
+                    ?? $address['country']
+                    ?? null;
+
+                if (!$name) {
+                    return null;
+                }
+
+                return [
+                    'id' => $item['id'] ?? null,
+                    'name' => $name,
+                    'address' => $address['freeformAddress'] ?? $name,
+                    'type' => $item['type'] ?? null,
+                    'score' => isset($item['score']) ? (float) $item['score'] : null,
+                    'latitude' => (float) $position['lat'],
+                    'longitude' => (float) $position['lon'],
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     private function normalizeRoute(array $payload): array
