@@ -172,6 +172,12 @@ jobs:
               git clone --depth 1 --branch main https://github.com/Oaquinor/EncoreTransport.git "$release"
           fi
           test -d "$release/.git"
+          # The release directory is named after the triggering SHA. Fetch and
+          # check out that exact object so a moving main branch can never cause
+          # a different commit to be published under this release name.
+          git -C "$release" fetch --depth 1 origin "$GITHUB_SHA"
+          git -C "$release" checkout --detach --force "$GITHUB_SHA"
+          test "$(git -C "$release" rev-parse HEAD)" = "$GITHUB_SHA"
           stage release-ready
           ln -sfn "$root/shared/laravel.env" "$release/backend/laravel/.env"
           rm -rf "$release/backend/laravel/storage"
