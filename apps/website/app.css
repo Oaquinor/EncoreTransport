@@ -835,7 +835,7 @@
 /* Compact planner geometry: route controls remain more generous than date
    and passenger controls, while every control shares the same baseline. */
 .public-booking .public-booking-card {
-  grid-template-columns: minmax(160px, 1.15fr) 40px minmax(190px, 1.35fr) minmax(118px, .9fr) minmax(78px, .55fr) minmax(150px, .9fr);
+  grid-template-columns: minmax(160px, 1.15fr) 40px minmax(190px, 1.35fr) minmax(118px, .9fr) minmax(78px, .55fr) minmax(180px, 1.05fr);
   gap: 9px;
   padding: 14px;
 }
@@ -878,9 +878,25 @@
   padding-inline: 12px;
 }
 
+/* Do not turn a translated action into an unexplained ellipsis. The action
+   column is deliberately given enough room for English and Spanish labels. */
+.public-booking .public-search-button [data-action-label],
+.site-page--trips .trip-search-card .public-search-button [data-action-label] {
+  flex: 0 0 auto;
+  min-width: max-content;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.public-booking .public-field .website-select__value.is-loading,
+.site-page--trips .trip-search-card .public-field .website-select__value.is-loading {
+  overflow: visible;
+  text-overflow: clip;
+}
+
 @media (min-width: 901px) and (max-width: 1100px) {
   .public-booking .public-booking-card {
-    grid-template-columns: minmax(140px, 1.15fr) 38px minmax(160px, 1.3fr) minmax(108px, .9fr) minmax(74px, .55fr) minmax(138px, .9fr);
+    grid-template-columns: minmax(140px, 1.15fr) 38px minmax(160px, 1.3fr) minmax(108px, .9fr) minmax(74px, .55fr) minmax(170px, 1fr);
     gap: 8px;
     padding: 12px;
   }

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-05T19:43:17.806Z",
+  "generated_at": "2026-11-05T19:49:31.174Z",
   "columns": [
     "Aplicación",
     "Pantalla",
@@ -722,7 +722,7 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "button",
-      "width": 170,
+      "width": 162,
       "height": 36
     },
     {
@@ -820,7 +820,7 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "button",
-      "width": 204,
+      "width": 194,
       "height": 36
     },
     {
@@ -876,7 +876,7 @@
       "test": "test:website-controls-browser",
       "tag": "input",
       "type": "date",
-      "width": 127,
+      "width": 121,
       "height": 36
     },
     {
@@ -890,7 +890,7 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "button",
-      "width": 127,
+      "width": 121,
       "height": 36
     },
     {
@@ -904,7 +904,7 @@
       "test": "test:website-controls-browser",
       "tag": "input",
       "type": "number",
-      "width": 68,
+      "width": 64,
       "height": 22
     },
     {
@@ -918,7 +918,7 @@
       "test": "test:website-controls-browser",
       "tag": "button",
       "type": "submit",
-      "width": 153,
+      "width": 180,
       "height": 58
     },
     {
@@ -6356,6 +6356,48 @@
     {
       "application": "Website",
       "screen": "/website/live/",
+      "control": "Zoom in",
+      "purpose": "navigation",
+      "destination": "#",
+      "permissions": "public",
+      "status": "visible",
+      "test": "test:website-controls-browser",
+      "tag": "a",
+      "type": "",
+      "width": 30,
+      "height": 30
+    },
+    {
+      "application": "Website",
+      "screen": "/website/live/",
+      "control": "Zoom out",
+      "purpose": "navigation",
+      "destination": "#",
+      "permissions": "public",
+      "status": "visible",
+      "test": "test:website-controls-browser",
+      "tag": "a",
+      "type": "",
+      "width": 30,
+      "height": 30
+    },
+    {
+      "application": "Website",
+      "screen": "/website/live/",
+      "control": "A JavaScript library for interactive maps",
+      "purpose": "navigation",
+      "destination": "https://leafletjs.com",
+      "permissions": "public",
+      "status": "visible",
+      "test": "test:website-controls-browser",
+      "tag": "a",
+      "type": "",
+      "width": 66,
+      "height": 21
+    },
+    {
+      "application": "Website",
+      "screen": "/website/live/",
       "control": "Track a parcel →",
       "purpose": "navigation",
       "destination": "/track-package/",
@@ -6882,50 +6924,8 @@
       "test": "test:website-controls-browser",
       "tag": "select",
       "type": "",
-      "width": 1,
+      "width": 78,
       "height": 40
-    },
-    {
-      "application": "Website",
-      "screen": "/website/about/",
-      "control": "Language",
-      "purpose": "select-trigger",
-      "destination": "#website-select-menu-1",
-      "permissions": "public",
-      "status": "visible",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 68,
-      "height": 40
-    },
-    {
-      "application": "Website",
-      "screen": "/website/about/",
-      "control": "EN✓",
-      "purpose": "select-option",
-      "destination": "website-select-menu-1-option-0",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 0,
-      "height": 0
-    },
-    {
-      "application": "Website",
-      "screen": "/website/about/",
-      "control": "ES",
-      "purpose": "select-option",
-      "destination": "website-select-menu-1-option-1",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 0,
-      "height": 0
     },
     {
       "application": "Website",
@@ -6980,48 +6980,6 @@
       "test": "test:website-controls-browser",
       "tag": "select",
       "type": "",
-      "width": 0,
-      "height": 0
-    },
-    {
-      "application": "Website",
-      "screen": "/website/about/",
-      "control": "Language",
-      "purpose": "select-trigger",
-      "destination": "#website-select-menu-2",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 0,
-      "height": 0
-    },
-    {
-      "application": "Website",
-      "screen": "/website/about/",
-      "control": "EN✓",
-      "purpose": "select-option",
-      "destination": "website-select-menu-2-option-0",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 0,
-      "height": 0
-    },
-    {
-      "application": "Website",
-      "screen": "/website/about/",
-      "control": "ES",
-      "purpose": "select-option",
-      "destination": "website-select-menu-2-option-1",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
       "width": 0,
       "height": 0
     },
@@ -7834,50 +7792,8 @@
       "test": "test:website-controls-browser",
       "tag": "select",
       "type": "",
-      "width": 1,
+      "width": 78,
       "height": 40
-    },
-    {
-      "application": "Website",
-      "screen": "/website/contact/",
-      "control": "Language",
-      "purpose": "select-trigger",
-      "destination": "#website-select-menu-1",
-      "permissions": "public",
-      "status": "visible",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 68,
-      "height": 40
-    },
-    {
-      "application": "Website",
-      "screen": "/website/contact/",
-      "control": "EN✓",
-      "purpose": "select-option",
-      "destination": "website-select-menu-1-option-0",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 0,
-      "height": 0
-    },
-    {
-      "application": "Website",
-      "screen": "/website/contact/",
-      "control": "ES",
-      "purpose": "select-option",
-      "destination": "website-select-menu-1-option-1",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 0,
-      "height": 0
     },
     {
       "application": "Website",
@@ -7932,48 +7848,6 @@
       "test": "test:website-controls-browser",
       "tag": "select",
       "type": "",
-      "width": 0,
-      "height": 0
-    },
-    {
-      "application": "Website",
-      "screen": "/website/contact/",
-      "control": "Language",
-      "purpose": "select-trigger",
-      "destination": "#website-select-menu-2",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 0,
-      "height": 0
-    },
-    {
-      "application": "Website",
-      "screen": "/website/contact/",
-      "control": "EN✓",
-      "purpose": "select-option",
-      "destination": "website-select-menu-2-option-0",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
-      "width": 0,
-      "height": 0
-    },
-    {
-      "application": "Website",
-      "screen": "/website/contact/",
-      "control": "ES",
-      "purpose": "select-option",
-      "destination": "website-select-menu-2-option-1",
-      "permissions": "public",
-      "status": "available-hidden",
-      "test": "test:website-controls-browser",
-      "tag": "button",
-      "type": "button",
       "width": 0,
       "height": 0
     },

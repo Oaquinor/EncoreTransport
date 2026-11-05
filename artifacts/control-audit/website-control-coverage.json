@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-11-05T19:43:17.803Z",
+  "generated_at": "2026-11-05T19:49:31.170Z",
   "source": "tests/website-controls-browser.test.mjs",
-  "inventory_rows": 683,
+  "inventory_rows": 674,
   "action_rows": 65,
   "required_behaviors": [
     "navigation",
