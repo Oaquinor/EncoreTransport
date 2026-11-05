@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Build Passenger before browser tests
+        run: npm run build:passenger --silent
+
       - name: Install browser runtime
         run: npx playwright install --with-deps chromium
 
@@ -51,9 +54,6 @@ jobs:
         run: |
           npm run typecheck:api-client --silent
           npm run typecheck:passenger --silent
-
-      - name: Build Passenger
-        run: npm run build:passenger --silent
 
   backend:
     name: Laravel tests
@@ -103,6 +103,11 @@ jobs:
       - name: Install Laravel dependencies
         working-directory: backend/laravel
         run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare Laravel runtime directories
+        working-directory: backend/laravel
+        run: |
+          mkdir -p storage/framework/cache storage/framework/sessions storage/framework/testing storage/framework/views storage/logs bootstrap/cache
 
       - name: Run Laravel feature and unit tests
         working-directory: backend/laravel
