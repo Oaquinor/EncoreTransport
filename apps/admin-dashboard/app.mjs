@@ -924,7 +924,7 @@ function content() {
 
   if (state.module === 'routes') {
     const selectedRoute = state.routes.find((route) => String(route.id) === String(state.routeEditingId));
-    const routeImage = state.routeFormOpen && state.routeEditingId ? `<label class="file-field"><span>Website card image</span><input name="route_image" id="routeImageInput" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG or WebP · maximum 5 MB</small></label><div class="route-image-preview" id="routeImagePreview">${selectedRoute?.image_url ? `<img src="${esc(publicAssetUrl(selectedRoute.image_url))}" alt="Current image for ${esc(selectedRoute.origin)} to ${esc(selectedRoute.destination)}" />` : '<span>Public route card graphic fallback</span>'}</div>${selectedRoute?.image_url ? '<button type="button" class="button button--ghost" id="removeRouteImage">Remove route image</button>' : ''}` : '';
+    const routeImage = state.routeFormOpen ? `<label class="file-field"><span>Website route photo</span><input name="route_image" id="routeImageInput" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG or WebP · maximum 5 MB · ${state.routeEditingId ? 'replaces the current photo' : 'uploaded after the route is created'}</small></label><div class="route-image-preview" id="routeImagePreview">${selectedRoute?.image_url ? `<img src="${esc(publicAssetUrl(selectedRoute.image_url))}" alt="Current image for ${esc(selectedRoute.origin)} to ${esc(selectedRoute.destination)}" />` : '<span>Public route card graphic fallback</span>'}</div>${selectedRoute?.image_url ? '<button type="button" class="button button--ghost" id="removeRouteImage">Remove route image</button>' : ''}` : '';
     const form = state.routeFormOpen ? `<form id="routeForm" class="premium-form-grid fleet-form"><input type="hidden" name="id" value="${esc(state.routeEditingId ?? '')}" /><div class="form-intro"><div class="form-avatar">${icon('edit')}</div><div><strong>${state.routeEditingId ? 'Update route' : 'Create a route'}</strong><span>Define the service corridor, ordered stops and commercial fares.</span></div></div><label><span>Origin terminal</span><input name="origin" required maxlength="150" placeholder="Starting terminal" /></label><label><span>Destination terminal</span><input name="destination" required maxlength="150" placeholder="Destination terminal" /></label><label><span>Distance (km)</span><input name="distance_km" type="number" min="0" required placeholder="0" /></label>${routeEditorFields()}${routeImage}<label><span>Published</span><select name="active"><option value="1">Active</option><option value="0">Inactive</option></select></label><div class="form-actions"><button type="submit" class="button button--primary button--with-icon">${icon('save')}${state.routeEditingId ? 'Update route' : 'Save route'}</button> <button type="button" class="button button--ghost button--with-icon" id="cancelRoute">${icon('close')}Cancel</button></div><div id="routeMessage" aria-live="polite"></div></form>` : '';
     return `
       <section class="admin-panel admin-panel--pad">
@@ -1938,7 +1938,7 @@ function wire() {
       segments = JSON.parse(String(form.get('segments') ?? '[]'));
       if (!Array.isArray(stops) || stops.length < 2) throw new Error('Add at least two ordered stops.');
       if (stops.some((stop) => !stop.name)) throw new Error('Every stop needs a name.');
-      await api.saveRoute({
+      const savedRoute = await api.saveRoute({
         origin: form.get('origin'),
         destination: form.get('destination'),
         distance_km: Number(form.get('distance_km')),
@@ -1947,7 +1947,8 @@ function wire() {
         segments,
       }, id);
       const routeImage = form.get('route_image');
-      if (id && routeImage instanceof File && routeImage.size > 0) await api.uploadRouteImage(id, await optimizeImageForUpload(routeImage));
+      const savedRouteId = id || savedRoute?.id;
+      if (savedRouteId && routeImage instanceof File && routeImage.size > 0) await api.uploadRouteImage(savedRouteId, await optimizeImageForUpload(routeImage));
       message.textContent = 'Route saved.';
       state.routes = await api.routes();
       state.routeFormOpen = false;

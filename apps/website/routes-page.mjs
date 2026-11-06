@@ -18,6 +18,28 @@ const routeOrigin = (route) => route.origin ?? route.segments?.[0]?.origin ?? ''
 const routeDestination = (route) => route.destination ?? route.segments?.at(-1)?.destination ?? '';
 const terminalNames = (routes) => [...new Set(routes.flatMap((route) => [routeOrigin(route), routeDestination(route), ...(route.stops ?? []).map((stop) => stop.name)]).filter(Boolean))].sort((a, b) => a.localeCompare(b));
 
+function publicAssetUrl(value) {
+  if (typeof value !== 'string' || !value.trim()) return '';
+  const candidate = value.trim();
+  if (/^(storage\/)?routes\//i.test(candidate)) return `/storage/${candidate.replace(/^\/?storage\//i, '')}`;
+  try {
+    const parsed = new URL(candidate, window.location.origin);
+    if (['localhost', '127.0.0.1', '::1'].includes(parsed.hostname)) return `${parsed.pathname}${parsed.search}`;
+    return parsed.protocol === 'https:' ? parsed.href : '';
+  } catch {
+    return '';
+  }
+}
+
+function routeVisual(route, origin, destination) {
+  const image = publicAssetUrl(route.image_url);
+  const label = `${origin} to ${destination}`;
+  if (!image) {
+    return `<div class="route-directory-card__visual route-directory-card__visual--fallback" aria-hidden="true"><span>${escapeHtml(String(destination).slice(0, 3).toUpperCase() || 'ET')}</span></div>`;
+  }
+  return `<div class="route-directory-card__visual"><img src="${escapeHtml(image)}" alt="${escapeHtml(label)} route" loading="lazy" decoding="async" /><span class="route-directory-card__visual-label">${copy('Route photo', 'Foto de la ruta')}</span></div>`;
+}
+
 let publishedRoutes = [];
 
 function renderPreview(routes) {
@@ -49,7 +71,7 @@ function renderDirectory() {
     const destination = routeDestination(route);
     const segments = (route.segments ?? []).filter((segment) => segment.active !== false);
     const queryParams = new URLSearchParams({ origin, destination, passengers: '1' });
-    return `<article class="route-directory-card"><div class="route-directory-card__top"><span class="site-kicker">${copy('Published route', 'Ruta publicada')}</span><span>${route.distance_km ? `${escapeHtml(route.distance_km)} km` : copy('Distance pending', 'Distancia pendiente')}</span></div><h3>${escapeHtml(origin)} <span aria-hidden="true">→</span> ${escapeHtml(destination)}</h3><p>${segments.length ? copy(`${segments.length} segment${segments.length === 1 ? '' : 's'} to review.`, `${segments.length} tramo${segments.length === 1 ? '' : 's'} para consultar.`) : copy('Review departures available for this route.', 'Consulta las salidas disponibles para este recorrido.')}</p><a class="button button--ghost btn btn-secondary" href="/website/trips/?${queryParams}">${copy('Find departures', 'Buscar salidas')} <span aria-hidden="true">→</span></a></article>`;
+    return `<article class="route-directory-card">${routeVisual(route, origin, destination)}<div class="route-directory-card__top"><span class="site-kicker">${copy('Published route', 'Ruta publicada')}</span><span>${route.distance_km ? `${escapeHtml(route.distance_km)} km` : copy('Distance pending', 'Distancia pendiente')}</span></div><h3>${escapeHtml(origin)} <span aria-hidden="true">→</span> ${escapeHtml(destination)}</h3><p>${segments.length ? copy(`${segments.length} segment${segments.length === 1 ? '' : 's'} to review.`, `${segments.length} tramo${segments.length === 1 ? '' : 's'} para consultar.`) : copy('Review departures available for this route.', 'Consulta las salidas disponibles para este recorrido.')}</p><a class="button button--ghost btn btn-secondary" href="/website/trips/?${queryParams}">${copy('Find departures', 'Buscar salidas')} <span aria-hidden="true">→</span></a></article>`;
   }).join('') : `<div class="routes-empty"><strong>${copy('No routes match your search.', 'No hay rutas que coincidan con tu búsqueda.')}</strong><span>${copy('Try another origin or destination.', 'Prueba con otro origen o destino.')}</span></div>`;
 }
 

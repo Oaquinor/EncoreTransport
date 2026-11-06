@@ -8,13 +8,14 @@ const { server, host, port } = await startEncoreServer({ port: 0, host: '127.0.0
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
-const routeFixture = { data: [{ id: 10, origin: 'Georgetown', destination: 'New Amsterdam', status: 'active', distance_km: 120, segments: [{ origin: 'Georgetown', destination: 'New Amsterdam', active: true }] }] };
+const routeFixture = { data: [{ id: 10, origin: 'Georgetown', destination: 'New Amsterdam', status: 'active', distance_km: 120, image_url: '/storage/routes/georgetown-new-amsterdam.webp', segments: [{ origin: 'Georgetown', destination: 'New Amsterdam', active: true }] }] };
 await page.route('**/api/v1/routes', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(routeFixture) }));
 await page.route('**/api/v1/trips/search**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: [], total: 0 }) }));
 await page.route('**/api/v1/health', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ok' }) }));
 await page.route('**/api/v1/website-content', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: {} }) }));
 await page.route('**/api/v1/network/live', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: { routes: [], trips: [], updated_at: null } }) }));
 await page.route('**/api/v1/maps/tiles/**', (route) => route.fulfill({ status: 204, body: '' }));
+await page.route('**/storage/routes/**', (route) => route.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><rect width="640" height="360" fill="#0e526d"/><circle cx="500" cy="90" r="120" fill="#39b7ea" opacity=".35"/><path d="M50 300 250 170l100 70 110-120 130 180Z" fill="#8bd2e9" opacity=".8"/></svg>' }));
 
 const pages = [
   ['home', '/website/'],
@@ -165,6 +166,8 @@ await page.screenshot({ path: 'artifacts/visual/website-navigation-mobile-390.pn
 await page.setViewportSize({ width: 1440, height: 900 });
 await page.goto(`http://${host}:${port}/website/routes/`, { waitUntil: 'domcontentloaded' });
 await page.locator('#routesPageGrid a').first().waitFor();
+assert.equal(await page.locator('#routesPageGrid .route-directory-card__visual img').count(), 1, 'published route photos must be shown in the route directory');
+assert.equal(await page.locator('#routesPageGrid .route-directory-card__visual img').getAttribute('loading'), 'lazy', 'route photos must use lazy loading');
 await page.locator('#routesPageGrid a').first().click();
 await page.waitForURL('**/website/trips/**');
 assert.equal(new URL(page.url()).searchParams.get('origin'), 'Georgetown');
