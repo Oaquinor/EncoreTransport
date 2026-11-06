@@ -86,6 +86,13 @@ const state = {
   userDetailLoading: false,
   userDetailError: '',
   userDetailMeta: {},
+  accessCopyOpen: false,
+  accessCopySourceId: '',
+  accessCopyIncludeRoles: true,
+  accessCopyIncludeDirect: true,
+  accessCopyPreview: null,
+  accessCopyLoading: false,
+  accessCopyError: '',
   roleEditingId: null,
   profilePhotoMessage: '',
   profilePhotoDraftUrl: '',
@@ -672,6 +679,41 @@ function directPermissionList(permissions, directGrants = {}, assignedRoleIds = 
   }).join('')}</div>`;
 }
 
+function permissionStateLabel(permission) {
+  if (permission.direct === 'allow') return ['Direct allow', 'is-allow'];
+  if (permission.direct === 'deny') return ['Direct deny', 'is-deny'];
+  if (permission.effective) return ['Inherited', 'is-inherited'];
+  return ['Not granted', 'is-neutral'];
+}
+
+function userAccessMatrixPanel(data = {}, user = {}) {
+  const summary = data.summary ?? { roles: 0, total: 0, effective: 0, direct: 0, denied: 0 };
+  const matrix = Array.isArray(data.matrix) ? data.matrix : [];
+  const assignedRoles = Array.isArray(data.roles) ? data.roles : (user.roles ?? []);
+  const canCopyRoles = state.permissions.includes('roles.manage');
+  const canCopyDirect = state.permissions.includes('permissions.assign');
+  const sourceUsers = state.users.filter((item) => Number(item.id) !== Number(user.id));
+  const preview = state.accessCopyPreview;
+  const previewCount = preview
+    ? (preview.roles?.add?.length ?? 0) + (preview.roles?.remove?.length ?? 0) + (preview.direct?.add?.length ?? 0) + (preview.direct?.remove?.length ?? 0) + (preview.direct?.change?.length ?? 0)
+    : 0;
+  const copyPanel = (canCopyRoles || canCopyDirect) && state.accessCopyOpen ? `
+    <form class="access-copy-card" id="accessCopyForm">
+      <div class="access-copy-card__heading"><div><strong>Copy access safely</strong><span>Use another account as a model, then review the exact changes before applying them.</span></div><button type="button" class="button button--icon" data-access-copy-toggle aria-label="Close copy access">${icon('close')}</button></div>
+      <label><span>Model account</span><select name="source_user_id" id="accessCopySource" required><option value="">Choose an account</option>${sourceUsers.map((item) => `<option value="${esc(item.id)}" ${String(state.accessCopySourceId) === String(item.id) ? 'selected' : ''}>${esc(item.name)} · ${esc(item.email)}</option>`).join('')}</select></label>
+      <div class="access-copy-options"><label><input type="checkbox" name="include_roles" ${canCopyRoles && state.accessCopyIncludeRoles ? 'checked' : ''} ${canCopyRoles ? '' : 'disabled'} /><span>Roles / profiles</span></label><label><input type="checkbox" name="include_direct" ${canCopyDirect && state.accessCopyIncludeDirect ? 'checked' : ''} ${canCopyDirect ? '' : 'disabled'} /><span>Direct overrides</span></label></div>
+      <div class="form-actions"><button type="submit" class="button button--ghost" ${state.accessCopyLoading ? 'disabled' : ''}>${state.accessCopyLoading ? 'Reviewing…' : 'Preview changes'}</button>${preview ? `<button type="button" class="button button--primary" id="accessCopyApply" ${state.accessCopyLoading || previewCount === 0 ? 'disabled' : ''}>Apply ${previewCount} change${previewCount === 1 ? '' : 's'}</button>` : ''}</div>
+      ${preview ? `<div class="access-copy-preview" role="status"><strong>${previewCount ? `${previewCount} access changes ready` : 'No access changes detected'}</strong><span>${(preview.roles?.add?.length ?? 0)} roles to add · ${(preview.roles?.remove?.length ?? 0)} roles to remove · ${(preview.direct?.change?.length ?? 0)} direct overrides to change</span></div>` : ''}
+      ${state.accessCopyError ? `<div class="admin-error-state" role="alert">${esc(state.accessCopyError)}</div>` : ''}
+    </form>` : '';
+
+  return `<div class="user-access-view">
+    <div class="user-access-summary"><article><span>Profiles assigned</span><strong>${summary.roles}</strong></article><article><span>Effective permissions</span><strong>${summary.effective}<small> / ${summary.total}</small></strong></article><article><span>Direct overrides</span><strong>${summary.direct}</strong></article><article><span>Explicit denials</span><strong>${summary.denied}</strong></article></div>
+    <section class="user-access-card"><header class="user-access-card__heading"><div><div class="eyebrow">Access model</div><h3>Roles and permission sources</h3><p>Roles provide the baseline. Direct allow or deny overrides are shown explicitly and remain auditable.</p></div>${canCopyRoles || canCopyDirect ? `<button type="button" class="button button--ghost" data-access-copy-toggle>${state.accessCopyOpen ? 'Close copy' : 'Copy access'}</button>` : ''}</header><div class="user-access-roles">${assignedRoles.length ? assignedRoles.map((role) => `<span class="access-role-chip"><strong>${esc(role.label ?? role.name)}</strong><small>${role.system ? 'System profile' : 'Custom profile'}</small></span>`).join('') : '<span class="empty-inline">No profiles assigned.</span>'}</div>${copyPanel}</section>
+    <section class="user-access-card"><header class="user-access-card__heading"><div><div class="eyebrow">Permission matrix</div><h3>What this account can do</h3></div><span class="badge badge--neutral">${summary.effective} active</span></header><div class="permission-matrix">${matrix.length ? matrix.map((group) => `<section class="permission-group"><header><strong>${esc(group.resource)}</strong><span>${group.effective_count} of ${group.total_count} active</span></header><div class="permission-group__rows">${(group.permissions ?? []).map((permission) => { const [label, className] = permissionStateLabel(permission); return `<div class="permission-matrix__row"><div><strong>${esc(permission.label ?? permission.key)}</strong><small>${esc(permission.key)} · ${esc(permission.sources?.map((source) => source.label ?? source.name).join(', ') || 'No role source')}</small></div><span class="access-state ${className}">${label}</span></div>`; }).join('')}</div></section>`).join('') : '<div class="empty-state">No permission catalog is available for this account.</div>'}</div></section>
+  </div>`;
+}
+
 function rolePermissionList(permissions, assignedPermissionKeys = []) {
   const assigned = new Set(assignedPermissionKeys);
   return `<label class="access-search"><span>Find a permission</span><input type="search" placeholder="Search permissions" data-access-filter="role-permissions" /></label><div class="access-list__items" data-access-list="role-permissions">${permissions.map((permission) => {
@@ -736,7 +778,7 @@ function userDetailPanel() {
       : detail.tab === 'general' || detail.tab === 'profile'
         ? `<div class="user-detail-grid"><article><span>Name</span><strong>${esc(user.name)}</strong></article><article><span>Email</span><strong>${esc(user.email)}</strong></article><article><span>Phone</span><strong>${esc(user.phone || 'Not provided')}</strong></article><article><span>Status</span><strong>${user.active ? 'Active' : 'Disabled'}</strong></article><article><span>Legacy role</span><strong>${esc(user.role || '—')}</strong></article><article><span>Registered</span><strong>${esc(String(user.created_at ?? '').slice(0, 10) || '—')}</strong></article>${detail.tab === 'profile' ? `<article class="user-detail-grid__wide"><span>Assigned roles</span><strong>${(user.roles ?? []).map((role) => esc(role.label ?? role.name)).join(', ') || 'None'}</strong></article><article class="user-detail-grid__wide"><span>Direct permission overrides</span><strong>${(user.direct_permissions ?? []).map((permission) => esc(permission.key)).join(', ') || 'None'}</strong></article>` : ''}</div>`
         : detail.tab === 'permissions'
-          ? `<div class="user-detail-permissions"><section><h4>Roles</h4><p>${(detail.data.roles ?? []).map((role) => esc(role.label ?? role.name)).join(', ') || 'None'}</p></section><section><h4>Direct grants/denials</h4><p>${(detail.data.direct ?? []).map((permission) => `${esc(permission.key)} (${permission.pivot?.granted ? 'allow' : 'deny'})`).join(', ') || 'None'}</p></section><section><h4>Effective permissions</h4><p>${(detail.data.effective ?? []).map((permission) => esc(typeof permission === 'string' ? permission : permission.key ?? '')).join(', ') || 'None'}</p></section></div>`
+          ? userAccessMatrixPanel(detail.data, user)
           : `<div class="user-detail-table-wrap"><table class="table admin-table"><thead><tr>${(detail.tab === 'bookings' ? ['Reference', 'Status', 'Trip', 'Ticket', 'Payment'] : detail.tab === 'tickets' ? ['Ticket', 'Lifecycle', 'Booking', 'Payment', 'Boarding'] : detail.tab === 'packages' ? ['Reference', 'Status', 'Route', 'Authorized'] : ['Action', 'Subject', 'Date']).map((header) => `<th>${header}</th>`).join('')}</tr></thead><tbody>${(detail.data ?? []).length ? (detail.data ?? []).map((item) => `<tr>${detail.tab === 'bookings' ? `<td>${esc(item.reference)}</td><td>${esc(item.status)}</td><td>${esc(item.trip?.route ?? '—')}</td><td>${esc(item.ticket_status ?? '—')}</td><td>${esc(item.payment_status ?? '—')}</td>` : detail.tab === 'tickets' ? `<td>${esc(item.public_id)}</td><td>${esc(item.lifecycle_status)}</td><td>${esc(item.booking_reference ?? '—')}</td><td>${esc(item.payment_status ?? '—')}</td><td>${esc(item.boarding_status)}</td>` : detail.tab === 'packages' ? `<td>${esc(item.reference ?? '—')}</td><td>${esc(item.status ?? '—')}</td><td>${esc(item.route ?? '—')}</td><td>${esc(String(item.authorized_at ?? '').slice(0, 10) || '—')}</td>` : `<td>${esc(item.action)}</td><td>${esc(item.subject_type ? `${item.subject_type}#${item.subject_id ?? ''}` : '—')}</td><td>${esc(String(item.created_at ?? '').slice(0, 19) || '—')}</td>`}</tr>`).join('') : `<tr><td colspan="5">No records found.</td></tr>`}</tbody></table></div>`;
   const meta = state.userDetailMeta;
   const paginated = !['general', 'profile', 'permissions'].includes(detail.tab);
@@ -1010,9 +1052,9 @@ function content() {
   if (state.module === 'roles') {
     const editing = state.roles.find((role) => String(role.id) === String(state.roleEditingId));
     const roleForm = editing ? `<form id="roleForm" class="premium-form-grid fleet-form"><label><span>Role label</span><input name="label" required maxlength="120" value="${esc(editing.label)}" /></label><fieldset class="access-list"><legend>Permissions enabled for this role</legend>${rolePermissionList(state.permissionCatalog, (editing.permissions ?? []).map((item) => item.key))}</fieldset><div class="form-actions"><button class="button button--primary" type="submit">Save role</button><button class="button button--ghost" id="cancelRole" type="button">Cancel</button></div><div id="roleMessage" aria-live="polite"></div></form>` : '';
-    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Access control</div><h2>Roles</h2></div></div>${roleForm}</section>${table('Roles', ['Name', 'Label', 'System', 'Permissions', 'Actions'], state.roles.map((role) => [role.name, role.label, role.system ? 'Yes' : 'No', (role.permissions ?? []).length, { html: `<button class="button button--icon" data-edit-role="${esc(role.id)}" type="button" aria-label="Edit role" ${role.system && state.user?.role !== 'superadmin' ? 'disabled' : ''}>${icon('edit')}</button>` }]))}`;
+    return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Access control</div><h2>Roles</h2><p class="module-subtitle">Profiles bundle reusable access. Direct user overrides remain visible in the user matrix.</p></div><span class="badge badge--neutral">${state.roles.length} profiles</span></div>${roleForm}</section>${table('Roles', ['Name', 'Label', 'System', 'Users', 'Permissions', 'Actions'], state.roles.map((role) => [role.name, role.label, role.system ? 'Yes' : 'No', role.user_count ?? role.users_count ?? 0, role.permission_count ?? (role.permissions ?? []).length, { html: `<button class="button button--icon" data-edit-role="${esc(role.id)}" type="button" aria-label="Edit role" ${role.system && state.user?.role !== 'superadmin' ? 'disabled' : ''}>${icon('edit')}</button>` }]))}`;
   }
-  if (state.module === 'permissions') return table('Permissions', ['Key', 'Label', 'Resource'], state.permissionCatalog.map((permission) => [permission.key, permission.label, permission.resource]));
+  if (state.module === 'permissions') return `<section class="admin-panel admin-panel--pad"><div class="module-view__header"><div><div class="eyebrow">Access control</div><h2>Permission catalog</h2><p class="module-subtitle">Every capability is represented as a resource and action so access can be reviewed without guessing.</p></div><span class="badge badge--neutral">${state.permissionCatalog.length} permissions</span></div>${table('Permissions', ['Resource', 'Action', 'Key', 'Label'], state.permissionCatalog.map((permission) => [permission.resource, permission.action ?? permission.key.split('.').pop(), permission.key, permission.label]))}</section>`;
 
   if (state.module === 'profile') {
     const user = state.user ?? {};
@@ -1232,6 +1274,12 @@ async function loadModule() {
 }
 
 async function openUserDetail(userId, tab = 'general', page = 1) {
+  if (state.userDetail?.user?.id !== Number(userId)) {
+    state.accessCopyOpen = false;
+    state.accessCopySourceId = '';
+    state.accessCopyPreview = null;
+    state.accessCopyError = '';
+  }
   state.userDetailLoading = true;
   state.userDetailError = '';
   state.userDetail = state.userDetail?.user?.id === Number(userId)
@@ -1710,6 +1758,53 @@ function wire() {
     if (!userId || state.userDetailLoading) return;
     void openUserDetail(userId, button.dataset.userDetailTab, 1);
   }));
+  document.querySelectorAll('[data-access-copy-toggle]').forEach((button) => button.addEventListener('click', () => {
+    state.accessCopyOpen = !state.accessCopyOpen;
+    state.accessCopyPreview = null;
+    state.accessCopyError = '';
+    render();
+  }));
+  document.querySelector('#accessCopyForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const sourceId = String(form.get('source_user_id') ?? '');
+    if (!sourceId) return;
+    state.accessCopySourceId = sourceId;
+    state.accessCopyIncludeRoles = form.get('include_roles') === 'on';
+    state.accessCopyIncludeDirect = form.get('include_direct') === 'on';
+    state.accessCopyLoading = true;
+    state.accessCopyError = '';
+    render();
+    try {
+      state.accessCopyPreview = await api.previewUserAccess(state.userDetail.user.id, sourceId, { includeRoles: state.accessCopyIncludeRoles, includeDirect: state.accessCopyIncludeDirect });
+    } catch (error) {
+      state.accessCopyPreview = null;
+      state.accessCopyError = error.message;
+    } finally {
+      state.accessCopyLoading = false;
+      render();
+    }
+  });
+  document.querySelector('#accessCopyApply')?.addEventListener('click', async () => {
+    const userId = state.userDetail?.user?.id;
+    if (!userId || !state.accessCopySourceId || !state.accessCopyPreview) return;
+    if (!confirm('Apply the reviewed access changes to this account?')) return;
+    state.accessCopyLoading = true;
+    state.accessCopyError = '';
+    render();
+    try {
+      const updated = await api.copyUserAccess(userId, { source_user_id: Number(state.accessCopySourceId), include_roles: state.accessCopyIncludeRoles, include_direct: state.accessCopyIncludeDirect });
+      state.userDetail = { user: updated, tab: 'permissions', data: await api.userPermissions(userId), meta: {} };
+      state.users = state.users.map((item) => Number(item.id) === Number(userId) ? updated : item);
+      state.accessCopyPreview = null;
+      state.accessCopyOpen = false;
+    } catch (error) {
+      state.accessCopyError = error.message;
+    } finally {
+      state.accessCopyLoading = false;
+      render();
+    }
+  });
   document.querySelectorAll('[data-user-detail-page]').forEach((button) => button.addEventListener('click', () => {
     const meta = state.userDetailMeta;
     const direction = button.dataset.userDetailPage === 'next' ? 1 : -1;

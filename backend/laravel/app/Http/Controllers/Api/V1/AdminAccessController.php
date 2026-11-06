@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\Audit\AuditService;
 use App\Services\Auth\PermissionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -142,24 +143,127 @@ class AdminAccessController extends Controller
 
     public function userPermissions(User $user)
     {
+        $user->load(['roles.permissions', 'permissions']);
+        $directByKey = $user->permissions->keyBy('key');
+        $matrix = Permission::query()
+            ->orderBy('resource')
+            ->orderBy('key')
+            ->get()
+            ->map(function (Permission $permission) use ($user, $directByKey): array {
+                $sources = $user->roles
+                    ->filter(fn (Role $role) => $role->permissions->contains('id', $permission->id))
+                    ->map(fn (Role $role) => ['name' => $role->name, 'label' => $role->label])
+                    ->values();
+                $direct = $directByKey->get($permission->key);
+                $directState = $direct === null ? 'inherit' : ((bool) $direct->pivot->granted ? 'allow' : 'deny');
+                $effective = $direct === null ? $sources->isNotEmpty() : (bool) $direct->pivot->granted;
+
+                return [
+                    'key' => $permission->key,
+                    'label' => $permission->label,
+                    'resource' => $permission->resource,
+                    'action' => str_contains($permission->key, '.') ? str($permission->key)->afterLast('.')->toString() : $permission->key,
+                    'direct' => $directState,
+                    'effective' => $effective,
+                    'sources' => $sources,
+                ];
+            });
+
         return response()->json(['data' => [
-            'roles' => $user->load('roles.permissions')->roles,
-            'direct' => $user->load('permissions')->permissions,
+            'roles' => $user->roles,
+            'direct' => $user->permissions,
             'effective' => $this->permissions->effective($user),
+            'matrix' => $matrix->groupBy('resource')->map(fn ($permissions, $resource) => [
+                'resource' => $resource,
+                'permissions' => $permissions->values(),
+                'effective_count' => $permissions->where('effective', true)->count(),
+                'total_count' => $permissions->count(),
+            ])->values(),
+            'summary' => [
+                'roles' => $user->roles->count(),
+                'total' => $matrix->count(),
+                'effective' => $matrix->where('effective', true)->count(),
+                'direct' => $matrix->where('direct', '!=', 'inherit')->count(),
+                'denied' => $matrix->where('direct', 'deny')->count(),
+            ],
         ]]);
+    }
+
+    public function previewUserAccess(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'source_user_id' => ['required', 'integer', 'exists:users,id', 'different:' . $user->id],
+            'include_roles' => ['sometimes', 'boolean'],
+            'include_direct' => ['sometimes', 'boolean'],
+        ]);
+        $source = User::query()->with(['roles', 'permissions'])->findOrFail($data['source_user_id']);
+        $includeRoles = $data['include_roles'] ?? true;
+        $includeDirect = $data['include_direct'] ?? true;
+        $user->load(['roles', 'permissions']);
+
+        $targetRoles = $user->roles->keyBy('id');
+        $sourceRoles = $source->roles->keyBy('id');
+        $targetDirect = $user->permissions->keyBy('key');
+        $sourceDirect = $source->permissions->keyBy('key');
+
+        return response()->json(['data' => [
+            'source' => ['id' => $source->id, 'name' => $source->name, 'email' => $source->email],
+            'target' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+            'roles' => $includeRoles ? [
+                'add' => $sourceRoles->diffKeys($targetRoles)->values()->map(fn (Role $role) => ['name' => $role->name, 'label' => $role->label]),
+                'remove' => $targetRoles->diffKeys($sourceRoles)->values()->map(fn (Role $role) => ['name' => $role->name, 'label' => $role->label]),
+            ] : ['add' => [], 'remove' => []],
+            'direct' => $includeDirect ? [
+                'add' => $sourceDirect->diffKeys($targetDirect)->values()->map(fn (Permission $permission) => ['key' => $permission->key, 'label' => $permission->label, 'granted' => (bool) $permission->pivot->granted]),
+                'remove' => $targetDirect->diffKeys($sourceDirect)->values()->map(fn (Permission $permission) => ['key' => $permission->key, 'label' => $permission->label]),
+                'change' => $sourceDirect->intersectByKeys($targetDirect)->filter(fn (Permission $permission, string $key) => (bool) $permission->pivot->granted !== (bool) $targetDirect[$key]->pivot->granted)->values()->map(fn (Permission $permission) => ['key' => $permission->key, 'label' => $permission->label, 'granted' => (bool) $permission->pivot->granted]),
+            ] : ['add' => [], 'remove' => [], 'change' => []],
+        ]]);
+    }
+
+    public function copyUserAccess(Request $request, User $user, AuditService $audit)
+    {
+        $data = $request->validate([
+            'source_user_id' => ['required', 'integer', 'exists:users,id', 'different:' . $user->id],
+            'include_roles' => ['sometimes', 'boolean'],
+            'include_direct' => ['sometimes', 'boolean'],
+        ]);
+        $this->assertAccessCopyAllowed($request, $data);
+        $source = User::query()->with(['roles.permissions', 'permissions'])->findOrFail($data['source_user_id']);
+        $includeRoles = $data['include_roles'] ?? true;
+        $includeDirect = $data['include_direct'] ?? true;
+
+        DB::transaction(function () use ($user, $source, $includeRoles, $includeDirect, $request, $audit): void {
+            if ($includeRoles) $user->roles()->sync($source->roles->modelKeys());
+            if ($includeDirect) {
+                $user->permissions()->sync($source->permissions->mapWithKeys(fn (Permission $permission) => [
+                    $permission->id => ['granted' => (bool) $permission->pivot->granted, 'assigned_by_user_id' => $request->user()->id],
+                ])->all());
+            }
+            $audit->record($request->user(), 'user.access_copied', $user, [
+                'source_user_id' => $source->id,
+                'include_roles' => $includeRoles,
+                'include_direct' => $includeDirect,
+            ]);
+        });
+
+        return response()->json(['data' => $this->userPayload($user->fresh(['roles', 'permissions']))]);
     }
 
     public function storeUser(Request $request, AuditService $audit)
     {
         $data = $request->validate($this->userRules());
         $this->assertAccessChangesAllowed($request, $data);
-        $user = User::query()->create([
-            'name' => $data['name'], 'email' => mb_strtolower($data['email']),
-            'phone' => $data['phone'] ?? null, 'role' => $data['role'] ?? 'passenger',
-            'active' => $data['active'] ?? true, 'password' => Hash::make($data['password']),
-        ]);
-        $this->syncAccess($user, $data);
-        $audit->record($request->user(), 'user.created', $user);
+        $user = DB::transaction(function () use ($data, $request, $audit): User {
+            $user = User::query()->create([
+                'name' => $data['name'], 'email' => mb_strtolower($data['email']),
+                'phone' => $data['phone'] ?? null, 'role' => $data['role'] ?? 'passenger',
+                'active' => $data['active'] ?? true, 'password' => Hash::make($data['password']),
+            ]);
+            $this->syncAccess($user, $data, $request->user());
+            $audit->record($request->user(), 'user.created', $user, ['roles' => $data['role_ids'] ?? []]);
+            return $user;
+        });
         return response()->json(['data' => $this->userPayload($user->fresh(['roles','permissions']))], 201);
     }
 
@@ -168,27 +272,33 @@ class AdminAccessController extends Controller
         $rules = $this->userRules($user);
         $data = $request->validate($rules);
         $this->assertAccessChangesAllowed($request, $data);
-        $user->fill(array_filter($data, fn ($key) => in_array($key, ['name','email','phone','role','active'], true), ARRAY_FILTER_USE_KEY))->save();
-        if (!empty($data['password'])) {
-            $user->forceFill(['password' => Hash::make($data['password'])])->save();
-            ApiToken::query()->where('user_id', $user->id)->delete();
-        }
-        $this->syncAccess($user, $data);
-        $audit->record($request->user(), 'user.updated', $user);
+        $before = $this->accessSnapshot($user);
+        DB::transaction(function () use ($data, $user, $request, $audit, $before): void {
+            $user->fill(array_filter($data, fn ($key) => in_array($key, ['name','email','phone','role','active'], true), ARRAY_FILTER_USE_KEY))->save();
+            if (!empty($data['password'])) {
+                $user->forceFill(['password' => Hash::make($data['password'])])->save();
+                ApiToken::query()->where('user_id', $user->id)->delete();
+            }
+            $this->syncAccess($user, $data, $request->user());
+            $after = $this->accessSnapshot($user->fresh(['roles', 'permissions']));
+            $audit->record($request->user(), 'user.updated', $user, ['access_changes' => $this->accessDiff($before, $after), 'password_rotated' => !empty($data['password'])]);
+        });
         return response()->json(['data' => $this->userPayload($user->fresh(['roles','permissions']))]);
     }
 
     public function disableUser(Request $request, User $user, AuditService $audit)
     {
         if ($request->user()->is($user)) return response()->json(['message' => 'You cannot disable your own account.'], 422);
-        $user->update(['active' => false]);
-        ApiToken::query()->where('user_id', $user->id)->delete();
-        $audit->record($request->user(), 'user.disabled', $user);
+        DB::transaction(function () use ($user, $request, $audit): void {
+            $user->update(['active' => false]);
+            ApiToken::query()->where('user_id', $user->id)->delete();
+            $audit->record($request->user(), 'user.disabled', $user);
+        });
         return response()->json(['data' => $this->userPayload($user->fresh(['roles','permissions']))]);
     }
 
-    public function roles() { return response()->json(['data' => Role::query()->with('permissions')->orderBy('name')->get()]); }
-    public function permissions() { return response()->json(['data' => Permission::query()->orderBy('resource')->orderBy('key')->get()]); }
+    public function roles() { return response()->json(['data' => Role::query()->with('permissions')->withCount('users')->orderBy('name')->get()->map(fn (Role $role) => array_merge($role->toArray(), ['permission_count' => $role->permissions->count(), 'user_count' => $role->users_count]))]); }
+    public function permissions() { return response()->json(['data' => Permission::query()->orderBy('resource')->orderBy('key')->get()->map(fn (Permission $permission) => $permission->setAttribute('action', str_contains($permission->key, '.') ? str($permission->key)->afterLast('.')->toString() : $permission->key))]); }
 
     public function updateRole(Request $request, Role $role, AuditService $audit)
     {
@@ -199,9 +309,15 @@ class AdminAccessController extends Controller
                 if (!$this->permissions->allows($request->user(), $key)) abort(403, 'You cannot grant a permission you do not hold.');
             }
         }
-        $role->update(['label' => $data['label']]);
-        if (array_key_exists('permission_keys', $data)) $role->permissions()->sync(Permission::query()->whereIn('key', $data['permission_keys'])->pluck('id'));
-        $audit->record($request->user(), 'role.updated', $role);
+        $before = $role->permissions()->pluck('permissions.key')->values()->all();
+        DB::transaction(function () use ($role, $data, $request, $audit, $before): void {
+            $role->update(['label' => $data['label']]);
+            if (array_key_exists('permission_keys', $data)) $role->permissions()->sync(Permission::query()->whereIn('key', $data['permission_keys'])->pluck('id'));
+            $audit->record($request->user(), 'role.updated', $role, [
+                'permissions_before' => $before,
+                'permissions_after' => array_values($data['permission_keys'] ?? $before),
+            ]);
+        });
         return response()->json(['data' => $role->fresh('permissions')]);
     }
 
@@ -262,7 +378,7 @@ class AdminAccessController extends Controller
         }
     }
 
-    private function syncAccess(User $user, array $data): void
+    private function syncAccess(User $user, array $data, ?User $actor = null): void
     {
         if (array_key_exists('role_ids', $data)) $user->roles()->sync($data['role_ids']);
         if (array_key_exists('permission_grants', $data)) {
@@ -271,10 +387,53 @@ class AdminAccessController extends Controller
             foreach ($data['permission_grants'] as $key => $granted) {
                 if ($granted === null) continue;
                 $permission = $permissions->get($key);
-                if ($permission) $rows[$permission->id] = ['granted' => (bool) $granted];
+                if ($permission) $rows[$permission->id] = ['granted' => (bool) $granted, 'assigned_by_user_id' => $actor?->id];
             }
             $user->permissions()->sync($rows);
         }
+    }
+
+    private function assertAccessCopyAllowed(Request $request, array $data): void
+    {
+        $actor = $request->user();
+        $includeRoles = $data['include_roles'] ?? true;
+        $includeDirect = $data['include_direct'] ?? true;
+        if ($includeRoles && !$this->permissions->allows($actor, 'roles.manage')) {
+            abort(403, 'Copying role access requires roles.manage.');
+        }
+        if ($includeDirect && !$this->permissions->allows($actor, 'permissions.assign')) {
+            abort(403, 'Copying direct permissions requires permissions.assign.');
+        }
+        if ($this->isSystemAdministrator($actor)) return;
+
+        $source = User::query()->with(['roles.permissions', 'permissions'])->findOrFail($data['source_user_id']);
+        $keys = collect();
+        if ($includeRoles) $keys = $keys->merge($source->roles->flatMap(fn (Role $role) => $role->permissions->pluck('key')));
+        if ($includeDirect) $keys = $keys->merge($source->permissions->filter(fn (Permission $permission) => (bool) $permission->pivot->granted)->pluck('key'));
+        foreach ($keys->unique() as $key) {
+            if (!$this->permissions->allows($actor, (string) $key)) abort(403, 'You cannot copy access you do not hold.');
+        }
+    }
+
+    private function accessSnapshot(User $user): array
+    {
+        $user->load(['roles', 'permissions']);
+        return [
+            'roles' => $user->roles->pluck('name')->sort()->values()->all(),
+            'direct' => $user->permissions->mapWithKeys(fn (Permission $permission) => [$permission->key => (bool) $permission->pivot->granted])->all(),
+        ];
+    }
+
+    private function accessDiff(array $before, array $after): array
+    {
+        return [
+            'roles_added' => array_values(array_diff($after['roles'], $before['roles'])),
+            'roles_removed' => array_values(array_diff($before['roles'], $after['roles'])),
+            'direct_changed' => collect(array_unique(array_merge(array_keys($before['direct']), array_keys($after['direct']))))
+                ->filter(fn (string $key) => ($before['direct'][$key] ?? null) !== ($after['direct'][$key] ?? null))
+                ->mapWithKeys(fn (string $key) => [$key => ['from' => $before['direct'][$key] ?? null, 'to' => $after['direct'][$key] ?? null]])
+                ->all(),
+        ];
     }
 
     private function isSystemAdministrator(?User $user): bool

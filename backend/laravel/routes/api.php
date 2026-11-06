@@ -193,12 +193,14 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['api.token', 'permission:users.view'])->get('admin/users/{user}/packages', [AdminAccessController::class, 'userPackages']);
     Route::middleware(['api.token', 'permission:users.view'])->get('admin/users/{user}/activity', [AdminAccessController::class, 'userActivity']);
     Route::middleware(['api.token', 'permission:users.view'])->get('admin/users/{user}/permissions', [AdminAccessController::class, 'userPermissions']);
+    Route::middleware(['api.token', 'permission:users.view'])->get('admin/users/{user}/access/preview', [AdminAccessController::class, 'previewUserAccess']);
     Route::middleware(['api.token', 'permission:tickets.view'])->get('admin/tickets', [AdminTicketController::class, 'index']);
     Route::middleware(['api.token', 'permission:tickets.view'])->get('admin/tickets/{ticket}', [AdminTicketController::class, 'show']);
     Route::middleware(['api.token', 'permission:tickets.validate'])->post('admin/tickets/{ticket}/transition', [AdminTicketController::class, 'transition']);
     Route::middleware(['api.token', 'permission:users.create'])->post('admin/users', [AdminAccessController::class, 'storeUser']);
     Route::middleware(['api.token', 'permission:users.update'])->put('admin/users/{user}', [AdminAccessController::class, 'updateUser']);
     Route::middleware(['api.token', 'permission:users.disable'])->post('admin/users/{user}/disable', [AdminAccessController::class, 'disableUser']);
+    Route::middleware(['api.token', 'permission:users.update'])->post('admin/users/{user}/access/copy', [AdminAccessController::class, 'copyUserAccess']);
     Route::middleware(['api.token', 'permission:roles.view,roles.manage'])->get('admin/roles', [AdminAccessController::class, 'roles']);
     Route::middleware(['api.token', 'permission:roles.manage'])->put('admin/roles/{role}', [AdminAccessController::class, 'updateRole']);
     Route::middleware(['api.token', 'permission:permissions.view,permissions.assign'])->get('admin/permissions', [AdminAccessController::class, 'permissions']);

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\ApiToken;
+use App\Models\AuditLog;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -170,6 +171,68 @@ class AuthorizationTest extends TestCase
 
         $this->withToken($this->tokenFor($admin))->getJson('/api/v1/admin/roles')->assertOk();
         $this->withToken($this->tokenFor($admin))->getJson('/api/v1/admin/permissions')->assertOk();
+    }
+
+    public function test_user_access_matrix_exposes_role_sources_and_direct_overrides(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+        $passenger = User::query()->where('email', 'passenger@example.test')->firstOrFail();
+        $permission = Permission::query()->where('key', 'routes.view')->firstOrFail();
+        $passenger->permissions()->sync([$permission->id => ['granted' => false, 'assigned_by_user_id' => $admin->id]]);
+
+        $response = $this->withToken($this->tokenFor($admin))->getJson('/api/v1/admin/users/' . $passenger->id . '/permissions')->assertOk();
+
+        $response->assertJsonStructure([
+            'data' => [
+                'roles', 'direct', 'effective',
+                'matrix' => [['resource', 'permissions' => [['key', 'action', 'direct', 'effective', 'sources']]]],
+                'summary' => ['roles', 'total', 'effective', 'direct', 'denied'],
+            ],
+        ]);
+        $routes = collect($response->json('data.matrix'))->firstWhere('resource', 'routes');
+        $routesView = collect($routes['permissions'])->firstWhere('key', 'routes.view');
+        $this->assertSame('deny', $routesView['direct']);
+        $this->assertFalse($routesView['effective']);
+    }
+
+    public function test_admin_can_preview_and_copy_access_with_an_audit_record(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.test')->firstOrFail();
+        $target = User::query()->where('email', 'passenger@example.test')->firstOrFail();
+        $source = User::query()->create([
+            'name' => 'Operations model',
+            'email' => 'operations-model@example.test',
+            'role' => 'passenger',
+            'active' => true,
+            'password' => bcrypt('Password123'),
+        ]);
+        $role = Role::query()->create(['name' => 'operations_model', 'label' => 'Operations model', 'system' => false]);
+        $permission = Permission::query()->where('key', 'routes.view')->firstOrFail();
+        $role->permissions()->attach($permission->id);
+        $source->roles()->sync([$role->id]);
+
+        $headers = ['Authorization' => 'Bearer ' . $this->tokenFor($admin)];
+        $this->getJson('/api/v1/admin/users/' . $target->id . '/access/preview?source_user_id=' . $source->id, $headers)
+            ->assertOk()
+            ->assertJsonPath('data.source.id', $source->id)
+            ->assertJsonPath('data.roles.add.0.name', 'operations_model');
+        $this->getJson('/api/v1/admin/users/' . $target->id . '/access/preview?source_user_id=' . $source->id . '&include_roles=0&include_direct=1', $headers)
+            ->assertOk()
+            ->assertJsonPath('data.roles.add', []);
+
+        $this->postJson('/api/v1/admin/users/' . $target->id . '/access/copy', [
+            'source_user_id' => $source->id,
+            'include_roles' => true,
+            'include_direct' => false,
+        ], $headers)->assertOk();
+
+        $this->assertTrue($target->fresh()->roles()->whereKey($role->id)->exists());
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'user.access_copied',
+            'subject_type' => User::class,
+            'subject_id' => (string) $target->id,
+        ]);
+        $this->assertNotNull(AuditLog::query()->where('action', 'user.access_copied')->first());
     }
 
     private function tokenFor(User $user): string

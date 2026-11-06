@@ -97,6 +97,14 @@ export const userDetailTab = async (id, tab, page = 1) => {
   return { items: payload.data ?? [], meta: payload.meta ?? { current_page: page, last_page: 1, per_page: 10, total: (payload.data ?? []).length } };
 };
 export const userPermissions = async (id) => (await requestJson(`/admin/users/${encodeURIComponent(id)}/permissions`)).data ?? { roles: [], direct: [], effective: [] };
+export const previewUserAccess = async (targetId, sourceId, options = {}) => {
+  const query = new URLSearchParams({ source_user_id: String(sourceId), include_roles: options.includeRoles !== false ? '1' : '0', include_direct: options.includeDirect !== false ? '1' : '0' });
+  return (await requestJson(`/admin/users/${encodeURIComponent(targetId)}/access/preview?${query}`)).data ?? {};
+};
+export const copyUserAccess = async (targetId, data) => {
+  const payload = await requestJson(`/admin/users/${encodeURIComponent(targetId)}/access/copy`, { method: 'POST', body: JSON.stringify(data) });
+  return payload.data ?? payload;
+};
 export const roles = async () => (await requestJson('/admin/roles')).data ?? [];
 export const updateRole = async (id, data) => {
   const payload = await requestJson(`/admin/roles/${encodeURIComponent(id)}`, {
