@@ -182,6 +182,10 @@ jobs:
           ln -sfn "$root/shared/laravel.env" "$release/backend/laravel/.env"
           rm -rf "$release/backend/laravel/storage"
           ln -s "$root/shared/storage" "$release/backend/laravel/storage"
+          if [ -e "$release/backend/laravel/public/storage" ] || [ -L "$release/backend/laravel/public/storage" ]; then
+              rm -rf "$release/backend/laravel/public/storage"
+          fi
+          ln -s "$root/shared/storage/app/public" "$release/backend/laravel/public/storage"
           chown root:www-data "$root/shared"
           chmod 750 "$root/shared"
           mkdir -p "$root/shared/storage/framework/cache" "$root/shared/storage/framework/sessions" "$root/shared/storage/framework/testing" "$root/shared/storage/framework/views" "$root/shared/storage/logs"
