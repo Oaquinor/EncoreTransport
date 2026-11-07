@@ -9,6 +9,7 @@
 @import url("./mandate-fixes.css");
 @import url("./visual-refresh.css");
 @import url("../../packages/shared/design-system.css");
+@import url("./uxpilot-refinement.css");
 
 .admin-driver-photo { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; display: block; }
 .table-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-inline: 2px; }

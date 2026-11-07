@@ -1,0 +1,111 @@
+/* Operations sign-in: the same focused shell as the UX Pilot reference. */
+body {
+  background: #f1f5f9;
+}
+
+.premium-auth-shell {
+  min-height: 100dvh;
+  grid-template-columns: minmax(360px, .96fr) minmax(420px, 1.04fr);
+  background: #fff;
+}
+
+.premium-auth-visual {
+  background:
+    radial-gradient(circle at 70% 18%, rgba(37, 99, 235, .28), transparent 22rem),
+    #0f172a;
+}
+
+.premium-auth-visual__shade {
+  background:
+    linear-gradient(150deg, rgba(15, 23, 42, .25), rgba(15, 23, 42, .92)),
+    radial-gradient(circle at 12% 88%, rgba(37, 99, 235, .26), transparent 26rem);
+}
+
+.premium-auth-visual__copy {
+  left: clamp(28px, 7vw, 96px);
+  right: clamp(28px, 5vw, 80px);
+  bottom: clamp(32px, 9vh, 96px);
+}
+
+.premium-auth-visual__copy span {
+  color: #93c5fd;
+}
+
+.premium-auth-visual__copy strong {
+  max-width: 560px;
+  font-size: clamp(2.2rem, 4.2vw, 4.65rem);
+}
+
+.premium-auth-panel {
+  width: min(560px, calc(100% - 56px));
+  padding: clamp(34px, 7vh, 76px) 0;
+}
+
+.premium-auth-brand {
+  margin-bottom: clamp(38px, 8vh, 86px);
+}
+
+.premium-auth-copy h1 {
+  color: #0f172a;
+  font-size: clamp(2.8rem, 5vw, 4.8rem);
+}
+
+.premium-auth-copy p {
+  color: #64748b;
+}
+
+.premium-auth-form {
+  gap: 18px;
+}
+
+.premium-auth-form label {
+  color: #334155;
+  font-size: .7rem;
+}
+
+.premium-auth-form input {
+  min-height: 52px;
+  border-color: #d9e2ec;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.premium-auth-form input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
+  background: #fff;
+}
+
+.premium-auth-submit {
+  min-height: 54px;
+  margin-top: 4px;
+  border-radius: 12px;
+  background: #2563eb;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, .22);
+}
+
+.premium-auth-submit:hover,
+.premium-auth-submit:focus-visible {
+  background: #1d4ed8;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, .28);
+}
+
+.premium-auth-footer {
+  color: #64748b;
+}
+
+@media (max-width: 900px) {
+  .premium-auth-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .premium-auth-visual {
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 560px) {
+  .premium-auth-panel {
+    width: min(100% - 32px, 520px);
+  }
+}

@@ -1,0 +1,140 @@
+/* Driver workspace: glanceable operations, stronger hierarchy and touch-safe
+   controls inspired by the reference's operations dashboard. */
+.driver-screen {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 92% 0, rgba(37, 99, 235, .12), transparent 24rem),
+    #f1f5f9;
+}
+
+.driver-shell {
+  width: min(100% - 28px, 720px);
+  padding: 18px 0 36px;
+  gap: 16px;
+}
+
+.driver-dashboard,
+.driver-login {
+  gap: 16px;
+}
+
+.driver-card {
+  padding: 20px;
+  border: 1px solid #d9e2ec;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, .07);
+}
+
+.driver-header {
+  position: sticky;
+  z-index: 12;
+  top: 12px;
+  min-height: 66px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .94);
+  backdrop-filter: blur(14px);
+}
+
+.driver-avatar {
+  width: 42px;
+  height: 42px;
+  flex-basis: 42px;
+  border-radius: 11px;
+  background: #1d4ed8;
+}
+
+.driver-header__actions .button,
+.driver-actions .button,
+.driver-card .button {
+  min-height: 42px;
+  border-radius: 12px;
+}
+
+.driver-card h2,
+.driver-card h3 {
+  color: #0f172a;
+  letter-spacing: -.035em;
+}
+
+.driver-copy,
+.muted-copy {
+  color: #64748b;
+}
+
+.driver-quick-grid {
+  gap: 10px;
+}
+
+.driver-quick-grid > div {
+  padding: 13px;
+  border-color: #d9e2ec;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, .05);
+}
+
+.driver-grid .field,
+.driver-card .field {
+  min-height: 42px;
+  border: 1px solid #d9e2ec;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.driver-grid .field:focus,
+.driver-card .field:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+  outline: none;
+  background: #fff;
+}
+
+.passenger-row,
+.timeline__item,
+.summary-metric,
+.feed-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  background: #f8fafc;
+}
+
+.driver-card .button--primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  box-shadow: 0 9px 20px rgba(37, 99, 235, .2);
+}
+
+.driver-card .button--primary:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.driver-route-map {
+  min-height: 260px;
+  overflow: hidden;
+  border: 1px solid #d9e2ec;
+  border-radius: 13px;
+}
+
+.driver-custody-tools {
+  gap: 14px;
+  padding-top: 18px;
+  border-top-color: #e2e8f0;
+}
+
+@media (max-width: 560px) {
+  .driver-shell {
+    width: min(100% - 20px, 620px);
+  }
+
+  .driver-card {
+    padding: 16px;
+  }
+
+  .driver-header {
+    top: 8px;
+  }
+}

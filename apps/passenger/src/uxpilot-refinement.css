@@ -1,0 +1,204 @@
+/* Passenger workspace: the operational reference translated into a calm,
+   step-based booking surface without changing the booking state machine. */
+.app-shell {
+  width: min(1240px, calc(100% - 40px));
+  padding-top: 20px;
+  padding-bottom: 48px;
+}
+
+.app-shell .topbar {
+  position: sticky;
+  z-index: 20;
+  top: 12px;
+  min-height: 62px;
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  border: 1px solid #d9e2ec;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
+  backdrop-filter: blur(14px);
+}
+
+.app-shell .journey {
+  overflow: hidden;
+  border: 1px solid #d9e2ec;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, .07);
+}
+
+.app-shell .journey-top {
+  padding: 20px 22px 12px;
+}
+
+.app-shell .journey-bar {
+  padding: 0 22px 16px;
+  border-bottom-color: #e2e8f0;
+}
+
+.app-shell .journey-steps {
+  gap: 6px;
+}
+
+.app-shell .journey-step {
+  min-height: 38px;
+  border-radius: 9px;
+  color: #64748b;
+  font-size: .7rem;
+}
+
+.app-shell .journey-step.active {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.app-shell .hero {
+  margin-top: 20px;
+  padding: clamp(24px, 5vw, 54px);
+  border: 1px solid #d9e2ec;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 92% 10%, rgba(37, 99, 235, .12), transparent 22rem),
+    #f8fafc;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, .06);
+}
+
+.app-shell .hero h1,
+.app-shell .page-head h1 {
+  color: #0f172a;
+  letter-spacing: -.055em;
+}
+
+.app-shell .hero > div:first-child p {
+  color: #64748b;
+}
+
+.app-shell .search-console {
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #d9e2ec;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, .08);
+}
+
+.app-shell .search-console__field,
+.app-shell .passenger-select-field {
+  min-height: 58px;
+  border: 1px solid #d9e2ec;
+  border-radius: 11px;
+  background: #f8fafc;
+}
+
+.app-shell .search-console__field:focus-within,
+.app-shell .passenger-select-field.is-open {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+  background: #fff;
+}
+
+.app-shell .passenger-select__trigger {
+  min-height: 58px;
+  color: #334155;
+}
+
+.app-shell .passenger-select__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell .passenger-select__menu {
+  z-index: 80;
+  margin-top: 6px;
+  padding: 6px;
+  border: 1px solid #d9e2ec;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, .16);
+}
+
+.app-shell .passenger-select__option {
+  min-height: 42px;
+  border-radius: 8px;
+  color: #334155;
+}
+
+.app-shell .passenger-select__option:hover,
+.app-shell .passenger-select__option[aria-selected="true"] {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.app-shell .button--primary,
+.app-shell .booking-submit {
+  min-height: 48px;
+  border-radius: 12px;
+  background: #2563eb;
+  border-color: #2563eb;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, .2);
+}
+
+.app-shell .button--primary:hover:not(:disabled),
+.app-shell .booking-submit:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.app-shell .departure,
+.app-shell .trip-map-card,
+.app-shell .seat-summary,
+.app-shell .passenger-card,
+.app-shell .review-card,
+.app-shell .payment-form,
+.app-shell .confirmation {
+  border-color: #d9e2ec;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
+}
+
+.app-shell .departure:hover,
+.app-shell .trip-map-card:hover,
+.app-shell .seat-summary:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, .1);
+  transform: translateY(-1px);
+}
+
+.app-shell .results-toolbar {
+  border-color: #d9e2ec;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.app-shell .account-hero {
+  border-color: #d9e2ec;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fff, #eff6ff);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, .07);
+}
+
+.app-shell .account-booking {
+  border-color: #d9e2ec;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .05);
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    width: min(100% - 24px, 620px);
+  }
+
+  .app-shell .topbar {
+    top: 8px;
+  }
+
+  .app-shell .hero {
+    padding: 24px 18px;
+  }
+
+  .app-shell .search-console {
+    padding: 12px;
+  }
+}

@@ -16,6 +16,7 @@
 @import url("./layout-alignment.css");
 @import url("../../../packages/shared/design-system.css");
 @import url("./passenger-polish.css");
+@import url("./uxpilot-refinement.css");
 
 .checkout-account { display: grid; gap: 12px; grid-column: 1 / -1; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: #f8fbfc; }
 .passenger-boot-screen { min-height:100vh; display:grid; place-items:center; padding:24px; background:radial-gradient(circle at 18% 12%,rgba(45,169,223,.22),transparent 28%),linear-gradient(145deg,#071f31,#103f56); color:#fff; text-align:center; }

@@ -1,0 +1,146 @@
+/* Package intake aligned with the operational reference: one task per panel. */
+.intake-shell [hidden] {
+  display: none !important;
+}
+
+.intake-shell {
+  width: min(1240px, calc(100% - 48px));
+  padding-bottom: 72px;
+}
+
+.intake-header {
+  min-height: 68px;
+  padding: 14px 18px;
+  border-radius: 0 0 14px 14px;
+  background: #0f172a;
+}
+
+.intake-hero {
+  align-items: center;
+  gap: 36px;
+  padding: 58px 0 34px;
+}
+
+.intake-hero h1 {
+  max-width: 760px;
+  color: #0f172a;
+  font-size: clamp(2.8rem, 6vw, 5.2rem);
+}
+
+.hero-badge {
+  min-width: 260px;
+  padding: 18px;
+  border-color: #bfdbfe;
+  border-radius: 16px;
+  background: #eff6ff;
+}
+
+.intake-grid {
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, .75fr);
+  gap: 18px;
+}
+
+.card {
+  border-color: #d9e2ec;
+  border-radius: 18px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, .07);
+}
+
+.intake-form,
+.process-card {
+  padding: 24px;
+}
+
+.card-heading h2,
+.process-card h2 {
+  color: #0f172a;
+  font-size: 1.4rem;
+}
+
+.trip-status {
+  margin: 18px 0;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #475569;
+}
+
+.field-grid {
+  gap: 13px;
+}
+
+.field-grid label {
+  color: #334155;
+  font-size: .72rem;
+}
+
+.field-grid input {
+  min-height: 44px;
+  border-color: #d9e2ec;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.field-grid input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+  background: #fff;
+}
+
+.primary-button {
+  min-height: 48px;
+  margin-top: 18px;
+  border-radius: 12px;
+  background: #2563eb;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, .2);
+}
+
+.primary-button:not(:disabled):hover {
+  background: #1d4ed8;
+}
+
+.process-card {
+  background: #fff;
+}
+
+.process-card ol {
+  gap: 13px;
+}
+
+.process-card li {
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.process-card li:last-child {
+  border-bottom: 0;
+}
+
+.process-card li > b {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.success-card {
+  border-color: #bbf7d0;
+  border-radius: 12px;
+}
+
+@media (max-width: 780px) {
+  .intake-shell {
+    width: min(100% - 28px, 620px);
+  }
+
+  .intake-hero {
+    gap: 22px;
+    padding-top: 38px;
+  }
+
+  .intake-grid {
+    grid-template-columns: 1fr;
+  }
+}
