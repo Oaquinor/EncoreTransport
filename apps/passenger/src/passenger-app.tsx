@@ -895,7 +895,7 @@ function PointField({
 
   return (
     <div ref={fieldRef} className={`search-console__field passenger-select-field${open ? ' is-open' : ''}`}>
-      <span id={labelId}>{label}</span>
+      <span id={labelId} className="search-console__field-label">{label}</span>
       <select
         className="passenger-select__native"
         name={name}
@@ -991,7 +991,7 @@ function Field({
 }) {
   return (
     <label className="search-console__field">
-      <span>{label}</span>
+      <span className="search-console__field-label">{label}</span>
       <input
         type={type}
         name={name}
